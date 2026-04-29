@@ -5,7 +5,6 @@ export default async function Home() {
 
   const { data } = await supabase.from("demos").select();
 
-  console.log(data);
   return (
     <div>
       <div>Kids-GPT</div>
