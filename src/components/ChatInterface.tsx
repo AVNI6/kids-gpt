@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import type { ComponentType, SVGProps } from "react";
 import { Send, Mic, Bot, Sparkles, PanelLeftOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
