@@ -26,7 +26,7 @@ const Profile = () => {
   };
   return (
     <>
-      <div className="flex gap-4">
+      <div className="flex gap-4 items-center">
         {profile && (
           <div className="w-7 h-7 bg-black text-white rounded-full flex items-center justify-center">
             {profile.charAt(0).toUpperCase()}
