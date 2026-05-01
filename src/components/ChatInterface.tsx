@@ -11,6 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import Navbar from "./Navbar";
 
 type Message = {
   id: string;
@@ -78,7 +79,6 @@ export default function ChatInterface() {
       <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
 
       <main className="flex-1 flex flex-col justify-between h-full overflow-hidden relative bg-white min-h-0">
-        {/* Top Header inside Main Content */}
         <header className="sticky top-0 z-50 w-full h-16 bg-white border-b flex items-center px-6 font-bold text-sky-600 justify-between shrink-0">
           <div className="flex items-center gap-3">
             {!isSidebarOpen && (
@@ -95,14 +95,7 @@ export default function ChatInterface() {
               <div className="text-sky-600">ChatGPT Kids</div>
             </Link>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="lg">
-              <Link href="/signin">Sign In</Link>
-            </Button>
-            <Button size="lg">
-              <Link href="/signup">Sign Up</Link>
-            </Button>
-          </div>
+          <Navbar />
         </header>
 
         {messages.length === 0 ? (
