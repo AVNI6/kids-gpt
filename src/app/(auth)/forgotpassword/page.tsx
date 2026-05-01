@@ -26,10 +26,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f6fafe] flex flex-col items-center px-6 py-10 relative overflow-hidden">
+    <div className="min-h-screen bg-[#f6fafe] flex flex-col items-center px-6 py-3 relative overflow-hidden">
       <div className="my-auto w-full flex flex-col items-center">
         {/* Brand Header */}
-        <header className="mb-10 text-center">
+        <header className="mb-3  text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <div className="w-12 h-12 bg-[#4cc2ff] rounded-2xl flex items-center justify-center border-b-4 border-[#004c6b] shadow-sm">
               <Bot className="w-7 h-7 text-white" />
@@ -90,11 +90,11 @@ export default function ForgotPasswordPage() {
             </form>
 
             {/* Back to Login */}
-            <div className="mt-8 pt-8 border-t-2 border-gray-200 flex flex-col items-center gap-4">
+            <div className="mt-4 pt-4 border-t-2 border-gray-200 flex flex-col items-center gap-4">
               <p className="text-[#3e484f]">Remembered your password?</p>
 
               <Link
-                href="/login"
+                href="/signin"
                 className="flex items-center gap-2 font-bold text-[#00658d] hover:text-[#004c6b] transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -109,7 +109,7 @@ export default function ForgotPasswordPage() {
         </main>
 
         {/* Footer */}
-        <footer className="mt-14 text-center">
+        <footer className="mt-6 text-center">
           <div className="flex items-center justify-center gap-6">
             <Link
               href="/help"

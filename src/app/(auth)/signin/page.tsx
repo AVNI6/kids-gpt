@@ -1,8 +1,8 @@
 "use client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createClient } from "@/lib/supabase/client";
-
-import { Mail, Lock, CheckCircle, BookOpen, Brain } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
+import { Mail, Lock, CheckCircle, BookOpen, Brain, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -42,10 +42,12 @@ export default function LoginPage() {
         {/* Left Side */}
         <div className="hidden flex-col gap-8 lg:flex">
           {/* Logo */}
+
           <div className="flex items-center gap-4">
-            <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-bold text-theme-brand">
-              ChatGPT Kid
-            </h1>
+            <div className="w-16 h-16 rounded-2xl bg-sky-500 flex items-center justify-center shadow-lg">
+              <Sparkles className="text-white w-8 h-8" />
+            </div>
+            <h1 className="text-5xl font-black text-sky-600">ChatGPT Kid</h1>
           </div>
 
           {/* Welcome Card */}
@@ -173,13 +175,9 @@ export default function LoginPage() {
           </div>
 
           {/* Social Buttons */}
-          <div className="grid grid-cols-2 gap-4">
-            <button className="rounded-full border-2 py-3 font-semibold hover:bg-gray-50">
-              Google
-            </button>
-
-            <button className="rounded-full border-2 py-3 font-semibold hover:bg-gray-50">
-              Apple
+          <div className="grid gap-4">
+            <button className="rounded-full flex items-center justify-center gap-2 border-2 py-3 font-semibold hover:bg-gray-50">
+              <FcGoogle /> Google
             </button>
           </div>
 

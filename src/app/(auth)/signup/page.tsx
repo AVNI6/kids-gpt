@@ -56,12 +56,14 @@ export default function ChatGPTKidSignupPage() {
     <main className="min-h-screen bg-linear-to-br from-sky-100 via-white to-green-50 flex flex-col px-6">
       <div className="my-auto mx-auto max-w-6xl w-full grid lg:grid-cols-2 gap-10 items-center">
         <div className="hidden lg:flex flex-col gap-8 relative">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-sky-500 flex items-center justify-center shadow-lg">
-              <Sparkles className="text-white w-8 h-8" />
+          <Link href="/" className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-500 flex items-center justify-center shadow-lg">
+                <Sparkles className="text-white w-8 h-8" />
+              </div>
+              <h1 className="text-5xl font-black text-sky-600">ChatGPT Kid</h1>
             </div>
-            <h1 className="text-5xl font-black text-sky-600">ChatGPT Kid</h1>
-          </div>
+          </Link>
 
           <Card className="relative border-2 border-sky-200 rounded-3xl shadow-xl overflow-visible">
             <CardContent className="p-8">

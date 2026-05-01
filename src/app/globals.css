@@ -130,13 +130,13 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border: outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: text-foreground;
   }
   html {
-    font-family: var(--font-sans);
+    font-family: font-sans;
   }
   button {
     cursor: pointer;

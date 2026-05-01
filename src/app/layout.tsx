@@ -25,7 +25,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Lexend:wght@400;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body suppressHydrationWarning className="min-h-screen flex flex-col bg-white">
         <Providers>{children}</Providers>
       </body>
     </html>
