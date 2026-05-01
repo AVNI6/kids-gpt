@@ -17,6 +17,18 @@ export default function LoginPage() {
 
   const { register, handleSubmit } = useForm<FormValue>();
 
+  const onSubmitOAuth = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) {
+      console.error(error);
+    }
+  };
+
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: e.email,
@@ -176,7 +188,10 @@ export default function LoginPage() {
 
           {/* Social Buttons */}
           <div className="grid gap-4">
-            <button className="rounded-full flex items-center justify-center gap-2 border-2 py-3 font-semibold hover:bg-gray-50">
+            <button
+              onClick={() => onSubmitOAuth()}
+              className="rounded-full flex items-center justify-center gap-2 border-2 py-3 font-semibold hover:bg-gray-50"
+            >
               <FcGoogle /> Google
             </button>
           </div>
