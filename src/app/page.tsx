@@ -1,7 +1,5 @@
+import ChatInterface from "@/components/ChatInterface";
+
 export default async function Home() {
-  return (
-    <div>
-      <div>Kids-GPT</div>
-    </div>
-  );
+  return <ChatInterface />;
 }
