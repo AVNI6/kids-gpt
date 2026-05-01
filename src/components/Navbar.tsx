@@ -16,11 +16,12 @@ const Navbar = () => {
         console.log(error);
       }
       if (data?.user) {
-        setProfile(data.user.email || "A");
+        setProfile(data.user.email || "");
       }
     }
     checkUser();
-  }, [profile]);
+  }, []);
+
   const handleLogOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -28,17 +29,17 @@ const Navbar = () => {
     }
     setProfile("");
   };
+
   return (
     <div className="flex items-center gap-2">
-      {profile && (
+      {profile ? (
         <div
           onClick={handleLogOut}
           className="w-9 h-9 cursor-pointer hover:bg-hover-sky-blue transition-all ease-out duration-300 rounded-full bg-sky-blue text-white flex items-center justify-center"
         >
           {profile.charAt(0).toUpperCase()}
         </div>
-      )}
-      {!profile && (
+      ) : (
         <>
           <Button variant="ghost" size="lg">
             <Link href="/signin">Sign In</Link>
