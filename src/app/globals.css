@@ -138,4 +138,7 @@
   html {
     font-family: var(--font-sans);
   }
+  button {
+    cursor: pointer;
+  }
 }

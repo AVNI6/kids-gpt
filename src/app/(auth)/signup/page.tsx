@@ -17,9 +17,43 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 
+import { SubmitHandler, useForm } from "react-hook-form";
+import { createClient } from "@/lib/supabase/client";
+
+const supabase = createClient();
 export default function ChatGPTKidSignupPage() {
+  type FormValue = {
+    name: string;
+    email: string;
+    password: string;
+  };
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValue>();
+
+  const onSubmit: SubmitHandler<FormValue> = async (e) => {
+    const { data, error } = await supabase.auth.signUp({
+      email: e.email,
+      password: e.password,
+      options: {
+        data: {
+          fullname: e.name,
+        },
+        emailRedirectTo: `${window.location.origin}/signin`,
+      },
+    });
+    if (error) {
+      console.error(error);
+    }
+    if (data) {
+      alert("Signup successful! Please check your email to confirm your account.");
+    }
+  };
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-sky-100 via-white to-green-50 flex flex-col px-6 py-10">
+    <main className="min-h-screen bg-linear-to-br from-sky-100 via-white to-green-50 flex flex-col px-6">
       <div className="my-auto mx-auto max-w-6xl w-full grid lg:grid-cols-2 gap-10 items-center">
         <div className="hidden lg:flex flex-col gap-8 relative">
           <div className="flex items-center gap-4">
@@ -70,55 +104,61 @@ export default function ChatGPTKidSignupPage() {
               </p>
             </div>
 
-            <form className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
                 <label className="font-semibold">Full Name</label>
                 <div className="relative">
                   <User className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
-                  <Input className="pl-12 h-14 rounded-4xl" placeholder="Alex Explorer" />
+                  <Input
+                    {...register("name", { required: true })}
+                    className="pl-12 h-14 rounded-4xl"
+                    placeholder="Alex Explorer"
+                  />
                 </div>
               </div>
 
               {/* Parent Email */}
               <div className="space-y-2">
-                <label className="font-semibold">Parent’s Email</label>
+                <label className="font-semibold">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
                   <Input
+                    {...register("email", { required: true })}
                     type="email"
                     className="pl-12 h-14 rounded-4xl"
-                    placeholder="parent@example.com"
+                    placeholder="you@example.com"
                   />
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* DOB */}
-                <div className="space-y-2">
+              {/* <div className="grid md:grid-cols-1 gap-6"> */}
+              {/* DOB */}
+              {/* <div className="space-y-2">
                   <label className="font-semibold">Date of Birth</label>
                   <div className="relative">
                     <Cake className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
                     <Input type="date" className="pl-12 h-14 rounded-4xl" />
                   </div>
-                </div>
+                </div> */}
 
-                {/* Password */}
-                <div className="space-y-2">
-                  <label className="font-semibold">Secret Code</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
-                    <Input
-                      type="password"
-                      className="pl-12 h-14 rounded-4xl"
-                      placeholder="••••••••"
-                    />
-                  </div>
+              {/* Password */}
+              <div className="space-y-2">
+                <label className="font-semibold">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
+                  <Input
+                    {...register("password", { required: true })}
+                    type="password"
+                    className="pl-12 h-14 rounded-4xl"
+                    placeholder="••••••••"
+                  />
                 </div>
               </div>
+              {/* </div> */}
 
               {/* Terms */}
               <div className="flex items-center gap-3">
-                <Checkbox />
+                <Checkbox required />
                 <p className="text-sm text-slate-500 leading-relaxed">
                   I agree to the{" "}
                   <Link href="#" className="text-sky-600 font-semibold hover:underline">
@@ -132,14 +172,17 @@ export default function ChatGPTKidSignupPage() {
               </div>
 
               {/* Submit */}
-              <Button className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2">
+              <Button
+                type="submit"
+                className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2"
+              >
                 Create Account
                 <Rocket className="w-5 h-5" />
               </Button>
 
               <p className="text-center text-slate-500">
                 Already an explorer?{" "}
-                <Link href="/login" className="text-sky-600 font-semibold hover:underline">
+                <Link href="/signin" className="text-sky-600 font-semibold hover:underline">
                   Log in here
                 </Link>
               </p>

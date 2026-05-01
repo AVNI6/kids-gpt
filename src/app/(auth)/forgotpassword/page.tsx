@@ -1,16 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Mail, ArrowRight, Lightbulb, ArrowLeft, HelpCircle, Shield, Bot } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { SubmitHandler, useForm } from "react-hook-form";
 
+const supabase = createClient();
 export default function ForgotPasswordPage() {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  type FormValue = {
+    email: string;
+  };
 
-    // Add your forgot password logic here
-    // Example: Supabase reset password email
-    console.log("Reset password link sent");
+  const { register, handleSubmit } = useForm<FormValue>();
+
+  const onSubmit: SubmitHandler<FormValue> = async (e) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(e.email, {
+      redirectTo: `${window.location.origin}/signin`,
+    });
+    if (error) {
+      console.error(error);
+    }
+    if (data) {
+      alert("Reset link sent! Please check your email.");
+    }
   };
 
   return (
@@ -30,7 +42,7 @@ export default function ForgotPasswordPage() {
         </header>
 
         {/* Main Section */}
-        <main className="w-full max-w-[560px] relative">
+        <main className="w-full max-w-140 relative">
           {/* Main Card */}
           <section className="bg-white border-2 border-[#4cc2ff] rounded-[2rem] p-8 shadow-[12px_12px_0px_0px_#c6e7ff] relative overflow-hidden">
             {/* Tip Section */}
@@ -48,7 +60,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
               <div>
                 <label className="block text-sm font-bold text-[#3e484f] mb-3 px-2">
                   ENTER YOUR EMAIL
@@ -59,6 +71,7 @@ export default function ForgotPasswordPage() {
 
                   <input
                     type="email"
+                    {...register("email", { required: true })}
                     placeholder="student@learning.com"
                     required
                     className="w-full h-16 pl-14 pr-5 bg-white border-2 border-gray-300 focus:border-[#00658d] rounded-2xl text-lg outline-none transition-all"
