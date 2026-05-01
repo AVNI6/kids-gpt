@@ -1,11 +1,39 @@
 "use client";
+import { Checkbox } from "@/components/ui/checkbox";
+import { createClient } from "@/lib/supabase/client";
+
 import { Mail, Lock, CheckCircle, BookOpen, Brain } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { SubmitHandler, useForm } from "react-hook-form";
+const supabase = createClient();
 
 export default function LoginPage() {
+  const router = useRouter();
+  type FormValue = {
+    email: string;
+    password: string;
+  };
+
+  const { register, handleSubmit } = useForm<FormValue>();
+
+  const onSubmit: SubmitHandler<FormValue> = async (e) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: e.email,
+      password: e.password,
+    });
+    if (error) {
+      console.log(error);
+    }
+    if (data) {
+      router.push("/");
+      alert("Login successful!");
+    }
+  };
+
   return (
     <main
-      className="min-h-[calc(100vh-4rem)] flex flex-col px-6 py-10 font-['Lexend']"
+      className="min-h-screen flex flex-col px-6  font-['Lexend']"
       style={{
         background: `radial-gradient(circle at top left, #c6e7ff 0%, #f6fafe 45%, rgb(132 251 66 / 0.08) 100%)`,
       }}
@@ -32,7 +60,7 @@ export default function LoginPage() {
               Continue your learning adventure.
             </p>
 
-            <div className="absolute -bottom-14 right-6">
+            <div className="absolute -bottom-14 right-6 rounded-md overflow-hidden">
               <img
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxDgf-02-AXOs-V48tFjAQajOESWiJjOwgWc5kV1J90hdnwLqvUzFHNgYtZVHxmSl3C0mAUzg5Emwp_wwfdaYtZ9R33Sd2HlPVhWz_W8UrWEkscg-9r9kj3CmDECSyeRVwdDCaWQ8iBH5lqJ9WudeXzVoENYkxd33KnUk_r41pVqHoC_VRof_D9_zUE8N1VbWuXqekSJ9SM0tTGJ7R5zovAzRphvaDvSoWEkjUZnLZp97qZXP_Qds__dLdJ_J5r_r5LaT8jE5_lvI"
                 alt="Mascot"
@@ -71,7 +99,7 @@ export default function LoginPage() {
             <p className="text-theme-text-secondary">Access your learning dashboard</p>
           </div>
 
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email */}
             <div>
               <label className="mb-2 block text-sm font-semibold">Parent’s Email</label>
@@ -83,6 +111,7 @@ export default function LoginPage() {
                 />
 
                 <input
+                  {...register("email", { required: true })}
                   type="email"
                   placeholder="parent@example.com"
                   className="w-full rounded-full border-2 border-gray-200 py-4 pl-12 pr-4 outline-none transition focus:border-theme-brand"
@@ -109,6 +138,7 @@ export default function LoginPage() {
                 />
 
                 <input
+                  {...register("password", { required: true })}
                   type="password"
                   placeholder="••••••••"
                   className="w-full rounded-full border-2 border-gray-200 py-4 pl-12 pr-4 outline-none transition focus:border-theme-brand"
@@ -118,7 +148,7 @@ export default function LoginPage() {
 
             {/* Remember */}
             <div className="flex items-center gap-3">
-              <input type="checkbox" className="h-5 w-5 rounded" />
+              <Checkbox />
               <span className="text-sm text-theme-text-secondary">Keep me logged in</span>
             </div>
 
