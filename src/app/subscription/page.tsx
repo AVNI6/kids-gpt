@@ -1,0 +1,270 @@
+"use client";
+
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import { Rocket, Star, Users, School, CheckCircle2, XCircle } from "lucide-react";
+
+const plans = [
+  {
+    name: "Free",
+    price: 0,
+    description: "Perfect for starting your learning journey.",
+    icon: Rocket,
+    buttonText: "Get Started",
+    features: ["10 questions per day", "Access to 5 core subjects", "Basic progress tracking"],
+  },
+  {
+    name: "Pro",
+    price: 12,
+    description: "Unlock limitless curiosity and discovery.",
+    icon: Star,
+    buttonText: "Upgrade Now",
+    popular: true,
+    features: [
+      "Unlimited AI questions",
+      "Advanced voice interaction",
+      "Personalized AI Tutor",
+      "Ad-free experience",
+    ],
+  },
+  {
+    name: "Family",
+    price: 24,
+    description: "Learning together for the whole family.",
+    icon: Users,
+    buttonText: "Get Family Pro",
+    features: ["Up to 5 student accounts", "Full Parent Dashboard", "Safety reports"],
+  },
+  {
+    name: "Teacher",
+    price: 49,
+    description: "Supercharge your classroom learning.",
+    icon: School,
+    buttonText: "Classroom Access",
+    features: ["Classroom Management", "Worksheet Generator", "Student analytics"],
+  },
+];
+
+const comparison = [
+  {
+    feature: "Daily Questions",
+    free: "10 Daily",
+    pro: "Unlimited",
+    family: "Unlimited",
+    teacher: "Unlimited",
+  },
+  {
+    feature: "AI Personality",
+    free: "Standard",
+    pro: "Adaptive",
+    family: "Adaptive",
+    teacher: "Customizable",
+  },
+  {
+    feature: "Parent Dashboard",
+    free: false,
+    pro: false,
+    family: true,
+    teacher: true,
+  },
+  {
+    feature: "Worksheet Generator",
+    free: false,
+    pro: false,
+    family: false,
+    teacher: true,
+  },
+];
+
+function FeatureValue({ value }: { value: string | boolean }) {
+  if (typeof value === "boolean") {
+    return value ? (
+      <CheckCircle2 className="h-5 w-5 text-green-500" />
+    ) : (
+      <XCircle className="h-5 w-5 text-muted-foreground" />
+    );
+  }
+
+  return <span>{value}</span>;
+}
+
+export default function SubscriptionPage() {
+  const [annual, setAnnual] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("Pro");
+
+  const getPrice = (price: number) => {
+    if (price === 0) return "$0";
+    return annual ? `$${Math.floor(price * 0.8)}` : `$${price}`;
+  };
+
+  const activePlan = plans.find((plan) => plan.name === selectedPlan) ?? plans[1];
+
+  return (
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/15 blur-3xl" />
+        <div className="absolute top-40 -left-24 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="absolute bottom-16 -right-20 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
+      </div>
+
+      <main className="container mx-auto px-6 py-10">
+        {/* Hero Section */}
+        <section className="text-center mb-16">
+          <Badge className="mb-5 rounded-full px-4 py-1 bg-indigo-100 text-indigo-700 border border-indigo-200">
+            Flexible Plans for Every Learner
+          </Badge>
+
+          <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4">
+            Choose Your Adventure
+          </h1>
+
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8 leading-relaxed">
+            Unlock the full power of your AI learning companion.
+          </p>
+
+          {/* Billing Toggle */}
+          <div className="inline-flex items-center justify-center gap-4 rounded-full border bg-card px-5 py-3 shadow-sm">
+            <span className={!annual ? "font-semibold" : "text-muted-foreground"}>Monthly</span>
+
+            <Switch checked={annual} onCheckedChange={setAnnual} />
+
+            <div className="flex items-center gap-2">
+              <span className={annual ? "font-semibold" : "text-muted-foreground"}>Annual</span>
+
+              <Badge variant="secondary" className="rounded-full">
+                Save 20%
+              </Badge>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mt-3">
+            {annual
+              ? "Billed yearly at a discounted rate"
+              : "Switch to annual and keep 20% in your pocket"}
+          </p>
+        </section>
+
+        {/* Pricing Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {plans.map((plan) => {
+            const Icon = plan.icon;
+            const isSelected = selectedPlan === plan.name;
+
+            return (
+              <Card
+                key={plan.name}
+                className={`relative transition-all duration-300 cursor-pointer group ${
+                  plan.popular ? "border-primary shadow-lg" : ""
+                } ${
+                  isSelected
+                    ? "ring-2 ring-primary shadow-xl border-primary"
+                    : "hover:shadow-xl hover:border-primary/40"
+                }`}
+                onClick={() => setSelectedPlan(plan.name)}
+              >
+                {isSelected && (
+                  <Badge className="absolute top-3 right-3 bg-emerald-600 text-white">
+                    Selected
+                  </Badge>
+                )}
+
+                <CardHeader>
+                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110">
+                    <Icon className="h-6 w-6" />
+                  </div>
+
+                  <CardTitle>{plan.name}</CardTitle>
+                  <CardDescription>{plan.description}</CardDescription>
+                </CardHeader>
+
+                <CardContent>
+                  <div className="mb-6">
+                    <span className="text-4xl font-bold">{getPrice(plan.price)}</span>
+
+                    <span className="text-muted-foreground ml-1">
+                      {plan.price === 0 ? "/forever" : "/month"}
+                    </span>
+                  </div>
+
+                  <ul className="space-y-4 mb-8 min-h-[180px]">
+                    {plan.features.map((feature) => (
+                      <li
+                        key={feature}
+                        className="flex items-center gap-3 text-sm rounded-lg px-2 py-1 transition-colors group-hover:bg-muted/60"
+                      >
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button className="w-full" variant={isSelected ? "default" : "secondary"}>
+                    {isSelected ? "Selected Plan" : plan.buttonText}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </section>
+
+        {/* Comparison Table */}
+        <section className="mt-24">
+          <h2 className="text-3xl font-bold text-center mb-8">Feature Comparison</h2>
+
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Feature</TableHead>
+                    <TableHead>Free</TableHead>
+                    <TableHead>Pro</TableHead>
+                    <TableHead>Family</TableHead>
+                    <TableHead>Teacher</TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {comparison.map((row) => (
+                    <TableRow key={row.feature}>
+                      <TableCell className="font-medium">{row.feature}</TableCell>
+
+                      <TableCell>
+                        <FeatureValue value={row.free} />
+                      </TableCell>
+
+                      <TableCell>
+                        <FeatureValue value={row.pro} />
+                      </TableCell>
+
+                      <TableCell>
+                        <FeatureValue value={row.family} />
+                      </TableCell>
+
+                      <TableCell>
+                        <FeatureValue value={row.teacher} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </section>
+      </main>
+    </div>
+  );
+}

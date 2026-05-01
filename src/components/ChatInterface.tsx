@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import type { ComponentType, SVGProps } from "react";
 import { Send, Mic, Bot, Sparkles, PanelLeftOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -118,7 +117,7 @@ export default function ChatInterface() {
                     className="cursor-pointer hover:bg-sky-50 hover:border-sky-200 transition-colors shadow-sm"
                     onClick={() => setInput(item)}
                   >
-                    <CardContent className="p-4 flex items-center justify-center min-h-[100px]">
+                    <CardContent className="p-4 flex items-center justify-center min-h-25">
                       <h3 className="font-semibold text-slate-700 text-center">{item}</h3>
                     </CardContent>
                   </Card>
@@ -206,7 +205,7 @@ export default function ChatInterface() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask your buddy anything..."
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                className="rounded-3xl border-0 bg-transparent min-h-[52px] h-auto pl-14 pr-14 py-3 shadow-none focus-visible:ring-0 text-base"
+                className="rounded-3xl border-0 bg-transparent min-h-13 h-auto pl-14 pr-14 py-3 shadow-none focus-visible:ring-0 text-base"
               />
 
               <Button

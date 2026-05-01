@@ -26,7 +26,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         isOpen ? "w-72 p-4" : "w-0 p-0 overflow-hidden border-none"
       }`}
     >
-      <div className="flex items-center justify-between mb-8 min-w-[240px]">
+      <div className="flex items-center justify-between mb-8 min-w-60">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0">
             <Sparkles className="w-5 h-5" />
@@ -42,7 +42,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         </Button>
       </div>
 
-      <nav className="space-y-2 flex-1 min-w-[240px] overflow-y-auto pr-2">
+      <nav className="space-y-2 flex-1 min-w-60 overflow-y-auto pr-2">
         {(
           [
             ["New Chat", PlusCircle],
@@ -61,7 +61,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="space-y-2 min-w-[240px] pt-4 border-t">
+      <div className="space-y-2 min-w-60 pt-4 border-t">
         <Button className="w-full rounded-xl bg-sky-100 text-sky-700 hover:bg-sky-200">
           <Link href={"/subscription"}>Try Premium</Link>
         </Button>

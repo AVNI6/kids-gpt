@@ -54,13 +54,14 @@ export default function LoginPage() {
         {/* Left Side */}
         <div className="hidden flex-col gap-8 lg:flex">
           {/* Logo */}
-
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-sky-500 flex items-center justify-center shadow-lg">
-              <Sparkles className="text-white w-8 h-8" />
+          <Link href="/" className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-500 flex items-center justify-center shadow-lg">
+                <Sparkles className="text-white w-8 h-8" />
+              </div>
+              <h1 className="text-5xl font-black text-sky-600">ChatGPT Kid</h1>
             </div>
-            <h1 className="text-5xl font-black text-sky-600">ChatGPT Kid</h1>
-          </div>
+          </Link>
 
           {/* Welcome Card */}
           <div className="relative rounded-[32px] border-2 border-theme-border-light bg-white p-8 shadow-xl">
