@@ -33,11 +33,16 @@ const Navbar = () => {
   return (
     <div className="flex items-center gap-2">
       {profile ? (
-        <div
-          onClick={handleLogOut}
-          className="w-9 h-9 cursor-pointer hover:bg-hover-sky-blue transition-all ease-out duration-300 rounded-full bg-sky-blue text-white flex items-center justify-center"
-        >
-          {profile.charAt(0).toUpperCase()}
+        <div className="flex items-center gap-4">
+          <Link
+            href="/profile"
+            className="w-9 h-9 cursor-pointer bg-sky-blue hover:bg-hover-sky-blue transition-all ease-out duration-300 rounded-full text-white flex items-center justify-center"
+          >
+            {profile.charAt(0).toUpperCase()}
+          </Link>
+          <Button size="lg" variant="destructive" onClick={handleLogOut}>
+            <Link href="/signup">Logout</Link>
+          </Button>
         </div>
       ) : (
         <>
