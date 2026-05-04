@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Send, Mic, Bot, Sparkles, PanelLeftOpen } from "lucide-react";
+import { Send, Plus, Bot, Sparkles, PanelLeftOpen, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,11 +11,16 @@ import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "./Navbar";
+import ChatFooter from "./ChatFooter";
 
 type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  pdfContent?: string;
+  isPdfRequest?: boolean;
+  isImage?: boolean;
+  uploadedImage?: string;
 };
 
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
@@ -25,42 +30,101 @@ export default function ChatInterface() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [image, setImage] = useState<string | null>(null);
+
+  const handleDownloadPDF = async (messageId: string) => {
+    const message = messages.find((m) => m.id === messageId);
+    if (!message) return;
+
+    try {
+      const { pdf } = await import("@react-pdf/renderer");
+      const { PdfDocument } = await import("./PdfDocument");
+
+      const blob = await pdf(
+        <PdfDocument content={message.pdfContent || message.content} />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "kids-learning-material.pdf";
+      a.click();
+
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+    }
+  };
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && !image) return;
+
+    const currentInput = input;
+    const currentImage = image;
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
-      content: input,
+      content: currentInput,
+      uploadedImage: currentImage || undefined,
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setImage(null);
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/chat", {
+      const isEditRequest = /edit|modify|recreate|transform/i.test(currentInput);
+      const isImageGeneration =
+        /(generate|create|draw|make).*(image|picture|photo|illustration|drawing)/i.test(
+          currentInput
+        ) &&
+        !isEditRequest &&
+        !/pdf/i.test(currentInput);
+
+      const apiUrl = isImageGeneration ? "/api/generate-image" : "/api/chat";
+      const bodyPayload = isImageGeneration
+        ? { prompt: currentInput }
+        : { message: currentInput, image: currentImage };
+
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify(bodyPayload),
       });
 
       const data = await res.json();
-      const aiText =
-        data?.aiResponse ??
-        data?.response ??
-        data?.message ??
-        data?.text ??
-        "No response generated";
 
-      const aiMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: aiText,
-      };
+      if (data.type === "image") {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.image,
+            isImage: true,
+          },
+        ]);
+      } else {
+        const aiText =
+          data?.message ??
+          data?.aiResponse ??
+          data?.response ??
+          data?.text ??
+          "No response generated";
 
-      setMessages((prev) => [...prev, aiMessage]);
+        const aiMessage: Message = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: aiText,
+          pdfContent: data?.pdfContent,
+          isPdfRequest: data?.isPdfRequest,
+        };
+
+        setMessages((prev) => [...prev, aiMessage]);
+      }
     } catch (err) {
       const errMessage: Message = {
         id: crypto.randomUUID(),
@@ -149,19 +213,75 @@ export default function ChatInterface() {
                       </Avatar>
 
                       <div
-                        className={`rounded-3xl px-5 py-3.5 leading-relaxed text-[15px] shadow-sm ${message.role === "user" ? "bg-sky-500 text-white rounded-br-sm" : "bg-white border rounded-bl-sm text-slate-700"}`}
+                        className={`flex flex-col gap-2 ${message.role === "user" ? "items-end" : "items-start"}`}
                       >
-                        {message.role === "assistant" && (
-                          <div className="flex items-center gap-1.5 mb-1 text-sky-600 font-bold text-sm">
-                            <Bot className="w-4 h-4" /> AI Buddy
-                          </div>
+                        {message.uploadedImage && (
+                          <img
+                            src={message.uploadedImage}
+                            alt="Uploaded"
+                            className="w-32 h-32 object-cover rounded-2xl shadow-sm border border-slate-200"
+                          />
                         )}
-                        {message.role === "assistant" ? (
-                          <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 prose-pre:text-slate-800">
-                            <ReactMarkdown>{message.content}</ReactMarkdown>
+                        {(message.content || message.isImage || message.role === "assistant") && (
+                          <div
+                            className={`rounded-3xl px-5 py-3.5 leading-relaxed text-[15px] shadow-sm ${message.role === "user" ? "bg-sky-500 text-white rounded-br-sm" : "bg-white border rounded-bl-sm text-slate-700"}`}
+                          >
+                            {message.role === "assistant" && (
+                              <div className="flex items-center justify-between gap-1.5 mb-2">
+                                <div className="flex items-center gap-1.5 text-sky-600 font-bold text-sm">
+                                  <Bot className="w-4 h-4" /> AI Buddy
+                                </div>
+                                {/* <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownloadPDF(message.id)}
+                                className="h-8 text-slate-400 hover:text-sky-600 hover:bg-sky-50 px-2"
+                                title="Download as PDF"
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                <span className="text-xs">PDF</span>
+                            </Button>  */}
+                              </div>
+                            )}
+                            <div id={`msg-${message.id}`}>
+                              {message.isImage ? (
+                                <img
+                                  src={message.content}
+                                  alt="Generated"
+                                  className="rounded-xl max-w-xs shadow-sm"
+                                />
+                              ) : message.role === "assistant" ? (
+                                <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 prose-pre:text-slate-800">
+                                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                                  {message.isPdfRequest && (
+                                    <div className="mt-4 p-4 bg-sky-50 border border-sky-100 rounded-2xl flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600">
+                                          <Download className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold text-slate-800 m-0">
+                                            Your PDF is ready
+                                          </p>
+                                          <p className="text-sm text-slate-500 m-0">
+                                            Click to download the document
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <Button
+                                        onClick={() => handleDownloadPDF(message.id)}
+                                        className="bg-sky-500 hover:bg-sky-600 text-white rounded-xl"
+                                      >
+                                        Download PDF
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <p>{message.content}</p>
+                              )}
+                            </div>
                           </div>
-                        ) : (
-                          <p>{message.content}</p>
                         )}
                       </div>
                     </div>
@@ -189,39 +309,14 @@ export default function ChatInterface() {
           </div>
         )}
 
-        <footer className="bg-white p-4 pb-6 shrink-0 border-t md:border-none shadow-[0_-10px_40px_rgba(255,255,255,0.9)] z-10">
-          <div className="w-full max-w-3xl mx-auto flex items-end gap-2 relative">
-            <div className="relative flex-1 flex items-end bg-slate-50 border rounded-3xl overflow-hidden focus-within:ring-1 focus-within:ring-sky-500 transition-shadow">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute left-2 bottom-1 text-slate-400 hover:text-slate-600 rounded-full h-10 w-10"
-              >
-                <Mic className="w-5 h-5" />
-              </Button>
-
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask your buddy anything..."
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                className="rounded-3xl border-0 bg-transparent min-h-13 h-auto pl-14 pr-14 py-3 shadow-none focus-visible:ring-0 text-base"
-              />
-
-              <Button
-                onClick={sendMessage}
-                size="icon"
-                disabled={!input.trim() || isLoading}
-                className="absolute right-2 bottom-1 h-10 w-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white disabled:opacity-50 disabled:bg-slate-300 transition-colors"
-              >
-                <Send className="w-4 h-4 ml-0.5" />
-              </Button>
-            </div>
-          </div>
-          <div className="text-center mt-3 text-xs text-slate-400">
-            ChatGPT Kid can make mistakes. Consider verifying important information.
-          </div>
-        </footer>
+        <ChatFooter
+          input={input}
+          setInput={setInput}
+          onSend={sendMessage}
+          isLoading={isLoading}
+          image={image}
+          setImage={setImage}
+        />
       </main>
     </div>
   );
