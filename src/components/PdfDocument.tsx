@@ -1,212 +1,187 @@
 import React from "react";
-import { Document, Page, Text, StyleSheet, View, Font, type TextProps } from "@react-pdf/renderer";
+import { Document, Page, Text, StyleSheet, View } from "@react-pdf/renderer";
 
-// Register Fonts - Using local files for reliability
-Font.register({
-  family: "NotoSans",
-  fonts: [
-    {
-      src: "/fonts/NotoSans-Regular.ttf",
-      fontWeight: "normal",
-    },
-    {
-      src: "/fonts/NotoSans-Bold.ttf",
-      fontWeight: "bold",
-    },
-  ],
-});
-
-// Register Emoji Font - Using local file
-Font.register({
-  family: "NotoEmoji",
-  src: "/fonts/NotoEmoji-Regular.ttf",
-});
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const styles = StyleSheet.create({
   page: {
-    padding: 50,
+    padding: 40,
     fontSize: 12,
-    lineHeight: 1.5,
-    fontFamily: "NotoSans",
-    backgroundColor: "#ffffff",
+    lineHeight: 1.6,
+    fontFamily: "Helvetica",
   },
+
   header: {
-    fontSize: 26,
-    marginBottom: 25,
+    fontSize: 22,
+    marginBottom: 20,
     color: "#0284c7",
     fontWeight: "bold",
-    textAlign: "center",
-    borderBottom: 2,
-    borderBottomColor: "#0284c7",
-    paddingBottom: 15,
   },
+
   section: {
-    marginBottom: 15,
-  },
-  h1: {
-    fontSize: 22,
     marginBottom: 12,
-    marginTop: 20,
+  },
+
+  h1: {
+    fontSize: 20,
+    marginBottom: 10,
+    marginTop: 14,
     fontWeight: "bold",
     color: "#0f172a",
   },
+
   h2: {
-    fontSize: 18,
-    marginBottom: 10,
-    marginTop: 15,
+    fontSize: 16,
+    marginBottom: 8,
+    marginTop: 12,
     fontWeight: "bold",
     color: "#1e293b",
   },
+
+  h3: {
+    fontSize: 14,
+    marginBottom: 6,
+    marginTop: 10,
+    fontWeight: "bold",
+    color: "#334155",
+  },
+
   text: {
     fontSize: 12,
     color: "#334155",
-    marginBottom: 10,
+    marginBottom: 8,
   },
+
   bold: {
     fontWeight: "bold",
-    color: "#000000",
   },
+
   bulletRow: {
     flexDirection: "row",
-    marginBottom: 8,
-    paddingLeft: 15,
+    marginBottom: 6,
+    alignItems: "flex-start",
   },
+
   bullet: {
-    width: 20,
-    fontSize: 14,
-    color: "#0284c7",
+    width: 14,
+    fontSize: 12,
   },
+
   bulletText: {
     flex: 1,
     fontSize: 12,
     color: "#334155",
   },
+
   footer: {
     position: "absolute",
-    bottom: 30,
-    left: 50,
-    right: 50,
+    bottom: 20,
+    left: 40,
+    right: 40,
     textAlign: "center",
     fontSize: 10,
     color: "#94a3b8",
-    borderTop: 1,
-    borderTopColor: "#f1f5f9",
-    paddingTop: 15,
   },
 });
 
-// Enhanced Emoji Regex
-const emojiRegex =
-  /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g;
+const cleanMarkdown = (content: string) => {
+  return content
+    .replace(/\r/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+};
 
-const renderTextContent = (text: string, baseStyle: TextProps["style"] = {}) => {
-  if (!text) return null;
+const emojiRegex = /\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
 
-  // Split by bold patterns **text**
-  const boldParts = text.split(/(\*\*.*?\*\*)/g);
+const renderTextWithEmoji = (children: React.ReactNode) => {
+  const processNode = (node: React.ReactNode): React.ReactNode => {
+    if (typeof node === "string") {
+      const parts = node.split(emojiRegex);
+      const emojis = node.match(emojiRegex) || [];
+
+      const result: React.ReactNode[] = [];
+
+      parts.forEach((part, index) => {
+        if (part) {
+          result.push(
+            <Text key={`text-${index}`} style={{ fontFamily: "NotoSans" }}>
+              {part}
+            </Text>
+          );
+        }
+
+        if (emojis[index]) {
+          result.push(
+            <Text key={`emoji-${index}`} style={{ fontFamily: "NotoEmoji" }}>
+              {emojis[index]}
+            </Text>
+          );
+        }
+      });
+
+      return result;
+    }
+
+    if (Array.isArray(node)) {
+      return node.map((child, index) => (
+        <React.Fragment key={index}>{processNode(child)}</React.Fragment>
+      ));
+    }
+
+    return node;
+  };
+
+  return processNode(children);
+};
+
+const MarkdownToPdf = ({ content }: { content: string }) => {
+  const cleanedContent = cleanMarkdown(content);
 
   return (
-    <Text style={baseStyle}>
-      {boldParts.map((part, i) => {
-        const isBold = part.startsWith("**") && part.endsWith("**");
-        const content = isBold ? part.slice(2, -2) : part;
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        h1: ({ children }) => <Text style={styles.h1}>{renderTextWithEmoji(children)}</Text>,
 
-        const baseStyleArray = Array.isArray(baseStyle) ? baseStyle : baseStyle ? [baseStyle] : [];
-        const partStyle: TextProps["style"] = isBold
-          ? [...baseStyleArray, { fontWeight: "bold" }]
-          : baseStyle;
+        h2: ({ children }) => <Text style={styles.h2}>{renderTextWithEmoji(children)}</Text>,
 
-        // Inside each part, handle emojis
-        const emojiParts = content.split(emojiRegex);
-        return (
-          <Text key={`part-${i}`} style={partStyle}>
-            {emojiParts.map((emojiPart, j) => {
-              if (emojiPart.match(emojiRegex)) {
-                return (
-                  <Text key={`${i}-${j}`} style={{ fontFamily: "NotoEmoji" }}>
-                    {emojiPart}
-                  </Text>
-                );
-              }
-              return emojiPart;
-            })}
-          </Text>
-        );
-      })}
-    </Text>
+        h3: ({ children }) => <Text style={styles.h3}>{renderTextWithEmoji(children)}</Text>,
+
+        p: ({ children }) => <Text style={styles.text}>{renderTextWithEmoji(children)}</Text>,
+
+        strong: ({ children }) => <Text style={styles.bold}>{renderTextWithEmoji(children)}</Text>,
+
+        li: ({ children }) => (
+          <View style={styles.bulletRow} wrap={false}>
+            <Text style={styles.bullet}>•</Text>
+            <Text style={styles.bulletText}>{renderTextWithEmoji(children)}</Text>
+          </View>
+        ),
+      }}
+    >
+      {cleanedContent}
+    </ReactMarkdown>
   );
 };
 
-const SimpleMarkdown = ({ content }: { content: string }) => {
-  // Basic cleaning
-  const cleanContent = content.replace(/\r/g, "").trim();
-  const lines = cleanContent.split("\n");
-  const elements: React.ReactNode[] = [];
-
-  lines.forEach((line, index) => {
-    const trimmedLine = line.trim();
-    if (!trimmedLine) return;
-
-    // Headers
-    if (trimmedLine.startsWith("# ")) {
-      elements.push(
-        <View key={index} style={styles.section}>
-          {renderTextContent(trimmedLine.replace("# ", ""), styles.h1)}
-        </View>
-      );
-    } else if (trimmedLine.startsWith("## ")) {
-      elements.push(
-        <View key={index} style={styles.section}>
-          {renderTextContent(trimmedLine.replace("## ", ""), styles.h2)}
-        </View>
-      );
-    } else if (trimmedLine.startsWith("### ")) {
-      elements.push(
-        <View key={index} style={styles.section}>
-          {renderTextContent(trimmedLine.replace("### ", ""), styles.h2)}
-        </View>
-      );
-    }
-    // Bullets
-    else if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
-      const bulletText = trimmedLine.substring(2);
-      elements.push(
-        <View key={index} style={styles.bulletRow}>
-          <Text style={{ fontFamily: "NotoEmoji", width: 15, color: "#0284c7" }}>•</Text>
-          <View style={{ flex: 1 }}>{renderTextContent(bulletText, styles.bulletText)}</View>
-        </View>
-      );
-    }
-    // Regular paragraph
-    else {
-      elements.push(
-        <View key={index} style={styles.section}>
-          {renderTextContent(trimmedLine, styles.text)}
-        </View>
-      );
-    }
-  });
-
-  return <>{elements}</>;
+type PdfDocumentProps = {
+  content: string;
 };
 
-export const PdfDocument = ({ content }: { content: string }) => {
+export const PdfDocument = ({ content }: PdfDocumentProps) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text>Learning Adventure 🚀</Text>
+        <Text style={styles.header}>
+          Learning Material <Text style={{ fontFamily: "NotoEmoji" }}>📘</Text>
+        </Text>
+
+        <View style={styles.section}>
+          <MarkdownToPdf content={content} />
         </View>
 
-        <SimpleMarkdown content={content} />
-
-        <Text
-          style={styles.footer}
-          fixed
-          render={({ pageNumber, totalPages }) =>
-            `Page ${pageNumber} of ${totalPages} • Created with Love by ChatGPT Kids`
-          }
-        />
+        <Text style={styles.footer}>Generated by ChatGPT Kids</Text>
       </Page>
     </Document>
   );
