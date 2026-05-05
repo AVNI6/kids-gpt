@@ -8,6 +8,7 @@ const supabase = createClient();
 
 const Navbar = () => {
   const [profile, setProfile] = useState("");
+  const [role, setRole] = useState<"kid" | "parent" | "teacher">("kid");
 
   useEffect(() => {
     async function checkUser() {
@@ -17,6 +18,10 @@ const Navbar = () => {
       }
       if (data?.user) {
         setProfile(data.user.email || "");
+        const userRole = data.user.user_metadata?.role;
+        if (userRole === "kid" || userRole === "parent" || userRole === "teacher") {
+          setRole(userRole);
+        }
       }
     }
     checkUser();
@@ -35,8 +40,8 @@ const Navbar = () => {
       {profile ? (
         <div className="flex items-center gap-2 sm:gap-4">
           <Link
-            href="/profile"
-            className="w-8 h-8 sm:w-9 sm:h-9 cursor-pointer bg-sky-blue hover:bg-hover-sky-blue transition-all ease-out duration-300 rounded-full text-white flex items-center justify-center text-sm sm:text-base"
+            href={`/dashboard/${role}/profile`}
+            className="w-9 h-9 cursor-pointer bg-sky-blue hover:bg-hover-sky-blue transition-all ease-out duration-300 rounded-full text-white flex items-center justify-center"
           >
             {profile.charAt(0).toUpperCase()}
           </Link>

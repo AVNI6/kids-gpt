@@ -4,14 +4,17 @@ import { createClient } from "@/lib/supabase/client";
 import { FcGoogle } from "react-icons/fc";
 import { Mail, Lock, CheckCircle, BookOpen, Brain, Sparkles } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import Image from "next/image";
 const supabase = createClient();
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams?.get("from");
+  const fromRole = searchParams?.get("role");
   type FormValue = {
     email: string;
     password: string;
@@ -40,6 +43,28 @@ export default function LoginPage() {
       console.log(error);
     }
     if (data) {
+      // Attempt to read profile and route first-time users to onboarding.
+      try {
+        const userId = data.user?.id;
+        if (userId) {
+          const { data: profileData } = await supabase
+            .from("profile")
+            .select("role, is_onboarded")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          const role = profileData?.role ?? data.user?.user_metadata?.role ?? "kid";
+          const isOnboarded = Boolean(profileData?.is_onboarded);
+
+          if (!isOnboarded) {
+            router.push(`/onboarding/${role}`);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Error checking profile after sign-in:", err);
+      }
+
       router.push("/");
       toast.success("Welcome back!", {
         description: "Login successful!",
@@ -106,6 +131,12 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-[32px] border-2 border-theme-border-light bg-white p-8 shadow-xl md:p-10">
+          {from === "signup" && (
+            <div className="mb-4 rounded-lg border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-slate-700">
+              Account created. Please sign in to continue to onboarding
+              {fromRole ? ` as ${fromRole}` : ""}.
+            </div>
+          )}
           <div className="mb-8">
             <h2 className="mb-2 text-4xl font-bold text-theme-brand">Sign In</h2>
             <p className="text-theme-text-secondary">Access your learning dashboard</p>
