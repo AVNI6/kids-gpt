@@ -53,11 +53,14 @@ export default function LoginPage() {
             .eq("user_id", userId)
             .maybeSingle();
 
-          const role = profileData?.role ?? data.user?.user_metadata?.role ?? "kid";
+          const role = profileData?.role ?? data.user?.user_metadata?.role;
           const isOnboarded = Boolean(profileData?.is_onboarded);
 
           if (!isOnboarded) {
-            router.push(`/onboarding/${role}`);
+            // If role is already set, we can still go to that specific onboarding,
+            // but the root /onboarding will now handle role selection if needed.
+            const target = role ? `/onboarding/${role}` : "/onboarding";
+            router.push(target);
             return;
           }
         }

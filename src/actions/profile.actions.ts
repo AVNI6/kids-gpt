@@ -99,8 +99,8 @@ export async function submitKidOnboarding(
     .trim()
     .toLowerCase();
 
-  if (!firstName || !lastName || !dateOfBirth || !parentEmail) {
-    return { error: "Please fill in all required fields." };
+  if (!firstName) {
+    return { error: "First name is required." };
   }
 
   const cookieStore = await cookies();
@@ -115,19 +115,22 @@ export async function submitKidOnboarding(
     return { error: "Please sign in again to continue onboarding." };
   }
 
-  const { data: parentProfile, error: parentLookupError } = await supabase
-    .from("profile")
-    .select("user_id, role")
-    .eq("email", parentEmail)
-    .eq("role", "parent")
-    .maybeSingle();
+  let parentUserId: string | null = null;
+  if (parentEmail) {
+    const { data: parentProfile, error: parentLookupError } = await supabase
+      .from("profile")
+      .select("user_id, role")
+      .eq("email", parentEmail)
+      .eq("role", "parent")
+      .maybeSingle();
 
-  if (parentLookupError) {
-    return { error: parentLookupError.message };
-  }
+    if (parentLookupError) {
+      return { error: parentLookupError.message };
+    }
 
-  if (!parentProfile?.user_id) {
-    return { error: "Parent account not found for that email." };
+    if (parentProfile?.user_id) {
+      parentUserId = parentProfile.user_id;
+    }
   }
 
   const { error: profileUpdateError } = await supabase
@@ -144,23 +147,25 @@ export async function submitKidOnboarding(
     return { error: profileUpdateError.message };
   }
 
-  const { error: removeExistingLinkError } = await supabase
-    .from("parent_child_link")
-    .delete()
-    .eq("child_user_id", user.id);
+  if (parentUserId) {
+    const { error: removeExistingLinkError } = await supabase
+      .from("parent_child_link")
+      .delete()
+      .eq("child_user_id", user.id);
 
-  if (removeExistingLinkError) {
-    return { error: removeExistingLinkError.message };
-  }
+    if (removeExistingLinkError) {
+      return { error: removeExistingLinkError.message };
+    }
 
-  const { error: linkInsertError } = await supabase.from("parent_child_link").insert({
-    parent_user_id: parentProfile.user_id,
-    child_user_id: user.id,
-    is_approved: true,
-  });
+    const { error: linkInsertError } = await supabase.from("parent_child_link").insert({
+      parent_user_id: parentUserId,
+      child_user_id: user.id,
+      is_approved: true,
+    });
 
-  if (linkInsertError) {
-    return { error: linkInsertError.message };
+    if (linkInsertError) {
+      return { error: linkInsertError.message };
+    }
   }
 
   redirect("/dashboard/kid");
@@ -176,8 +181,8 @@ export async function submitParentOnboarding(
     .trim()
     .toLowerCase();
 
-  if (!firstName || !lastName) {
-    return { error: "First name and last name are required." };
+  if (!firstName) {
+    return { error: "First name is required." };
   }
 
   const cookieStore = await cookies();
@@ -255,8 +260,8 @@ export async function submitTeacherOnboarding(
   const lastName = String(formData.get("lastName") ?? "").trim();
   const organizationName = String(formData.get("organizationName") ?? "").trim();
 
-  if (!firstName || !lastName || !organizationName) {
-    return { error: "First name, last name, and organization/school name are required." };
+  if (!firstName) {
+    return { error: "First name is required." };
   }
 
   const cookieStore = await cookies();

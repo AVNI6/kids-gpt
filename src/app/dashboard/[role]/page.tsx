@@ -132,7 +132,7 @@ export default async function DashboardRoute({ params }: { params: Promise<{ rol
                   workspace that belongs to you.
                 </p>
                 <Link
-                  href={`/chat/${role}`}
+                  href={`/`}
                   className="mt-2 inline-flex h-12 items-center justify-center rounded-2xl bg-white px-5 font-semibold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   {copy.primaryLabel}
