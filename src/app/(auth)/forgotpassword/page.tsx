@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Mail, ArrowRight, Lightbulb, ArrowLeft, HelpCircle, Shield, Bot } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 const supabase = createClient();
 export default function ForgotPasswordPage() {
@@ -21,7 +22,9 @@ export default function ForgotPasswordPage() {
       console.error(error);
     }
     if (data) {
-      alert("Reset link sent! Please check your email.");
+      toast.success("Reset link sent!", {
+        description: "Please check your email for instructions.",
+      });
     }
   };
 

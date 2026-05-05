@@ -1,14 +1,14 @@
 "use client";
-import { useState } from "react";
-import { Send, Plus, Bot, Sparkles, PanelLeftOpen, Download } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bot, Sparkles, PanelLeftOpen, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Spinner } from "@/components/ui/spinner";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
+import Image from "next/image";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "./Navbar";
 import ChatFooter from "./ChatFooter";
@@ -31,6 +31,21 @@ export default function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [image, setImage] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Close sidebar on mobile by default
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setIsSidebarOpen(false);
+      }
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleDownloadPDF = async (messageId: string) => {
     const message = messages.find((m) => m.id === messageId);
@@ -76,6 +91,28 @@ export default function ChatInterface() {
     setIsLoading(true);
 
     try {
+      // Check for vague requests (e.g., "generate image" or "make pdf" without a topic)
+      const trimmedInput = currentInput.trim().toLowerCase();
+      const isVagueImageRequest =
+        /^(generate|make|create|draw|show)\s+(an?\s+)?(image|picture|photo|drawing|illustration)$/i.test(
+          trimmedInput
+        ) || trimmedInput === "image";
+      const isVaguePdfRequest =
+        /^(generate|make|create|download|give\s+me)\s+(a\s+)?pdf$/i.test(trimmedInput) ||
+        trimmedInput === "pdf";
+
+      if (isVagueImageRequest || isVaguePdfRequest) {
+        const topicType = isVagueImageRequest ? "picture" : "PDF document";
+        const aiMessage: Message = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: `I'd love to help you with that! 🎨✨ But I need to know what topic you'd like me to use. What should the ${topicType} be about? 🚀`,
+        };
+        setMessages((prev) => [...prev, aiMessage]);
+        setIsLoading(false);
+        return;
+      }
+
       const isEditRequest = /edit|modify|recreate|transform/i.test(currentInput);
       const isImageGeneration =
         /(generate|create|draw|make).*(image|picture|photo|illustration|drawing)/i.test(
@@ -125,7 +162,7 @@ export default function ChatInterface() {
 
         setMessages((prev) => [...prev, aiMessage]);
       }
-    } catch (err) {
+    } catch (_error) {
       const errMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -142,20 +179,27 @@ export default function ChatInterface() {
       <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
 
       <main className="flex-1 flex flex-col justify-between h-full overflow-hidden relative bg-white min-h-0">
-        <header className="sticky top-0 z-50 w-full h-16 bg-white border-b flex items-center px-6 font-bold text-sky-600 justify-between shrink-0">
+        <header className="sticky top-0 z-50 w-full h-16 bg-white border-b flex items-center px-4 md:px-6 font-bold text-sky-600 justify-between shrink-0">
           <div className="flex items-center gap-3">
-            {!isSidebarOpen && (
+            {(!isSidebarOpen || isMobile) && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsSidebarOpen(true)}
-                className="text-slate-500 hover:text-slate-700 mr-2"
+                className={`text-slate-500 hover:text-slate-700 mr-2 ${isSidebarOpen ? "hidden" : "flex"}`}
               >
                 <PanelLeftOpen className="w-5 h-5" />
               </Button>
             )}
-            <Link href="/" className="flex items-center gap-3">
-              <div className="text-sky-600">ChatGPT Kids</div>
+            <Link href="/" className="flex items-center gap-2">
+              {!isSidebarOpen && (
+                <div className="h-8 w-8 rounded-xl bg-sky-500 flex items-center justify-center text-white shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+              )}
+              <div className="text-sky-600 truncate max-w-[120px] sm:max-w-none">
+                ChatGPT <span className="hidden sm:inline">Kids</span>
+              </div>
             </Link>
           </div>
           <Navbar />
@@ -193,7 +237,7 @@ export default function ChatInterface() {
           /* Chat state */
           <div className="flex-1 min-h-0 overflow-hidden relative">
             <ScrollArea className="h-full w-full">
-              <div className="w-full max-w-3xl mx-auto space-y-6 pb-6 p-4 md:p-8">
+              <div className="w-full max-w-3xl mx-auto space-y-6 pb-6 p-3 sm:p-6 md:p-8">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -213,18 +257,21 @@ export default function ChatInterface() {
                       </Avatar>
 
                       <div
-                        className={`flex flex-col gap-2 ${message.role === "user" ? "items-end" : "items-start"}`}
+                        className={`flex flex-col gap-2 overflow-x-auto ${message.role === "user" ? "items-end" : "items-start"}`}
                       >
                         {message.uploadedImage && (
-                          <img
+                          <Image
                             src={message.uploadedImage}
                             alt="Uploaded"
+                            width={128}
+                            height={128}
                             className="w-32 h-32 object-cover rounded-2xl shadow-sm border border-slate-200"
+                            unoptimized
                           />
                         )}
                         {(message.content || message.isImage || message.role === "assistant") && (
                           <div
-                            className={`rounded-3xl px-5 py-3.5 leading-relaxed text-[15px] shadow-sm ${message.role === "user" ? "bg-sky-500 text-white rounded-br-sm" : "bg-white border rounded-bl-sm text-slate-700"}`}
+                            className={`rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2.5 sm:py-3.5 leading-relaxed text-[14px] sm:text-[15px] shadow-sm ${message.role === "user" ? "bg-sky-500 text-white rounded-br-sm" : "bg-white border rounded-bl-sm text-slate-700"}`}
                           >
                             {message.role === "assistant" && (
                               <div className="flex items-center justify-between gap-1.5 mb-2">
@@ -245,19 +292,22 @@ export default function ChatInterface() {
                             )}
                             <div id={`msg-${message.id}`}>
                               {message.isImage ? (
-                                <img
+                                <Image
                                   src={message.content}
                                   alt="Generated"
-                                  className="rounded-xl max-w-xs shadow-sm"
+                                  width={400}
+                                  height={400}
+                                  className="rounded-xl max-w-full md:max-w-xs shadow-sm"
+                                  unoptimized
                                 />
                               ) : message.role === "assistant" ? (
                                 <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 prose-pre:text-slate-800">
                                   <ReactMarkdown>{message.content}</ReactMarkdown>
                                   {message.isPdfRequest && (
-                                    <div className="mt-4 p-4 bg-sky-50 border border-sky-100 rounded-2xl flex items-center justify-between">
+                                    <div className="mt-4 p-4 bg-sky-50 border border-sky-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between">
                                       <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600">
-                                          <Download className="w-5 h-5" />
+                                        <div className=" sm:w-10 sm:h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600">
+                                          <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                                         </div>
                                         <div>
                                           <p className="font-semibold text-slate-800 m-0">

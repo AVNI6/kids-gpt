@@ -58,7 +58,6 @@ export async function POST(req: NextRequest) {
               parts,
             },
           ],
-          // Add generationConfig to encourage JSON if PDF request
           generationConfig: isPdfRequest ? { responseMimeType: "application/json" } : undefined,
         }),
       }

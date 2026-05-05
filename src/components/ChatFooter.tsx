@@ -66,7 +66,7 @@ export default function ChatFooter({ input, setInput, onSend, isLoading, image, 
         if (file) handleFile(file);
       }}
     >
-      <footer className="bg-white p-4 pb-6">
+      <footer className="bg-white p-2 sm:p-4 pb-4 sm:pb-6">
         <div className="w-full max-w-3xl mx-auto">
           <div className="relative bg-slate-50 border rounded-[28px] overflow-hidden focus-within:ring-2 focus-within:ring-sky-400 transition-all">
             <input

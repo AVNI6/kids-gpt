@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  Sparkles,
-  Lightbulb,
-  ShieldCheck,
-  School,
-  User,
-  Mail,
-  Cake,
-  Lock,
-  Rocket,
-} from "lucide-react";
+import { Sparkles, Lightbulb, ShieldCheck, School, User, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,6 +9,7 @@ import Link from "next/link";
 
 import { SubmitHandler, useForm } from "react-hook-form";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 const supabase = createClient();
 export default function ChatGPTKidSignupPage() {
@@ -28,11 +19,7 @@ export default function ChatGPTKidSignupPage() {
     password: string;
   };
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValue>();
+  const { register, handleSubmit } = useForm<FormValue>();
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     const { data, error } = await supabase.auth.signUp({
@@ -49,11 +36,18 @@ export default function ChatGPTKidSignupPage() {
       console.error(error);
     }
     if (data) {
-      alert("Signup successful! Please check your email to confirm your account.");
+      toast.success("Signup successful!", {
+        description: "Please check your email to confirm your account.",
+      });
     }
   };
   return (
-    <main className="min-h-screen bg-linear-to-br from-sky-100 via-white to-green-50 flex flex-col px-6">
+    <main
+      className="min-h-screen flex flex-col px-6 font-sans"
+      style={{
+        background: `radial-gradient(circle at top left, #c6e7ff 0%, #f6fafe 45%, rgb(132 251 66 / 0.08) 100%)`,
+      }}
+    >
       <div className="my-auto mx-auto max-w-6xl w-full grid lg:grid-cols-2 gap-10 items-center">
         <div className="hidden lg:flex flex-col gap-8 relative">
           <Link href="/" className="flex items-center gap-4">
@@ -65,7 +59,7 @@ export default function ChatGPTKidSignupPage() {
             </div>
           </Link>
 
-          <Card className="relative border-2 border-sky-200 rounded-3xl shadow-xl overflow-visible">
+          <Card className="relative border-2 border-theme-border-light rounded-[32px] bg-white p-2 shadow-xl overflow-visible">
             <CardContent className="p-8">
               <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full bg-blue-900 flex items-center justify-center shadow-lg">
                 <Lightbulb className="text-white" />
@@ -96,11 +90,10 @@ export default function ChatGPTKidSignupPage() {
           </Card>
         </div>
 
-        {/* Signup Form */}
-        <Card className="rounded-3xl border-2 border-sky-200 shadow-xl">
+        <Card className="rounded-[32px] border-2 border-theme-border-light bg-white shadow-xl overflow-hidden">
           <CardContent className="p-8 md:p-10">
             <div className="mb-8">
-              <h2 className="text-3xl font-black mb-2">Create Account</h2>
+              <h2 className="text-4xl font-bold mb-2 text-theme-brand">Create Account</h2>
               <p className="text-slate-500">
                 Fill in the bubbles to start your learning journey 🚀
               </p>
@@ -119,7 +112,6 @@ export default function ChatGPTKidSignupPage() {
                 </div>
               </div>
 
-              {/* Parent Email */}
               <div className="space-y-2">
                 <label className="font-semibold">Email</label>
                 <div className="relative">
@@ -133,17 +125,6 @@ export default function ChatGPTKidSignupPage() {
                 </div>
               </div>
 
-              {/* <div className="grid md:grid-cols-1 gap-6"> */}
-              {/* DOB */}
-              {/* <div className="space-y-2">
-                  <label className="font-semibold">Date of Birth</label>
-                  <div className="relative">
-                    <Cake className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
-                    <Input type="date" className="pl-12 h-14 rounded-4xl" />
-                  </div>
-                </div> */}
-
-              {/* Password */}
               <div className="space-y-2">
                 <label className="font-semibold">Password</label>
                 <div className="relative">
@@ -156,9 +137,7 @@ export default function ChatGPTKidSignupPage() {
                   />
                 </div>
               </div>
-              {/* </div> */}
 
-              {/* Terms */}
               <div className="flex items-center gap-3">
                 <Checkbox required />
                 <p className="text-sm text-slate-500 leading-relaxed">
@@ -173,18 +152,16 @@ export default function ChatGPTKidSignupPage() {
                 </p>
               </div>
 
-              {/* Submit */}
               <Button
                 type="submit"
-                className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2"
+                className="w-full h-14 rounded-full bg-theme-brand text-lg font-bold flex items-center justify-center gap-2 text-white shadow-[0_8px_0_rgb(0_77_109)] transition hover:-translate-y-1"
               >
-                Create Account
-                <Rocket className="w-5 h-5" />
+                Create Account 🚀
               </Button>
 
               <p className="text-center text-slate-500">
                 Already an explorer?{" "}
-                <Link href="/signin" className="text-sky-600 font-semibold hover:underline">
+                <Link href="/signin" className="font-semibold text-theme-brand hover:underline">
                   Log in here
                 </Link>
               </p>

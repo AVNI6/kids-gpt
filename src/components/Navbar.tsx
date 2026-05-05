@@ -16,11 +16,12 @@ const Navbar = () => {
         console.log(error);
       }
       if (data?.user) {
-        setProfile(data.user.email || "A");
+        setProfile(data.user.email || "");
       }
     }
     checkUser();
-  }, [profile]);
+  }, []);
+
   const handleLogOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -28,24 +29,40 @@ const Navbar = () => {
     }
     setProfile("");
   };
+
   return (
-    <div className="flex items-center gap-2">
-      {profile && (
-        <div
-          onClick={handleLogOut}
-          className="w-9 h-9 cursor-pointer hover:bg-hover-sky-blue transition-all ease-out duration-300 rounded-full bg-sky-blue text-white flex items-center justify-center"
-        >
-          {profile.charAt(0).toUpperCase()}
+    <div className="flex items-center gap-1 sm:gap-2">
+      {profile ? (
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Link
+            href="/profile"
+            className="w-8 h-8 sm:w-9 sm:h-9 cursor-pointer bg-sky-blue hover:bg-hover-sky-blue transition-all ease-out duration-300 rounded-full text-white flex items-center justify-center text-sm sm:text-base"
+          >
+            {profile.charAt(0).toUpperCase()}
+          </Link>
+          <Link href="/signup">
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleLogOut}
+              className="h-8 sm:h-10 px-3 sm:px-6"
+            >
+              Logout
+            </Button>
+          </Link>
         </div>
-      )}
-      {!profile && (
+      ) : (
         <>
-          <Button variant="ghost" size="lg">
-            <Link href="/signin">Sign In</Link>
-          </Button>
-          <Button size="lg">
-            <Link href="/signup">Sign Up</Link>
-          </Button>
+          <Link href="/signin">
+            <Button variant="ghost" size="sm" className="h-8 sm:h-10 px-2 sm:px-4">
+              Sign In
+            </Button>
+          </Link>
+          <Link href="/signup">
+            <Button size="sm" className="h-8 sm:h-10 px-3 sm:px-6">
+              Sign Up
+            </Button>
+          </Link>
         </>
       )}
     </div>
