@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Sparkles,
   Lightbulb,
@@ -7,51 +9,86 @@ import {
   School,
   User,
   Mail,
-  Cake,
   Lock,
   Rocket,
+  Users,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 import { SubmitHandler, useForm } from "react-hook-form";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();
+
+const roleOptions = [
+  {
+    id: "kid",
+    label: "Kid",
+    description: "A playful learning space",
+    icon: Rocket,
+  },
+  {
+    id: "parent",
+    label: "Parent",
+    description: "Set guardrails and invite your child",
+    icon: Users,
+  },
+  {
+    id: "teacher",
+    label: "Teacher",
+    description: "Prepare classroom-ready learning",
+    icon: GraduationCap,
+  },
+] as const;
+
 export default function ChatGPTKidSignupPage() {
+  const router = useRouter();
+  const [selectedRole, setSelectedRole] = useState<(typeof roleOptions)[number]["id"]>("kid");
+  const [signupState, setSignupState] = useState<"idle" | "loading" | "check-email">("idle");
+
   type FormValue = {
     name: string;
     email: string;
     password: string;
   };
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValue>();
+  const { register, handleSubmit } = useForm<FormValue>();
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
+    setSignupState("loading");
+
     const { data, error } = await supabase.auth.signUp({
       email: e.email,
       password: e.password,
       options: {
         data: {
           fullname: e.name,
+          role: selectedRole,
         },
         emailRedirectTo: `${window.location.origin}/signin`,
       },
     });
+
     if (error) {
       console.error(error);
+      setSignupState("idle");
+      return;
     }
-    if (data) {
-      alert("Signup successful! Please check your email to confirm your account.");
+
+    if (data.session) {
+      router.push(`/onboarding/${selectedRole}`);
+      return;
     }
+
+    setSignupState("check-email");
   };
+
   return (
     <main className="min-h-screen bg-linear-to-br from-sky-100 via-white to-green-50 flex flex-col px-6">
       <div className="my-auto mx-auto max-w-6xl w-full grid lg:grid-cols-2 gap-10 items-center">
@@ -107,6 +144,40 @@ export default function ChatGPTKidSignupPage() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-3">
+                <label className="font-semibold">Choose your role</label>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {roleOptions.map((role) => {
+                    const Icon = role.icon;
+                    const active = selectedRole === role.id;
+
+                    return (
+                      <button
+                        key={role.id}
+                        type="button"
+                        onClick={() => setSelectedRole(role.id)}
+                        className={`rounded-3xl border-2 p-4 text-left transition-all ${
+                          active
+                            ? "border-sky-500 bg-sky-50 shadow-[0_12px_30px_rgba(0,101,141,0.12)]"
+                            : "border-sky-100 bg-white hover:border-sky-300 hover:bg-sky-50/60"
+                        }`}
+                      >
+                        <div className="mb-4 flex items-center justify-between gap-3">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600">
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          {active && <Badge className="rounded-full bg-sky-600">Selected</Badge>}
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-semibold text-slate-900">{role.label}</p>
+                          <p className="text-sm leading-snug text-slate-500">{role.description}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label className="font-semibold">Full Name</label>
                 <div className="relative">
@@ -176,11 +247,19 @@ export default function ChatGPTKidSignupPage() {
               {/* Submit */}
               <Button
                 type="submit"
+                disabled={signupState === "loading"}
                 className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2"
               >
-                Create Account
+                {signupState === "loading" ? "Creating Account..." : "Create Account"}
                 <Rocket className="w-5 h-5" />
               </Button>
+
+              {signupState === "check-email" && (
+                <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-slate-700">
+                  Check your email to confirm your account. Once confirmed, you can sign in and
+                  continue to your onboarding flow.
+                </div>
+              )}
 
               <p className="text-center text-slate-500">
                 Already an explorer?{" "}
