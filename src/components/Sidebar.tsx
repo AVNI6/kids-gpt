@@ -94,9 +94,11 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
             <Settings className="mr-2 w-5 h-5" />
             Settings
           </Button>
-          <Button variant="ghost" className="w-full justify-start text-slate-700">
-            <HelpCircle className="mr-2 w-5 h-5" /> Help
-          </Button>
+          <Link href={"/help"}>
+            <Button variant="ghost" className="w-full justify-start text-slate-700">
+              <HelpCircle className="mr-2 w-5 h-5" /> Help
+            </Button>
+          </Link>
         </div>
       </aside>
     </>

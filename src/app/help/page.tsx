@@ -89,11 +89,11 @@ const steps = [
 
 export default function HelpPage() {
   return (
-    <div className="min-h-screen bg-[var(--theme-bg-light)]">
+    <div className="min-h-screen bg-(--theme-bg-light)]">
       <main className="container mx-auto max-w-6xl px-4 py-10 space-y-14">
         {/* HERO */}
         <section className="text-center space-y-6">
-          <Badge className="px-4 py-2 text-sm bg-[var(--theme-border-light)] text-[var(--theme-brand)] border border-[var(--theme-brand)]/20">
+          <Badge className="px-4 py-2 text-sm bg-(--theme-border-light) text-(--theme-brand) border border-(--theme-brand)/20">
             Help Center
           </Badge>
 
@@ -104,14 +104,6 @@ export default function HelpPage() {
               Find guides for students, parents, and teachers. Learn how to use ChatGPT Kids safely
               and effectively.
             </p>
-          </div>
-
-          <div className="max-w-2xl mx-auto relative">
-            <Search className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Search help articles, safety guides, or classroom setup..."
-              className="pl-12 h-12 rounded-xl bg-white border-2 border-[var(--theme-border-light)] focus-visible:ring-[var(--theme-brand)]/40"
-            />
           </div>
         </section>
 
@@ -129,11 +121,11 @@ export default function HelpPage() {
               return (
                 <Card
                   key={role.title}
-                  className="group transition hover:shadow-lg hover:-translate-y-1 cursor-pointer bg-white border-2 border-[var(--theme-border-light)]"
+                  className="group transition hover:shadow-lg hover:-translate-y-1 cursor-pointer bg-white border-2 border-(--theme-border-light)"
                 >
                   <CardHeader>
-                    <div className="w-14 h-14 rounded-2xl bg-[var(--theme-border-light)] flex items-center justify-center">
-                      <Icon className="w-7 h-7 text-[var(--theme-brand)]" />
+                    <div className="w-14 h-14 rounded-2xl bg-(--theme-border-light) flex items-center justify-center">
+                      <Icon className="w-7 h-7 text-(--theme-brand)" />
                     </div>
 
                     <CardTitle>{role.title}</CardTitle>
@@ -145,7 +137,7 @@ export default function HelpPage() {
                     <Button
                       render={<Link href={role.href} />}
                       nativeButton={false}
-                      className="w-full bg-[var(--theme-brand)] hover:bg-[var(--theme-brand-dark)] text-white"
+                      className="w-full bg-(--theme-brand) hover:bg-(--theme-brand-dark) text-white"
                     >
                       Explore Guide
                       <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -169,7 +161,7 @@ export default function HelpPage() {
               <div key={step} className="relative">
                 <Card>
                   <CardContent className="pt-6 space-y-4">
-                    <div className="w-12 h-12 rounded-full bg-[var(--theme-brand)] text-white flex items-center justify-center font-bold">
+                    <div className="w-12 h-12 rounded-full bg-(--theme-brand) text-white flex items-center justify-center font-bold">
                       {index + 1}
                     </div>
 
@@ -179,7 +171,7 @@ export default function HelpPage() {
 
                 {index < steps.length - 1 && (
                   <div className="hidden md:flex items-center justify-center absolute -right-4 top-1/2 -translate-y-1/2 z-10">
-                    <div className="h-8 w-8 rounded-full bg-[var(--theme-border-light)] text-[var(--theme-brand)] flex items-center justify-center border border-[var(--theme-brand)]/20">
+                    <div className="h-8 w-8 rounded-full bg-(--theme-border-light) text-(--theme-brand) flex items-center justify-center border border-(--theme-brand)/20">
                       <ArrowRight className="h-4 w-4" />
                     </div>
                   </div>
@@ -192,7 +184,7 @@ export default function HelpPage() {
             {steps.slice(0, -1).map((step) => (
               <div
                 key={`mobile-arrow-${step}`}
-                className="flex items-center justify-center text-[var(--theme-brand)]/70"
+                className="flex items-center justify-center text-(--theme-brand)/70"
               >
                 <ArrowDownRight className="h-4 w-4" />
               </div>
@@ -207,7 +199,7 @@ export default function HelpPage() {
           </div>
 
           <Tabs defaultValue="student" className="w-full">
-            <TabsList className="grid w-full md:w-[500px] grid-cols-3">
+            <TabsList className="grid w-full md:w-125 grid-cols-3">
               <TabsTrigger value="student">Student</TabsTrigger>
               <TabsTrigger value="parent">Parent</TabsTrigger>
               <TabsTrigger value="teacher">Teacher</TabsTrigger>
@@ -218,7 +210,7 @@ export default function HelpPage() {
                 <CardHeader>
                   <CardTitle>Student Help Guide</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 text-[var(--theme-text-secondary)]">
+                <CardContent className="space-y-4 text-(--theme-text-secondary)">
                   <p>• How to chat with AI tutor</p>
                   <p>• Solve quizzes and flashcards</p>
                   <p>• Join teacher classroom</p>
@@ -232,7 +224,7 @@ export default function HelpPage() {
                 <CardHeader>
                   <CardTitle>Parent Help Guide</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 text-[var(--theme-text-secondary)]">
+                <CardContent className="space-y-4 text-(--theme-text-secondary)">
                   <p>• Monitor child activity</p>
                   <p>• Safety controls</p>
                   <p>• Subscription management</p>
@@ -246,7 +238,7 @@ export default function HelpPage() {
                 <CardHeader>
                   <CardTitle>Teacher Help Guide</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 text-[var(--theme-text-secondary)]">
+                <CardContent className="space-y-4 text-(--theme-text-secondary)">
                   <p>• Create classroom</p>
                   <p>• Share class codes</p>
                   <p>• Create activities</p>
@@ -271,11 +263,11 @@ export default function HelpPage() {
               return (
                 <Card
                   key={topic.title}
-                  className="hover:shadow-md transition cursor-pointer bg-white border-2 border-[var(--theme-border-light)]"
+                  className="hover:shadow-md transition cursor-pointer bg-white border-2 border-(--theme-border-light)"
                 >
                   <CardContent className="pt-6 flex gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-[var(--theme-border-light)] flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-[var(--theme-brand)]" />
+                    <div className="w-12 h-12 rounded-xl bg-(--theme-border-light) flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-(--theme-brand)" />
                     </div>
 
                     <div>
@@ -298,7 +290,7 @@ export default function HelpPage() {
           <Accordion className="w-full space-y-3" defaultValue={["1"]}>
             <AccordionItem
               value="1"
-              className="rounded-xl border-2 border-[var(--theme-border-light)] bg-white px-4"
+              className="rounded-xl border-2 border-(--theme-border-light) bg-white px-4"
             >
               <AccordionTrigger>How do students join a class?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
@@ -308,7 +300,7 @@ export default function HelpPage() {
 
             <AccordionItem
               value="2"
-              className="rounded-xl border-2 border-[var(--theme-border-light)] bg-white px-4"
+              className="rounded-xl border-2 border-(--theme-border-light) bg-white px-4"
             >
               <AccordionTrigger>Is ChatGPT Kids safe for children?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
@@ -318,7 +310,7 @@ export default function HelpPage() {
 
             <AccordionItem
               value="3"
-              className="rounded-xl border-2 border-[var(--theme-border-light)] bg-white px-4"
+              className="rounded-xl border-2 border-(--theme-border-light) bg-white px-4"
             >
               <AccordionTrigger>Can parents monitor progress?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
@@ -328,7 +320,7 @@ export default function HelpPage() {
 
             <AccordionItem
               value="4"
-              className="rounded-xl border-2 border-[var(--theme-border-light)] bg-white px-4"
+              className="rounded-xl border-2 border-(--theme-border-light) bg-white px-4"
             >
               <AccordionTrigger>Can teachers create quizzes?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
@@ -345,31 +337,31 @@ export default function HelpPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <Card className="group bg-white border-2 border-[var(--theme-border-light)]">
+            <Card className="group bg-white border-2 border-(--theme-border-light)">
               <CardContent className="pt-6 text-center space-y-4">
-                <MessageSquare className="mx-auto h-8 w-8 text-[var(--theme-brand)]" />
+                <MessageSquare className="mx-auto h-8 w-8 text-(--theme-brand)" />
                 <h3 className="font-semibold">AI Support</h3>
-                <Button className="w-full bg-muted text-foreground hover:bg-[var(--theme-brand)] hover:text-white group-hover:bg-[var(--theme-brand)] group-hover:text-white">
+                <Button className="w-full bg-muted text-foreground hover:bg-(--theme-brand) hover:text-white group-hover:bg-(--theme-brand) group-hover:text-white">
                   Start Chat
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="group bg-white border-2 border-[var(--theme-border-light)]">
+            <Card className="group bg-white border-2 border-(--theme-border-light)">
               <CardContent className="pt-6 text-center space-y-4">
-                <Mail className="mx-auto h-8 w-8 text-[var(--theme-brand)]" />
+                <Mail className="mx-auto h-8 w-8 text-(--theme-brand)" />
                 <h3 className="font-semibold">Email Support</h3>
-                <Button className="w-full bg-muted text-foreground hover:bg-[var(--theme-brand)] hover:text-white group-hover:bg-[var(--theme-brand)] group-hover:text-white">
+                <Button className="w-full bg-muted text-foreground hover:bg-(--theme-brand) hover:text-white group-hover:bg-(--theme-brand) group-hover:text-white">
                   Contact Us
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="group bg-white border-2 border-[var(--theme-border-light)]">
+            <Card className="group bg-white border-2 border-(--theme-border-light)">
               <CardContent className="pt-6 text-center space-y-4">
-                <Video className="mx-auto h-8 w-8 text-[var(--theme-brand)]" />
+                <Video className="mx-auto h-8 w-8 text-(--theme-brand)" />
                 <h3 className="font-semibold">Video Tutorials</h3>
-                <Button className="w-full bg-muted text-foreground hover:bg-[var(--theme-brand)] hover:text-white group-hover:bg-[var(--theme-brand)] group-hover:text-white">
+                <Button className="w-full bg-muted text-foreground hover:bg-(--theme-brand) hover:text-white group-hover:bg-(--theme-brand) group-hover:text-white">
                   Watch Tutorials
                 </Button>
               </CardContent>
@@ -380,10 +372,10 @@ export default function HelpPage() {
         {/* BANNER */}
         <section>
           <Card className="overflow-hidden">
-            <div className="relative h-[320px]">
+            <div className="relative h-80">
               <Image src="/help-banner.jpg" alt="Learning banner" fill className="object-cover" />
 
-              <div className="absolute inset-0 bg-gradient-to-r from-[var(--theme-brand-dark)]/80 to-[var(--theme-brand)]/60 flex items-center">
+              <div className="absolute inset-0 bg-gradient-to-r from-(--theme-brand-dark)/80 to-(--theme-brand)/60 flex items-center">
                 <div className="px-8 space-y-4 text-white max-w-xl">
                   <Badge variant="secondary">ChatGPT Kids Mission</Badge>
 
@@ -405,9 +397,7 @@ export default function HelpPage() {
         <footer className="py-8">
           <div className="flex flex-col md:flex-row justify-between gap-6">
             <div>
-              <h3 className="font-bold text-lg text-[var(--theme-brand)]">
-                ChatGPT Kids Companion
-              </h3>
+              <h3 className="font-bold text-lg text-(--theme-brand)">ChatGPT Kids Companion</h3>
               <p className="text-sm text-muted-foreground">
                 Safe, interactive AI learning for kids.
               </p>
