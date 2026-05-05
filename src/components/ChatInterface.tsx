@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Bot, Sparkles, PanelLeftOpen, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,10 +12,27 @@ import Image from "next/image";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "./Navbar";
 import ChatFooter from "./ChatFooter";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  addMessage,
+  setMessages,
+  setCurrentSessionId,
+  updateSessionTitleInList,
+} from "@/store/slice/chat.slice";
+import {
+  fetchSessionMessages,
+  saveChatMessage,
+  createChatSession,
+  updateSessionTitle,
+  type ChatMessageRow,
+} from "@/lib/supabase/chat";
+import { createClient } from "@/lib/supabase/client";
+
+const supabase = createClient();
 
 type Message = {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "model";
   content: string;
   pdfContent?: string;
   isPdfRequest?: boolean;
@@ -26,12 +43,52 @@ type Message = {
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
 
 export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const dispatch = useAppDispatch();
+  const messages = useAppSelector((state) => state.chat.messages);
+  const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
+
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [image, setImage] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+
+  // Check login status
+  useEffect(() => {
+    const checkUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setIsUserLoggedIn(!!user);
+    };
+    checkUser();
+  }, []);
+
+  // Fetch messages when session changes
+  useEffect(() => {
+    const loadMessages = async () => {
+      if (currentSessionId) {
+        setIsLoading(true);
+        try {
+          const dbMessages = await fetchSessionMessages(currentSessionId);
+          const mappedMessages: Message[] = dbMessages.map((m: ChatMessageRow) => ({
+            id: m.id,
+            role: m.sender_role,
+            content: m.content,
+          }));
+          dispatch(setMessages(mappedMessages));
+        } catch (error) {
+          console.error("Failed to load messages:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        dispatch(setMessages([]));
+      }
+    };
+    loadMessages();
+  }, [currentSessionId, dispatch]);
 
   // Close sidebar on mobile by default
   useEffect(() => {
@@ -77,6 +134,19 @@ export default function ChatInterface() {
 
     const currentInput = input;
     const currentImage = image;
+    let sessionId = currentSessionId;
+
+    // 1. Create session if it doesn't exist and user is logged in
+    if (!sessionId && isUserLoggedIn) {
+      try {
+        const newSession = await createChatSession(currentInput.slice(0, 30) + "...");
+        sessionId = newSession.id;
+        dispatch(setCurrentSessionId(sessionId));
+        dispatch(updateSessionTitleInList({ id: sessionId, title: newSession.title }));
+      } catch (error) {
+        console.error("Failed to create session:", error);
+      }
+    }
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -85,13 +155,18 @@ export default function ChatInterface() {
       uploadedImage: currentImage || undefined,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    dispatch(addMessage(userMessage));
     setInput("");
     setImage(null);
     setIsLoading(true);
 
+    // Save user message to DB
+    if (sessionId && isUserLoggedIn) {
+      const sid = sessionId; // Narrowing
+      saveChatMessage(sid, "user", currentInput).catch(console.error);
+    }
+
     try {
-      // Check for vague requests (e.g., "generate image" or "make pdf" without a topic)
       const trimmedInput = currentInput.trim().toLowerCase();
       const isVagueImageRequest =
         /^(generate|make|create|draw|show)\s+(an?\s+)?(image|picture|photo|drawing|illustration)$/i.test(
@@ -103,12 +178,20 @@ export default function ChatInterface() {
 
       if (isVagueImageRequest || isVaguePdfRequest) {
         const topicType = isVagueImageRequest ? "picture" : "PDF document";
+        const aiResponse = `I'd love to help you with that! 🎨✨ But I need to know what topic you'd like me to use. What should the ${topicType} be about? 🚀`;
+
         const aiMessage: Message = {
           id: crypto.randomUUID(),
-          role: "assistant",
-          content: `I'd love to help you with that! 🎨✨ But I need to know what topic you'd like me to use. What should the ${topicType} be about? 🚀`,
+          role: "model",
+          content: aiResponse,
         };
-        setMessages((prev) => [...prev, aiMessage]);
+        dispatch(addMessage(aiMessage));
+
+        if (sessionId && isUserLoggedIn) {
+          const sid = sessionId;
+          saveChatMessage(sid, "model", aiResponse).catch(console.error);
+        }
+
         setIsLoading(false);
         return;
       }
@@ -133,19 +216,21 @@ export default function ChatInterface() {
       });
 
       const data = await res.json();
+      let aiResponseContent = "";
+      let isImage = false;
 
       if (data.type === "image") {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: data.image,
-            isImage: true,
-          },
-        ]);
+        aiResponseContent = data.image;
+        isImage = true;
+        const aiMessage: Message = {
+          id: crypto.randomUUID(),
+          role: "model",
+          content: aiResponseContent,
+          isImage: true,
+        };
+        dispatch(addMessage(aiMessage));
       } else {
-        const aiText =
+        aiResponseContent =
           data?.message ??
           data?.aiResponse ??
           data?.response ??
@@ -154,21 +239,40 @@ export default function ChatInterface() {
 
         const aiMessage: Message = {
           id: crypto.randomUUID(),
-          role: "assistant",
-          content: aiText,
+          role: "model",
+          content: aiResponseContent,
           pdfContent: data?.pdfContent,
           isPdfRequest: data?.isPdfRequest,
         };
+        dispatch(addMessage(aiMessage));
+      }
 
-        setMessages((prev) => [...prev, aiMessage]);
+      // Save assistant message to DB
+      if (sessionId && isUserLoggedIn) {
+        const sid = sessionId;
+        saveChatMessage(sid, "model", aiResponseContent).catch(console.error);
+
+        // Update title if it's the first message
+        if (messages.length === 1) {
+          // 1 user message already added
+          const newTitle = currentInput.slice(0, 40);
+          updateSessionTitle(sid, newTitle).catch(console.error);
+          dispatch(updateSessionTitleInList({ id: sid, title: newTitle }));
+        }
       }
     } catch (_error) {
+      const errResponse = "Sorry, something went wrong. Please try again.";
       const errMessage: Message = {
         id: crypto.randomUUID(),
-        role: "assistant",
-        content: "Sorry, something went wrong. Please try again.",
+        role: "model",
+        content: errResponse,
       };
-      setMessages((prev) => [...prev, errMessage]);
+      dispatch(addMessage(errMessage));
+
+      if (sessionId && isUserLoggedIn) {
+        const sid = sessionId;
+        saveChatMessage(sid, "model", errResponse).catch(console.error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -234,7 +338,6 @@ export default function ChatInterface() {
             </div>
           </div>
         ) : (
-          /* Chat state */
           <div className="flex-1 min-h-0 overflow-hidden relative">
             <ScrollArea className="h-full w-full">
               <div className="w-full max-w-3xl mx-auto space-y-6 pb-6 p-3 sm:p-6 md:p-8">
@@ -269,25 +372,15 @@ export default function ChatInterface() {
                             unoptimized
                           />
                         )}
-                        {(message.content || message.isImage || message.role === "assistant") && (
+                        {(message.content || message.isImage || message.role === "model") && (
                           <div
                             className={`rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2.5 sm:py-3.5 leading-relaxed text-[14px] sm:text-[15px] shadow-sm ${message.role === "user" ? "bg-sky-500 text-white rounded-br-sm" : "bg-white border rounded-bl-sm text-slate-700"}`}
                           >
-                            {message.role === "assistant" && (
+                            {message.role === "model" && (
                               <div className="flex items-center justify-between gap-1.5 mb-2">
                                 <div className="flex items-center gap-1.5 text-sky-600 font-bold text-sm">
                                   <Bot className="w-4 h-4" /> AI Buddy
                                 </div>
-                                {/* <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDownloadPDF(message.id)}
-                                className="h-8 text-slate-400 hover:text-sky-600 hover:bg-sky-50 px-2"
-                                title="Download as PDF"
-                              >
-                                <Download className="w-4 h-4 mr-1" />
-                                <span className="text-xs">PDF</span>
-                            </Button>  */}
                               </div>
                             )}
                             <div id={`msg-${message.id}`}>
@@ -300,7 +393,7 @@ export default function ChatInterface() {
                                   className="rounded-xl max-w-full md:max-w-xs shadow-sm"
                                   unoptimized
                                 />
-                              ) : message.role === "assistant" ? (
+                              ) : message.role === "model" ? (
                                 <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 prose-pre:text-slate-800">
                                   <ReactMarkdown>{message.content}</ReactMarkdown>
                                   {message.isPdfRequest && (
