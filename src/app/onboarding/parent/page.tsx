@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 const initialAvatarState: AvatarUploadState = { avatarUrl: null, error: null };
 const initialParentState: ParentOnboardingState = { error: null };
@@ -279,7 +280,7 @@ export default function ParentOnboardingPage() {
 
             <p className="text-center text-xs font-bold text-slate-400">
               Need another account?{" "}
-              <Link href="/signin" className="text-sky-600 hover:underline">
+              <Link href={APP_ROUTES.Signin} className="text-sky-600 hover:underline">
                 Sign in
               </Link>
             </p>

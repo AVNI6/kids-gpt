@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 const quests = [
   {
@@ -44,7 +45,7 @@ export default function CodeQuestPage() {
       <main className="px-8 py-8">
         <div className="mx-auto max-w-4xl space-y-8">
           <Link
-            href="/activities"
+            href={APP_ROUTES.Activities}
             className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-foreground hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit"
           >
             <ArrowLeft className="h-5 w-5" /> Back to Activities

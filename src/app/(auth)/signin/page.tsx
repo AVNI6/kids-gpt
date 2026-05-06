@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Image from "next/image";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 const supabase = createClient();
 
 export default function LoginPage() {
@@ -169,7 +170,7 @@ export default function LoginPage() {
               <div className="mb-2 flex justify-between">
                 <label className="text-sm font-semibold text-foreground">Password</label>
                 <Link
-                  href="/forgotpassword"
+                  href={APP_ROUTES.ForgotPassword}
                   className="text-sm font-semibold text-sky-500 hover:underline"
                 >
                   Forgot Password?
@@ -196,9 +197,9 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full rounded-full bg-sky-500 py-4 font-bold text-white shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-1 active:translate-y-1 active:shadow-none"
+              className="w-full rounded-full py-4 font-bold text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
             >
-              Sign In 🚀
+              Sign In
             </button>
           </form>
 
@@ -222,7 +223,7 @@ export default function LoginPage() {
 
           <p className="mt-8 text-center text-muted-foreground">
             New explorer?{" "}
-            <Link href="/signup" className="font-semibold text-sky-500 hover:underline">
+            <Link href={APP_ROUTES.Signup} className="font-semibold text-sky-500 hover:underline">
               Create account
             </Link>
           </p>

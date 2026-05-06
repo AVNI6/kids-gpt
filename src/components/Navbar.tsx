@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -32,7 +33,7 @@ const Navbar = () => {
     <div className="flex items-center gap-2">
       {!isLoggedIn && (
         <>
-          <Link href="/signin">
+          <Link href={APP_ROUTES.Signin}>
             <Button
               variant="ghost"
               size="sm"
@@ -41,7 +42,7 @@ const Navbar = () => {
               Sign In
             </Button>
           </Link>
-          <Link href="/signup">
+          <Link href={APP_ROUTES.Signup}>
             <Button
               size="sm"
               className="h-9 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl shadow-lg shadow-sky-500/20 transition-all active:scale-95"

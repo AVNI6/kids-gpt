@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 const flashcards = [
   {
@@ -44,7 +45,7 @@ export default function FlashcardsPage() {
 
         <div className="relative z-10 mx-auto max-w-5xl">
           <Link
-            href="/activities"
+            href={APP_ROUTES.Activities}
             className="inline-flex items-center gap-2 text-sky-600 font-bold hover:text-sky-800 hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit mb-6"
           >
             <ArrowLeft className="h-5 w-5" /> Back to Activities

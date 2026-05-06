@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { kidActivities, activityColorStyles, activityButtonStyles } from "@/lib/kid-activities";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 export default function ActivityDetailPage({ params }: { params: { slug: string } }) {
   const activity = kidActivities.find((item) => item.slug === params.slug);
@@ -20,7 +21,7 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
     <main className="min-h-screen bg-background px-6 py-10">
       <div className="max-w-4xl mx-auto space-y-8">
         <Link
-          href="/activities"
+          href={APP_ROUTES.Activities}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Activities

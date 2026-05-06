@@ -5,6 +5,7 @@ import { Mail, ArrowRight, Lightbulb, ArrowLeft, HelpCircle, Shield, Bot } from 
 import { createClient } from "@/lib/supabase/client";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 const supabase = createClient();
 export default function ForgotPasswordPage() {
@@ -97,7 +98,7 @@ export default function ForgotPasswordPage() {
               <p className="text-[#3e484f]">Remembered your password?</p>
 
               <Link
-                href="/signin"
+                href={APP_ROUTES.Signin}
                 className="flex items-center gap-2 font-bold text-[#00658d] hover:text-[#004c6b] transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -115,7 +116,7 @@ export default function ForgotPasswordPage() {
         <footer className="mt-6 text-center">
           <div className="flex items-center justify-center gap-6">
             <Link
-              href="/help"
+              href={APP_ROUTES.Help}
               className="flex items-center gap-2 text-gray-500 hover:text-[#00658d] font-semibold"
             >
               <HelpCircle className="w-4 h-4" />
