@@ -165,7 +165,7 @@ export async function submitKidOnboarding(
     }
   }
 
-  redirect("/dashboard/kid");
+  redirect("/");
 }
 
 export async function submitParentOnboarding(
@@ -203,7 +203,7 @@ export async function submitParentOnboarding(
     .eq("user_id", user.id);
 
   if (profileUpdateError) {
-    return { error: profileUpdateError.message };
+    return { error: "Profile update failed." };
   }
 
   let childNotFound = false;
@@ -242,10 +242,10 @@ export async function submitParentOnboarding(
   }
 
   if (childNotFound) {
-    redirect("/dashboard/parent?warning=child-not-found");
+    redirect("/?warning=child-not-found");
   }
 
-  redirect("/dashboard/parent");
+  redirect("/");
 }
 
 export async function submitTeacherOnboarding(
@@ -282,8 +282,8 @@ export async function submitTeacherOnboarding(
     .eq("user_id", user.id);
 
   if (profileUpdateError) {
-    return { error: profileUpdateError.message };
+    return { error: "Profile update failed." };
   }
 
-  redirect("/dashboard/teacher");
+  redirect("/");
 }

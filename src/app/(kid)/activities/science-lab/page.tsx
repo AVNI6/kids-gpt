@@ -42,38 +42,38 @@ export default function ScienceLabPage() {
   };
 
   return (
-    <div className="min-h-screen bg-emerald-50">
+    <div className="min-h-screen bg-background">
       <main className="px-8 py-8">
         <div className="mx-auto max-w-4xl space-y-8">
           <Link
             href="/activities"
-            className="inline-flex items-center gap-2 text-emerald-700 font-bold hover:text-emerald-900 hover:-translate-x-1 transition-transform bg-white px-4 py-2 rounded-full shadow-sm border border-emerald-200 w-fit"
+            className="inline-flex items-center gap-2 text-emerald-600 font-bold hover:text-emerald-800 hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit"
           >
             <ArrowLeft className="h-5 w-5" /> Back to Activities
           </Link>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm text-emerald-700 font-bold">
+            <div className="flex items-center justify-between text-sm text-emerald-600 font-bold">
               <span>Lab Notes</span>
-              <span className="flex items-center gap-2 rounded-full bg-white px-3 py-1 shadow-sm border border-emerald-200">
+              <span className="flex items-center gap-2 rounded-full bg-card px-3 py-1 shadow-sm border border-border">
                 <FlaskConical className="h-4 w-4 text-emerald-500" /> Experiment {currentExp + 1}
               </span>
             </div>
             <Progress
               value={progress}
-              className="h-3 rounded-full bg-emerald-200 [&>div]:bg-emerald-500"
+              className="h-3 rounded-full bg-emerald-500/10 [&>div]:bg-emerald-500"
             />
           </div>
 
-          <Card className="border-4 border-emerald-300 shadow-xl rounded-[2rem] overflow-hidden bg-white">
-            <div className="bg-emerald-400 p-6 flex justify-center">
+          <Card className="border-4 border-emerald-500/20 shadow-xl rounded-[2rem] overflow-hidden bg-card">
+            <div className="bg-emerald-500 p-6 flex justify-center">
               <div className="bg-white p-4 rounded-full shadow-inner">
                 <Beaker className="h-12 w-12 text-emerald-600" />
               </div>
             </div>
             <CardContent className="p-10 text-center space-y-6">
-              <h2 className="text-3xl font-black text-slate-800">{exp.title}</h2>
-              <p className="text-xl text-slate-600 font-medium bg-emerald-50 p-6 rounded-2xl border-2 border-emerald-100">
+              <h2 className="text-3xl font-black text-foreground">{exp.title}</h2>
+              <p className="text-xl text-muted-foreground font-medium bg-emerald-500/5 p-6 rounded-2xl border-2 border-emerald-500/10">
                 {exp.setup}
               </p>
             </CardContent>
@@ -93,10 +93,10 @@ export default function ScienceLabPage() {
                   disabled={selected !== null}
                   className={`p-8 rounded-3xl border-4 text-2xl font-bold transition-all duration-300 ${
                     showSuccess
-                      ? "border-green-500 bg-green-100 text-green-700 scale-105"
+                      ? "border-green-500 bg-green-500/10 text-green-600 scale-105"
                       : showError
-                        ? "border-red-500 bg-red-100 text-red-700 opacity-50"
-                        : "border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50 hover:-translate-y-2 hover:shadow-xl"
+                        ? "border-red-500 bg-red-500/10 text-red-600 opacity-50"
+                        : "border-emerald-500/20 bg-card text-emerald-600 hover:bg-emerald-500/5 hover:-translate-y-2 hover:shadow-xl"
                   }`}
                 >
                   {opt.label}
@@ -110,9 +110,9 @@ export default function ScienceLabPage() {
 
           {selected !== null && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-              <Card className="bg-emerald-100 border-none shadow-none rounded-3xl">
+              <Card className="bg-emerald-500/10 border-none shadow-none rounded-3xl">
                 <CardContent className="p-6">
-                  <p className="text-emerald-800 font-bold text-lg flex items-start gap-3">
+                  <p className="text-emerald-600 font-bold text-lg flex items-start gap-3">
                     <span className="text-3xl">🔬</span>
                     {exp.explanation}
                   </p>

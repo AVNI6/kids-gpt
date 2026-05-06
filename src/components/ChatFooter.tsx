@@ -66,9 +66,9 @@ export default function ChatFooter({ input, setInput, onSend, isLoading, image, 
         if (file) handleFile(file);
       }}
     >
-      <footer className="bg-white p-2 sm:p-4 pb-4 sm:pb-6">
+      <footer className="bg-background p-2 sm:p-4 pb-4 sm:pb-6">
         <div className="w-full max-w-3xl mx-auto">
-          <div className="relative bg-slate-50 border rounded-[28px] overflow-hidden focus-within:ring-2 focus-within:ring-sky-400 transition-all">
+          <div className="relative bg-muted/30 border border-border rounded-[28px] overflow-hidden focus-within:ring-2 focus-within:ring-sky-400 transition-all">
             <input
               type="file"
               accept="image/*"
@@ -88,11 +88,11 @@ export default function ChatFooter({ input, setInput, onSend, isLoading, image, 
                     alt="preview"
                     width={112}
                     height={112}
-                    className="w-28 h-28 rounded-2xl object-cover border"
+                    className="w-28 h-28 rounded-2xl object-cover border border-border"
                   />
                   <button
                     onClick={removeImage}
-                    className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-white border shadow flex items-center justify-center hover:bg-red-50"
+                    className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-background border border-border shadow flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -129,15 +129,15 @@ export default function ChatFooter({ input, setInput, onSend, isLoading, image, 
               </Button>
             </div>
           </div>
-          <div className="text-center mt-3 text-xs text-slate-400">
+          <div className="text-center mt-3 text-xs text-muted-foreground">
             ChatGPT Kid can make mistakes. Verify important information.
           </div>
         </div>
       </footer>
 
       {isDragging && (
-        <div className="fixed inset-0 bg-sky-100/80 flex items-center justify-center z-50 border-2 border-dashed border-sky-400 pointer-events-none">
-          <p className="text-sky-700 font-semibold text-lg">Drop your image here 📸</p>
+        <div className="fixed inset-0 bg-sky-500/20 backdrop-blur-sm flex items-center justify-center z-50 border-2 border-dashed border-sky-400 pointer-events-none">
+          <p className="text-sky-600 font-semibold text-lg">Drop your image here 📸</p>
         </div>
       )}
     </div>

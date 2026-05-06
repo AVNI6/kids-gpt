@@ -36,16 +36,16 @@ export default function FlashcardsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-sky-50">
+    <div className="min-h-screen bg-background">
       <main className="relative px-8 py-8">
-        {/* Background blobs */}
-        <div className="absolute top-20 left-10 h-32 w-32 rounded-full bg-sky-200/30 blur-3xl" />
-        <div className="absolute bottom-20 right-10 h-48 w-48 rounded-full bg-green-200/30 blur-3xl" />
+        {/* Background blobs - modernized for theme compatibility */}
+        <div className="absolute top-20 left-10 h-32 w-32 rounded-full bg-sky-500/10 blur-3xl" />
+        <div className="absolute bottom-20 right-10 h-48 w-48 rounded-full bg-green-500/10 blur-3xl" />
 
         <div className="relative z-10 mx-auto max-w-5xl">
           <Link
             href="/activities"
-            className="inline-flex items-center gap-2 text-sky-700 font-bold hover:text-sky-900 hover:-translate-x-1 transition-transform bg-white px-4 py-2 rounded-full shadow-sm border border-sky-200 w-fit mb-6"
+            className="inline-flex items-center gap-2 text-sky-600 font-bold hover:text-sky-800 hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit mb-6"
           >
             <ArrowLeft className="h-5 w-5" /> Back to Activities
           </Link>
@@ -54,10 +54,10 @@ export default function FlashcardsPage() {
           <div className="mb-8 space-y-4">
             <div className="flex justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Current Deck
                 </p>
-                <h2 className="text-3xl font-black text-slate-800">Solar System Wonders 🌍</h2>
+                <h2 className="text-3xl font-black text-foreground">Solar System Wonders 🌍</h2>
               </div>
 
               <div>
@@ -67,36 +67,38 @@ export default function FlashcardsPage() {
               </div>
             </div>
 
-            <Progress value={progress} className="h-4 rounded-full" />
+            <Progress value={progress} className="h-4 rounded-full bg-muted" />
           </div>
 
           {/* Flashcard Area */}
           <div className="relative">
             {/* Mascot Bubble */}
             <div className="absolute -top-20 left-0 z-20">
-              <div className="rounded-3xl border-4 border-sky-200 bg-white p-4 shadow-xl max-w-[220px]">
-                <p className="font-bold text-sky-700">{card.fact}</p>
+              <div className="rounded-3xl border-4 border-sky-500/20 bg-card p-4 shadow-xl max-w-[220px]">
+                <p className="font-bold text-sky-600">{card.fact}</p>
               </div>
             </div>
 
             {/* Flashcard */}
-            <Card className="border-4 border-sky-500 shadow-[12px_12px_0px_0px_#dbeafe] rounded-[30px] min-h-[500px]">
+            <Card className="border-4 border-sky-500 shadow-[12px_12px_0px_0px_rgba(14,165,233,0.2)] rounded-[30px] min-h-[500px] bg-card">
               <CardContent className="flex flex-col items-center justify-center p-12 text-center min-h-[500px]">
                 {!flipped ? (
                   <>
-                    <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-[30px] bg-sky-100">
+                    <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-[30px] bg-sky-500/10">
                       <Rocket className="h-16 w-16 text-sky-600" />
                     </div>
 
-                    <h2 className="text-4xl font-black text-slate-800 leading-tight">
+                    <h2 className="text-4xl font-black text-foreground leading-tight">
                       {card.question}
                     </h2>
 
-                    <p className="mt-6 text-sm font-bold uppercase text-slate-400">Click to flip</p>
+                    <p className="mt-6 text-sm font-bold uppercase text-muted-foreground">
+                      Click to flip
+                    </p>
                   </>
                 ) : (
                   <>
-                    <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-[30px] bg-green-100">
+                    <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-[30px] bg-green-500/10">
                       <Sparkles className="h-16 w-16 text-green-600" />
                     </div>
 
@@ -110,7 +112,7 @@ export default function FlashcardsPage() {
             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
               <Button
                 onClick={() => setFlipped(!flipped)}
-                className="h-16 rounded-2xl px-8 text-lg font-bold shadow-[0_8px_0px_0px_#0c4a6e] active:translate-y-1 active:shadow-[0_4px_0px_0px_#0c4a6e]"
+                className="h-16 rounded-2xl px-8 text-lg font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-[0_8px_0px_0px_rgba(12,74,110,0.5)] active:translate-y-1 active:shadow-none"
               >
                 <RefreshCcw className="mr-2 h-5 w-5" />
                 Flip Card
@@ -121,46 +123,46 @@ export default function FlashcardsPage() {
           {/* Actions */}
           <div className="mt-20 grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Study Again */}
-            <Card className="border-4 border-red-500 rounded-[24px] shadow-[0_8px_0px_0px_#991b1b] cursor-pointer hover:-translate-y-1 transition-all">
+            <Card className="border-4 border-red-500/50 rounded-[24px] shadow-[0_8px_0px_0px_rgba(153,27,27,0.3)] cursor-pointer hover:-translate-y-1 transition-all bg-card">
               <CardContent className="flex flex-col items-center gap-3 py-8">
-                <div className="rounded-full bg-red-100 p-4">
+                <div className="rounded-full bg-red-500/10 p-4">
                   <RotateCcw className="h-8 w-8 text-red-600" />
                 </div>
 
                 <h3 className="text-2xl font-black text-red-600">Study Again</h3>
 
-                <p className="text-slate-500">Need more practice</p>
+                <p className="text-muted-foreground">Need more practice</p>
               </CardContent>
             </Card>
 
             {/* Know This */}
             <Card
               onClick={handleNext}
-              className="border-4 border-green-500 rounded-[24px] shadow-[0_8px_0px_0px_#166534] cursor-pointer hover:-translate-y-1 transition-all"
+              className="border-4 border-green-500/50 rounded-[24px] shadow-[0_8px_0px_0px_rgba(22,101,52,0.3)] cursor-pointer hover:-translate-y-1 transition-all bg-card"
             >
               <CardContent className="flex flex-col items-center gap-3 py-8">
-                <div className="rounded-full bg-green-100 p-4">
+                <div className="rounded-full bg-green-500/10 p-4">
                   <CheckCircle2 className="h-8 w-8 text-green-600" />
                 </div>
 
                 <h3 className="text-2xl font-black text-green-600">I Know This</h3>
 
-                <p className="text-slate-500">Mastered it!</p>
+                <p className="text-muted-foreground">Mastered it!</p>
               </CardContent>
             </Card>
           </div>
 
           {/* Stats */}
           <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <div className="rounded-full bg-white px-6 py-3 shadow-md border border-slate-100">
+            <div className="rounded-full bg-card px-6 py-3 shadow-md border border-border">
               <span className="font-bold text-green-600">3 Mastered</span>
             </div>
 
-            <div className="rounded-full bg-white px-6 py-3 shadow-md border border-slate-100">
+            <div className="rounded-full bg-card px-6 py-3 shadow-md border border-border">
               <span className="font-bold text-red-500">1 Review</span>
             </div>
 
-            <div className="rounded-full bg-white px-6 py-3 shadow-md border border-slate-100">
+            <div className="rounded-full bg-card px-6 py-3 shadow-md border border-border">
               <span className="font-bold text-sky-600">8 Remaining</span>
             </div>
           </div>
@@ -170,7 +172,7 @@ export default function FlashcardsPage() {
       {/* Floating AI Help Button */}
       <Button
         size="icon"
-        className="fixed bottom-8 right-8 h-16 w-16 rounded-full bg-sky-500 shadow-[0_8px_0px_0px_#0c4a6e] hover:bg-sky-600"
+        className="fixed bottom-8 right-8 h-16 w-16 rounded-full bg-sky-500 shadow-lg hover:bg-sky-600"
       >
         <Sparkles className="h-8 w-8" />
       </Button>

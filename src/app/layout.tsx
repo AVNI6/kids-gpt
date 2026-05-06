@@ -41,6 +41,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${plusJakartaSans.variable} ${lexend.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body>
         <Providers>

@@ -34,12 +34,12 @@ export default function WordScramblesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-pink-50">
+    <div className="min-h-screen bg-background">
       <main className="px-8 py-8">
         <div className="mx-auto max-w-3xl space-y-8">
           <Link
             href="/activities"
-            className="inline-flex items-center gap-2 text-pink-600 font-bold hover:text-pink-800 hover:-translate-x-1 transition-transform bg-white px-4 py-2 rounded-full shadow-sm border border-pink-100 w-fit"
+            className="inline-flex items-center gap-2 text-pink-600 font-bold hover:text-pink-800 hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit"
           >
             <ArrowLeft className="h-5 w-5" /> Back to Activities
           </Link>
@@ -47,29 +47,31 @@ export default function WordScramblesPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm text-pink-600 font-bold">
               <span>Word Magic Progress</span>
-              <span className="flex items-center gap-2 rounded-full bg-white px-3 py-1 shadow-sm border border-pink-100">
+              <span className="flex items-center gap-2 rounded-full bg-card px-3 py-1 shadow-sm border border-border">
                 Word {currentWord + 1}
               </span>
             </div>
             <Progress
               value={progress}
-              className="h-3 rounded-full bg-pink-100 [&>div]:bg-pink-500"
+              className="h-3 rounded-full bg-pink-500/10 [&>div]:bg-pink-500"
             />
           </div>
 
-          <Card className="border-4 border-pink-200 shadow-xl rounded-[2rem]">
+          <Card className="border-4 border-pink-500/20 shadow-xl rounded-[2rem] bg-card">
             <CardContent className="p-12 text-center space-y-8">
-              <div className="mx-auto bg-pink-100 w-24 h-24 rounded-full flex items-center justify-center mb-4">
+              <div className="mx-auto bg-pink-500/10 w-24 h-24 rounded-full flex items-center justify-center mb-4">
                 <Type className="h-12 w-12 text-pink-600" />
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold text-slate-500 mb-2">Unscramble the letters!</h2>
+                <h2 className="text-2xl font-bold text-muted-foreground mb-2">
+                  Unscramble the letters!
+                </h2>
                 <div className="flex justify-center gap-4">
                   {word.scrambled.split(" ").map((letter, i) => (
                     <div
                       key={i}
-                      className="bg-white border-4 border-pink-300 w-16 h-20 rounded-2xl flex items-center justify-center text-4xl font-black text-pink-600 shadow-sm rotate-[-2deg] hover:rotate-[2deg] transition-transform"
+                      className="bg-background border-4 border-pink-500/30 w-16 h-20 rounded-2xl flex items-center justify-center text-4xl font-black text-pink-600 shadow-sm rotate-[-2deg] hover:rotate-[2deg] transition-transform"
                     >
                       {letter}
                     </div>
@@ -84,7 +86,7 @@ export default function WordScramblesPage() {
                   onChange={(e) => setInput(e.target.value.toUpperCase())}
                   disabled={showResult}
                   placeholder="Type your answer..."
-                  className="w-full max-w-sm text-center text-3xl font-black uppercase tracking-widest p-6 rounded-2xl border-4 border-slate-200 focus:border-pink-500 focus:outline-none shadow-inner"
+                  className="w-full max-w-sm text-center text-3xl font-black uppercase tracking-widest p-6 rounded-2xl border-4 border-border bg-background focus:border-pink-500 focus:outline-none shadow-inner text-foreground"
                   maxLength={word.answer.length}
                 />
               </div>

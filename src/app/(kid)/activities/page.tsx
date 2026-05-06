@@ -10,11 +10,11 @@ import { kidActivities, activityButtonStyles, activityColorStyles } from "@/lib/
 
 export default function ActivitiesPage() {
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-8">
+    <main className="min-h-screen bg-background px-6 py-8">
       <div className="max-w-7xl mx-auto">
         {/* Heading */}
         <div className="mb-10">
-          <h1 className="text-4xl font-bold">Activities</h1>
+          <h1 className="text-4xl font-bold text-foreground">Activities</h1>
           <p className="text-muted-foreground mt-2">Pick a fun activity and start learning!</p>
         </div>
 
@@ -26,9 +26,7 @@ export default function ActivitiesPage() {
             return (
               <Card
                 key={activity.id}
-                className={`border-2 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-sky-300 transition-all duration-300 ${
-                  activity.dark ? "bg-slate-900 text-white" : "bg-white"
-                }`}
+                className="border-2 border-border shadow-sm hover:shadow-xl hover:border-sky-500/50 transition-all duration-300 bg-card text-foreground"
               >
                 <CardContent className="p-6 flex flex-col h-full">
                   {/* Icon */}
@@ -44,30 +42,31 @@ export default function ActivitiesPage() {
                   <h3 className="text-2xl font-bold mb-2">{activity.title}</h3>
 
                   {/* Description */}
-                  <p
-                    className={`mb-6 flex-1 ${activity.dark ? "text-slate-400" : "text-slate-500"}`}
-                  >
-                    {activity.description}
-                  </p>
+                  <p className="mb-6 flex-1 text-muted-foreground">{activity.description}</p>
 
                   {/* Footer */}
                   <div className="flex items-center justify-between mt-auto">
                     <div>
-                      {activity.xp && <Badge>{activity.xp}</Badge>}
-
-                      {activity.badge && <Badge variant="secondary">{activity.badge}</Badge>}
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {activity.xp && (
+                          <Badge className="bg-sky-500/10 text-sky-500 border-sky-500/20">
+                            {activity.xp}
+                          </Badge>
+                        )}
+                        {activity.badge && <Badge variant="secondary">{activity.badge}</Badge>}
+                      </div>
 
                       {activity.duration && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                           <Timer className="w-4 h-4" />
                           {activity.duration}
                         </div>
                       )}
 
                       {activity.stars && (
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 mb-1">
                           {Array.from({ length: activity.stars }).map((_, index) => (
-                            <Star key={index} className="w-4 h-4 fill-current" />
+                            <Star key={index} className="w-4 h-4 fill-sky-500 text-sky-500" />
                           ))}
                         </div>
                       )}
@@ -77,7 +76,7 @@ export default function ActivitiesPage() {
                           {activity.users.map((user) => (
                             <div
                               key={user}
-                              className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 text-xs font-bold flex items-center justify-center"
+                              className="w-8 h-8 rounded-full border-2 border-card bg-muted text-xs font-bold flex items-center justify-center"
                             >
                               {user}
                             </div>
@@ -90,7 +89,7 @@ export default function ActivitiesPage() {
                     <Button
                       render={<Link href={activity.href} />}
                       nativeButton={false}
-                      className={`${activityButtonStyles[activity.color]} rounded-2xl`}
+                      className={`${activityButtonStyles[activity.color]} rounded-2xl shadow-lg`}
                     >
                       Start Activity
                     </Button>
