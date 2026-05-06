@@ -161,7 +161,6 @@ export default function HelpPage() {
           </div>
         </section>
 
-        {/* GETTING STARTED */}
         <section className="space-y-8">
           <div>
             <h2 className="text-2xl font-bold">Getting Started</h2>
@@ -193,7 +192,6 @@ export default function HelpPage() {
           </div>
         </section>
 
-        {/* HELP CONTENT TABS */}
         <section className="space-y-8">
           <div>
             <h2 className="text-2xl font-bold">Guides & Resources</h2>
@@ -250,7 +248,6 @@ export default function HelpPage() {
           </Tabs>
         </section>
 
-        {/* POPULAR TOPICS */}
         <section className="space-y-6">
           <div>
             <h2 className="text-2xl font-bold">Popular Topics</h2>
@@ -282,7 +279,6 @@ export default function HelpPage() {
           </div>
         </section>
 
-        {/* FAQ */}
         <section className="space-y-6">
           <div>
             <h2 className="text-2xl font-bold">Frequently Asked Questions</h2>
