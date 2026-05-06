@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle2, Timer, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Timer, ArrowLeft, Star } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 const quizDeck = [
   {
@@ -115,7 +116,7 @@ export default function QuizzesPage() {
             Start Again
           </Button>
           <Link
-            href="/activities"
+            href={APP_ROUTES.Activities}
             className="block text-sm text-muted-foreground hover:text-foreground font-medium"
           >
             Back to Activities
@@ -130,7 +131,7 @@ export default function QuizzesPage() {
       <main className="px-8 py-8">
         <div className="mx-auto max-w-5xl space-y-5">
           <Link
-            href="/activities"
+            href={APP_ROUTES.Activities}
             className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-foreground hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit"
           >
             <ArrowLeft className="h-5 w-5" /> Back to Activities
@@ -211,15 +212,45 @@ export default function QuizzesPage() {
                     : "border-red-500/30 bg-red-500/5"
                 }`}
               >
-                <p
-                  className={
-                    quiz.options.find((o) => o.id === selected)?.correct
-                      ? "text-green-600 font-semibold"
-                      : "text-red-600 font-semibold"
-                  }
-                >
-                  {quiz.feedback}
-                </p>
+                <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between p-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`h-12 w-12 rounded-full flex items-center justify-center text-white ${
+                        quiz.options.find((o) => o.id === selected)?.correct
+                          ? "bg-green-600"
+                          : "bg-red-600"
+                      }`}
+                    >
+                      {quiz.options.find((o) => o.id === selected)?.correct ? (
+                        <Star className="h-6 w-6" />
+                      ) : (
+                        <span className="font-bold text-xl">!</span>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-foreground">
+                        {quiz.options.find((o) => o.id === selected)?.correct
+                          ? "Awesome job, Explorer!"
+                          : "Nice try, Space Ranger!"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{quiz.feedback}</p>
+                    </div>
+                  </div>
+                  {isLastQuestion ? (
+                    <Link href={APP_ROUTES.Activities}>
+                      <Button className="rounded-full bg-green-600 hover:bg-green-700">
+                        Finish Mission
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button
+                      onClick={handleNext}
+                      className="rounded-full bg-sky-600 hover:bg-sky-700"
+                    >
+                      Next Question
+                    </Button>
+                  )}
+                </CardContent>
               </Card>
 
               {!isLastQuestion && (

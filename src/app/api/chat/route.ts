@@ -64,6 +64,11 @@ export async function POST(req: NextRequest) {
     );
 
     const data = await response.json();
+    const usage = data?.usageMetadata || {
+      promptTokenCount: 0,
+      candidatesTokenCount: 0,
+      totalTokenCount: 0,
+    };
 
     const aiResponseRaw =
       data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated";
@@ -76,6 +81,7 @@ export async function POST(req: NextRequest) {
           message: parsed.overview,
           pdfContent: parsed.pdfContent,
           isPdfRequest: true,
+          usage,
         });
       } catch {
         // Fallback if AI fails to return valid JSON
@@ -84,6 +90,7 @@ export async function POST(req: NextRequest) {
           message: "Here is an overview of your material.",
           pdfContent: aiResponseRaw,
           isPdfRequest: true,
+          usage,
         });
       }
     }
@@ -92,6 +99,7 @@ export async function POST(req: NextRequest) {
       type: "text",
       message: aiResponseRaw,
       isPdfRequest: false,
+      usage,
     });
   } catch (error) {
     console.error("Chat API Error:", error);

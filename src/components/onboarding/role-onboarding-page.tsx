@@ -16,6 +16,7 @@ import Image from "next/image";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 const supabase = createClient();
 
@@ -167,7 +168,7 @@ export function RoleOnboardingPage({ role }: Props) {
 
             <p className="text-center text-xs font-bold text-slate-400">
               Need help?{" "}
-              <Link href="/signin" className="text-sky-600 hover:underline">
+              <Link href={APP_ROUTES.Signin} className="text-sky-600 hover:underline">
                 Sign in
               </Link>
             </p>

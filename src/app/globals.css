@@ -75,12 +75,18 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --theme-brand: #0284c7; /* sky-600 */
-  --theme-brand-dark: #0369a1; /* sky-700 */
-  --theme-border-light: #e0f2fe; /* sky-100 */
-  --theme-bg-light: #f0f9ff; /* sky-50 */
-  --theme-accent-green: #22c55e; /* green-500 */
-  --theme-text-secondary: #475569; /* slate-600 */
+  --theme-brand: #0284c7;
+  /* sky-600 */
+  --theme-brand-dark: #0369a1;
+  /* sky-700 */
+  --theme-border-light: #e0f2fe;
+  /* sky-100 */
+  --theme-bg-light: #f0f9ff;
+  /* sky-50 */
+  --theme-accent-green: #22c55e;
+  /* green-500 */
+  --theme-text-secondary: #475569;
+  /* slate-600 */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);

@@ -1,27 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-export interface ChatSession {
-  id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Message {
-  id: string;
-  role: "user" | "model";
-  content: string;
-  isImage?: boolean;
-  uploadedImage?: string;
-  pdfContent?: string;
-  isPdfRequest?: boolean;
-}
-
-interface ChatState {
-  currentSessionId: string | null;
-  sessions: ChatSession[];
-  messages: Message[];
-}
+import { ChatSession, Message, ChatState } from "@/types/chat.types";
 
 const initialState: ChatState = {
   currentSessionId: null,
@@ -45,6 +23,9 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<Message>) => {
       state.messages.push(action.payload);
     },
+    addSession: (state, action: PayloadAction<ChatSession>) => {
+      state.sessions = [action.payload, ...state.sessions];
+    },
     updateSessionTitleInList: (state, action: PayloadAction<{ id: string; title: string }>) => {
       const session = state.sessions.find((s) => s.id === action.payload.id);
       if (session) {
@@ -59,6 +40,7 @@ export const {
   setCurrentSessionId,
   setMessages,
   addMessage,
+  addSession,
   updateSessionTitleInList,
 } = chatSlice.actions;
 

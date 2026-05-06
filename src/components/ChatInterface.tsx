@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Bot, Sparkles, PanelLeftOpen, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,33 +12,22 @@ import Image from "next/image";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "./Navbar";
 import ChatFooter from "./ChatFooter";
+import ShareLink from "./ShareLink";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-  addMessage,
-  setMessages,
-  setCurrentSessionId,
-  updateSessionTitleInList,
-} from "@/store/slice/chat.slice";
+import { addMessage, setMessages, setCurrentSessionId, addSession } from "@/store/slice/chat.slice";
 import {
   fetchSessionMessages,
   saveChatMessage,
   createChatSession,
-  updateSessionTitle,
+  trackDailyUsage,
+  saveGeneratedMaterial,
+  uploadFileToStorage,
 } from "@/actions/chat.actions";
+import { Message, ChatMessageRow } from "@/types/chat.types";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { ChatMessageRow } from "@/types/chat.types";
 
 const supabase = createClient();
-
-type Message = {
-  id: string;
-  role: "user" | "model";
-  content: string;
-  pdfContent?: string;
-  isPdfRequest?: boolean;
-  isImage?: boolean;
-  uploadedImage?: string;
-};
 
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
 
@@ -46,6 +35,7 @@ export default function ChatInterface() {
   const dispatch = useAppDispatch();
   const messages = useAppSelector((state) => state.chat.messages);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -53,6 +43,10 @@ export default function ChatInterface() {
   const [image, setImage] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const urlSessionId = searchParams?.get("id") || null;
 
   // Check login status
   useEffect(() => {
@@ -65,29 +59,45 @@ export default function ChatInterface() {
     checkUser();
   }, []);
 
-  // Fetch messages when session changes
+  // Sync Redux with URL session ID
   useEffect(() => {
-    const loadMessages = async () => {
-      if (currentSessionId) {
-        setIsLoading(true);
+    if (urlSessionId !== currentSessionId) {
+      dispatch(setCurrentSessionId(urlSessionId));
+    }
+  }, [urlSessionId, currentSessionId, dispatch]);
+
+  // Load messages when currentSessionId changes
+  useEffect(() => {
+    if (currentSessionId) {
+      const loadMessages = async () => {
         try {
           const dbMessages = await fetchSessionMessages(currentSessionId);
-          const mappedMessages: Message[] = dbMessages.map((m: ChatMessageRow) => ({
-            id: m.id,
-            role: m.sender_role,
-            content: m.content,
-          }));
+          const mappedMessages: Message[] = dbMessages.map((m: ChatMessageRow) => {
+            const isImage =
+              m.content.includes("supabase.co/storage/") || m.attachment_url?.includes("image/");
+            const isPdf =
+              m.attachment_url?.includes(".pdf") ||
+              (m.content.includes("pdf/") && m.content.includes(".pdf"));
+
+            return {
+              id: m.id,
+              role: (m.sender_role as string) === "assistant" ? "model" : m.sender_role,
+              content: m.content,
+              isImage,
+              isPdfRequest: isPdf,
+              pdfContent: m.content, // Restore as fallback for PDF generation
+              attachmentUrl: m.attachment_url,
+            };
+          });
           dispatch(setMessages(mappedMessages));
         } catch (error) {
           console.error("Failed to load messages:", error);
-        } finally {
-          setIsLoading(false);
         }
-      } else {
-        dispatch(setMessages([]));
-      }
-    };
-    loadMessages();
+      };
+      loadMessages();
+    } else {
+      dispatch(setMessages([]));
+    }
   }, [currentSessionId, dispatch]);
 
   // Close sidebar on mobile by default
@@ -104,48 +114,105 @@ export default function ChatInterface() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const handleDownloadPDF = async (messageId: string) => {
-    const message = messages.find((m) => m.id === messageId);
-    if (!message) return;
-
-    try {
-      const { pdf } = await import("@react-pdf/renderer");
-      const { PdfDocument } = await import("./PdfDocument");
-
-      const blob = await pdf(
-        <PdfDocument content={message.pdfContent || message.content} />
-      ).toBlob();
-
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "kids-learning-material.pdf";
-      a.click();
-
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("PDF generation failed:", error);
-    }
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const sendMessage = async () => {
+  // Auto-scroll to bottom
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
+
+  const handleDownloadPDF = useCallback(
+    async (messageId: string) => {
+      const message = messages.find((m) => m.id === messageId);
+      if (!message) return;
+
+      // If we have a stored attachment URL, force download it
+      if (message.attachmentUrl) {
+        try {
+          const response = await fetch(message.attachmentUrl);
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `kids-learning-${messageId.slice(0, 5)}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (err) {
+          console.error("Direct download failed, opening in new tab:", err);
+          window.open(message.attachmentUrl, "_blank");
+        }
+        return;
+      }
+
+      try {
+        const { pdf } = await import("@react-pdf/renderer");
+        const { PdfDocument } = await import("./PdfDocument");
+
+        const blob = await pdf(
+          <PdfDocument content={message.pdfContent || message.content} />
+        ).toBlob();
+
+        // Upload to storage if not already there
+        if (currentSessionId && isUserLoggedIn && !message.pdfContent?.startsWith("http")) {
+          const fileName = `pdf/${currentSessionId}_${Date.now()}.pdf`;
+          const storageUrl = await uploadFileToStorage(blob, fileName);
+
+          await saveGeneratedMaterial(currentSessionId, "pdf", "application/pdf", storageUrl, {
+            originalMessageId: messageId,
+            tokens: Math.round(message.content.length / 4),
+          });
+
+          console.log("PDF uploaded to storage:", storageUrl);
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "kids-learning-material.pdf";
+        a.click();
+
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("PDF generation failed:", error);
+      }
+    },
+    [messages, currentSessionId, isUserLoggedIn]
+  );
+
+  const sendMessage = useCallback(async () => {
     if (!input.trim() && !image) return;
 
     const currentInput = input;
     const currentImage = image;
     let sessionId = currentSessionId;
 
-    // 1. Create session if it doesn't exist and user is logged in
+    // 1. Create session and save user message if it doesn't exist
     if (!sessionId && isUserLoggedIn) {
       try {
         const newSession = await createChatSession(currentInput.slice(0, 30) + "...");
         sessionId = newSession.id;
+
+        // 1. Save user message to DB FIRST so it's there when we switch sessions
+        const userTokens = Math.round(currentInput.length / 4);
+        await saveChatMessage(sessionId, "user", currentInput, { tokens: userTokens });
+        await trackDailyUsage(userTokens);
+
+        // 2. Now update UI and URL
+        dispatch(addSession(newSession));
         dispatch(setCurrentSessionId(sessionId));
-        dispatch(updateSessionTitleInList({ id: sessionId, title: newSession.title }));
+        router.push(`/?id=${sessionId}`);
       } catch (error) {
-        console.error("Failed to create session:", error);
+        console.error("Failed to create session/save message:", error);
       }
+    } else if (sessionId && isUserLoggedIn) {
+      // 2. Save user message for existing session
+      const userTokens = Math.round(currentInput.length / 4);
+      saveChatMessage(sessionId, "user", currentInput, { tokens: userTokens }).catch(console.error);
+      trackDailyUsage(userTokens).catch(console.error);
     }
 
     const userMessage: Message = {
@@ -160,52 +227,15 @@ export default function ChatInterface() {
     setImage(null);
     setIsLoading(true);
 
-    // Save user message to DB
-    if (sessionId && isUserLoggedIn) {
-      const sid = sessionId; // Narrowing
-      saveChatMessage(sid, "user", currentInput).catch(console.error);
-    }
-
     try {
-      const trimmedInput = currentInput.trim().toLowerCase();
-      const isVagueImageRequest =
-        /^(generate|make|create|draw|show)\s+(an?\s+)?(image|picture|photo|drawing|illustration)$/i.test(
-          trimmedInput
-        ) || trimmedInput === "image";
-      const isVaguePdfRequest =
-        /^(generate|make|create|download|give\s+me)\s+(a\s+)?pdf$/i.test(trimmedInput) ||
-        trimmedInput === "pdf";
-
-      if (isVagueImageRequest || isVaguePdfRequest) {
-        const topicType = isVagueImageRequest ? "picture" : "PDF document";
-        const aiResponse = `I'd love to help you with that! 🎨✨ But I need to know what topic you'd like me to use. What should the ${topicType} be about? 🚀`;
-
-        const aiMessage: Message = {
-          id: crypto.randomUUID(),
-          role: "model",
-          content: aiResponse,
-        };
-        dispatch(addMessage(aiMessage));
-
-        if (sessionId && isUserLoggedIn) {
-          const sid = sessionId;
-          saveChatMessage(sid, "model", aiResponse).catch(console.error);
-        }
-
-        setIsLoading(false);
-        return;
-      }
-
-      const isEditRequest = /edit|modify|recreate|transform/i.test(currentInput);
-      const isImageGeneration =
-        /(generate|create|draw|make).*(image|picture|photo|illustration|drawing)/i.test(
+      const isImageRequest =
+        /(generate|create|draw|make|show).*(image|picture|photo|illustration|drawing|painting)/i.test(
           currentInput
-        ) &&
-        !isEditRequest &&
-        !/pdf/i.test(currentInput);
+        ) ||
+        (/image|picture|drawing|illustration/i.test(currentInput) && currentInput.length < 50);
 
-      const apiUrl = isImageGeneration ? "/api/generate-image" : "/api/chat";
-      const bodyPayload = isImageGeneration
+      const apiUrl = isImageRequest ? "/api/generate-image" : "/api/chat";
+      const bodyPayload = isImageRequest
         ? { prompt: currentInput }
         : { message: currentInput, image: currentImage };
 
@@ -217,16 +247,14 @@ export default function ChatInterface() {
 
       const data = await res.json();
       let aiResponseContent = "";
+      let isImageResponse = false;
+      const rawTokens =
+        data.usage?.totalTokenCount || data.message?.length / 4 || data.text?.length / 4 || 0;
+      const tokens = Math.round(rawTokens);
 
       if (data.type === "image") {
         aiResponseContent = data.image;
-        const aiMessage: Message = {
-          id: crypto.randomUUID(),
-          role: "model",
-          content: aiResponseContent,
-          isImage: true,
-        };
-        dispatch(addMessage(aiMessage));
+        isImageResponse = true;
       } else {
         aiResponseContent =
           data?.message ??
@@ -235,30 +263,105 @@ export default function ChatInterface() {
           data?.text ??
           "No response generated";
 
-        const aiMessage: Message = {
-          id: crypto.randomUUID(),
-          role: "model",
-          content: aiResponseContent,
-          pdfContent: data?.pdfContent,
-          isPdfRequest: data?.isPdfRequest,
-        };
-        dispatch(addMessage(aiMessage));
-      }
+        // Robust JSON parsing for tool calls
+        try {
+          const jsonMatch = aiResponseContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const toolData = JSON.parse(jsonMatch[0]);
+            if (toolData.action === "dalle.text2im" || toolData.action === "generate_image") {
+              let prompt = "";
+              const input = toolData.action_input;
+              if (typeof input === "string") {
+                if (input.startsWith("{")) {
+                  try {
+                    prompt = JSON.parse(input).prompt;
+                  } catch {
+                    prompt = input;
+                  }
+                } else {
+                  prompt = input;
+                }
+              } else {
+                prompt = input?.prompt || toolData.thought;
+              }
 
-      // Save assistant message to DB
-      if (sessionId && isUserLoggedIn) {
-        const sid = sessionId;
-        saveChatMessage(sid, "model", aiResponseContent).catch(console.error);
-
-        // Update title if it's the first message
-        if (messages.length === 1) {
-          // 1 user message already added
-          const newTitle = currentInput.slice(0, 40);
-          updateSessionTitle(sid, newTitle).catch(console.error);
-          dispatch(updateSessionTitleInList({ id: sid, title: newTitle }));
+              if (prompt) {
+                aiResponseContent = `https://pollinations.ai/p/${encodeURIComponent(prompt)}`;
+                isImageResponse = true;
+              }
+            }
+          }
+        } catch (_e) {
+          // Not a valid JSON tool call
         }
       }
-    } catch {
+
+      // Upload if needed
+      let attachmentUrl: string | undefined = undefined;
+      let finalContent = aiResponseContent;
+
+      if (sessionId && isUserLoggedIn) {
+        if (isImageResponse) {
+          try {
+            const imgRes = await fetch(aiResponseContent);
+            const imgBlob = await imgRes.blob();
+            const fileName = `image/${sessionId}_${Date.now()}.jpg`;
+            attachmentUrl = await uploadFileToStorage(imgBlob, fileName);
+
+            // For images, we keep the URL in content as well so the <img> tag can use it
+            finalContent = attachmentUrl;
+
+            await saveGeneratedMaterial(sessionId, "image", "image/jpeg", attachmentUrl, {
+              prompt: currentInput,
+            });
+            await trackDailyUsage(Math.round(100), { isImage: true });
+          } catch (_e) {
+            console.error("Failed to upload image:", _e);
+          }
+        }
+
+        if (data.isPdfRequest && data.pdfContent) {
+          try {
+            const { pdf } = await import("@react-pdf/renderer");
+            const { PdfDocument } = await import("./PdfDocument");
+            const pdfBlob = await pdf(<PdfDocument content={data.pdfContent} />).toBlob();
+            const fileName = `pdf/${sessionId}_${Date.now()}.pdf`;
+            attachmentUrl = await uploadFileToStorage(pdfBlob, fileName);
+
+            await saveGeneratedMaterial(sessionId, "pdf", "application/pdf", attachmentUrl, {
+              prompt: currentInput,
+            });
+            await trackDailyUsage(tokens, { isPdf: true });
+          } catch (_e) {
+            console.error("Failed to upload pdf:", _e);
+          }
+        }
+      }
+
+      const aiMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "model",
+        content: finalContent,
+        isImage: isImageResponse,
+        pdfContent: data?.isPdfRequest ? data.pdfContent : undefined,
+        isPdfRequest: data?.isPdfRequest,
+        token_used: tokens,
+        attachmentUrl: attachmentUrl,
+      };
+
+      dispatch(addMessage(aiMessage));
+      setIsLoading(false);
+
+      if (sessionId && isUserLoggedIn) {
+        // Save model message to DB
+        await saveChatMessage(sessionId, "model", finalContent, {
+          tokens,
+          model: isImageRequest ? "image-preview" : "gemini-flash",
+          attachmentUrl: attachmentUrl,
+        }).catch(console.error);
+      }
+    } catch (error) {
+      console.error("Chat error:", error);
       const errResponse = "Sorry, something went wrong. Please try again.";
       const errMessage: Message = {
         id: crypto.randomUUID(),
@@ -266,15 +369,26 @@ export default function ChatInterface() {
         content: errResponse,
       };
       dispatch(addMessage(errMessage));
-
-      if (sessionId && isUserLoggedIn) {
-        const sid = sessionId;
-        saveChatMessage(sid, "model", errResponse).catch(console.error);
-      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    input,
+    image,
+    currentSessionId,
+    isUserLoggedIn,
+    dispatch,
+    router,
+    setMessages,
+    setCurrentSessionId,
+    addSession,
+    fetchSessionMessages,
+    saveChatMessage,
+    createChatSession,
+    trackDailyUsage,
+    saveGeneratedMaterial,
+    uploadFileToStorage,
+  ]);
 
   return (
     <div className="fixed inset-0 flex bg-background w-full overflow-hidden">
@@ -304,15 +418,15 @@ export default function ChatInterface() {
               </div>
             </Link>
           </div>
-          <Navbar />
+          <div className="flex items-center gap-2">
+            {currentSessionId && <ShareLink sessionId={currentSessionId} />}
+            <Navbar />
+          </div>
         </header>
 
         {messages.length === 0 ? (
-          <div className="flex-1 overflow-auto min-h-0">
+          <div className="flex justify-center overflow-auto min-h-0">
             <div className="w-full max-w-4xl mx-auto text-center pt-16 p-4 md:p-8">
-              <div className="w-20 h-20 bg-sky-500 rounded-3xl mx-auto flex items-center justify-center text-white mb-6 shadow-sm">
-                <Sparkles className="w-10 h-10" />
-              </div>
               <h2 className="text-3xl font-black mb-4 text-foreground">
                 What should we explore today?
               </h2>
@@ -447,6 +561,7 @@ export default function ChatInterface() {
                     </div>
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
           </div>

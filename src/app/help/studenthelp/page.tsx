@@ -11,13 +11,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 export default function StudentHelpPage() {
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto max-w-5xl px-4 py-12 space-y-12">
         <Link
-          href="/help"
+          href={APP_ROUTES.Help}
           className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-sky-600 transition-colors bg-card px-4 py-2 rounded-full border border-border shadow-sm w-fit"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Help Center

@@ -12,6 +12,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 const supabase = createClient();
 
@@ -183,7 +184,7 @@ export default function ChatGPTKidSignupPage() {
               <Button
                 type="submit"
                 disabled={signupState === "loading"}
-                className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2 bg-sky-500 text-white shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-1 active:translate-y-1 active:shadow-none"
+                className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2 text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
               >
                 {signupState === "loading" ? "Creating Account..." : "Create Account"}
                 <Rocket className="w-5 h-5" />
@@ -198,7 +199,10 @@ export default function ChatGPTKidSignupPage() {
 
               <p className="text-center text-muted-foreground">
                 Already an explorer?{" "}
-                <Link href="/signin" className="font-semibold text-sky-500 hover:underline">
+                <Link
+                  href={APP_ROUTES.Signin}
+                  className="font-semibold text-sky-500 hover:underline"
+                >
                   Log in here
                 </Link>
               </p>
