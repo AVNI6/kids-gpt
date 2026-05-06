@@ -17,16 +17,16 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
   const Icon = activity.icon;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10">
+    <main className="min-h-screen bg-background px-6 py-10">
       <div className="max-w-4xl mx-auto space-y-8">
         <Link
           href="/activities"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Activities
         </Link>
 
-        <Card className="border-2 border-slate-200 shadow-lg">
+        <Card className="border-2 border-border shadow-lg bg-card">
           <CardHeader className="space-y-4">
             <div
               className={`w-16 h-16 rounded-2xl flex items-center justify-center ${activityColorStyles[activity.color]}`}
@@ -35,16 +35,22 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <CardTitle className="text-3xl font-black">{activity.title}</CardTitle>
+              <CardTitle className="text-3xl font-black text-foreground">
+                {activity.title}
+              </CardTitle>
               {activity.badge && <Badge variant="secondary">{activity.badge}</Badge>}
-              {activity.xp && <Badge>{activity.xp}</Badge>}
+              {activity.xp && (
+                <Badge className="bg-sky-500/10 text-sky-500 border-sky-500/20">
+                  {activity.xp}
+                </Badge>
+              )}
             </div>
 
-            <p className="text-slate-500 text-lg">{activity.description}</p>
+            <p className="text-muted-foreground text-lg">{activity.description}</p>
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <div className="flex flex-wrap items-center gap-6 text-sm text-slate-500">
+            <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
               {activity.duration && (
                 <span className="inline-flex items-center gap-2">
                   <Timer className="h-4 w-4" /> {activity.duration}
@@ -53,18 +59,18 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
               {activity.stars && (
                 <span className="inline-flex items-center gap-1">
                   {Array.from({ length: activity.stars }).map((_, index) => (
-                    <Star key={`star-${index}`} className="h-4 w-4 fill-current text-yellow-500" />
+                    <Star key={`star-${index}`} className="h-4 w-4 fill-sky-500 text-sky-500" />
                   ))}
                 </span>
               )}
             </div>
 
-            <div className="rounded-2xl border-2 border-slate-100 bg-white p-6 space-y-3">
-              <h3 className="text-lg font-bold">How it works</h3>
+            <div className="rounded-2xl border-2 border-border bg-muted/30 p-6 space-y-3">
+              <h3 className="text-lg font-bold text-foreground">How it works</h3>
               <ul className="space-y-2">
                 {activity.steps.map((step, index) => (
-                  <li key={step} className="flex items-center gap-3 text-slate-600">
-                    <span className="h-6 w-6 rounded-full bg-sky-100 text-sky-700 text-xs font-bold flex items-center justify-center">
+                  <li key={step} className="flex items-center gap-3 text-muted-foreground">
+                    <span className="h-6 w-6 rounded-full bg-sky-500/10 text-sky-500 text-xs font-bold flex items-center justify-center">
                       {index + 1}
                     </span>
                     {step}
@@ -76,7 +82,7 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
             <Button
               render={<Link href={activity.href} />}
               nativeButton={false}
-              className={`${activityButtonStyles[activity.color]} w-full rounded-2xl text-base font-semibold`}
+              className={`${activityButtonStyles[activity.color]} w-full rounded-2xl text-base font-semibold shadow-lg`}
             >
               Start {activity.title}
             </Button>
@@ -84,27 +90,27 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
         </Card>
 
         <div className="grid md:grid-cols-3 gap-4">
-          <Card className="border-2 border-slate-100">
+          <Card className="border-2 border-border bg-card">
             <CardContent className="py-6 space-y-2">
-              <h4 className="font-semibold">Difficulty</h4>
-              <p className="text-sm text-slate-500">Beginner friendly</p>
+              <h4 className="font-semibold text-foreground">Difficulty</h4>
+              <p className="text-sm text-muted-foreground">Beginner friendly</p>
             </CardContent>
           </Card>
-          <Card className="border-2 border-slate-100">
+          <Card className="border-2 border-border bg-card">
             <CardContent className="py-6 space-y-2">
-              <h4 className="font-semibold">Rewards</h4>
-              <p className="text-sm text-slate-500">Stars, streaks, and XP</p>
+              <h4 className="font-semibold text-foreground">Rewards</h4>
+              <p className="text-sm text-muted-foreground">Stars, streaks, and XP</p>
             </CardContent>
           </Card>
-          <Card className="border-2 border-slate-100">
+          <Card className="border-2 border-border bg-card">
             <CardContent className="py-6 space-y-2">
-              <h4 className="font-semibold">Progress</h4>
-              <p className="text-sm text-slate-500">Track growth each round</p>
+              <h4 className="font-semibold text-foreground">Progress</h4>
+              <p className="text-sm text-muted-foreground">Track growth each round</p>
             </CardContent>
           </Card>
         </div>
 
-        <Button variant="outline" className="w-full rounded-2xl">
+        <Button variant="outline" className="w-full rounded-2xl border-border hover:bg-muted">
           <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Favorite
         </Button>
       </div>

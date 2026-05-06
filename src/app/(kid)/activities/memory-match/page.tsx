@@ -57,18 +57,18 @@ export default function MemoryMatchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-indigo-50">
+    <div className="min-h-screen bg-background">
       <main className="px-8 py-8 flex flex-col items-center">
         <div className="w-full max-w-2xl space-y-8">
           <Link
             href="/activities"
-            className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-800 hover:-translate-x-1 transition-transform bg-white px-4 py-2 rounded-full shadow-sm border border-indigo-100 w-fit"
+            className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-800 hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit"
           >
             <ArrowLeft className="h-5 w-5" /> Back to Activities
           </Link>
 
-          <div className="flex items-center justify-between bg-white p-4 rounded-3xl border-4 border-indigo-200 shadow-sm">
-            <h1 className="text-2xl font-black text-indigo-800 flex items-center gap-2">
+          <div className="flex items-center justify-between bg-card p-4 rounded-3xl border-4 border-indigo-500/20 shadow-sm">
+            <h1 className="text-2xl font-black text-foreground flex items-center gap-2">
               <Grid className="text-indigo-500" /> Memory Match
             </h1>
             <div className="text-indigo-600 font-bold">Matches: {matches} / 4</div>
@@ -83,8 +83,8 @@ export default function MemoryMatchPage() {
                   onClick={() => handleCardClick(i)}
                   className={`aspect-square rounded-2xl border-4 transition-all duration-500 transform-gpu ${
                     isFlipped
-                      ? "bg-white border-indigo-300 shadow-inner rotate-y-180"
-                      : "bg-indigo-500 border-indigo-700 shadow-[0_6px_0px_0px_#4338ca] hover:-translate-y-1 hover:bg-indigo-400"
+                      ? "bg-card border-indigo-500/30 shadow-inner rotate-y-180"
+                      : "bg-indigo-500 border-indigo-700 shadow-[0_6px_0px_0px_#4338ca] hover:-translate-y-1 hover:bg-indigo-400 dark:shadow-none"
                   }`}
                   style={{ perspective: "1000px" }}
                 >

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Bot, Sparkles, PanelLeftOpen, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -279,11 +279,11 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="fixed inset-0 flex bg-white w-full overflow-hidden">
+    <div className="fixed inset-0 flex bg-background w-full overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-      <main className="flex-1 flex flex-col justify-between h-full overflow-hidden relative bg-white min-h-0">
-        <header className="sticky top-0 z-50 w-full h-16 bg-white border-b flex items-center px-4 md:px-6 font-bold text-sky-600 justify-between shrink-0">
+      <main className="flex-1 flex flex-col justify-between h-full overflow-hidden relative bg-background min-h-0">
+        <header className="sticky top-0 z-50 w-full h-16 bg-background border-b border-border flex items-center px-4 md:px-6 font-bold text-sky-600 justify-between shrink-0">
           <div className="flex items-center gap-3">
             {(!isSidebarOpen || isMobile) && (
               <Button
@@ -315,10 +315,10 @@ export default function ChatInterface() {
               <div className="w-20 h-20 bg-sky-500 rounded-3xl mx-auto flex items-center justify-center text-white mb-6 shadow-sm">
                 <Sparkles className="w-10 h-10" />
               </div>
-              <h2 className="text-3xl font-black mb-4 text-slate-800">
+              <h2 className="text-3xl font-black mb-4 text-foreground">
                 What should we explore today?
               </h2>
-              <p className="text-slate-500 mb-10 text-lg">
+              <p className="text-muted-foreground mb-10 text-lg">
                 Ask me anything and let’s learn together.
               </p>
 
@@ -326,11 +326,11 @@ export default function ChatInterface() {
                 {suggestions.map((item) => (
                   <Card
                     key={item}
-                    className="cursor-pointer hover:bg-sky-50 hover:border-sky-200 transition-colors shadow-sm"
+                    className="cursor-pointer hover:bg-sky-500/10 hover:border-sky-500/30 transition-colors shadow-sm bg-card border-border/50"
                     onClick={() => setInput(item)}
                   >
                     <CardContent className="p-4 flex items-center justify-center min-h-25">
-                      <h3 className="font-semibold text-slate-700 text-center">{item}</h3>
+                      <h3 className="font-semibold text-foreground text-center">{item}</h3>
                     </CardContent>
                   </Card>
                 ))}
@@ -351,7 +351,7 @@ export default function ChatInterface() {
                     >
                       <Avatar size={"sm"} className="shrink-0 mb-1">
                         {message.role === "user" ? (
-                          <AvatarFallback className="bg-sky-100 text-sky-700">U</AvatarFallback>
+                          <AvatarFallback className="bg-sky-500/10 text-sky-600">U</AvatarFallback>
                         ) : (
                           <AvatarFallback className="bg-sky-500 text-white">
                             <Bot className="w-4 h-4" />
@@ -368,13 +368,13 @@ export default function ChatInterface() {
                             alt="Uploaded"
                             width={128}
                             height={128}
-                            className="w-32 h-32 object-cover rounded-2xl shadow-sm border border-slate-200"
+                            className="w-32 h-32 object-cover rounded-2xl shadow-sm border border-border"
                             unoptimized
                           />
                         )}
                         {(message.content || message.isImage || message.role === "model") && (
                           <div
-                            className={`rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2.5 sm:py-3.5 leading-relaxed text-[14px] sm:text-[15px] shadow-sm ${message.role === "user" ? "bg-sky-500 text-white rounded-br-sm" : "bg-white border rounded-bl-sm text-slate-700"}`}
+                            className={`rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2.5 sm:py-3.5 leading-relaxed text-[14px] sm:text-[15px] shadow-sm ${message.role === "user" ? "bg-sky-500 text-white rounded-br-sm" : "bg-card border border-border rounded-bl-sm text-foreground"}`}
                           >
                             {message.role === "model" && (
                               <div className="flex items-center justify-between gap-1.5 mb-2">
@@ -394,19 +394,19 @@ export default function ChatInterface() {
                                   unoptimized
                                 />
                               ) : message.role === "model" ? (
-                                <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 prose-pre:text-slate-800">
+                                <div className="prose prose-sm max-w-none prose-p:leading-relaxed dark:prose-invert prose-pre:bg-muted prose-pre:text-foreground">
                                   <ReactMarkdown>{message.content}</ReactMarkdown>
                                   {message.isPdfRequest && (
-                                    <div className="mt-4 p-4 bg-sky-50 border border-sky-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between">
+                                    <div className="mt-4 p-4 bg-sky-500/10 border border-sky-500/20 rounded-2xl flex flex-col sm:flex-row items-center justify-between">
                                       <div className="flex items-center gap-3">
-                                        <div className=" sm:w-10 sm:h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600">
+                                        <div className=" sm:w-10 sm:h-10 bg-sky-500/20 rounded-full flex items-center justify-center text-sky-600">
                                           <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                                         </div>
                                         <div>
-                                          <p className="font-semibold text-slate-800 m-0">
+                                          <p className="font-semibold text-foreground m-0">
                                             Your PDF is ready
                                           </p>
-                                          <p className="text-sm text-slate-500 m-0">
+                                          <p className="text-sm text-muted-foreground m-0">
                                             Click to download the document
                                           </p>
                                         </div>
@@ -440,9 +440,11 @@ export default function ChatInterface() {
                         </AvatarFallback>
                       </Avatar>
 
-                      <div className="rounded-3xl rounded-bl-sm px-5 py-3.5 bg-white border flex items-center gap-3 shadow-sm">
+                      <div className="rounded-3xl rounded-bl-sm px-5 py-3.5 bg-card border border-border flex items-center gap-3 shadow-sm">
                         <Spinner />
-                        <span className="text-slate-500 text-sm font-medium">Thinking...</span>
+                        <span className="text-muted-foreground text-sm font-medium">
+                          Thinking...
+                        </span>
                       </div>
                     </div>
                   </div>

@@ -1,6 +1,5 @@
 "use client";
-
-import { ComponentType, SVGProps, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   PlusCircle,
   ClipboardList,
@@ -11,13 +10,20 @@ import {
   PanelLeftClose,
   Search,
   MessageSquare,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setSessions, setCurrentSessionId, setMessages } from "@/store/slice/chat.slice";
 import { fetchUserSessions, createChatSession } from "@/lib/supabase/chat";
 import { createClient } from "@/lib/supabase/client";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import Profile from "./Profile";
 
 const supabase = createClient();
 
@@ -31,6 +37,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const sessions = useAppSelector((state) => state.chat.sessions);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const { setTheme, theme } = useTheme();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -44,6 +51,21 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       }
     };
     checkUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        setIsUserLoggedIn(true);
+        const userSessions = await fetchUserSessions();
+        dispatch(setSessions(userSessions));
+      } else {
+        setIsUserLoggedIn(false);
+        dispatch(setSessions([]));
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [dispatch]);
 
   const handleNewChat = async () => {
@@ -79,7 +101,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-[70] md:relative transition-all duration-300 ease-in-out border-r bg-white flex flex-col min-h-0 ${
+        className={`fixed inset-y-0 left-0 z-[70] md:relative transition-all duration-300 ease-in-out border-r border-sidebar-border bg-sidebar flex flex-col min-h-0 ${
           isOpen
             ? "w-72 p-4 translate-x-0"
             : "w-72 p-4 -translate-x-full md:w-0 md:p-0 md:overflow-hidden md:border-none"
@@ -107,7 +129,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               <button
                 key={item.label}
                 onClick={item.onClick}
-                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sky-50 text-left font-semibold text-slate-700 transition-colors"
+                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold text-sidebar-foreground transition-colors"
               >
                 <Icon className="w-5 h-5" />
                 <span className="whitespace-nowrap">{item.label}</span>
@@ -124,14 +146,14 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     <button
                       key={session.id}
                       onClick={() => handleSelectSession(session.id)}
-                      className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-sky-50 text-left font-semibold transition-colors group ${
+                      className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group ${
                         currentSessionId === session.id
-                          ? "bg-sky-50 text-sky-600"
-                          : "text-slate-700"
+                          ? "bg-sidebar-accent text-sky-500"
+                          : "text-sidebar-foreground"
                       }`}
                     >
                       <MessageSquare
-                        className={`w-4 h-4 ${currentSessionId === session.id ? "text-sky-500" : "text-slate-400"}`}
+                        className={`w-4 h-4 ${currentSessionId === session.id ? "text-sky-500" : "text-sidebar-foreground/50 group-hover:text-sidebar-accent-foreground"}`}
                       />
                       <span className="whitespace-nowrap overflow-hidden text-ellipsis text-sm">
                         {session.title}
@@ -146,19 +168,66 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           )}
         </nav>
 
-        <div className="space-y-2 pt-4 border-t">
+        <div className="space-y-2 pt-4 border-t border-sidebar-border">
           <Link href={"/subscription"}>
-            <Button className="w-full rounded-xl bg-sky-100 text-sky-700 hover:bg-sky-200">
+            <Button className="w-full rounded-xl bg-sky-500 text-white hover:bg-sky-600 shadow-lg shadow-sky-500/20">
               Try Premium
             </Button>
           </Link>
-          <Button variant="ghost" className="w-full justify-start mt-3 text-slate-700">
-            <Settings className="mr-2 w-5 h-5" />
-            Settings
-          </Button>
-          <Button variant="ghost" className="w-full justify-start text-slate-700">
-            <HelpCircle className="mr-2 w-5 h-5" /> Help
-          </Button>
+          <Popover>
+            <PopoverTrigger
+              className={cn(
+                buttonVariants({ variant: "ghost" }),
+                "w-full justify-start mt-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              )}
+            >
+              <Settings className="mr-2 w-5 h-5" />
+              Settings
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-56 p-2 rounded-2xl shadow-xl border-sidebar-border bg-popover"
+              side="top"
+              align="center"
+              sideOffset={10}
+            >
+              <div className="space-y-1">
+                <h4 className="font-bold text-popover-foreground px-2 py-1.5 text-sm uppercase tracking-wider opacity-50">
+                  Theme
+                </h4>
+                <button
+                  onClick={() => setTheme("light")}
+                  className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors ${theme === "light" ? "bg-sky-500/10 text-sky-500 font-bold" : "text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground"}`}
+                >
+                  <Sun className="h-4 w-4" />
+                  <span>Light</span>
+                </button>
+                <button
+                  onClick={() => setTheme("dark")}
+                  className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors ${theme === "dark" ? "bg-sky-500/10 text-sky-500 font-bold" : "text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground"}`}
+                >
+                  <Moon className="h-4 w-4" />
+                  <span>Dark</span>
+                </button>
+                <button
+                  onClick={() => setTheme("system")}
+                  className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors ${theme === "system" ? "bg-sky-500/10 text-sky-500 font-bold" : "text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground"}`}
+                >
+                  <Monitor className="h-4 w-4" />
+                  <span>System</span>
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Link href="/help">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <HelpCircle className="mr-2 w-5 h-5" /> Help
+            </Button>
+          </Link>
+
+          <Profile />
         </div>
       </aside>
     </>

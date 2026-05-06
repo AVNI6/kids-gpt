@@ -122,12 +122,12 @@ export const kidActivities: KidActivity[] = [
 ];
 
 export const activityColorStyles: Record<KidActivity["color"], string> = {
-  sky: "border-sky-200 bg-sky-50 text-sky-600",
-  green: "border-green-200 bg-green-50 text-green-600",
-  orange: "border-orange-200 bg-orange-50 text-orange-600",
-  purple: "border-purple-200 bg-purple-50 text-purple-600",
-  pink: "border-pink-200 bg-pink-50 text-pink-600",
-  slate: "border-slate-200 bg-slate-100 text-slate-700",
+  sky: "border-sky-500/20 bg-sky-500/10 text-sky-600",
+  green: "border-green-500/20 bg-green-500/10 text-green-600",
+  orange: "border-orange-500/20 bg-orange-500/10 text-orange-600",
+  purple: "border-purple-500/20 bg-purple-500/10 text-purple-600",
+  pink: "border-pink-500/20 bg-pink-500/10 text-pink-600",
+  slate: "border-slate-500/20 bg-slate-500/10 text-slate-600",
 };
 
 export const activityButtonStyles: Record<KidActivity["color"], string> = {

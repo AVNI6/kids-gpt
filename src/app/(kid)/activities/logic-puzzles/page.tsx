@@ -50,12 +50,12 @@ export default function LogicPuzzlesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-purple-50">
+    <div className="min-h-screen bg-background">
       <main className="px-8 py-8">
         <div className="mx-auto max-w-5xl space-y-8">
           <Link
             href="/activities"
-            className="inline-flex items-center gap-2 text-purple-600 font-bold hover:text-purple-800 hover:-translate-x-1 transition-transform bg-white px-4 py-2 rounded-full shadow-sm border border-purple-100 w-fit"
+            className="inline-flex items-center gap-2 text-purple-600 font-bold hover:text-purple-800 hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit"
           >
             <ArrowLeft className="h-5 w-5" /> Back to Activities
           </Link>
@@ -63,27 +63,27 @@ export default function LogicPuzzlesPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm text-purple-600 font-bold">
               <span>Detective Progress</span>
-              <span className="flex items-center gap-2 rounded-full bg-white px-3 py-1 shadow-sm border border-purple-100">
+              <span className="flex items-center gap-2 rounded-full bg-card px-3 py-1 shadow-sm border border-border">
                 <Brain className="h-4 w-4 text-purple-500" /> Level {currentPuzzle + 1}
               </span>
             </div>
             <Progress
               value={progress}
-              className="h-3 rounded-full bg-purple-100 [&>div]:bg-purple-500"
+              className="h-3 rounded-full bg-purple-500/10 [&>div]:bg-purple-500"
             />
           </div>
 
-          <Card className="border-4 border-purple-200 shadow-xl rounded-[2rem]">
+          <Card className="border-4 border-purple-500/20 shadow-xl rounded-[2rem] bg-card">
             <CardContent className="p-8 text-center space-y-8">
-              <div className="mx-auto bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center">
+              <div className="mx-auto bg-purple-500/10 w-20 h-20 rounded-full flex items-center justify-center">
                 <Puzzle className="h-10 w-10 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-3xl font-black text-slate-800 mb-2">What comes next?</h2>
-                <p className="text-purple-600 font-medium">{puzzle.hint}</p>
+                <h2 className="text-3xl font-black text-foreground mb-2">What comes next?</h2>
+                <p className="text-purple-500 font-medium">{puzzle.hint}</p>
               </div>
 
-              <div className="flex justify-center gap-4 text-5xl bg-white p-8 rounded-[2rem] shadow-inner border-2 border-slate-100">
+              <div className="flex justify-center gap-4 text-5xl bg-background/50 p-8 rounded-[2rem] shadow-inner border-2 border-border">
                 {puzzle.sequence.map((item, i) => (
                   <span key={i} className={item === "?" ? "text-purple-400 animate-pulse" : ""}>
                     {item}
@@ -107,10 +107,10 @@ export default function LogicPuzzlesPage() {
                   disabled={selected !== null}
                   className={`relative flex flex-col items-center justify-center gap-4 rounded-[2rem] border-4 p-8 text-4xl transition-all duration-300 ${
                     showSuccess
-                      ? "border-green-500 bg-green-100 scale-105"
+                      ? "border-green-500 bg-green-500/10 scale-105"
                       : showError
-                        ? "border-red-500 bg-red-100 opacity-50"
-                        : "border-purple-200 bg-white hover:-translate-y-2 hover:shadow-xl hover:border-purple-400"
+                        ? "border-red-500 bg-red-500/10 opacity-50"
+                        : "border-purple-500/20 bg-card hover:-translate-y-2 hover:shadow-xl hover:border-purple-500/50"
                   }`}
                 >
                   {option.label}

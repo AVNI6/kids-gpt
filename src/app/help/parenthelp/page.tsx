@@ -14,100 +14,126 @@ import {
 
 export default function ParentHelpPage() {
   return (
-    <main className="min-h-screen bg-[var(--theme-bg-light)]">
-      <div className="container mx-auto max-w-5xl px-4 py-10 space-y-8">
+    <main className="min-h-screen bg-background">
+      <div className="container mx-auto max-w-5xl px-4 py-12 space-y-12">
         <Link
           href="/help"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-sky-600 transition-colors bg-card px-4 py-2 rounded-full border border-border shadow-sm w-fit"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Help Center
         </Link>
 
-        <section className="space-y-3">
-          <h1 className="text-4xl font-bold tracking-tight text-[var(--theme-brand)]">
-            Parental Hub
+        <section className="space-y-4">
+          <h1 className="text-5xl font-black tracking-tight text-foreground">
+            Parental <span className="text-sky-600">Hub</span>
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Manage safety settings, billing, and your child learning progress in ChatGPT Kids.
+          <p className="text-muted-foreground text-xl font-medium">
+            Manage safety settings, billing, and your child&apos;s learning progress in ChatGPT
+            Kids.
           </p>
         </section>
 
-        <section className="grid md:grid-cols-2 gap-5">
-          <Card className="bg-white border-2 border-[var(--theme-border-light)]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Shield className="h-5 w-5 text-[var(--theme-brand)]" /> Safety Settings
-              </CardTitle>
+        <section className="grid md:grid-cols-2 gap-6">
+          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
+                <Shield className="h-6 w-6 text-sky-600" />
+              </div>
+              <CardTitle className="text-xl font-bold text-foreground">Safety Settings</CardTitle>
             </CardHeader>
-            <CardContent className="text-muted-foreground">
+            <CardContent className="text-muted-foreground font-medium">
               Control content filters, topic guardrails, and age-appropriate settings.
             </CardContent>
           </Card>
-          <Card className="bg-white border-2 border-[var(--theme-border-light)]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <BarChart3 className="h-5 w-5 text-[var(--theme-brand)]" /> Child Progress
-              </CardTitle>
+          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
+                <BarChart3 className="h-6 w-6 text-sky-600" />
+              </div>
+              <CardTitle className="text-xl font-bold text-foreground">Child Progress</CardTitle>
             </CardHeader>
-            <CardContent className="text-muted-foreground">
+            <CardContent className="text-muted-foreground font-medium">
               Review weekly growth, completed topics, and learning highlights.
             </CardContent>
           </Card>
         </section>
 
-        <Card className="bg-white border-2 border-[var(--theme-border-light)]">
-          <CardContent className="py-5 flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <CreditCard className="h-5 w-5 text-[var(--theme-brand)]" />
-              <span className="font-medium">Billing & Subscriptions</span>
+        <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm overflow-hidden">
+          <CardContent className="py-6 flex items-center justify-between gap-6 flex-wrap">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-sky-500/10 flex items-center justify-center">
+                <CreditCard className="h-6 w-6 text-sky-600" />
+              </div>
+              <div className="space-y-1">
+                <span className="font-bold text-foreground block text-lg">
+                  Billing & Subscriptions
+                </span>
+                <span className="text-muted-foreground text-sm">
+                  Manage your plan and invoices.
+                </span>
+              </div>
             </div>
-            <Button variant="secondary">Manage Payments</Button>
+            <Button
+              variant="secondary"
+              className="rounded-full px-6 font-bold text-sky-700 bg-sky-500/10 hover:bg-sky-500/20 transition-colors"
+            >
+              Manage Payments
+            </Button>
           </CardContent>
         </Card>
 
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">Common Parent Questions</h2>
-          <Accordion className="space-y-3" defaultValue={["q1"]}>
+        <section className="space-y-6">
+          <h2 className="text-3xl font-black text-foreground">Common Parent Questions</h2>
+          <Accordion className="space-y-4" defaultValue={["q1"]}>
             <AccordionItem
               value="q1"
-              className="rounded-xl border-2 border-[var(--theme-border-light)] bg-white px-4"
+              className="rounded-2xl border-2 border-border/50 bg-card px-6 hover:border-sky-500/30 transition-colors overflow-hidden"
             >
-              <AccordionTrigger>Is my child safe using ChatGPT Kids?</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
+              <AccordionTrigger className="text-lg font-bold text-foreground hover:text-sky-600 hover:no-underline py-5">
+                Is my child safe using ChatGPT Kids?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground text-base font-medium pb-5">
                 Yes. Interactions are moderated and safety controls are built for children.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem
               value="q2"
-              className="rounded-xl border-2 border-[var(--theme-border-light)] bg-white px-4"
+              className="rounded-2xl border-2 border-border/50 bg-card px-6 hover:border-sky-500/30 transition-colors overflow-hidden"
             >
-              <AccordionTrigger>How do I see detailed progress reports?</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
+              <AccordionTrigger className="text-lg font-bold text-foreground hover:text-sky-600 hover:no-underline py-5">
+                How do I see detailed progress reports?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground text-base font-medium pb-5">
                 Open Parent Dashboard and select Weekly Insights for detailed reports.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem
               value="q3"
-              className="rounded-xl border-2 border-[var(--theme-border-light)] bg-white px-4"
+              className="rounded-2xl border-2 border-border/50 bg-card px-6 hover:border-sky-500/30 transition-colors overflow-hidden"
             >
-              <AccordionTrigger>Where can I download invoices?</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
+              <AccordionTrigger className="text-lg font-bold text-foreground hover:text-sky-600 hover:no-underline py-5">
+                Where can I download invoices?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground text-base font-medium pb-5">
                 Go to Subscriptions and open Billing History to download invoices.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
         </section>
 
-        <Card className="bg-gradient-to-r from-[var(--theme-brand)] to-[var(--theme-brand-dark)] text-white border-0">
-          <CardContent className="py-8 flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <h3 className="text-2xl font-bold">Your data is yours. Always.</h3>
-              <p className="opacity-90">
+        <Card className="bg-gradient-to-r from-sky-600 to-sky-700 text-white border-0 rounded-3xl overflow-hidden shadow-xl shadow-sky-500/20">
+          <CardContent className="py-10 px-8 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-2 text-center md:text-left">
+              <h3 className="text-3xl font-black">Your data is yours. Always.</h3>
+              <p className="text-sky-50 text-lg font-medium">
                 Learn how we protect your family with secure privacy controls.
               </p>
             </div>
-            <Button variant="secondary">
-              <Lock className="h-4 w-4 mr-2" /> Privacy Policy
+            <Button
+              variant="secondary"
+              className="rounded-full px-8 h-14 text-sky-700 font-bold text-lg hover:bg-white transition-colors"
+            >
+              <Lock className="h-5 w-5 mr-2" /> Privacy Policy
             </Button>
           </CardContent>
         </Card>
