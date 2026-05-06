@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bot, Sparkles, PanelLeftOpen, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -123,67 +123,64 @@ export default function ChatInterface() {
     scrollToBottom();
   }, [messages, isLoading]);
 
-  const handleDownloadPDF = useCallback(
-    async (messageId: string) => {
-      const message = messages.find((m) => m.id === messageId);
-      if (!message) return;
+  const handleDownloadPDF = async (messageId: string) => {
+    const message = messages.find((m) => m.id === messageId);
+    if (!message) return;
 
-      // If we have a stored attachment URL, force download it
-      if (message.attachmentUrl) {
-        try {
-          const response = await fetch(message.attachmentUrl);
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `kids-learning-${messageId.slice(0, 5)}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-        } catch (err) {
-          console.error("Direct download failed, opening in new tab:", err);
-          window.open(message.attachmentUrl, "_blank");
-        }
-        return;
-      }
-
+    // If we have a stored attachment URL, force download it
+    if (message.attachmentUrl) {
       try {
-        const { pdf } = await import("@react-pdf/renderer");
-        const { PdfDocument } = await import("./PdfDocument");
-
-        const blob = await pdf(
-          <PdfDocument content={message.pdfContent || message.content} />
-        ).toBlob();
-
-        // Upload to storage if not already there
-        if (currentSessionId && isUserLoggedIn && !message.pdfContent?.startsWith("http")) {
-          const fileName = `pdf/${currentSessionId}_${Date.now()}.pdf`;
-          const storageUrl = await uploadFileToStorage(blob, fileName);
-
-          await saveGeneratedMaterial(currentSessionId, "pdf", "application/pdf", storageUrl, {
-            originalMessageId: messageId,
-            tokens: Math.round(message.content.length / 4),
-          });
-
-          console.log("PDF uploaded to storage:", storageUrl);
-        }
-
-        const url = URL.createObjectURL(blob);
+        const response = await fetch(message.attachmentUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "kids-learning-material.pdf";
+        a.download = `kids-learning-${messageId.slice(0, 5)}.pdf`;
+        document.body.appendChild(a);
         a.click();
-
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error("PDF generation failed:", error);
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (err) {
+        console.error("Direct download failed, opening in new tab:", err);
+        window.open(message.attachmentUrl, "_blank");
       }
-    },
-    [messages, currentSessionId, isUserLoggedIn]
-  );
+      return;
+    }
 
-  const sendMessage = useCallback(async () => {
+    try {
+      const { pdf } = await import("@react-pdf/renderer");
+      const { PdfDocument } = await import("./PdfDocument");
+
+      const blob = await pdf(
+        <PdfDocument content={message.pdfContent || message.content} />
+      ).toBlob();
+
+      // Upload to storage if not already there
+      if (currentSessionId && isUserLoggedIn && !message.pdfContent?.startsWith("http")) {
+        const fileName = `pdf/${currentSessionId}.pdf`;
+        const storageUrl = await uploadFileToStorage(blob, fileName);
+
+        await saveGeneratedMaterial(currentSessionId, "pdf", "application/pdf", storageUrl, {
+          originalMessageId: messageId,
+          tokens: Math.round(message.content.length / 4),
+        });
+
+        console.log("PDF uploaded to storage:", storageUrl);
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "kids-learning-material.pdf";
+      a.click();
+
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+    }
+  };
+
+  const sendMessage = async () => {
     if (!input.trim() && !image) return;
 
     const currentInput = input;
@@ -291,7 +288,7 @@ export default function ChatInterface() {
               }
             }
           }
-        } catch (_e) {
+        } catch (e) {
           // Not a valid JSON tool call
         }
       }
@@ -315,8 +312,8 @@ export default function ChatInterface() {
               prompt: currentInput,
             });
             await trackDailyUsage(Math.round(100), { isImage: true });
-          } catch (_e) {
-            console.error("Failed to upload image:", _e);
+          } catch (e) {
+            console.error("Failed to upload image:", e);
           }
         }
 
@@ -332,8 +329,8 @@ export default function ChatInterface() {
               prompt: currentInput,
             });
             await trackDailyUsage(tokens, { isPdf: true });
-          } catch (_e) {
-            console.error("Failed to upload pdf:", _e);
+          } catch (e) {
+            console.error("Failed to upload pdf:", e);
           }
         }
       }
@@ -372,23 +369,7 @@ export default function ChatInterface() {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    input,
-    image,
-    currentSessionId,
-    isUserLoggedIn,
-    dispatch,
-    router,
-    setMessages,
-    setCurrentSessionId,
-    addSession,
-    fetchSessionMessages,
-    saveChatMessage,
-    createChatSession,
-    trackDailyUsage,
-    saveGeneratedMaterial,
-    uploadFileToStorage,
-  ]);
+  };
 
   return (
     <div className="fixed inset-0 flex bg-background w-full overflow-hidden">
