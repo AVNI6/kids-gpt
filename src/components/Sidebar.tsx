@@ -85,9 +85,9 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   };
 
   const navItems = [
-    { label: "New Chat", icon: PlusCircle, onClick: handleNewChat },
-    { label: "Search Chats", icon: Search },
-    { label: "Activities", icon: ClipboardList },
+    { label: "New Chat", icon: PlusCircle, href: "/", onClick: handleNewChat },
+    { label: "Search Chats", icon: Search, href: "/search" },
+    { label: "Activities", icon: ClipboardList, href: "/activities" },
   ];
 
   return (
@@ -125,6 +125,20 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         <nav className="space-y-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
           {navItems.map((item) => {
             const Icon = item.icon;
+            if (item.href) {
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={item.onClick}
+                  className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold text-sidebar-foreground transition-colors"
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="whitespace-nowrap">{item.label}</span>
+                </Link>
+              );
+            }
+
             return (
               <button
                 key={item.label}

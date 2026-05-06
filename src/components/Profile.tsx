@@ -87,7 +87,7 @@ export default function Profile() {
           sideOffset={12}
         >
           <div className="space-y-1">
-            <Link href={`/dashboard/${user.user_metadata?.role || "kid"}/profile`}>
+            <Link href={`/dashboard/${user.user_metadata?.role || "kid"}`}>
               <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold">
                 <UserRound className="h-4 w-4" />
                 <span>View Profile</span>

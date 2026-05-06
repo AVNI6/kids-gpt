@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle2, Star, Timer, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Timer, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -196,78 +196,40 @@ export default function QuizzesPage() {
                     {option.label}
                   </span>
                   {isSelected &&
-                    (isCorrect ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <div className="h-5 w-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px]">
-                        X
-                      </div>
-                    ))}
+                    (isCorrect ? <CheckCircle2 className="h-5 w-5 text-green-600" /> : null)}
                 </button>
               );
             })}
           </div>
 
-          {selected && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {/* Feedback Card */}
+          {selected !== null && (
+            <div className="mt-4 space-y-3 animate-in fade-in">
               <Card
-                className={`border-2 ${
+                className={`border-2 p-4 ${
                   quiz.options.find((o) => o.id === selected)?.correct
-                    ? "border-green-500/20 bg-green-500/10"
-                    : "border-red-500/20 bg-red-500/10"
+                    ? "border-green-500/30 bg-green-500/5"
+                    : "border-red-500/30 bg-red-500/5"
                 }`}
               >
-                <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between p-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`h-12 w-12 rounded-full flex items-center justify-center text-white ${
-                        quiz.options.find((o) => o.id === selected)?.correct
-                          ? "bg-green-600"
-                          : "bg-red-600"
-                      }`}
-                    >
-                      {quiz.options.find((o) => o.id === selected)?.correct ? (
-                        <Star className="h-6 w-6" />
-                      ) : (
-                        <span className="font-bold text-xl">!</span>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-foreground">
-                        {quiz.options.find((o) => o.id === selected)?.correct
-                          ? "Awesome job, Explorer!"
-                          : "Nice try, Space Ranger!"}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{quiz.feedback}</p>
-                    </div>
-                  </div>
-                  {isLastQuestion ? (
-                    <Link href="/activities">
-                      <Button className="rounded-full bg-green-600 hover:bg-green-700">
-                        Finish Mission
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      onClick={handleNext}
-                      className="rounded-full bg-sky-600 hover:bg-sky-700"
-                    >
-                      Next Question
-                    </Button>
-                  )}
-                </CardContent>
+                <p
+                  className={
+                    quiz.options.find((o) => o.id === selected)?.correct
+                      ? "text-green-600 font-semibold"
+                      : "text-red-600 font-semibold"
+                  }
+                >
+                  {quiz.feedback}
+                </p>
               </Card>
 
-              {/* Tip Card */}
-              <Card className="border-2 border-orange-500/20 bg-orange-500/10">
-                <CardContent className="flex flex-col gap-3 p-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-orange-500">
-                    Pro Explorer Tip
-                  </span>
-                  <p className="text-muted-foreground">{quiz.tip}</p>
-                </CardContent>
-              </Card>
+              {!isLastQuestion && (
+                <Button
+                  onClick={handleNext}
+                  className="w-full bg-sky-600 hover:bg-sky-700 py-6 text-lg font-bold rounded-2xl"
+                >
+                  Next Question
+                </Button>
+              )}
             </div>
           )}
         </div>

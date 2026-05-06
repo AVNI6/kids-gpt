@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 
 import Sidebar from "@/components/Sidebar";
 
-export default function KidLayout({ children }: { children: ReactNode }) {
+export default function MainLayout({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   return (
