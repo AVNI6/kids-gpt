@@ -1,6 +1,5 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
@@ -33,8 +32,7 @@ export async function uploadAvatar(formData: FormData) {
     throw new Error("Only image files are allowed.");
   }
 
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   const {
     data: { user },
@@ -103,8 +101,7 @@ export async function submitKidOnboarding(
     return { error: "First name is required." };
   }
 
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   const {
     data: { user },
@@ -185,8 +182,7 @@ export async function submitParentOnboarding(
     return { error: "First name is required." };
   }
 
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   const {
     data: { user },
@@ -264,8 +260,7 @@ export async function submitTeacherOnboarding(
     return { error: "First name is required." };
   }
 
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   const {
     data: { user },

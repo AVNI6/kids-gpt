@@ -1,6 +1,6 @@
 "use client";
 
-import { ComponentType, SVGProps } from "react";
+import { ComponentType, SVGProps, useEffect, useState } from "react";
 import {
   PlusCircle,
   ClipboardList,
@@ -10,9 +10,16 @@ import {
   X,
   PanelLeftClose,
   Search,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setSessions, setCurrentSessionId, setMessages } from "@/store/slice/chat.slice";
+import { fetchUserSessions, createChatSession } from "@/actions/chat.actions";
+import { createClient } from "@/lib/supabase/client";
+
+const supabase = createClient();
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,6 +27,47 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
+  const dispatch = useAppDispatch();
+  const sessions = useAppSelector((state) => state.chat.sessions);
+  const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        setIsUserLoggedIn(true);
+        const userSessions = await fetchUserSessions();
+        dispatch(setSessions(userSessions));
+      }
+    };
+    checkUser();
+  }, [dispatch]);
+
+  const handleNewChat = async () => {
+    if (!isUserLoggedIn) return;
+    try {
+      const newSession = await createChatSession();
+      dispatch(setSessions([newSession, ...sessions]));
+      dispatch(setCurrentSessionId(newSession.id));
+      dispatch(setMessages([]));
+    } catch (error) {
+      console.error("Failed to create new chat:", error);
+    }
+  };
+
+  const handleSelectSession = (sessionId: string) => {
+    dispatch(setCurrentSessionId(sessionId));
+  };
+
+  const navItems = [
+    { label: "New Chat", icon: PlusCircle, onClick: handleNewChat },
+    { label: "Search Chats", icon: Search },
+    { label: "Activities", icon: ClipboardList },
+  ];
+
   return (
     <>
       {/* Backdrop for mobile */}
@@ -52,36 +100,50 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           </Button>
         </div>
 
-        <nav className="space-y-2 flex-1 overflow-y-auto pr-2">
-          {(
-            [
-              ["New Chat", PlusCircle],
-              ["Search Chats", Search],
-              ["Activities", ClipboardList],
-            ] as Array<[string, ComponentType<SVGProps<SVGSVGElement>>]>
-          ).map(([label, Icon]) => (
-            <button
-              key={label}
-              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sky-50 text-left font-semibold text-slate-700 transition-colors"
-            >
-              <Icon className="w-5 h-5" />
-              <span className="whitespace-nowrap">{label}</span>
-            </button>
-          ))}
-          {/* show only if user is logged in */}
-          <div>
-            <h1 className="font-semibold text-slate-700 text-md mt-4 mb-2 ml-3">Recents</h1>
-            {Array(5)
-              .fill(0)
-              .map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-sky-50 text-left font-semibold text-slate-700 transition-colors"
-                >
-                  <span className="whitespace-nowrap">Chat {i + 1}</span>
-                </div>
-              ))}
-          </div>
+        <nav className="space-y-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sky-50 text-left font-semibold text-slate-700 transition-colors"
+              >
+                <Icon className="w-5 h-5" />
+                <span className="whitespace-nowrap">{item.label}</span>
+              </button>
+            );
+          })}
+
+          {isUserLoggedIn && (
+            <div className="mt-6">
+              <h1 className="font-semibold text-slate-700 text-md mb-2 ml-3">Recent Chats</h1>
+              <div className="space-y-1">
+                {sessions.length > 0 ? (
+                  sessions.map((session) => (
+                    <button
+                      key={session.id}
+                      onClick={() => handleSelectSession(session.id)}
+                      className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-sky-50 text-left font-semibold transition-colors group ${
+                        currentSessionId === session.id
+                          ? "bg-sky-50 text-sky-600"
+                          : "text-slate-700"
+                      }`}
+                    >
+                      <MessageSquare
+                        className={`w-4 h-4 ${currentSessionId === session.id ? "text-sky-500" : "text-slate-400"}`}
+                      />
+                      <span className="whitespace-nowrap overflow-hidden text-ellipsis text-sm">
+                        {session.title}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-400 ml-3 italic">No recent chats</p>
+                )}
+              </div>
+            </div>
+          )}
         </nav>
 
         <div className="space-y-2 pt-4 border-t">

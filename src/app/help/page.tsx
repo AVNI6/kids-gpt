@@ -369,31 +369,6 @@ export default function HelpPage() {
           </div>
         </section>
 
-        {/* BANNER */}
-        <section>
-          <Card className="overflow-hidden">
-            <div className="relative h-80">
-              <Image src="/help-banner.jpg" alt="Learning banner" fill className="object-cover" />
-
-              <div className="absolute inset-0 bg-gradient-to-r from-(--theme-brand-dark)/80 to-(--theme-brand)/60 flex items-center">
-                <div className="px-8 space-y-4 text-white max-w-xl">
-                  <Badge variant="secondary">ChatGPT Kids Mission</Badge>
-
-                  <h2 className="text-3xl font-bold">Safe AI Learning, Built for Kids</h2>
-
-                  <p>
-                    Personalized learning for students, parents, and teachers, designed with safety,
-                    curiosity, and engagement first.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </section>
-
-        <Separator />
-
-        {/* FOOTER */}
         <footer className="py-8">
           <div className="flex flex-col md:flex-row justify-between gap-6">
             <div>

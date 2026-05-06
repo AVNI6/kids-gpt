@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -46,8 +45,7 @@ export default async function ProfilePage({ params }: { params: { role: string }
   const roleParam = params.role as Role;
   if (!allowedRoles.includes(roleParam)) return null;
 
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;
   if (!user) return null; // middleware should have redirected

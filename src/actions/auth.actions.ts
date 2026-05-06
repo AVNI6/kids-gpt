@@ -1,6 +1,5 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
@@ -33,8 +32,7 @@ export async function signUpUser(input: SignUpUserInput) {
 
   assertValidRole(role);
 
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
 
@@ -69,8 +67,7 @@ export async function signInUser(input: SignInUserInput) {
     throw new Error("Email and password are required.");
   }
 
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
