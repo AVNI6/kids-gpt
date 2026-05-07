@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 interface DeleteSessionDialogProps {
   sessionId: string;
   onDelete: (sessionId: string) => Promise<void>;
-  trigger?: React.ReactNode;
+  trigger?: React.ReactElement;
 }
 
 export default function DeleteSessionDialog({
@@ -41,17 +41,19 @@ export default function DeleteSessionDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger>
-        {trigger || (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-          >
-            <Trash2 className="w-4 h-4 mr-2" /> Delete
-          </Button>
-        )}
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          trigger || (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-500 hover:text-red-600 hover:bg-red-50"
+            >
+              <Trash2 className="w-4 h-4 mr-2" /> Delete
+            </Button>
+          )
+        }
+      />
       <DialogContent className="sm:max-w-[425px] rounded-2xl border-border bg-background">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-foreground">Delete Chat?</DialogTitle>

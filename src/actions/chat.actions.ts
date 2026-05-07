@@ -3,18 +3,23 @@ import { ChatSessionRow, ChatMessageRow } from "@/types/chat.types";
 
 const supabase = createClient();
 
-export async function fetchUserSessions(): Promise<ChatSessionRow[]> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function fetchUserSessions(userId?: string): Promise<ChatSessionRow[]> {
+  let finalUserId = userId;
 
-  console.log("fetchUserSessions: user =", user?.id);
-  if (!user) return [];
+  if (!finalUserId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    finalUserId = user?.id;
+  }
+
+  console.log("fetchUserSessions: user =", finalUserId);
+  if (!finalUserId) return [];
 
   const { data, error } = await supabase
     .from("chat_sessions")
-    .select("*")
-    .eq("user_id", user.id)
+    .select("id, title, updated_at, created_at")
+    .eq("user_id", finalUserId)
     .is("deleted_at", null)
     .order("updated_at", { ascending: false });
 
@@ -96,7 +101,7 @@ export async function uploadFileToStorage(file: Blob | File, path: string): Prom
   // Path format: folder/filename (e.g., pdf/filename.pdf)
   const fullPath = `${path}`;
 
-  const { data: _data, error } = await supabase.storage.from("materials").upload(fullPath, file, {
+  const { error } = await supabase.storage.from("materials").upload(fullPath, file, {
     cacheControl: "3600",
     upsert: true,
   });
@@ -229,7 +234,17 @@ export async function updateSessionTitle(sessionId: string, title: string) {
 }
 
 export async function deleteChatSession(sessionId: string) {
-  // First, delete all messages associated with this session to satisfy foreign key constraints
+  // 1. Delete generated materials associated with this session
+  const { error: matError } = await supabase
+    .from("generated_materials")
+    .delete()
+    .eq("chat_session_id", sessionId);
+
+  if (matError) {
+    console.warn("Failed to delete generated materials (might not exist):", matError.message);
+  }
+
+  // 2. Delete all messages associated with this session
   const { error: msgError } = await supabase
     .from("chat_messages")
     .delete()
@@ -240,11 +255,11 @@ export async function deleteChatSession(sessionId: string) {
     throw msgError;
   }
 
-  // Then delete the session itself
-  const { error } = await supabase.from("chat_sessions").delete().eq("id", sessionId);
+  // 3. Finally delete the session itself
+  const { error: finalError } = await supabase.from("chat_sessions").delete().eq("id", sessionId);
 
-  if (error) {
-    console.error("Hard delete failed:", error);
-    throw error;
+  if (finalError) {
+    console.error("Hard delete failed:", finalError);
+    throw finalError;
   }
 }

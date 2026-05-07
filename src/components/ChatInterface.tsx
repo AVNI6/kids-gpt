@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Bot, Sparkles, PanelLeftOpen, Download } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Bot, Sparkles, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -24,7 +24,7 @@ import {
   uploadFileToStorage,
 } from "@/actions/chat.actions";
 import { Message, ChatMessageRow } from "@/types/chat.types";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();
@@ -41,11 +41,11 @@ export default function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [image, setImage] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [fileContent, setFileContent] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
 
   const searchParams = useSearchParams();
-  const router = useRouter();
   const urlSessionId = searchParams?.get("id") || null;
 
   // Check login status
@@ -103,9 +103,7 @@ export default function ChatInterface() {
   // Close sidebar on mobile by default
   useEffect(() => {
     const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (mobile) {
+      if (window.innerWidth < 768) {
         setIsSidebarOpen(false);
       }
     };
@@ -123,96 +121,100 @@ export default function ChatInterface() {
     scrollToBottom();
   }, [messages, isLoading]);
 
-  const handleDownloadPDF = useCallback(
-    async (messageId: string) => {
-      const message = messages.find((m) => m.id === messageId);
-      if (!message) return;
+  const handleDownloadPDF = async (messageId: string) => {
+    const message = messages.find((m) => m.id === messageId);
+    if (!message) return;
 
-      // If we have a stored attachment URL, force download it
-      if (message.attachmentUrl) {
-        try {
-          const response = await fetch(message.attachmentUrl);
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `kids-learning-${messageId.slice(0, 5)}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-        } catch (err) {
-          console.error("Direct download failed, opening in new tab:", err);
-          window.open(message.attachmentUrl, "_blank");
-        }
-        return;
-      }
-
+    // If we have a stored attachment URL, force download it
+    if (message.attachmentUrl) {
       try {
-        const { pdf } = await import("@react-pdf/renderer");
-        const { PdfDocument } = await import("./PdfDocument");
-
-        const blob = await pdf(
-          <PdfDocument content={message.pdfContent || message.content} />
-        ).toBlob();
-
-        // Upload to storage if not already there
-        if (currentSessionId && isUserLoggedIn && !message.pdfContent?.startsWith("http")) {
-          const fileName = `pdf/${currentSessionId}_${Date.now()}.pdf`;
-          const storageUrl = await uploadFileToStorage(blob, fileName);
-
-          await saveGeneratedMaterial(currentSessionId, "pdf", "application/pdf", storageUrl, {
-            originalMessageId: messageId,
-            tokens: Math.round(message.content.length / 4),
-          });
-
-          console.log("PDF uploaded to storage:", storageUrl);
-        }
-
-        const url = URL.createObjectURL(blob);
+        const response = await fetch(message.attachmentUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "kids-learning-material.pdf";
+        a.download = `kids-learning-${messageId.slice(0, 5)}.pdf`;
+        document.body.appendChild(a);
         a.click();
-
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error("PDF generation failed:", error);
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (err) {
+        console.error("Direct download failed, opening in new tab:", err);
+        window.open(message.attachmentUrl, "_blank");
       }
-    },
-    [messages, currentSessionId, isUserLoggedIn]
-  );
+      return;
+    }
 
-  const sendMessage = useCallback(async () => {
-    if (!input.trim() && !image) return;
+    try {
+      const { pdf } = await import("@react-pdf/renderer");
+      const { PdfDocument } = await import("./PdfDocument");
 
+      const blob = await pdf(
+        <PdfDocument content={message.pdfContent || message.content} />
+      ).toBlob();
+
+      // Upload to storage if not already there
+      if (currentSessionId && isUserLoggedIn && !message.pdfContent?.startsWith("http")) {
+        const fileName = `pdf/${currentSessionId}.pdf`;
+        const storageUrl = await uploadFileToStorage(blob, fileName);
+
+        await saveGeneratedMaterial(currentSessionId, "pdf", "application/pdf", storageUrl, {
+          originalMessageId: messageId,
+          tokens: Math.round(message.content.length / 4),
+        });
+
+        console.log("PDF uploaded to storage:", storageUrl);
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "kids-learning-material.pdf";
+      a.click();
+
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+    }
+  };
+
+  const sendMessage = async () => {
     const currentInput = input;
     const currentImage = image;
+    const currentFileContent = fileContent;
+    const currentFileName = fileName;
     let sessionId = currentSessionId;
 
-    // 1. Create session and save user message if it doesn't exist
-    if (!sessionId && isUserLoggedIn) {
+    // Combine input with file content if present
+    const finalInputForAI = currentFileContent
+      ? `${currentInput}\n\n[Attachment: ${currentFileName}]\n${currentFileContent}`
+      : currentInput;
+
+    setIsLoading(true);
+    setInput("");
+    setImage(null);
+    setFileContent(null);
+    setFileName(null);
+
+    let userAttachmentUrl: string | undefined = undefined;
+
+    // 1. Upload user attachment if exists (Images or PDFs)
+    if (isUserLoggedIn && (currentImage || currentFileContent)) {
       try {
-        const newSession = await createChatSession(currentInput.slice(0, 30) + "...");
-        sessionId = newSession.id;
-
-        // 1. Save user message to DB FIRST so it's there when we switch sessions
-        const userTokens = Math.round(currentInput.length / 4);
-        await saveChatMessage(sessionId, "user", currentInput, { tokens: userTokens });
-        await trackDailyUsage(userTokens);
-
-        // 2. Now update UI and URL
-        dispatch(addSession(newSession));
-        dispatch(setCurrentSessionId(sessionId));
-        router.push(`/?id=${sessionId}`);
-      } catch (error) {
-        console.error("Failed to create session/save message:", error);
+        if (currentImage) {
+          const res = await fetch(currentImage);
+          const blob = await res.blob();
+          const path = `materials/image/${sessionId || "new"}_${Date.now()}.jpg`;
+          userAttachmentUrl = await uploadFileToStorage(blob, path);
+        } else if (currentFileContent) {
+          // Upload PDF or Text file
+          const blob = new Blob([currentFileContent], { type: "text/plain" });
+          const path = `materials/docs/${sessionId || "new"}_${Date.now()}.txt`;
+          userAttachmentUrl = await uploadFileToStorage(blob, path);
+        }
+      } catch (e) {
+        console.error("User upload failed:", e);
       }
-    } else if (sessionId && isUserLoggedIn) {
-      // 2. Save user message for existing session
-      const userTokens = Math.round(currentInput.length / 4);
-      saveChatMessage(sessionId, "user", currentInput, { tokens: userTokens }).catch(console.error);
-      trackDailyUsage(userTokens).catch(console.error);
     }
 
     const userMessage: Message = {
@@ -220,24 +222,65 @@ export default function ChatInterface() {
       role: "user",
       content: currentInput,
       uploadedImage: currentImage || undefined,
+      attachmentUrl: userAttachmentUrl,
+      fileName: currentFileName || undefined,
     };
 
     dispatch(addMessage(userMessage));
-    setInput("");
-    setImage(null);
+
+    // Prepare history for API
+    const chatHistory = messages.slice(-10).map((m) => ({
+      role: m.role === "user" ? "user" : "model",
+      content: m.content,
+    }));
+
+    // 2. Create session and save user message if it doesn't exist
+    if (!sessionId && isUserLoggedIn) {
+      try {
+        const newSession = await createChatSession(currentInput.slice(0, 30) + "...");
+        sessionId = newSession.id;
+
+        const userTokens = Math.round(currentInput.length / 4);
+        await saveChatMessage(sessionId, "user", currentInput, {
+          tokens: userTokens,
+          attachmentUrl: userAttachmentUrl,
+        });
+        await trackDailyUsage(userTokens);
+
+        dispatch(addSession(newSession));
+        dispatch(setCurrentSessionId(sessionId));
+        // Replace URL without full reload to maintain state
+        window.history.replaceState(null, "", `/?id=${sessionId}`);
+      } catch (error) {
+        console.error("Failed to create session/save message:", error);
+      }
+    } else if (sessionId && isUserLoggedIn) {
+      const userTokens = Math.round(currentInput.length / 4);
+      saveChatMessage(sessionId, "user", currentInput, {
+        tokens: userTokens,
+        attachmentUrl: userAttachmentUrl,
+      }).catch(console.error);
+      trackDailyUsage(userTokens).catch(console.error);
+    }
+
     setIsLoading(true);
 
     try {
       const isImageRequest =
-        /(generate|create|draw|make|show).*(image|picture|photo|illustration|drawing|painting)/i.test(
+        !currentImage &&
+        (/(generate|create|draw|make|show).*(image|picture|photo|illustration|drawing|painting)/i.test(
           currentInput
         ) ||
-        (/image|picture|drawing|illustration/i.test(currentInput) && currentInput.length < 50);
+          (/image|picture|drawing|illustration/i.test(currentInput) && currentInput.length < 50));
 
       const apiUrl = isImageRequest ? "/api/generate-image" : "/api/chat";
       const bodyPayload = isImageRequest
         ? { prompt: currentInput }
-        : { message: currentInput, image: currentImage };
+        : {
+            message: finalInputForAI,
+            image: currentImage,
+            history: chatHistory,
+          };
 
       const res = await fetch(apiUrl, {
         method: "POST",
@@ -291,7 +334,7 @@ export default function ChatInterface() {
               }
             }
           }
-        } catch (_e) {
+        } catch {
           // Not a valid JSON tool call
         }
       }
@@ -315,8 +358,8 @@ export default function ChatInterface() {
               prompt: currentInput,
             });
             await trackDailyUsage(Math.round(100), { isImage: true });
-          } catch (_e) {
-            console.error("Failed to upload image:", _e);
+          } catch {
+            console.error("Failed to upload image");
           }
         }
 
@@ -332,8 +375,8 @@ export default function ChatInterface() {
               prompt: currentInput,
             });
             await trackDailyUsage(tokens, { isPdf: true });
-          } catch (_e) {
-            console.error("Failed to upload pdf:", _e);
+          } catch {
+            console.error("Failed to upload pdf");
           }
         }
       }
@@ -351,6 +394,8 @@ export default function ChatInterface() {
 
       dispatch(addMessage(aiMessage));
       setIsLoading(false);
+      setFileContent(null);
+      setFileName(null);
 
       if (sessionId && isUserLoggedIn) {
         // Save model message to DB
@@ -372,23 +417,7 @@ export default function ChatInterface() {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    input,
-    image,
-    currentSessionId,
-    isUserLoggedIn,
-    dispatch,
-    router,
-    setMessages,
-    setCurrentSessionId,
-    addSession,
-    fetchSessionMessages,
-    saveChatMessage,
-    createChatSession,
-    trackDailyUsage,
-    saveGeneratedMaterial,
-    uploadFileToStorage,
-  ]);
+  };
 
   return (
     <div className="fixed inset-0 flex bg-background w-full overflow-hidden">
@@ -397,23 +426,16 @@ export default function ChatInterface() {
       <main className="flex-1 flex flex-col justify-between h-full overflow-hidden relative bg-background min-h-0">
         <header className="sticky top-0 z-50 w-full h-16 bg-background border-b border-border flex items-center px-4 md:px-6 font-bold text-sky-600 justify-between shrink-0">
           <div className="flex items-center gap-3">
-            {(!isSidebarOpen || isMobile) && (
-              <Button
-                variant="ghost"
-                size="icon"
+            {!isSidebarOpen && (
+              <button
                 onClick={() => setIsSidebarOpen(true)}
-                className={`text-slate-500 hover:text-slate-700 mr-2 ${isSidebarOpen ? "hidden" : "flex"}`}
+                className="md:hidden h-8 w-8 rounded-xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95"
               >
-                <PanelLeftOpen className="w-5 h-5" />
-              </Button>
+                <Sparkles className="w-4 h-4" />
+              </button>
             )}
             <Link href="/" className="flex items-center gap-2">
-              {!isSidebarOpen && (
-                <div className="h-8 w-8 rounded-xl bg-sky-500 flex items-center justify-center text-white shrink-0">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-              )}
-              <div className="text-sky-600 truncate max-w-30 sm:max-w-none">
+              <div className="text-sky-600 truncate max-w-[120px] sm:max-w-none font-black text-xl">
                 ChatGPT <span className="hidden sm:inline">Kids</span>
               </div>
             </Link>
@@ -426,23 +448,25 @@ export default function ChatInterface() {
 
         {messages.length === 0 ? (
           <div className="flex justify-center overflow-auto min-h-0">
-            <div className="w-full max-w-4xl mx-auto text-center pt-16 p-4 md:p-8">
-              <h2 className="text-3xl font-black mb-4 text-foreground">
+            <div className="w-full max-w-4xl mx-auto text-center pt-8 sm:pt-16 p-4 sm:p-6 md:p-8">
+              <h2 className="text-2xl sm:text-3xl font-black mb-4 text-foreground">
                 What should we explore today?
               </h2>
-              <p className="text-muted-foreground mb-10 text-lg">
+              <p className="text-muted-foreground mb-6 sm:mb-10 text-base sm:text-lg">
                 Ask me anything and let’s learn together.
               </p>
 
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 {suggestions.map((item) => (
                   <Card
                     key={item}
-                    className="cursor-pointer hover:bg-sky-500/10 hover:border-sky-500/30 transition-colors shadow-sm bg-card border-border/50"
+                    className="cursor-pointer hover:bg-sky-500/10 hover:border-sky-500/30 transition-all shadow-sm bg-card border-border/50 active:scale-95"
                     onClick={() => setInput(item)}
                   >
-                    <CardContent className="p-4 flex items-center justify-center min-h-25">
-                      <h3 className="font-semibold text-foreground text-center">{item}</h3>
+                    <CardContent className="p-3 sm:p-4 flex items-center justify-center min-h-[70px] sm:min-h-[100px]">
+                      <h3 className="font-semibold text-foreground text-center text-sm sm:text-base">
+                        {item}
+                      </h3>
                     </CardContent>
                   </Card>
                 ))}
@@ -533,7 +557,14 @@ export default function ChatInterface() {
                                   )}
                                 </div>
                               ) : (
-                                <p>{message.content}</p>
+                                <div className="space-y-2">
+                                  {message.content && <p>{message.content}</p>}
+                                  {message.fileName && (
+                                    <div className="flex items-center gap-2 p-2 bg-white/20 rounded-xl text-xs font-bold w-fit">
+                                      <FileText className="w-3 h-3" /> {message.fileName}
+                                    </div>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
@@ -574,6 +605,8 @@ export default function ChatInterface() {
           isLoading={isLoading}
           image={image}
           setImage={setImage}
+          setFileContent={setFileContent}
+          setFileName={setFileName}
         />
       </main>
     </div>
