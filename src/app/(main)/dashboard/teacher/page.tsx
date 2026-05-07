@@ -93,6 +93,16 @@ export default async function TeacherDashboardPage() {
           <p className="text-sm text-slate-600 mt-1">5 Students • Last updated 2 hours ago</p>
         </div>
 
+        <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <Suspense fallback={<StudentListSkeleton />}>
+            <TeacherProfileManager profile={profile} />
+          </Suspense>
+
+          <Suspense fallback={<StudentListSkeleton />}>
+            <ActiveStudentsList />
+          </Suspense>
+        </div>
+
         {/* 2-Column Layout */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Left/Center Column (2/3 width) */}
@@ -118,15 +128,6 @@ export default async function TeacherDashboardPage() {
             {/* Class Insights */}
             <Suspense fallback={<InsightsSkeleton />}>
               <ClassInsightsCard />
-            </Suspense>
-
-            {/* Active Students List */}
-            <Suspense fallback={<StudentListSkeleton />}>
-              <ActiveStudentsList />
-            </Suspense>
-
-            <Suspense fallback={<StudentListSkeleton />}>
-              <TeacherProfileManager profile={profile} />
             </Suspense>
           </div>
         </div>

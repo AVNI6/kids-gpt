@@ -43,7 +43,7 @@ async function verifyUserRole(allowedRole?: UserRole): Promise<VerifiedUser> {
   const { data: profile, error: profileError } = await supabase
     .from("profile")
     .select(
-      "user_id, first_name, last_name, username, avatar_url, role, standard, date_of_birth, total_experience_points, current_streak, longest_streak"
+      "user_id, email, first_name, last_name, username, avatar_url, role, standard, date_of_birth, total_experience_points, current_streak, longest_streak"
     )
     .eq("user_id", user.id)
     .is("deleted_at", null)
@@ -191,88 +191,11 @@ export async function linkByEmail(targetEmail: string): Promise<EmailLinkResult>
     return { status: "error", message: "Email is required." };
   }
 
+  const { profile } = await verifyUserRole();
   const supabase = await getSupabaseClient();
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return { status: "error", message: "Unauthorized" };
-  }
-
-  // Get current user's profile to determine role
-  const { data: currentProfile, error: currentProfileError } = await supabase
-    .from("profile")
-    .select("user_id, role")
-    .eq("user_id", user.id)
-    .is("deleted_at", null)
-    .maybeSingle<{ user_id: string; role: UserRole }>();
-
-  if (currentProfileError || !currentProfile) {
-    return { status: "error", message: "Unable to determine current user role." };
-  }
-
-  // If current user is a teacher, handle teacher-student linking
-  if (currentProfile.role === "teacher") {
-    // Query for target student profile by email
-    const { data: targetUsers, error: targetError } = await supabase
-      .from("profile")
-      .select("user_id, role")
-      .eq("email", email)
-      .is("deleted_at", null);
-
-    if (targetError) {
-      return { status: "error", message: targetError.message };
-    }
-
-    const targetUser = targetUsers?.[0];
-
-    if (!targetUser) {
-      return { status: "error", message: "User with this email not found." };
-    }
-
-    // Verify target is a student/kid
-    if (targetUser.role !== "kid") {
-      return { status: "error", message: "Can only link students (kids)." };
-    }
-
-    // Check if link already exists
-    const { data: existingLink, error: existingError } = await supabase
-      .from("teacher_student_links")
-      .select("id")
-      .eq("teacher_user_id", user.id)
-      .eq("student_user_id", targetUser.user_id)
-      .maybeSingle();
-
-    if (existingError) {
-      return { status: "error", message: existingError.message };
-    }
-
-    if (existingLink) {
-      return { status: "error", message: "This student is already linked." };
-    }
-
-    // Insert into teacher_student_links with status 'active'
-    const { error: insertError } = await supabase.from("teacher_student_links").insert({
-      teacher_user_id: user.id,
-      student_user_id: targetUser.user_id,
-      status: "active",
-      created_at: new Date().toISOString(),
-    });
-
-    if (insertError) {
-      return { status: "error", message: insertError.message };
-    }
-
-    revalidatePath("/dashboard/teacher");
-    return { status: "success", message: "Student linked successfully!" };
-  }
-
-  // For parent/kid, use the existing RPC
   const { data, error } = await supabase.rpc("link_users_by_email", {
-    p_current_user_id: user.id,
+    p_current_user_id: profile.user_id,
     p_target_email: email,
   });
 
@@ -287,7 +210,7 @@ export async function linkByEmail(targetEmail: string): Promise<EmailLinkResult>
   }
 
   if (result.status === "success" || result.status === "pending") {
-    revalidatePath("/dashboard/parent");
+    revalidatePath(profile.role === "teacher" ? "/dashboard/teacher" : "/dashboard/parent");
   }
 
   return result;
@@ -380,7 +303,7 @@ export async function updateKidProfile(formData: FormData) {
   const { data: profile, error: profileError } = await supabase
     .from("profile")
     .select(
-      "user_id, first_name, last_name, username, avatar_url, role, date_of_birth, total_experience_points, current_streak, longest_streak"
+      "user_id, email, first_name, last_name, username, avatar_url, role, date_of_birth, total_experience_points, current_streak, longest_streak"
     )
     .eq("user_id", userId)
     .maybeSingle<DashboardUserProfile>();

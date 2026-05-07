@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   UserRound,
   PanelLeftClose,
@@ -29,24 +29,46 @@ interface ProfileProps {
 export default function Profile({ isCollapsed }: ProfileProps) {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const inFlightRef = useRef(false);
   const { setTheme, theme } = useTheme();
 
   useEffect(() => {
+    let mounted = true;
+    // prevent concurrent in-flight checks from colliding under React Strict Mode
+    const inFlight = inFlightRef;
+
     const checkUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setIsUserLoggedIn(true);
-        setUser(user);
+      if (inFlight.current) return;
+      inFlight.current = true;
+      try {
+        // getSession checks local cache first and avoids triggering network locks
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (session?.user) {
+          setIsUserLoggedIn(true);
+          setUser(session.user);
+        } else {
+          setIsUserLoggedIn(false);
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Profile: failed to get session", err);
+      } finally {
+        inFlight.current = false;
       }
     };
+
     checkUser();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (!mounted) return;
+      if (session?.user) {
         setIsUserLoggedIn(true);
         setUser(session.user);
       } else {
@@ -55,7 +77,14 @@ export default function Profile({ isCollapsed }: ProfileProps) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      try {
+        subscription.unsubscribe();
+      } catch {
+        /* ignore */
+      }
+    };
   }, []);
 
   const getInitials = (name?: string, email?: string) => {

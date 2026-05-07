@@ -1,12 +1,15 @@
-import { getLinkedChildren } from "@/actions/dashboard.actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { UserRound } from "lucide-react";
+import type { LinkedChildProfile } from "@/types/dashboard.types";
 
-export default async function ChildOverviewCard() {
-  const children = await getLinkedChildren();
-  const child = children[0];
+type ChildOverviewCardProps = {
+  linkedChildren: LinkedChildProfile[];
+};
+
+export default function ChildOverviewCard({ linkedChildren }: ChildOverviewCardProps) {
+  const child = linkedChildren[0];
 
   if (!child) {
     return (
