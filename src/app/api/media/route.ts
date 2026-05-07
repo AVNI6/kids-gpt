@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import path from "path";
 
-export const runtime = "nodejs"; // important for file handling
+export const runtime = "nodejs";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GEMINI_API_KEY!,
@@ -10,9 +10,6 @@ const ai = new GoogleGenAI({
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 
-// =========================
-// POST: Upload + Analyze
-// =========================
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -24,17 +21,12 @@ export async function POST(req: Request) {
       return Response.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // Convert File → Buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Convert buffer to temporary file (Gemini SDK expects file path)
     const tempPath = path.join("/tmp", file.name);
     await import("fs/promises").then((fs) => fs.writeFile(tempPath, buffer));
 
-    // =========================
-    // Upload file to Gemini
-    // =========================
     const uploadedFile = await ai.files.upload({
       file: tempPath,
       config: {
@@ -44,9 +36,6 @@ export async function POST(req: Request) {
 
     console.log("Uploaded file:", uploadedFile);
 
-    // =========================
-    // Generate content using file
-    // =========================
     const result = await ai.models.generateContent({
       model: "gemini-2.0-flash",
       contents: [
