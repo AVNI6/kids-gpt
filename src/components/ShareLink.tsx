@@ -15,10 +15,11 @@ import {
 
 interface ShareLinkProps {
   sessionId: string;
-  trigger?: React.ReactNode;
+  trigger?: React.ReactElement;
 }
 
 export default function ShareLink({ sessionId, trigger }: ShareLinkProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Ensure we handle SSR safely for the URL
@@ -36,14 +37,16 @@ export default function ShareLink({ sessionId, trigger }: ShareLinkProps) {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger>
-        {trigger || (
-          <Button variant="outline" size="sm" className="gap-2 rounded-xl">
-            <Share2 className="w-4 h-4" /> Share
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger
+        render={
+          trigger || (
+            <Button variant="outline" size="sm" className="gap-2 rounded-xl">
+              <Share2 className="w-4 h-4" /> Share
+            </Button>
+          )
+        }
+      />
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
           <DialogTitle>Share this chat</DialogTitle>

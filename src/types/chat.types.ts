@@ -19,6 +19,7 @@ export interface Message {
   isPdfRequest?: boolean;
   token_used?: number;
   attachmentUrl?: string | null;
+  fileName?: string | null;
 }
 
 export interface ChatState {
@@ -65,4 +66,29 @@ export interface GeneratedMaterialRow {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+}
+
+// API and Gemini Specific Types
+export interface ChatMessage {
+  role: string;
+  content: string;
+}
+
+export interface ChatRequestBody {
+  message: string;
+  image?: string;
+  history?: ChatMessage[];
+}
+
+export interface GeminiPart {
+  text?: string;
+  inlineData?: {
+    mimeType: string;
+    data: string;
+  };
+}
+
+export interface GeminiContent {
+  role: string;
+  parts: GeminiPart[];
 }

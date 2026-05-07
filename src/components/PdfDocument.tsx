@@ -211,6 +211,7 @@ export const PdfDocument = ({ content }: PdfDocumentProps) => {
       <Page size="A4" style={styles.page}>
         {/* Background Doodles */}
         <View style={styles.backgroundContainer} fixed>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image src={backgroundSrc} style={styles.backgroundImage} />
         </View>
 

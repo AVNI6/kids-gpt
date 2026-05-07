@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 
-import { Rocket, Star, Users, School, CheckCircle2, XCircle, X } from "lucide-react";
+import { Rocket, Star, Users, School, CheckCircle2, X } from "lucide-react";
 import Link from "next/link";
 
 const plans = [

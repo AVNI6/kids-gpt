@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ChatMessage, ChatRequestBody, GeminiPart, GeminiContent } from "@/types/chat.types";
 
 const BASE_PROMPT_CHAT = `You are a helpful educational assistant for kids. 
 Answer the user's questions clearly and simply, using a friendly tone suitable for a child.`;
@@ -16,16 +17,28 @@ const TEXT_MODEL = "gemini-flash-latest";
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, image } = await req.json();
+    const { message, image, history }: ChatRequestBody = await req.json();
 
-    const isPdfRequest = /pdf/i.test(message || "");
+    // Check if user specifically wants to CREATE a new PDF document
+    const isPdfRequest =
+      /pdf/i.test(message || "") && /generate|create|make|build|download/i.test(message || "");
 
     const activePrompt = isPdfRequest ? BASE_PROMPT_PDF : BASE_PROMPT_CHAT;
-    const fullMessage = `${activePrompt}\n\nUser request: ${message || "Please analyze this image."}`;
 
-    const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
-      { text: fullMessage },
-    ];
+    // Construct the Gemini contents array with history
+    const contents: GeminiContent[] = [];
+
+    // Add history first
+    if (history && Array.isArray(history)) {
+      history.forEach((h: ChatMessage) => {
+        contents.push({
+          role: h.role === "user" ? "user" : "model",
+          parts: [{ text: h.content }],
+        });
+      });
+    }
+
+    const currentParts: GeminiPart[] = [{ text: `${activePrompt}\n\nUser Question: ${message}` }];
 
     if (image) {
       let mimeType = "image/png";
@@ -37,7 +50,7 @@ export async function POST(req: NextRequest) {
         base64Data = parts[1];
       }
 
-      parts.push({
+      currentParts.push({
         inlineData: {
           mimeType,
           data: base64Data,
@@ -45,19 +58,18 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    contents.push({
+      role: "user",
+      parts: currentParts,
+    });
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${TEXT_MODEL}:generateContent?key=${process.env.GOOGLE_GEMINI_API_KEY}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [
-            {
-              parts,
-            },
-          ],
+          contents,
           generationConfig: isPdfRequest ? { responseMimeType: "application/json" } : undefined,
         }),
       }
