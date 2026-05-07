@@ -4,8 +4,19 @@ VALUES ('materials', 'materials', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage Policies for 'materials' bucket
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated Upload" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete own materials" ON storage.objects;
 
+-- Allow anyone to view materials (for sharing)
+CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'materials');
 
+-- Allow users to manage their own files in the bucket
+CREATE POLICY "Manage own storage objects" 
+ON storage.objects FOR ALL 
+TO authenticated 
+USING (bucket_id = 'materials')
+WITH CHECK (bucket_id = 'materials');
 
 -- SELECT: Users can view their own sessions
 CREATE POLICY "chat_sessions_select_own" 
