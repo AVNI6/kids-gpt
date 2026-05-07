@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   UserRound,
   PanelLeftClose,
@@ -11,52 +11,23 @@ import {
   Moon,
   Monitor,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { APP_ROUTES } from "@/constant/AppRoutes";
-
-const supabase = createClient();
+import { useAuth } from "@/context/AuthContext";
 
 interface ProfileProps {
   isCollapsed?: boolean;
 }
 
 export default function Profile({ isCollapsed }: ProfileProps) {
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { user: authUser, isUserLoggedIn, logout } = useAuth();
   const { setTheme, theme } = useTheme();
 
-  useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setIsUserLoggedIn(true);
-        setUser(user);
-      }
-    };
-    checkUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        setIsUserLoggedIn(true);
-        setUser(session.user);
-      } else {
-        setIsUserLoggedIn(false);
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const user = authUser;
 
   const getInitials = (name?: string, email?: string) => {
     if (name) {
@@ -69,13 +40,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
   };
 
   const handleLogOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error(error);
-    }
-    setIsUserLoggedIn(false);
-    setUser(null);
-    window.location.href = "/";
+    await logout();
   };
 
   if (!isUserLoggedIn || !user) return null;

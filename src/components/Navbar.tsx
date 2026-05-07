@@ -2,36 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import { APP_ROUTES } from "@/constant/AppRoutes";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
-const supabase = createClient();
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    async function checkUser() {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setIsLoggedIn(true);
-      }
-    }
-    checkUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsLoggedIn(!!session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { isUserLoggedIn } = useAuth();
 
   return (
     <div className="flex items-center gap-2">
-      {!isLoggedIn && (
+      {!isUserLoggedIn && (
         <>
           <Link href={APP_ROUTES.Signin}>
             <Button
