@@ -84,19 +84,12 @@ export default function ParentProfileManager({ profile }: Props) {
     event.preventDefault();
     try {
       setLinkMessage(null);
-
-      // Read the email directly from the submitted form to avoid stale state
-      const form = event.currentTarget as HTMLFormElement;
-      const fd = new FormData(form);
-      const target = String(fd.get("childEmail") ?? "").trim();
+      const target = linkEmail.trim();
 
       if (!target) {
         setLinkMessage("Please enter an email address.");
         return;
       }
-
-      // Keep local state in sync for UX
-      setLinkEmail(target);
 
       const result = await linkByEmail(target);
       setLinkMessage(result.message);
@@ -205,6 +198,7 @@ export default function ParentProfileManager({ profile }: Props) {
             <Label htmlFor="childEmail">Child&apos;s Email</Label>
             <Input
               id="childEmail"
+              name="childEmail"
               type="email"
               value={linkEmail}
               onChange={(event) => setLinkEmail(event.target.value)}

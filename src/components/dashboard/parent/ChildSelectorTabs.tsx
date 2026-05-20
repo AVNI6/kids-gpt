@@ -1,39 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { getLinkedChildren } from "@/actions/dashboard.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { LinkedChildProfile } from "@/types/dashboard.types";
 
-export default function ChildSelectorTabs() {
-  const [children, setChildren] = useState<LinkedChildProfile[]>([]);
-  const [selectedChildId, setSelectedChildId] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
+type ChildSelectorTabsProps = {
+  linkedChildren: LinkedChildProfile[];
+};
 
-  useEffect(() => {
-    const fetchChildren = async () => {
-      try {
-        const linkedChildren = await getLinkedChildren();
-        setChildren(linkedChildren);
-        if (linkedChildren.length > 0) {
-          setSelectedChildId(linkedChildren[0].user_id);
-        }
-      } catch (error) {
-        console.error("Failed to fetch linked children:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+export default function ChildSelectorTabs({ linkedChildren }: ChildSelectorTabsProps) {
+  const [selectedChildId, setSelectedChildId] = useState<string>(linkedChildren[0]?.user_id ?? "");
 
-    fetchChildren();
-  }, []);
-
-  if (isLoading) {
-    return <div className="h-12 rounded-xl bg-slate-100 animate-pulse" />;
-  }
-
-  if (children.length === 0) {
+  if (linkedChildren.length === 0) {
     return (
       <div className="flex items-center gap-3 rounded-xl bg-white p-4 border border-sky-100 shadow-sm">
         <p className="text-slate-600">No linked children found.</p>
@@ -55,7 +34,7 @@ export default function ChildSelectorTabs() {
 
   return (
     <div className="flex items-center gap-3 rounded-xl bg-white p-3 border border-sky-100 shadow-sm overflow-x-auto">
-      {children.map((child) => (
+      {linkedChildren.map((child) => (
         <button
           key={child.user_id}
           onClick={() => setSelectedChildId(child.user_id)}
