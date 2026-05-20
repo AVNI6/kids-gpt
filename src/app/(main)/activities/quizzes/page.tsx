@@ -127,38 +127,40 @@ export default function QuizzesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="px-8 py-8">
-        <div className="mx-auto max-w-5xl space-y-5">
+    <div className="h-full bg-background overflow-hidden flex flex-col">
+      <main className="flex-1 px-4 py-4 md:px-8 md:py-5 overflow-hidden flex flex-col min-h-0">
+        <div className="mx-auto max-w-4xl w-full h-full flex flex-col justify-between gap-3 min-h-0">
           <Link
             href={APP_ROUTES.Activities}
-            className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-foreground hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit"
+            className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-foreground hover:-translate-x-1 transition-transform bg-card px-4 py-1.5 rounded-full shadow-sm border border-border w-fit text-sm shrink-0"
           >
-            <ArrowLeft className="h-5 w-5" /> Back to Activities
+            <ArrowLeft className="h-4 w-4" /> Back to Activities
           </Link>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="space-y-1.5 shrink-0">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span className="font-semibold">Your Mission Progress</span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1">
-                <Timer className="h-4 w-4 text-orange-500" /> {formatTime(timeLeft)}
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-0.5 text-xs">
+                <Timer className="h-3.5 w-3.5 text-orange-500" /> {formatTime(timeLeft)}
               </span>
             </div>
-            <Progress value={progress} className="h-3 rounded-full" />
+            <Progress value={progress} className="h-2 rounded-full" />
           </div>
 
-          <Card className="border-2 border-border shadow-sm bg-card">
-            <CardContent className="p-4">
-              <div className="space-y-3">
-                <h2 className="text-2xl font-black text-foreground">{quiz.question}</h2>
-                <p className="text-sm text-muted-foreground">
+          <Card className="border-2 border-border shadow-sm bg-card flex-1 flex flex-col min-h-0 justify-center">
+            <CardContent className="p-4 md:p-5 flex-1 flex flex-col justify-center min-h-0 overflow-y-auto">
+              <div className="space-y-1.5">
+                <h2 className="text-xl md:text-2xl font-black text-foreground leading-tight">
+                  {quiz.question}
+                </h2>
+                <p className="text-xs text-muted-foreground">
                   Pick the correct answer to move ahead!
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-2 md:grid-cols-2 shrink-0">
             {quiz.options.map((option) => {
               const isSelected = selected === option.id;
               const isCorrect = option.correct;
@@ -170,7 +172,7 @@ export default function QuizzesPage() {
                   type="button"
                   disabled={isAnswered}
                   onClick={() => handleSelect(option.id)}
-                  className={`flex items-center justify-between rounded-2xl border-2 px-5 py-4 text-left font-semibold transition ${
+                  className={`flex items-center justify-between rounded-xl border-2 px-4 py-2.5 text-left font-semibold text-sm transition ${
                     isSelected
                       ? isCorrect
                         ? "border-green-500 bg-green-500/10 text-green-600"
@@ -180,9 +182,9 @@ export default function QuizzesPage() {
                         : "border-border bg-card text-muted-foreground hover:border-sky-500/50 hover:bg-sky-500/5"
                   } ${isAnswered ? "cursor-default" : "cursor-pointer"}`}
                 >
-                  <span className="flex items-center gap-3">
+                  <span className="flex items-center gap-2.5">
                     <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-full text-sm ${
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
                         isSelected
                           ? isCorrect
                             ? "bg-green-600 text-white"
@@ -197,72 +199,69 @@ export default function QuizzesPage() {
                     {option.label}
                   </span>
                   {isSelected &&
-                    (isCorrect ? <CheckCircle2 className="h-5 w-5 text-green-600" /> : null)}
+                    (isCorrect ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : null)}
                 </button>
               );
             })}
           </div>
 
-          {selected !== null && (
-            <div className="mt-4 space-y-3 animate-in fade-in">
-              <Card
-                className={`border-2 p-4 ${
-                  quiz.options.find((o) => o.id === selected)?.correct
-                    ? "border-green-500/30 bg-green-500/5"
-                    : "border-red-500/30 bg-red-500/5"
-                }`}
-              >
-                <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between p-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`h-12 w-12 rounded-full flex items-center justify-center text-white ${
-                        quiz.options.find((o) => o.id === selected)?.correct
-                          ? "bg-green-600"
-                          : "bg-red-600"
-                      }`}
-                    >
-                      {quiz.options.find((o) => o.id === selected)?.correct ? (
-                        <Star className="h-6 w-6" />
+          <div className="h-28 flex items-center justify-center shrink-0">
+            {selected !== null && (
+              <div className="w-full animate-in fade-in">
+                <Card
+                  className={`border-2 ${
+                    quiz.options.find((o) => o.id === selected)?.correct
+                      ? "border-green-500/30 bg-green-500/5"
+                      : "border-red-500/30 bg-red-500/5"
+                  }`}
+                >
+                  <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between p-3.5">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`h-10 w-10 rounded-full flex items-center justify-center text-white shrink-0 ${
+                          quiz.options.find((o) => o.id === selected)?.correct
+                            ? "bg-green-600"
+                            : "bg-red-600"
+                        }`}
+                      >
+                        {quiz.options.find((o) => o.id === selected)?.correct ? (
+                          <Star className="h-5 w-5" />
+                        ) : (
+                          <span className="font-bold text-lg">!</span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-foreground text-sm">
+                          {quiz.options.find((o) => o.id === selected)?.correct
+                            ? "Awesome job, Explorer!"
+                            : "Nice try, Space Ranger!"}
+                        </h3>
+                        <p className="text-xs text-muted-foreground leading-tight">
+                          {quiz.feedback}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      {isLastQuestion ? (
+                        <Link href={APP_ROUTES.Activities}>
+                          <Button className="h-9 rounded-full bg-green-600 hover:bg-green-700 text-sm">
+                            Finish Mission
+                          </Button>
+                        </Link>
                       ) : (
-                        <span className="font-bold text-xl">!</span>
+                        <Button
+                          onClick={handleNext}
+                          className="h-9 rounded-full bg-sky-600 hover:bg-sky-700 text-sm"
+                        >
+                          Next Question
+                        </Button>
                       )}
                     </div>
-                    <div>
-                      <h3 className="font-bold text-foreground">
-                        {quiz.options.find((o) => o.id === selected)?.correct
-                          ? "Awesome job, Explorer!"
-                          : "Nice try, Space Ranger!"}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{quiz.feedback}</p>
-                    </div>
-                  </div>
-                  {isLastQuestion ? (
-                    <Link href={APP_ROUTES.Activities}>
-                      <Button className="rounded-full bg-green-600 hover:bg-green-700">
-                        Finish Mission
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      onClick={handleNext}
-                      className="rounded-full bg-sky-600 hover:bg-sky-700"
-                    >
-                      Next Question
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-
-              {!isLastQuestion && (
-                <Button
-                  onClick={handleNext}
-                  className="w-full bg-sky-600 hover:bg-sky-700 py-6 text-lg font-bold rounded-2xl"
-                >
-                  Next Question
-                </Button>
-              )}
-            </div>
-          )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>

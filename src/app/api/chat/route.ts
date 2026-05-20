@@ -1,120 +1,105 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ChatMessage, ChatRequestBody, GeminiPart, GeminiContent } from "@/types/chat.types";
-
-const BASE_PROMPT_CHAT = `You are a helpful educational assistant for kids. 
-Answer the user's questions clearly and simply, using a friendly tone suitable for a child.`;
-
-const BASE_PROMPT_PDF = `You are a helpful educational assistant for kids. 
-The user specifically requested a PDF document. 
-You MUST return your response in the following JSON format:
-{
-  "overview": "A short, engaging 2-3 sentence overview of what the document contains to be shown in the chat.",
-  "pdfContent": "The full, detailed content in Markdown format for the PDF document. Include title, headings, bullet points, and fun facts."
-}
-Ensure the pdfContent is well-structured and comprehensive. Use emojis to make it fun!`;
-
-const TEXT_MODEL = "gemini-flash-latest";
+import { ChatRequestBody } from "@/types/chat.types";
+import { generateAIResponse } from "@/lib/ai/model-orchestrator";
+import { buildChatPrompt, buildPdfPrompt } from "@/lib/ai/prompts";
+import { buildGeminiContents } from "@/lib/ai/context-window";
+import { aiLogger } from "@/lib/ai/logger";
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, image, history }: ChatRequestBody = await req.json();
+    const { message, image, history, role = "kid" }: ChatRequestBody = await req.json();
 
     // Check if user specifically wants to CREATE a new PDF document
     const isPdfRequest =
       /pdf/i.test(message || "") && /generate|create|make|build|download/i.test(message || "");
 
-    const activePrompt = isPdfRequest ? BASE_PROMPT_PDF : BASE_PROMPT_CHAT;
+    aiLogger.info("ChatAPI", `Received request. Role: ${role}, Is PDF: ${isPdfRequest}`);
 
-    // Construct the Gemini contents array with history
-    const contents: GeminiContent[] = [];
+    // Build the system prompt based on user's role and request type
+    const activePrompt = isPdfRequest ? buildPdfPrompt(role) : buildChatPrompt(role);
 
-    // Add history first
-    if (history && Array.isArray(history)) {
-      history.forEach((h: ChatMessage) => {
-        contents.push({
-          role: h.role === "user" ? "user" : "model",
-          parts: [{ text: h.content }],
-        });
-      });
-    }
+    // Build optimized contents array using context window memory management
+    const contents = buildGeminiContents(activePrompt, history || [], message, image);
 
-    const currentParts: GeminiPart[] = [{ text: `${activePrompt}\n\nUser Question: ${message}` }];
+    const generationConfig = isPdfRequest ? { responseMimeType: "application/json" } : undefined;
 
-    if (image) {
-      let mimeType = "image/png";
-      let base64Data = image;
-
-      if (image.startsWith("data:")) {
-        const parts = image.split(",");
-        mimeType = parts[0].split(":")[1].split(";")[0];
-        base64Data = parts[1];
-      }
-
-      currentParts.push({
-        inlineData: {
-          mimeType,
-          data: base64Data,
-        },
-      });
-    }
-
-    contents.push({
-      role: "user",
-      parts: currentParts,
+    // Delegate to the model fallback orchestrator
+    const response = await generateAIResponse({
+      contents,
+      generationConfig,
+      signal: req.signal,
     });
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${TEXT_MODEL}:generateContent?key=${process.env.GOOGLE_GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents,
-          generationConfig: isPdfRequest ? { responseMimeType: "application/json" } : undefined,
-        }),
-      }
-    );
-
-    const data = await response.json();
-    const usage = data?.usageMetadata || {
-      promptTokenCount: 0,
-      candidatesTokenCount: 0,
-      totalTokenCount: 0,
-    };
-
-    const aiResponseRaw =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated";
+    if (!response.success) {
+      return NextResponse.json(
+        { error: response.error || "Failed to generate AI response" },
+        { status: 500 }
+      );
+    }
 
     if (isPdfRequest) {
       try {
-        const parsed = JSON.parse(aiResponseRaw);
+        const parsed = JSON.parse(response.content);
         return NextResponse.json({
           type: "text",
-          message: parsed.overview,
-          pdfContent: parsed.pdfContent,
+          message: parsed.overview || "Here is your completed PDF material.",
+          pdfContent: parsed.pdfContent || response.content,
+          pdfTheme:
+            parsed.pdfTheme || (role === "kid" ? "kid" : role === "teacher" ? "teacher" : "clean"),
+          suggestedTitle: parsed.suggestedTitle || "Learning Material",
           isPdfRequest: true,
-          usage,
+          usage: {
+            promptTokenCount: response.usage.promptTokens,
+            candidatesTokenCount: response.usage.completionTokens,
+            totalTokenCount: response.usage.totalTokens,
+          },
+          provider: response.provider,
+          model: response.model,
+          fallbackUsed: response.fallbackUsed,
         });
-      } catch {
+      } catch (err) {
+        aiLogger.error("ChatAPI", "Failed to parse PDF JSON response", {
+          error: err instanceof Error ? err.message : String(err),
+          rawContent: response.content,
+        });
+
         // Fallback if AI fails to return valid JSON
         return NextResponse.json({
           type: "text",
-          message: "Here is an overview of your material.",
-          pdfContent: aiResponseRaw,
+          message: "Here is your PDF overview.",
+          pdfContent: response.content,
+          pdfTheme: role === "kid" ? "kid" : role === "teacher" ? "teacher" : "clean",
+          suggestedTitle: "Learning Material",
           isPdfRequest: true,
-          usage,
+          usage: {
+            promptTokenCount: response.usage.promptTokens,
+            candidatesTokenCount: response.usage.completionTokens,
+            totalTokenCount: response.usage.totalTokens,
+          },
+          provider: response.provider,
+          model: response.model,
+          fallbackUsed: response.fallbackUsed,
         });
       }
     }
 
     return NextResponse.json({
       type: "text",
-      message: aiResponseRaw,
+      message: response.content,
       isPdfRequest: false,
-      usage,
+      usage: {
+        promptTokenCount: response.usage.promptTokens,
+        candidatesTokenCount: response.usage.completionTokens,
+        totalTokenCount: response.usage.totalTokens,
+      },
+      provider: response.provider,
+      model: response.model,
+      fallbackUsed: response.fallbackUsed,
     });
   } catch (error) {
-    console.error("Chat API Error:", error);
-    return NextResponse.json({ error: "Failed request" }, { status: 500 });
+    aiLogger.error("ChatAPI", "Fatal Chat API Error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

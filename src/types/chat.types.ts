@@ -9,6 +9,10 @@ export interface ChatSession {
   deleted_at: string | null;
 }
 
+export type UserRole = "kid" | "parent" | "teacher";
+
+export type PdfTheme = "kid" | "clean" | "teacher";
+
 export interface Message {
   id: string;
   role: "user" | "model";
@@ -17,6 +21,8 @@ export interface Message {
   uploadedImage?: string;
   pdfContent?: string;
   isPdfRequest?: boolean;
+  pdfTheme?: PdfTheme;
+  suggestedTitle?: string;
   token_used?: number;
   attachmentUrl?: string | null;
   fileName?: string | null;
@@ -78,6 +84,7 @@ export interface ChatRequestBody {
   message: string;
   image?: string;
   history?: ChatMessage[];
+  role?: UserRole;
 }
 
 export interface GeminiPart {

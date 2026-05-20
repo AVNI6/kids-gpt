@@ -35,8 +35,9 @@ import Profile from "./Profile";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import ShareLink from "./ShareLink";
 import DeleteSessionDialog from "./DeleteSessionDialog";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { getSessionManager } from "@/lib/ai/session-manager";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -46,6 +47,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const pathname = usePathname() || "";
   const sessions = useAppSelector((state) => state.chat.sessions);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
   const { user, isUserLoggedIn, isLoading: isLoadingAuth } = useAuth();
@@ -67,6 +69,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   }, [user, dispatch]);
 
   const handleNewChat = () => {
+    getSessionManager().abortActiveRequest();
     dispatch(setCurrentSessionId(null));
     dispatch(setMessages([]));
     router.push("/");
@@ -74,7 +77,10 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
   const handleSelectSession = (sessionId: string) => {
     if (editingSessionId === sessionId) return;
+    getSessionManager().abortActiveRequest();
     setOpenPopoverId(null);
+    dispatch(setCurrentSessionId(sessionId));
+    dispatch(setMessages([]));
     router.push(`/?id=${sessionId}`);
   };
 
@@ -166,6 +172,12 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         <nav className="space-y-2 flex-1 overflow-y-auto pr-2 custom-scrollbar overflow-x-hidden">
           {navItems.map((item) => {
             const Icon = item.icon;
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href || "___NEVER_MATCH___");
+            const showActiveStyle = item.label !== "New Chat" && isActive;
+
             if (item.href) {
               return (
                 <Link
@@ -173,7 +185,10 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   href={item.href}
                   onClick={item.onClick}
                   className={cn(
-                    "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold text-sidebar-foreground transition-colors group",
+                    "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group",
+                    showActiveStyle
+                      ? "bg-sidebar-accent text-sky-500 font-bold"
+                      : "text-sidebar-foreground",
                     !isOpen && "justify-center px-0 h-10 w-10 mx-auto"
                   )}
                   title={!isOpen ? item.label : undefined}
@@ -234,7 +249,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                             onClick={() => handleSelectSession(session.id)}
                             className={cn(
                               "w-full flex items-center justify-between rounded-xl px-3 py-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors cursor-pointer group",
-                              currentSessionId === session.id
+                              pathname === "/" && currentSessionId === session.id
                                 ? "bg-sidebar-accent text-sky-500"
                                 : "text-sidebar-foreground",
                               !isOpen && "justify-center px-0"

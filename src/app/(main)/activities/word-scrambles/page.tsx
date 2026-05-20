@@ -35,44 +35,44 @@ export default function WordScramblesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="px-8 py-8">
-        <div className="mx-auto max-w-3xl space-y-8">
+    <div className="h-full bg-background overflow-hidden flex flex-col">
+      <main className="flex-1 px-4 py-4 md:px-8 md:py-5 overflow-hidden flex flex-col min-h-0">
+        <div className="mx-auto max-w-3xl w-full h-full flex flex-col justify-between gap-3 min-h-0">
           <Link
             href={APP_ROUTES.Activities}
-            className="inline-flex items-center gap-2 text-pink-600 font-bold hover:text-pink-800 hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit"
+            className="inline-flex items-center gap-2 text-pink-600 font-bold hover:text-pink-800 hover:-translate-x-1 transition-transform bg-card px-4 py-1.5 rounded-full shadow-sm border border-border w-fit text-sm shrink-0"
           >
-            <ArrowLeft className="h-5 w-5" /> Back to Activities
+            <ArrowLeft className="h-4 w-4" /> Back to Activities
           </Link>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm text-pink-600 font-bold">
+          <div className="space-y-1.5 shrink-0">
+            <div className="flex items-center justify-between text-xs text-pink-600 font-bold">
               <span>Word Magic Progress</span>
-              <span className="flex items-center gap-2 rounded-full bg-card px-3 py-1 shadow-sm border border-border">
+              <span className="flex items-center gap-1.5 rounded-full bg-card px-2.5 py-0.5 shadow-sm border border-border">
                 Word {currentWord + 1}
               </span>
             </div>
             <Progress
               value={progress}
-              className="h-3 rounded-full bg-pink-500/10 [&>div]:bg-pink-500"
+              className="h-2 rounded-full bg-pink-500/10 [&>div]:bg-pink-500"
             />
           </div>
 
-          <Card className="border-4 border-pink-500/20 shadow-xl rounded-[2rem] bg-card">
-            <CardContent className="p-12 text-center space-y-8">
-              <div className="mx-auto bg-pink-500/10 w-24 h-24 rounded-full flex items-center justify-center mb-4">
-                <Type className="h-12 w-12 text-pink-600" />
+          <Card className="border-4 border-pink-500/20 shadow-md rounded-[1.5rem] bg-card flex-1 flex flex-col min-h-0 overflow-hidden">
+            <CardContent className="p-4 md:p-6 text-center flex-1 flex flex-col justify-center gap-4 min-h-0 overflow-y-auto">
+              <div className="mx-auto bg-pink-500/10 w-16 h-16 rounded-full flex items-center justify-center shrink-0">
+                <Type className="h-8 w-8 text-pink-600" />
               </div>
 
-              <div>
-                <h2 className="text-2xl font-bold text-muted-foreground mb-2">
+              <div className="shrink-0">
+                <h2 className="text-lg md:text-xl font-bold text-muted-foreground mb-2">
                   Unscramble the letters!
                 </h2>
-                <div className="flex justify-center gap-4">
+                <div className="flex justify-center gap-3">
                   {word.scrambled.split(" ").map((letter, i) => (
                     <div
                       key={i}
-                      className="bg-background border-4 border-pink-500/30 w-16 h-20 rounded-2xl flex items-center justify-center text-4xl font-black text-pink-600 shadow-sm rotate-[-2deg] hover:rotate-[2deg] transition-transform"
+                      className="bg-background border-4 border-pink-500/30 w-12 h-16 md:w-14 md:h-18 rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-black text-pink-600 shadow-sm rotate-[-2deg] hover:rotate-[2deg] transition-transform"
                     >
                       {letter}
                     </div>
@@ -80,42 +80,44 @@ export default function WordScramblesPage() {
                 </div>
               </div>
 
-              <div className="pt-8 flex flex-col items-center">
+              <div className="flex flex-col items-center shrink-0">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value.toUpperCase())}
                   disabled={showResult}
                   placeholder="Type your answer..."
-                  className="w-full max-w-sm text-center text-3xl font-black uppercase tracking-widest p-6 rounded-2xl border-4 border-border bg-background focus:border-pink-500 focus:outline-none shadow-inner text-foreground"
+                  className="w-full max-w-xs text-center text-2xl font-black uppercase tracking-widest p-3 rounded-2xl border-4 border-border bg-background focus:border-pink-500 focus:outline-none shadow-inner text-foreground"
                   maxLength={word.answer.length}
                 />
               </div>
 
-              <p className="text-pink-500 font-medium">💡 Hint: {word.hint}</p>
+              <p className="text-pink-500 font-medium text-sm shrink-0">💡 Hint: {word.hint}</p>
             </CardContent>
           </Card>
 
-          <div className="flex justify-center h-20">
+          <div className="flex justify-center h-16 shrink-0">
             {!showResult ? (
               <Button
                 onClick={handleCheck}
-                className="h-16 px-12 rounded-full bg-pink-500 hover:bg-pink-600 text-xl font-bold shadow-[0_8px_0px_0px_#be185d] active:translate-y-2 active:shadow-none transition-all"
+                className="h-10 px-8 rounded-full bg-pink-500 hover:bg-pink-600 text-base font-bold shadow-[0_4px_0px_0px_#be185d] active:translate-y-1 active:shadow-none transition-all"
               >
-                Check Word <Sparkles className="ml-2 h-6 w-6" />
+                Check Word <Sparkles className="ml-2 h-4 w-4" />
               </Button>
             ) : (
-              <div className="flex flex-col items-center gap-4 animate-in zoom-in">
+              <div className="flex items-center gap-4 animate-in zoom-in">
                 {isCorrect ? (
-                  <div className="flex items-center gap-2 text-2xl font-black text-green-500">
-                    <CheckCircle2 className="h-8 w-8" /> You got it!
+                  <div className="flex items-center gap-1.5 text-lg font-black text-green-500">
+                    <CheckCircle2 className="h-5 w-5" /> You got it!
                   </div>
                 ) : (
-                  <div className="text-xl font-bold text-red-500">Oops! It was {word.answer}.</div>
+                  <div className="text-base font-bold text-red-500">
+                    Oops! It was {word.answer}.
+                  </div>
                 )}
                 <Button
                   onClick={handleNext}
-                  className="h-16 px-12 rounded-full bg-pink-500 hover:bg-pink-600 text-xl font-bold shadow-[0_8px_0px_0px_#be185d] active:translate-y-2 active:shadow-none transition-all"
+                  className="h-10 px-8 rounded-full bg-pink-500 hover:bg-pink-600 text-base font-bold shadow-[0_4px_0px_0px_#be185d] active:translate-y-1 active:shadow-none transition-all"
                 >
                   Next Word
                 </Button>
