@@ -13,12 +13,14 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/constant/AppRoutes";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 const supabase = createClient();
 
 export default function ChatGPTKidSignupPage() {
   const router = useRouter();
   const [signupState, setSignupState] = useState<"idle" | "loading" | "check-email">("idle");
+  const [showPassword, setShowPassword] = useState(false);
 
   type FormValue = {
     name: string;
@@ -132,7 +134,7 @@ export default function ChatGPTKidSignupPage() {
               <div className="space-y-2">
                 <label className="font-semibold text-foreground">Full Name</label>
                 <div className="relative">
-                  <User className="absolute left-4 top-4 w-5 h-5 text-muted-foreground/50" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                   <Input
                     {...register("name", { required: true })}
                     className="pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
@@ -144,7 +146,7 @@ export default function ChatGPTKidSignupPage() {
               <div className="space-y-2">
                 <label className="font-semibold text-foreground">Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-4 w-5 h-5 text-muted-foreground/50" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                   <Input
                     {...register("email", { required: true })}
                     type="email"
@@ -157,13 +159,20 @@ export default function ChatGPTKidSignupPage() {
               <div className="space-y-2">
                 <label className="font-semibold text-foreground">Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-4 w-5 h-5 text-muted-foreground/50" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                   <Input
                     {...register("password", { required: true })}
-                    type="password"
-                    className="pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
+                    type={showPassword ? "text" : "password"}
+                    className="pl-12 pr-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors"
+                  >
+                    {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+                  </button>
                 </div>
               </div>
 

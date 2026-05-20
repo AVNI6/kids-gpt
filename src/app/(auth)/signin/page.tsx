@@ -12,6 +12,8 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Image from "next/image";
 import { APP_ROUTES } from "@/constant/AppRoutes";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import { useState } from "react";
 const supabase = createClient();
 
 function LoginPageContent() {
@@ -19,6 +21,7 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const from = searchParams?.get("from");
   const fromRole = searchParams?.get("role");
+  const [showPassword, setShowPassword] = useState(false);
   type FormValue = {
     email: string;
     password: string;
@@ -151,10 +154,8 @@ function LoginPageContent() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-foreground">
-                Parent’s Email
-              </label>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Parent’s Email</label>
               <div className="relative">
                 <Mail
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50"
@@ -169,8 +170,8 @@ function LoginPageContent() {
               </div>
             </div>
 
-            <div>
-              <div className="mb-2 flex justify-between">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
                 <label className="text-sm font-semibold text-foreground">Password</label>
                 <Link
                   href={APP_ROUTES.ForgotPassword}
@@ -186,10 +187,18 @@ function LoginPageContent() {
                 />
                 <input
                   {...register("password", { required: true })}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full rounded-full border-2 border-border bg-muted/50 py-4 pl-12 pr-4 outline-none transition focus:border-sky-500 text-foreground"
+                  className="w-full rounded-full border-2 border-border bg-muted/50 py-4 pl-12 pr-12 outline-none transition focus:border-sky-500 text-foreground"
                 />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors z-10"
+                >
+                  {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+                </button>
               </div>
             </div>
 
@@ -217,10 +226,11 @@ function LoginPageContent() {
 
           <div className="grid gap-4">
             <button
+              type="button"
               onClick={() => onSubmitOAuth()}
-              className="rounded-full flex items-center justify-center gap-2 border-2 border-border py-3 font-semibold hover:bg-muted text-foreground transition-colors"
+              className="rounded-full flex items-center justify-center gap-2 border-2 border-border py-4 font-bold hover:bg-muted text-foreground transition-all duration-200"
             >
-              <FcGoogle /> Google
+              <FcGoogle className="text-xl" /> Sign In with Google
             </button>
           </div>
 
