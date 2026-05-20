@@ -154,10 +154,8 @@ function LoginPageContent() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-foreground">
-                Parent’s Email
-              </label>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Parent’s Email</label>
               <div className="relative">
                 <Mail
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50"
@@ -170,7 +168,10 @@ function LoginPageContent() {
                   className="w-full rounded-full border-2 border-border bg-muted/50 py-4 pl-12 pr-4 outline-none transition focus:border-sky-500 text-foreground"
                 />
               </div>
-              <div className="mb-2 flex justify-between">
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
                 <label className="text-sm font-semibold text-foreground">Password</label>
                 <Link
                   href={APP_ROUTES.ForgotPassword}
@@ -194,7 +195,7 @@ function LoginPageContent() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors z-10"
                 >
                   {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                 </button>
@@ -225,10 +226,11 @@ function LoginPageContent() {
 
           <div className="grid gap-4">
             <button
+              type="button"
               onClick={() => onSubmitOAuth()}
-              className="rounded-full flex items-center justify-center gap-2 border-2 border-border py-3 font-semibold hover:bg-muted text-foreground transition-colors"
+              className="rounded-full flex items-center justify-center gap-2 border-2 border-border py-4 font-bold hover:bg-muted text-foreground transition-all duration-200"
             >
-              <FcGoogle /> Google
+              <FcGoogle className="text-xl" /> Sign In with Google
             </button>
           </div>
 
