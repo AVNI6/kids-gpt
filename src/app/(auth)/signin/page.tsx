@@ -1,5 +1,6 @@
 "use client";
 export const dynamic = "force-dynamic";
+import { Suspense } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createClient } from "@/lib/supabase/client";
 import { FcGoogle } from "react-icons/fc";
@@ -13,7 +14,7 @@ import Image from "next/image";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 const supabase = createClient();
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams?.get("from");
@@ -232,5 +233,13 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

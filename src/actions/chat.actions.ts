@@ -13,7 +13,6 @@ export async function fetchUserSessions(userId?: string): Promise<ChatSessionRow
     finalUserId = user?.id;
   }
 
-  console.log("fetchUserSessions: user =", finalUserId);
   if (!finalUserId) return [];
 
   const { data, error } = await supabase
