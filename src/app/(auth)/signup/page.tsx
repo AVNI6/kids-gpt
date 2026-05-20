@@ -19,9 +19,12 @@ import Link from "next/link";
 
 import { SubmitHandler, useForm } from "react-hook-form";
 import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 const supabase = createClient();
 export default function ChatGPTKidSignupPage() {
+  const [showPassword, setShowPassword] = useState(false);
   type FormValue = {
     name: string;
     email: string;
@@ -110,7 +113,7 @@ export default function ChatGPTKidSignupPage() {
               <div className="space-y-2">
                 <label className="font-semibold">Full Name</label>
                 <div className="relative">
-                  <User className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
+                  <User className="absolute left-4 top-5 w-5 h-5 text-slate-400" />
                   <Input
                     {...register("name", { required: true })}
                     className="pl-12 h-14 rounded-4xl"
@@ -120,10 +123,10 @@ export default function ChatGPTKidSignupPage() {
               </div>
 
               {/* Parent Email */}
-              <div className="space-y-2">
+              <div className="space-y-2 ">
                 <label className="font-semibold">Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
+                  <Mail className="absolute left-4 top-5 w-5 h-5 text-slate-400" />
                   <Input
                     {...register("email", { required: true })}
                     type="email"
@@ -146,14 +149,24 @@ export default function ChatGPTKidSignupPage() {
               {/* Password */}
               <div className="space-y-2">
                 <label className="font-semibold">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
+                <div className="w-full flex items-center  rounded-full border border-gray-200 py-3 pl-4 pr-4">
+                  <Lock className="text-slate-400" />
                   <Input
-                    {...register("password", { required: true })}
-                    type="password"
-                    className="pl-12 h-14 rounded-4xl"
-                    placeholder="••••••••"
+                    {...register("password", {
+                      required: true,
+                      minLength: { value: 6, message: "Min 6 characters" },
+                    })}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="password"
+                    className="border-0 shadow-none focus-visible:ring-0 focus:outline-none w-full"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="cursor-pointer right-0 top-3 text-gray-400 hover:text-black transition-colors"
+                  >
+                    {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+                  </button>
                 </div>
               </div>
               {/* </div> */}

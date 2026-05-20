@@ -5,10 +5,14 @@ import { FcGoogle } from "react-icons/fc";
 import { Mail, Lock, CheckCircle, BookOpen, Brain, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { IoEyeOutline } from "react-icons/io5";
+import { IoEyeOffOutline } from "react-icons/io5";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { useState } from "react";
 const supabase = createClient();
 
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   type FormValue = {
     email: string;
@@ -117,7 +121,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email */}
             <div>
-              <label className="mb-2 block text-sm font-semibold">Parent’s Email</label>
+              <label className="mb-2 block text-sm font-semibold"> Email</label>
 
               <div className="relative">
                 <Mail
@@ -128,7 +132,7 @@ export default function LoginPage() {
                 <input
                   {...register("email", { required: true })}
                   type="email"
-                  placeholder="parent@example.com"
+                  placeholder="you@example.com"
                   className="w-full rounded-full border-2 border-gray-200 py-4 pl-12 pr-4 outline-none transition focus:border-theme-brand"
                 />
               </div>
@@ -146,18 +150,26 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <div className="relative">
-                <Lock
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={20}
-                />
+              <div className="w-full flex items-center gap-2 rounded-full border-2 border-gray-200 py-4 pl-4 pr-4  ">
+                <Lock className="text-slate-400" size={20} />
 
                 <input
-                  {...register("password", { required: true })}
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full rounded-full border-2 border-gray-200 py-4 pl-12 pr-4 outline-none transition focus:border-theme-brand"
+                  type={showPassword ? "text" : "password"}
+                  {...register("password", {
+                    required: true,
+                    minLength: { value: 6, message: "Min 6 characters" },
+                  })}
+                  placeholder="password"
+                  className="w-full outline-none transition focus:border-theme-brand"
                 />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="cursor-pointer right-0 top-3 text-gray-400 hover:text-black transition-colors"
+                >
+                  {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+                </button>
               </div>
             </div>
 
