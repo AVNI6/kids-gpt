@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Loader2,
@@ -15,6 +16,7 @@ import {
   Mail,
 } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
 
 import {
@@ -81,10 +83,20 @@ function KidSubmitButton() {
 }
 
 export default function KidOnboardingPage() {
+  const router = useRouter();
   const [avatarState, avatarAction] = useActionState(setProfileAvatar, initialAvatarState);
   const [kidState, kidAction] = useActionState(submitKidOnboarding, initialKidState);
 
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (kidState.success) {
+      toast.success(kidState.message || "Welcome explorer!");
+      router.push("/");
+    } else if (kidState.error) {
+      toast.error(kidState.error);
+    }
+  }, [kidState, router]);
 
   useEffect(() => {
     return () => {

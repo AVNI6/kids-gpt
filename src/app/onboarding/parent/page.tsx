@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Loader2,
@@ -13,6 +14,7 @@ import {
   Mail,
 } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
 
 import {
@@ -80,10 +82,20 @@ function ParentSubmitButton() {
 }
 
 export default function ParentOnboardingPage() {
+  const router = useRouter();
   const [avatarState, avatarAction] = useActionState(setProfileAvatar, initialAvatarState);
   const [parentState, parentAction] = useActionState(submitParentOnboarding, initialParentState);
 
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (parentState.success) {
+      toast.success(parentState.message || "Family setup complete!");
+      router.push("/");
+    } else if (parentState.error) {
+      toast.error(parentState.error);
+    }
+  }, [parentState, router]);
 
   useEffect(() => {
     return () => {

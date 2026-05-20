@@ -1,19 +1,23 @@
 "use server";
 
-import { redirect } from "next/navigation";
-
 import { createClient } from "@/lib/supabase/server";
 
 export type KidOnboardingState = {
   error: string | null;
+  success?: boolean;
+  message?: string | null;
 };
 
 export type ParentOnboardingState = {
   error: string | null;
+  success?: boolean;
+  message?: string | null;
 };
 
 export type TeacherOnboardingState = {
   error: string | null;
+  success?: boolean;
+  message?: string | null;
 };
 
 export type AvatarUploadState = {
@@ -112,24 +116,6 @@ export async function submitKidOnboarding(
     return { error: "Please sign in again to continue onboarding." };
   }
 
-  let parentUserId: string | null = null;
-  if (parentEmail) {
-    const { data: parentProfile, error: parentLookupError } = await supabase
-      .from("profile")
-      .select("user_id, role")
-      .eq("email", parentEmail)
-      .eq("role", "parent")
-      .maybeSingle();
-
-    if (parentLookupError) {
-      return { error: parentLookupError.message };
-    }
-
-    if (parentProfile?.user_id) {
-      parentUserId = parentProfile.user_id;
-    }
-  }
-
   const { error: profileUpdateError } = await supabase
     .from("profile")
     .update({
@@ -144,28 +130,28 @@ export async function submitKidOnboarding(
     return { error: profileUpdateError.message };
   }
 
-  if (parentUserId) {
-    const { error: removeExistingLinkError } = await supabase
-      .from("parent_child_link")
-      .delete()
-      .eq("child_user_id", user.id);
+  let linkMessage = "Profile setup complete!";
 
-    if (removeExistingLinkError) {
-      return { error: removeExistingLinkError.message };
-    }
-
-    const { error: linkInsertError } = await supabase.from("parent_child_link").insert({
-      parent_user_id: parentUserId,
-      child_user_id: user.id,
-      is_approved: true,
+  if (parentEmail) {
+    const { data: linkData, error: linkError } = await supabase.rpc("link_users_by_email", {
+      p_current_user_id: user.id,
+      p_target_email: parentEmail,
     });
 
-    if (linkInsertError) {
-      return { error: linkInsertError.message };
+    if (linkError) {
+      return { error: linkError.message };
+    }
+
+    if (linkData?.status === "error" || linkData?.status === "pending") {
+      return { error: linkData.message };
+    }
+
+    if (linkData?.message) {
+      linkMessage = linkData.message;
     }
   }
 
-  redirect("/");
+  return { success: true, message: linkMessage, error: null };
 }
 
 export async function submitParentOnboarding(
@@ -206,46 +192,28 @@ export async function submitParentOnboarding(
     return { error: "Profile update failed." };
   }
 
-  let childNotFound = false;
+  let linkMessage = "Profile setup complete!";
 
   if (childEmail) {
-    const { data: childProfile, error: childLookupError } = await supabase
-      .from("profile")
-      .select("user_id, role")
-      .eq("email", childEmail)
-      .eq("role", "kid")
-      .maybeSingle();
+    const { data: linkData, error: linkError } = await supabase.rpc("link_users_by_email", {
+      p_current_user_id: user.id,
+      p_target_email: childEmail,
+    });
 
-    if (childLookupError) {
-      return { error: childLookupError.message };
+    if (linkError) {
+      return { error: linkError.message };
     }
 
-    if (!childProfile?.user_id) {
-      childNotFound = true;
-    } else {
-      await supabase
-        .from("parent_child_link")
-        .delete()
-        .eq("parent_user_id", user.id)
-        .eq("child_user_id", childProfile.user_id);
+    if (linkData?.status === "error" || linkData?.status === "pending") {
+      return { error: linkData.message };
+    }
 
-      const { error: linkInsertError } = await supabase.from("parent_child_link").insert({
-        parent_user_id: user.id,
-        child_user_id: childProfile.user_id,
-        is_approved: true,
-      });
-
-      if (linkInsertError) {
-        return { error: linkInsertError.message };
-      }
+    if (linkData?.message) {
+      linkMessage = linkData.message;
     }
   }
 
-  if (childNotFound) {
-    redirect("/?warning=child-not-found");
-  }
-
-  redirect("/");
+  return { success: true, message: linkMessage, error: null };
 }
 
 export async function submitTeacherOnboarding(
@@ -255,6 +223,10 @@ export async function submitTeacherOnboarding(
   const firstName = String(formData.get("firstName") ?? "").trim();
   const lastName = String(formData.get("lastName") ?? "").trim();
   const organizationName = String(formData.get("organizationName") ?? "").trim();
+
+  const studentEmail = String(formData.get("studentEmail") ?? "")
+    .trim()
+    .toLowerCase();
 
   if (!firstName) {
     return { error: "First name is required." };
@@ -285,5 +257,26 @@ export async function submitTeacherOnboarding(
     return { error: "Profile update failed." };
   }
 
-  redirect("/");
+  let linkMessage = "Profile setup complete!";
+
+  if (studentEmail) {
+    const { data: linkData, error: linkError } = await supabase.rpc("link_users_by_email", {
+      p_current_user_id: user.id,
+      p_target_email: studentEmail,
+    });
+
+    if (linkError) {
+      return { error: linkError.message };
+    }
+
+    if (linkData?.status === "error" || linkData?.status === "pending") {
+      return { error: linkData.message };
+    }
+
+    if (linkData?.message) {
+      linkMessage = linkData.message;
+    }
+  }
+
+  return { success: true, message: linkMessage, error: null };
 }

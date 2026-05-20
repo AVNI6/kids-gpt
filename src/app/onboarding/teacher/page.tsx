@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Loader2,
@@ -11,8 +12,10 @@ import {
   School,
   Camera,
   CheckCircle2,
+  Mail,
 } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
 
 import {
@@ -80,6 +83,7 @@ function TeacherSubmitButton() {
 }
 
 export default function TeacherOnboardingPage() {
+  const router = useRouter();
   const [avatarState, avatarAction] = useActionState(setProfileAvatar, initialAvatarState);
   const [teacherState, teacherAction] = useActionState(
     submitTeacherOnboarding,
@@ -87,6 +91,15 @@ export default function TeacherOnboardingPage() {
   );
 
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (teacherState.success) {
+      toast.success(teacherState.message || "Classroom setup complete!");
+      router.push("/");
+    } else if (teacherState.error) {
+      toast.error(teacherState.error);
+    }
+  }, [teacherState, router]);
 
   useEffect(() => {
     return () => {
@@ -266,6 +279,22 @@ export default function TeacherOnboardingPage() {
                     id="organizationName"
                     name="organizationName"
                     placeholder="e.g. Bright Future Academy"
+                    className="h-12 rounded-2xl border-2 border-slate-100 pl-11 focus:border-sky-400 focus:ring-0 text-base font-medium bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="studentEmail" className="text-sm font-bold text-slate-700 ml-1">
+                  Student&apos;s Email (Optional)
+                </Label>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    id="studentEmail"
+                    name="studentEmail"
+                    type="email"
+                    placeholder="student@example.com"
                     className="h-12 rounded-2xl border-2 border-slate-100 pl-11 focus:border-sky-400 focus:ring-0 text-base font-medium bg-white"
                   />
                 </div>
