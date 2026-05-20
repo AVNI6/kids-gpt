@@ -1,5 +1,6 @@
 "use client";
 export const dynamic = "force-dynamic";
+import { Suspense } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createClient } from "@/lib/supabase/client";
 import { FcGoogle } from "react-icons/fc";
@@ -15,12 +16,12 @@ import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { useState } from "react";
 const supabase = createClient();
 
-export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams?.get("from");
   const fromRole = searchParams?.get("role");
+  const [showPassword, setShowPassword] = useState(false);
   type FormValue = {
     email: string;
     password: string;
@@ -240,5 +241,13 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

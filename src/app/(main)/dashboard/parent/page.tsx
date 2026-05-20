@@ -101,9 +101,8 @@ export default async function ParentDashboardPage() {
         </div>
 
         {/* Overview Grid */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-2">
           {/* Child Overview */}
-          <ChildOverviewCard linkedChildren={linkedChildren} />
 
           {/* Daily Activity Stats */}
           <Suspense fallback={<DailyActivitySkeleton />}>

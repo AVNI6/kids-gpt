@@ -10,7 +10,7 @@ function MainLayoutContent({ children }: { children: ReactNode }) {
   return (
     <div className="w-full h-screen flex flex-col md:flex-row bg-white overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
-      {children}
+      <div className="flex-1 min-w-0 h-full overflow-y-auto">{children}</div>
     </div>
   );
 }

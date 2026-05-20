@@ -182,6 +182,39 @@ export default function ChatInterface() {
     const currentFileName = fileName;
     let sessionId = currentSessionId;
 
+    const isPdfRequest =
+      /pdf/i.test(currentInput || "") &&
+      /generate|create|make|build|download/i.test(currentInput || "");
+
+    // Intercept PDF requests for unauthenticated (guest) users
+    if (!isUserLoggedIn && isPdfRequest) {
+      setIsLoading(true);
+      setInput("");
+      setImage(null);
+      setFileContent(null);
+      setFileName(null);
+
+      const userMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: currentInput,
+        uploadedImage: currentImage || undefined,
+        fileName: currentFileName || undefined,
+      };
+      dispatch(addMessage(userMessage));
+
+      setTimeout(() => {
+        const aiMessage: Message = {
+          id: crypto.randomUUID(),
+          role: "model",
+          content: "cant generate pdf, please signin to generate pdf",
+        };
+        dispatch(addMessage(aiMessage));
+        setIsLoading(false);
+      }, 800);
+      return;
+    }
+
     // Combine input with file content if present
     const finalInputForAI = currentFileContent
       ? `${currentInput}\n\n[Attachment: ${currentFileName}]\n${currentFileContent}`
