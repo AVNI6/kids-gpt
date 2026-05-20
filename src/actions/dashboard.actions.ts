@@ -336,7 +336,8 @@ export async function getLinkedChildren(): Promise<LinkedChildProfile[]> {
           role,
           total_experience_points,
           current_streak,
-          longest_streak
+          longest_streak,
+          standard
         )
       `
     )
@@ -372,7 +373,8 @@ export async function getLinkedStudents(): Promise<LinkedStudentProfile[]> {
           role,
           total_experience_points,
           current_streak,
-          longest_streak
+          longest_streak,
+          standard
         )
       `
     )
