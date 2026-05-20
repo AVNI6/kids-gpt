@@ -1,51 +1,34 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
-import { useEffect, useState } from "react";
 
-const supabase = createClient();
+import { Button } from "@/components/ui/button";
+import { APP_ROUTES } from "@/constant/AppRoutes";
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
-  const [profile, setProfile] = useState("");
+  const { isUserLoggedIn } = useAuth();
 
-  useEffect(() => {
-    async function checkUser() {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.log(error);
-      }
-      if (data?.user) {
-        setProfile(data.user.email || "A");
-      }
-    }
-    checkUser();
-  }, [profile]);
-  const handleLogOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error(error);
-    }
-    setProfile("");
-  };
   return (
     <div className="flex items-center gap-2">
-      {profile && (
-        <div
-          onClick={handleLogOut}
-          className="w-9 h-9 cursor-pointer hover:bg-hover-sky-blue transition-all ease-out duration-300 rounded-full bg-sky-blue text-white flex items-center justify-center"
-        >
-          {profile.charAt(0).toUpperCase()}
-        </div>
-      )}
-      {!profile && (
+      {!isUserLoggedIn && (
         <>
-          <Button variant="ghost" size="lg">
-            <Link href="/signin">Sign In</Link>
-          </Button>
-          <Button size="lg">
-            <Link href="/signup">Sign Up</Link>
-          </Button>
+          <Link href={APP_ROUTES.Signin}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 px-4 font-semibold text-foreground/70 hover:text-foreground"
+            >
+              Sign In
+            </Button>
+          </Link>
+          <Link href={APP_ROUTES.Signup}>
+            <Button
+              size="sm"
+              className="h-9 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl shadow-lg shadow-sky-500/20 transition-all active:scale-95"
+            >
+              Sign Up
+            </Button>
+          </Link>
         </>
       )}
     </div>

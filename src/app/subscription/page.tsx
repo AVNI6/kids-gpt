@@ -7,16 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-import { Rocket, Star, Users, School, CheckCircle2, XCircle } from "lucide-react";
+import { Rocket, Star, Users, School, CheckCircle2, X } from "lucide-react";
+import Link from "next/link";
 
 const plans = [
   {
@@ -59,49 +51,6 @@ const plans = [
   },
 ];
 
-const comparison = [
-  {
-    feature: "Daily Questions",
-    free: "10 Daily",
-    pro: "Unlimited",
-    family: "Unlimited",
-    teacher: "Unlimited",
-  },
-  {
-    feature: "AI Personality",
-    free: "Standard",
-    pro: "Adaptive",
-    family: "Adaptive",
-    teacher: "Customizable",
-  },
-  {
-    feature: "Parent Dashboard",
-    free: false,
-    pro: false,
-    family: true,
-    teacher: true,
-  },
-  {
-    feature: "Worksheet Generator",
-    free: false,
-    pro: false,
-    family: false,
-    teacher: true,
-  },
-];
-
-function FeatureValue({ value }: { value: string | boolean }) {
-  if (typeof value === "boolean") {
-    return value ? (
-      <CheckCircle2 className="h-5 w-5 text-green-500" />
-    ) : (
-      <XCircle className="h-5 w-5 text-muted-foreground" />
-    );
-  }
-
-  return <span>{value}</span>;
-}
-
 export default function SubscriptionPage() {
   const [annual, setAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("Pro");
@@ -111,10 +60,15 @@ export default function SubscriptionPage() {
     return annual ? `$${Math.floor(price * 0.8)}` : `$${price}`;
   };
 
-  const activePlan = plans.find((plan) => plan.name === selectedPlan) ?? plans[1];
-
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
+      <Link
+        href="/"
+        className="absolute top-6 right-6 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 border border-slate-200 shadow-sm hover:bg-black/15 transition-colors"
+      >
+        <X className="w-5 h-5 text-slate-500" />
+      </Link>
+
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/15 blur-3xl" />
         <div className="absolute top-40 -left-24 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
@@ -218,51 +172,6 @@ export default function SubscriptionPage() {
               </Card>
             );
           })}
-        </section>
-
-        {/* Comparison Table */}
-        <section className="mt-24">
-          <h2 className="text-3xl font-bold text-center mb-8">Feature Comparison</h2>
-
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Feature</TableHead>
-                    <TableHead>Free</TableHead>
-                    <TableHead>Pro</TableHead>
-                    <TableHead>Family</TableHead>
-                    <TableHead>Teacher</TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                  {comparison.map((row) => (
-                    <TableRow key={row.feature}>
-                      <TableCell className="font-medium">{row.feature}</TableCell>
-
-                      <TableCell>
-                        <FeatureValue value={row.free} />
-                      </TableCell>
-
-                      <TableCell>
-                        <FeatureValue value={row.pro} />
-                      </TableCell>
-
-                      <TableCell>
-                        <FeatureValue value={row.family} />
-                      </TableCell>
-
-                      <TableCell>
-                        <FeatureValue value={row.teacher} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
         </section>
       </main>
     </div>

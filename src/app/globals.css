@@ -1,9 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-/* Fonts are loaded via next/font in layout.tsx to avoid PostCSS @import ordering issues */
 
 @custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-sky-blue: #00a6f4;
+  --color-hover-sky-blue: #4192b8;
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -47,18 +51,13 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --color-sky-blue: var(--sky-blue);
-  --color-hover-sky-blue: var(--hover-sky-blue);
 }
 
 :root {
-  /* Use next/font variables (added as classes on <html>) when available, fallback to system stack */
   --font-sans:
     "Plus Jakarta Sans", Lexend, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial;
   --background: oklch(1 0 0);
-  --sky-blue: #00a6f4;
-  --hover-sky-blue: #4192b8;
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -76,12 +75,18 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --theme-brand: #00658d;
-  --theme-brand-dark: #004d6d;
-  --theme-border-light: #c6e7ff;
-  --theme-bg-light: #f6fafe;
-  --theme-accent-green: #84fb42;
-  --theme-text-secondary: #3e484f;
+  --theme-brand: #0284c7;
+  /* sky-600 */
+  --theme-brand-dark: #0369a1;
+  /* sky-700 */
+  --theme-border-light: #e0f2fe;
+  /* sky-100 */
+  --theme-bg-light: #f0f9ff;
+  /* sky-50 */
+  --theme-accent-green: #22c55e;
+  /* green-500 */
+  --theme-text-secondary: #475569;
+  /* slate-600 */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -136,12 +141,19 @@
   * {
     border: outline-ring/50;
   }
+
   body {
-    background-color: text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
+    margin: 0;
+    padding: 0;
+    height: 100%;
   }
+
   html {
-    font-family: font-sans;
+    font-family: var(--font-sans);
   }
+
   button {
     cursor: pointer;
   }

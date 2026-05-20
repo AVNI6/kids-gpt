@@ -1,43 +1,38 @@
 "use client";
 
-import {
-  Sparkles,
-  Lightbulb,
-  ShieldCheck,
-  School,
-  User,
-  Mail,
-  Cake,
-  Lock,
-  Rocket,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Sparkles, Lightbulb, ShieldCheck, School, User, Mail, Lock, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import Link from "next/link";
 
 import { SubmitHandler, useForm } from "react-hook-form";
-import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 const supabase = createClient();
+
 export default function ChatGPTKidSignupPage() {
+  const router = useRouter();
+  const [signupState, setSignupState] = useState<"idle" | "loading" | "check-email">("idle");
   const [showPassword, setShowPassword] = useState(false);
+
   type FormValue = {
     name: string;
     email: string;
     password: string;
   };
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValue>();
+  const { register, handleSubmit } = useForm<FormValue>();
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
+    setSignupState("loading");
+
     const { data, error } = await supabase.auth.signUp({
       email: e.email,
       password: e.password,
@@ -45,19 +40,46 @@ export default function ChatGPTKidSignupPage() {
         data: {
           fullname: e.name,
         },
-        emailRedirectTo: `${window.location.origin}/signin`,
+        emailRedirectTo: `${window.location.origin}/onboarding`,
       },
     });
+
     if (error) {
       console.error(error);
+      setSignupState("idle");
+
+      // Handle the common Supabase 500 error (SMTP/Redirect URL configuration)
+      const isConfirmationError = error.message.toLowerCase().includes("confirmation email");
+      const errorMessage = isConfirmationError
+        ? "Signup server error: Please ensure your Supabase SMTP and Redirect URLs are configured."
+        : error.message;
+
+      toast.error("Signup failed", { description: errorMessage });
+      return;
     }
     if (data) {
-      alert("Signup successful! Please check your email to confirm your account.");
+      toast.success("Signup successful!", {
+        description: "Please check your email to confirm your account.",
+      });
+
+      if (data.session) {
+        router.push(`/onboarding`);
+        return;
+      }
+
+      setSignupState("check-email");
     }
   };
+
   return (
-    <main className="min-h-screen bg-linear-to-br from-sky-100 via-white to-green-50 flex flex-col px-6">
-      <div className="my-auto mx-auto max-w-6xl w-full grid lg:grid-cols-2 gap-10 items-center">
+    <main className="min-h-screen flex flex-col px-6 font-sans bg-background relative overflow-hidden">
+      {/* Dynamic Background Accents */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-50 dark:opacity-20">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-sky-400/20 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-400/20 blur-[120px]" />
+      </div>
+
+      <div className="my-auto mx-auto max-w-6xl w-full grid lg:grid-cols-2 gap-10 items-center relative z-10">
         <div className="hidden lg:flex flex-col gap-8 relative">
           <Link href="/" className="flex items-center gap-4">
             <div className="flex items-center gap-4">
@@ -68,13 +90,13 @@ export default function ChatGPTKidSignupPage() {
             </div>
           </Link>
 
-          <Card className="relative border-2 border-sky-200 rounded-3xl shadow-xl overflow-visible">
+          <Card className="relative border-2 border-border/50 rounded-[32px] bg-card p-2 shadow-xl overflow-visible">
             <CardContent className="p-8">
-              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full bg-blue-900 flex items-center justify-center shadow-lg">
+              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full bg-sky-600 flex items-center justify-center shadow-lg">
                 <Lightbulb className="text-white" />
               </div>
 
-              <p className="text-xl text-slate-600 italic leading-relaxed">
+              <p className="text-xl text-muted-foreground italic leading-relaxed">
                 “Hi there! I’m your AI learning buddy. Let’s create your account and start exploring
                 fun adventures together!”
               </p>
@@ -82,83 +104,67 @@ export default function ChatGPTKidSignupPage() {
               <div className="mt-8 flex gap-3 flex-wrap">
                 <Button
                   variant="outline"
-                  className="rounded-full px-4 py-2 flex items-center gap-2"
+                  className="rounded-full px-4 py-2 flex items-center gap-2 pointer-events-none border-border/50"
                 >
                   <ShieldCheck className="w-4 h-4 text-sky-500" />
-                  <span className="font-semibold text-sm">Kid-Safe AI</span>
+                  <span className="font-semibold text-sm text-foreground">Kid-Safe AI</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="rounded-full px-4 py-2 flex items-center gap-2"
+                  className="rounded-full px-4 py-2 flex items-center gap-2 pointer-events-none border-border/50"
                 >
-                  <School className="w-4 h-4 text-green-500" />
-                  <span className="font-semibold text-sm">Teacher Approved</span>
+                  <School className="w-4 h-4 text-emerald-500" />
+                  <span className="font-semibold text-sm text-foreground">Teacher Approved</span>
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Signup Form */}
-        <Card className="rounded-3xl border-2 border-sky-200 shadow-xl">
+        <Card className="rounded-[32px] border-2 border-border/50 bg-card shadow-xl overflow-hidden">
           <CardContent className="p-8 md:p-10">
             <div className="mb-8">
-              <h2 className="text-3xl font-black mb-2">Create Account</h2>
-              <p className="text-slate-500">
+              <h2 className="text-4xl font-bold mb-2 text-foreground">Create Account</h2>
+              <p className="text-muted-foreground">
                 Fill in the bubbles to start your learning journey 🚀
               </p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
-                <label className="font-semibold">Full Name</label>
+                <label className="font-semibold text-foreground">Full Name</label>
                 <div className="relative">
-                  <User className="absolute left-4 top-5 w-5 h-5 text-slate-400" />
+                  <User className="absolute left-4 top-4 w-5 h-5 text-muted-foreground/50" />
                   <Input
                     {...register("name", { required: true })}
-                    className="pl-12 h-14 rounded-4xl"
+                    className="pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
                     placeholder="Alex Explorer"
                   />
                 </div>
               </div>
 
-              {/* Parent Email */}
-              <div className="space-y-2 ">
-                <label className="font-semibold">Email</label>
+              <div className="space-y-2">
+                <label className="font-semibold text-foreground">Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-5 w-5 h-5 text-slate-400" />
+                  <Mail className="absolute left-4 top-4 w-5 h-5 text-muted-foreground/50" />
                   <Input
                     {...register("email", { required: true })}
                     type="email"
-                    className="pl-12 h-14 rounded-4xl"
+                    className="pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
                     placeholder="you@example.com"
                   />
                 </div>
               </div>
 
-              {/* <div className="grid md:grid-cols-1 gap-6"> */}
-              {/* DOB */}
-              {/* <div className="space-y-2">
-                  <label className="font-semibold">Date of Birth</label>
-                  <div className="relative">
-                    <Cake className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
-                    <Input type="date" className="pl-12 h-14 rounded-4xl" />
-                  </div>
-                </div> */}
-
-              {/* Password */}
               <div className="space-y-2">
-                <label className="font-semibold">Password</label>
-                <div className="w-full flex items-center  rounded-full border border-gray-200 py-3 pl-4 pr-4">
-                  <Lock className="text-slate-400" />
+                <label className="font-semibold text-foreground">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-4 w-5 h-5 text-muted-foreground/50" />
                   <Input
-                    {...register("password", {
-                      required: true,
-                      minLength: { value: 6, message: "Min 6 characters" },
-                    })}
-                    type={showPassword ? "text" : "password"}
-                    placeholder="password"
-                    className="border-0 shadow-none focus-visible:ring-0 focus:outline-none w-full"
+                    {...register("password", { required: true })}
+                    type="password"
+                    className="pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
+                    placeholder="••••••••"
                   />
                   <button
                     type="button"
@@ -169,12 +175,10 @@ export default function ChatGPTKidSignupPage() {
                   </button>
                 </div>
               </div>
-              {/* </div> */}
 
-              {/* Terms */}
               <div className="flex items-center gap-3">
                 <Checkbox required />
-                <p className="text-sm text-slate-500 leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   I agree to the{" "}
                   <Link href="#" className="text-sky-600 font-semibold hover:underline">
                     Safety Rules
@@ -186,18 +190,28 @@ export default function ChatGPTKidSignupPage() {
                 </p>
               </div>
 
-              {/* Submit */}
               <Button
                 type="submit"
-                className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2"
+                disabled={signupState === "loading"}
+                className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2 text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
               >
-                Create Account
+                {signupState === "loading" ? "Creating Account..." : "Create Account"}
                 <Rocket className="w-5 h-5" />
               </Button>
 
-              <p className="text-center text-slate-500">
+              {signupState === "check-email" && (
+                <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-4 py-3 text-sm text-foreground animate-in fade-in slide-in-from-top-2">
+                  Check your email to confirm your account. Once confirmed, you can sign in and
+                  continue to your onboarding flow.
+                </div>
+              )}
+
+              <p className="text-center text-muted-foreground">
                 Already an explorer?{" "}
-                <Link href="/signin" className="text-sky-600 font-semibold hover:underline">
+                <Link
+                  href={APP_ROUTES.Signin}
+                  className="font-semibold text-sky-500 hover:underline"
+                >
                   Log in here
                 </Link>
               </p>
