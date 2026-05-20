@@ -59,6 +59,7 @@ export default function ChatInterface() {
     if (urlSessionId !== currentSessionId) {
       dispatch(setCurrentSessionId(urlSessionId));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlSessionId, dispatch]);
 
   // Load messages when currentSessionId changes
