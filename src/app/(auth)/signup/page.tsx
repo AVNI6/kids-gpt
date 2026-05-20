@@ -159,17 +159,17 @@ export default function ChatGPTKidSignupPage() {
               <div className="space-y-2">
                 <label className="font-semibold text-foreground">Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-4 w-5 h-5 text-muted-foreground/50" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                   <Input
                     {...register("password", { required: true })}
-                    type="password"
-                    className="pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
+                    type={showPassword ? "text" : "password"}
+                    className="pl-12 pr-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="cursor-pointer right-0 top-3 text-gray-400 hover:text-black transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors"
                   >
                     {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                   </button>

@@ -185,15 +185,15 @@ export default function LoginPage() {
                 />
                 <input
                   {...register("password", { required: true })}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full rounded-full border-2 border-border bg-muted/50 py-4 pl-12 pr-4 outline-none transition focus:border-sky-500 text-foreground"
+                  className="w-full rounded-full border-2 border-border bg-muted/50 py-4 pl-12 pr-12 outline-none transition focus:border-sky-500 text-foreground"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="cursor-pointer right-0 top-3 text-gray-400 hover:text-black transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors"
                 >
                   {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                 </button>
