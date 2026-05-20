@@ -134,7 +134,7 @@ export default function ChatGPTKidSignupPage() {
               <div className="space-y-2">
                 <label className="font-semibold text-foreground">Full Name</label>
                 <div className="relative">
-                  <User className="absolute left-4 top-4 w-5 h-5 text-muted-foreground/50" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                   <Input
                     {...register("name", { required: true })}
                     className="pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
@@ -146,7 +146,7 @@ export default function ChatGPTKidSignupPage() {
               <div className="space-y-2">
                 <label className="font-semibold text-foreground">Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-4 w-5 h-5 text-muted-foreground/50" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                   <Input
                     {...register("email", { required: true })}
                     type="email"
