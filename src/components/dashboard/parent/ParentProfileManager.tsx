@@ -6,7 +6,6 @@ import { Link2, PencilLine, Upload } from "lucide-react";
 import { linkByEmail, updateParentProfile } from "@/actions/dashboard.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -102,125 +101,156 @@ export default function ParentProfileManager({ profile }: Props) {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Visible Profile Card */}
-      <Card className="rounded-[24px] border-sky-100 bg-linear-to-br from-sky-50 to-cyan-50 p-6 shadow-sm">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16 rounded-3xl border-2 border-sky-200">
-              <AvatarImage src={profile.avatar_url ?? undefined} />
-              <AvatarFallback className="rounded-3xl bg-sky-100 text-sky-700 font-black">
-                {getInitials(profile.first_name, profile.last_name)}
-              </AvatarFallback>
-            </Avatar>
+    <div className="flex items-center gap-4">
+      {/* Sleek Profile Row */}
+      <div className="flex items-center gap-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-1.5 pr-4 rounded-full border border-slate-200/50 dark:border-slate-800/50 shadow-sm">
+        <Avatar className="h-10 w-10 border border-slate-200 dark:border-slate-700">
+          <AvatarImage src={profile.avatar_url ?? undefined} />
+          <AvatarFallback className="bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300 font-bold text-sm">
+            {getInitials(profile.first_name, profile.last_name)}
+          </AvatarFallback>
+        </Avatar>
 
-            <div className="min-w-0">
-              <h2 className="text-lg font-black text-slate-950">{formatDisplayName(profile)}</h2>
-              <p className="text-sm text-sky-700 font-semibold">Parent</p>
-            </div>
-          </div>
+        <div className="flex flex-col">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">
+            {formatDisplayName(profile) || "Parent"}
+          </h2>
+          <p className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">
+            Parent
+          </p>
+        </div>
 
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogTrigger className="inline-flex shrink-0 items-center justify-center border border-slate-200 bg-white rounded-full h-9 w-9 hover:bg-slate-50 transition-colors">
-              <PencilLine className="h-4 w-4 text-slate-600" />
-            </DialogTrigger>
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogTrigger className="ml-2 flex items-center justify-center h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+            <PencilLine className="h-4 w-4" />
+          </DialogTrigger>
 
-            <DialogContent className="max-w-md rounded-[24px] p-0">
-              <DialogHeader className="border-b px-6 pt-6 pb-4">
-                <DialogTitle className="text-lg font-black tracking-tight text-slate-950">
-                  Edit Profile
-                </DialogTitle>
-                <DialogDescription className="text-sm text-slate-500">
-                  Update your name and avatar.
-                </DialogDescription>
-              </DialogHeader>
+          <DialogContent className="max-w-md rounded-[24px] p-0 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
+              <DialogTitle className="text-lg font-black tracking-tight text-slate-950 dark:text-white">
+                Edit Profile
+              </DialogTitle>
+              <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
+                Update your name and avatar.
+              </DialogDescription>
+            </DialogHeader>
 
-              <form action={handleProfileSubmit} className="space-y-5 px-6 py-5">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="first_name">First name</Label>
-                    <Input
-                      id="first_name"
-                      name="first_name"
-                      defaultValue={profile.first_name ?? ""}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="last_name">Last name</Label>
-                    <Input id="last_name" name="last_name" defaultValue={profile.last_name ?? ""} />
-                  </div>
-                </div>
-
+            <form action={handleProfileSubmit} className="space-y-5 px-6 py-5">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="avatar">Avatar image</Label>
+                  <Label htmlFor="first_name" className="dark:text-slate-300">
+                    First name
+                  </Label>
                   <Input
-                    id="avatar"
-                    name="avatar"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
+                    id="first_name"
+                    name="first_name"
+                    defaultValue={profile.first_name ?? ""}
+                    className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                   />
                 </div>
 
-                {profileError ? (
-                  <p className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                    {profileError}
-                  </p>
-                ) : null}
+                <div className="space-y-2">
+                  <Label htmlFor="last_name" className="dark:text-slate-300">
+                    Last name
+                  </Label>
+                  <Input
+                    id="last_name"
+                    name="last_name"
+                    defaultValue={profile.last_name ?? ""}
+                    className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                  />
+                </div>
+              </div>
 
-                <DialogFooter className="border-t bg-slate-50 px-6 py-4 -mx-6 -mb-6">
-                  <Button type="submit" className="rounded-full px-6">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Save changes
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </Card>
+              <div className="space-y-2">
+                <Label htmlFor="avatar" className="dark:text-slate-300">
+                  Avatar image
+                </Label>
+                <Input
+                  id="avatar"
+                  name="avatar"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                />
+              </div>
 
-      {/* Link Child Card */}
-      <Card className="rounded-[24px] border-sky-100 bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <Link2 className="h-5 w-5 text-sky-600" />
-          <h3 className="text-sm font-black uppercase tracking-wide text-sky-700">Link a Child</h3>
-        </div>
+              {profileError ? (
+                <p className="rounded-lg bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400">
+                  {profileError}
+                </p>
+              ) : null}
 
-        <p className="text-sm text-slate-600 mb-4">
-          Invite a child by email. If they haven&apos;t signed up yet, we&apos;ll send a pending
-          invite.
-        </p>
+              <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 -mx-6 -mb-6 rounded-b-[24px]">
+                <Button
+                  type="submit"
+                  className="rounded-full px-6 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Save changes
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-        <form onSubmit={handleLinkSubmit} className="space-y-3">
-          <div className="space-y-2">
-            <Label htmlFor="childEmail">Child&apos;s Email</Label>
-            <Input
-              id="childEmail"
-              name="childEmail"
-              type="email"
-              value={linkEmail}
-              onChange={(event) => setLinkEmail(event.target.value)}
-              placeholder="child@example.com"
-              className="h-10 rounded-lg border-sky-100"
-            />
-          </div>
+      {/* Link Child Button/Dialog */}
+      <Dialog>
+        <DialogTrigger
+          render={
+            <Button
+              variant="outline"
+              className="rounded-full bg-white/70 dark:bg-slate-900/70 border-slate-200/50 dark:border-slate-800/50 shadow-sm backdrop-blur-md hover:bg-sky-50 dark:hover:bg-slate-800 dark:text-slate-200"
+            >
+              <Link2 className="mr-2 h-4 w-4 text-sky-600 dark:text-sky-400" />
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Link Child</span>
+            </Button>
+          }
+        />
+        <DialogContent className="max-w-md rounded-[24px] dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black tracking-tight text-slate-950 dark:text-white flex items-center gap-2">
+              <Link2 className="h-5 w-5 text-sky-600" /> Link a Child
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
+              Invite a child by email. If they haven&apos;t signed up yet, we&apos;ll send a pending
+              invite.
+            </DialogDescription>
+          </DialogHeader>
 
-          <Button
-            type="submit"
-            className="w-full rounded-lg bg-sky-600 text-white hover:bg-sky-700"
-          >
-            Link
-          </Button>
+          <form onSubmit={handleLinkSubmit} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="childEmail" className="dark:text-slate-300">
+                Child&apos;s Email
+              </Label>
+              <Input
+                id="childEmail"
+                name="childEmail"
+                type="email"
+                value={linkEmail}
+                onChange={(event) => setLinkEmail(event.target.value)}
+                placeholder="child@example.com"
+                className="h-10 rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+              />
+            </div>
 
-          {linkMessage ? (
-            <p className="rounded-lg bg-sky-50 px-4 py-3 text-sm font-medium text-sky-700 border border-sky-100">
-              {linkMessage}
-            </p>
-          ) : null}
-        </form>
-      </Card>
+            <Button
+              type="submit"
+              className="w-full rounded-lg bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600"
+            >
+              Send Link Invite
+            </Button>
+
+            {linkMessage ? (
+              <p className="rounded-lg bg-sky-50 dark:bg-sky-900/30 px-4 py-3 text-sm font-medium text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-800/50">
+                {linkMessage}
+              </p>
+            ) : null}
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

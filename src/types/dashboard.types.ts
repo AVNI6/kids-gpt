@@ -39,3 +39,36 @@ export type LinkedChildProfile = {
 };
 
 export type LinkedStudentProfile = LinkedChildProfile;
+
+export type ChildActivityLog = {
+  id: string;
+  rewards_amount: number | null;
+  description: string | null;
+  created_at: string | null;
+  source_type: string | null;
+};
+
+export type ChildDetailsResult = {
+  total_completed: number;
+  total_xp: number;
+  current_streak: number;
+  longest_streak: number;
+  learning_time_mins: number;
+  quiz_accuracy: number;
+  subject_mastery: {
+    math: number;
+    science: number;
+    english: number;
+    coding: number;
+  };
+  timeline: ChildActivityLog[];
+};
+
+export type ChildSafetyAndUsageResult = {
+  safety_score: number;
+  content_filter_status: string;
+  focus_mode_active: boolean;
+  daily_screen_time_mins: number;
+  weekly_ai_interactions: number;
+  unresolved_alerts_count: number;
+};

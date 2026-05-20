@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/constant/AppRoutes";
+import { saveKidActivityProgress } from "@/actions/dashboard.actions";
 
 const quizDeck = [
   {
@@ -53,6 +54,8 @@ export default function QuizzesPage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(600);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [isSavingProgress, setIsSavingProgress] = useState(false);
 
   const quiz = quizDeck[currentQuestion];
   const progress = ((currentQuestion + 1) / quizDeck.length) * 100;
@@ -75,6 +78,11 @@ export default function QuizzesPage() {
 
   const handleSelect = (id: string) => {
     setSelected(id);
+    const option = quiz.options.find((o) => o.id === id);
+    if (option?.correct) {
+      setCorrectCount((prev) => prev + 1);
+    }
+
     if (isLastQuestion) {
       toast.success("Mission Accomplished!", {
         description: "You've completed the quiz and explored the stars! 🚀✨",
@@ -89,10 +97,43 @@ export default function QuizzesPage() {
     }
   };
 
+  const handleFinishMission = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsSavingProgress(true);
+
+    const finalScorePercent = Math.round((correctCount / quizDeck.length) * 100);
+    const scoreStr = `${finalScorePercent}%`;
+
+    try {
+      const res = await saveKidActivityProgress(
+        "solar-system-explorers",
+        120,
+        "Solar System Explorers Quiz",
+        scoreStr
+      );
+      if (res.success) {
+        toast.success("Progress Saved!", {
+          description: "+120 XP earned! Streak updated! 🎉",
+        });
+      } else {
+        toast.error("Failed to save progress", {
+          description: res.error || "Please try again later.",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error saving progress");
+    } finally {
+      setIsSavingProgress(false);
+      window.location.href = APP_ROUTES.Activities;
+    }
+  };
+
   const handleReset = () => {
     setCurrentQuestion(0);
     setSelected(null);
     setTimeLeft(600);
+    setCorrectCount(0);
   };
 
   if (timeLeft === 0) {
@@ -243,11 +284,13 @@ export default function QuizzesPage() {
                     </div>
                     <div className="shrink-0">
                       {isLastQuestion ? (
-                        <Link href={APP_ROUTES.Activities}>
-                          <Button className="h-9 rounded-full bg-green-600 hover:bg-green-700 text-sm">
-                            Finish Mission
-                          </Button>
-                        </Link>
+                        <Button
+                          onClick={handleFinishMission}
+                          disabled={isSavingProgress}
+                          className="h-9 rounded-full bg-green-600 hover:bg-green-700 text-sm"
+                        >
+                          {isSavingProgress ? "Saving..." : "Finish Mission"}
+                        </Button>
                       ) : (
                         <Button
                           onClick={handleNext}

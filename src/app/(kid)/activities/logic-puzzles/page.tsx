@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/constant/AppRoutes";
+import { saveKidActivityProgress } from "@/actions/dashboard.actions";
+import { toast } from "sonner";
 
 const puzzles = [
   {
@@ -41,13 +43,45 @@ const puzzles = [
 export default function LogicPuzzlesPage() {
   const [currentPuzzle, setCurrentPuzzle] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
 
   const puzzle = puzzles[currentPuzzle];
   const progress = ((currentPuzzle + 1) / puzzles.length) * 100;
 
   const handleNext = () => {
-    setCurrentPuzzle((prev) => (prev + 1) % puzzles.length);
-    setSelected(null);
+    if (currentPuzzle < puzzles.length - 1) {
+      setCurrentPuzzle((prev) => prev + 1);
+      setSelected(null);
+    }
+  };
+
+  const handleFinish = async () => {
+    setIsSaving(true);
+    const scoreStr = `${Math.round((correctCount / puzzles.length) * 100)}%`;
+    try {
+      const res = await saveKidActivityProgress(
+        "logic-puzzles",
+        100,
+        "Logic Puzzles Mini-Mission",
+        scoreStr
+      );
+      if (res.success) {
+        toast.success("Mission Completed!", {
+          description: "+100 XP earned! Streak updated! 🎉",
+        });
+      } else {
+        toast.error("Failed to save progress", {
+          description: res.error || "Please try again later.",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error saving progress");
+    } finally {
+      setIsSaving(false);
+      window.location.href = APP_ROUTES.Activities;
+    }
   };
 
   return (
@@ -104,7 +138,14 @@ export default function LogicPuzzlesPage() {
               return (
                 <button
                   key={option.id}
-                  onClick={() => !selected && setSelected(option.id)}
+                  onClick={() => {
+                    if (!selected) {
+                      setSelected(option.id);
+                      if (option.correct) {
+                        setCorrectCount((prev) => prev + 1);
+                      }
+                    }
+                  }}
                   disabled={selected !== null}
                   className={`relative flex flex-col items-center justify-center gap-4 rounded-[2rem] border-4 p-8 text-4xl transition-all duration-300 ${
                     showSuccess
@@ -112,7 +153,7 @@ export default function LogicPuzzlesPage() {
                       : showError
                         ? "border-red-500 bg-red-500/10 opacity-50"
                         : "border-purple-500/20 bg-card hover:-translate-y-2 hover:shadow-xl hover:border-purple-500/50"
-                  }`}
+                  } ${selected !== null ? "cursor-default" : "cursor-pointer"}`}
                 >
                   {option.label}
                   {showSuccess && (
@@ -125,12 +166,22 @@ export default function LogicPuzzlesPage() {
 
           {selected && (
             <div className="flex justify-center animate-in fade-in slide-in-from-bottom-4">
-              <Button
-                onClick={handleNext}
-                className="h-16 px-12 rounded-full bg-purple-600 hover:bg-purple-700 text-xl font-bold shadow-[0_8px_0px_0px_#581c87] active:translate-y-2 active:shadow-none transition-all"
-              >
-                Next Puzzle <Star className="ml-2 h-6 w-6" />
-              </Button>
+              {currentPuzzle === puzzles.length - 1 ? (
+                <Button
+                  onClick={handleFinish}
+                  disabled={isSaving}
+                  className="h-16 px-12 rounded-full bg-green-600 hover:bg-green-700 text-xl font-bold shadow-[0_8px_0px_0px_#15803d] active:translate-y-2 active:shadow-none transition-all cursor-pointer"
+                >
+                  {isSaving ? "Saving..." : "Finish Mission"} <Star className="ml-2 h-6 w-6" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleNext}
+                  className="h-16 px-12 rounded-full bg-purple-600 hover:bg-purple-700 text-xl font-bold shadow-[0_8px_0px_0px_#581c87] active:translate-y-2 active:shadow-none transition-all cursor-pointer"
+                >
+                  Next Puzzle <Star className="ml-2 h-6 w-6" />
+                </Button>
+              )}
             </div>
           )}
         </div>
