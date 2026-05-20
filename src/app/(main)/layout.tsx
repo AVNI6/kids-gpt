@@ -1,19 +1,24 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-
+import { ReactNode } from "react";
 import Sidebar from "@/components/Sidebar";
+import { SidebarProvider, useSidebar } from "@/context/SidebarContext";
 
-export default function MainLayout({ children }: { children: ReactNode }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+function MainLayoutContent({ children }: { children: ReactNode }) {
+  const { isSidebarOpen, toggleSidebar } = useSidebar();
 
   return (
-    <div className="fixed inset-0 flex bg-white w-full overflow-hidden">
-      <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-      <main className="flex-1 flex flex-col justify-between h-full overflow-hidden relative bg-slate-50 min-h-0">
-        <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
-      </main>
+    <div className="w-full h-screen flex flex-col md:flex-row bg-white overflow-hidden">
+      <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
+      {children}
     </div>
+  );
+}
+
+export default function MainLayout({ children }: { children: ReactNode }) {
+  return (
+    <SidebarProvider>
+      <MainLayoutContent>{children}</MainLayoutContent>
+    </SidebarProvider>
   );
 }

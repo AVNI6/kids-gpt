@@ -28,7 +28,6 @@ import {
 } from "@/store/slice/chat.slice";
 import { fetchUserSessions, deleteChatSession, updateSessionTitle } from "@/actions/chat.actions";
 import { ChatSessionRow } from "@/types/chat.types";
-import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -36,10 +35,8 @@ import Profile from "./Profile";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import ShareLink from "./ShareLink";
 import DeleteSessionDialog from "./DeleteSessionDialog";
-
 import { useRouter } from "next/navigation";
-
-const supabase = createClient();
+import { useAuth } from "@/context/AuthContext";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -51,43 +48,23 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const router = useRouter();
   const sessions = useAppSelector((state) => state.chat.sessions);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const { user, isUserLoggedIn, isLoading: isLoadingAuth } = useAuth();
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const { setTheme, theme } = useTheme();
 
   useEffect(() => {
-    const initAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) {
-        setIsUserLoggedIn(true);
-        const userSessions = await fetchUserSessions(session.user.id);
-        dispatch(setSessions(userSessions));
-      }
-      setIsLoadingAuth(false);
-    };
-    initAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setIsUserLoggedIn(true);
-        const userSessions = await fetchUserSessions(session.user.id);
+    const loadSessions = async () => {
+      if (user) {
+        const userSessions = await fetchUserSessions(user.id);
         dispatch(setSessions(userSessions));
       } else {
-        setIsUserLoggedIn(false);
         dispatch(setSessions([]));
       }
-      setIsLoadingAuth(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [dispatch]);
+    };
+    loadSessions();
+  }, [user, dispatch]);
 
   const handleNewChat = () => {
     dispatch(setCurrentSessionId(null));
@@ -156,7 +133,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-[70] md:relative transition-all duration-300 ease-in-out border-r border-sidebar-border bg-sidebar flex flex-col min-h-0",
+          "fixed inset-y-0 left-0 z-[70] md:static md:z-auto md:relative transition-all duration-300 ease-in-out border-r border-sidebar-border bg-sidebar flex flex-col min-h-0 h-screen md:h-auto",
           isOpen ? "w-72 p-4 translate-x-0" : "w-72 md:w-20 p-4 -translate-x-full md:translate-x-0"
         )}
       >
@@ -195,10 +172,14 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   key={item.label}
                   href={item.href}
                   onClick={item.onClick}
-                  className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold text-sidebar-foreground transition-colors"
+                  className={cn(
+                    "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold text-sidebar-foreground transition-colors group",
+                    !isOpen && "justify-center px-0 h-10 w-10 mx-auto"
+                  )}
+                  title={!isOpen ? item.label : undefined}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="whitespace-nowrap">{item.label}</span>
+                  <Icon className="w-5 h-5 shrink-0" />
+                  {isOpen && <span className="whitespace-nowrap truncate">{item.label}</span>}
                 </Link>
               );
             }

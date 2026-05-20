@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Bot, Sparkles, Download, FileText } from "lucide-react";
+import { Bot, Menu, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,7 +9,6 @@ import { Spinner } from "@/components/ui/spinner";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import Image from "next/image";
-import Sidebar from "@/components/Sidebar";
 import Navbar from "./Navbar";
 import ChatFooter from "./ChatFooter";
 import ShareLink from "./ShareLink";
@@ -25,9 +24,8 @@ import {
 } from "@/actions/chat.actions";
 import { Message, ChatMessageRow } from "@/types/chat.types";
 import { useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-
-const supabase = createClient();
+import { useAuth } from "@/context/AuthContext";
+import { useSidebar } from "@/context/SidebarContext";
 
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
 
@@ -39,32 +37,30 @@ export default function ChatInterface() {
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [image, setImage] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
 
+  const { toggleSidebar, isSidebarOpen } = useSidebar();
+  const { isUserLoggedIn } = useAuth();
   const searchParams = useSearchParams();
   const urlSessionId = searchParams?.get("id") || null;
 
-  // Check login status
+  // Sync Redux with URL session ID - always ensure state matches URL
   useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setIsUserLoggedIn(!!user);
-    };
-    checkUser();
-  }, []);
+    // Immediately clear messages if no session ID
+    if (!urlSessionId) {
+      dispatch(setCurrentSessionId(null));
+      dispatch(setMessages([]));
+      return;
+    }
 
-  // Sync Redux with URL session ID
-  useEffect(() => {
+    // Update session ID if URL changed
     if (urlSessionId !== currentSessionId) {
       dispatch(setCurrentSessionId(urlSessionId));
     }
-  }, [urlSessionId, currentSessionId, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSessionId, dispatch]);
 
   // Load messages when currentSessionId changes
   useEffect(() => {
@@ -95,8 +91,6 @@ export default function ChatInterface() {
         }
       };
       loadMessages();
-    } else {
-      dispatch(setMessages([]));
     }
   }, [currentSessionId, dispatch]);
 
@@ -104,12 +98,10 @@ export default function ChatInterface() {
   useEffect(() => {
     const checkMobile = () => {
       if (window.innerWidth < 768) {
-        setIsSidebarOpen(false);
+        // Mobile logic handled by MainLayout
       }
     };
     checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const scrollToBottom = () => {
@@ -120,6 +112,11 @@ export default function ChatInterface() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  // Render nothing while chat is syncing to prevent showing old chat data
+  if (!urlSessionId && currentSessionId) {
+    return null; // Still syncing, don't render old chat
+  }
 
   const handleDownloadPDF = async (messageId: string) => {
     const message = messages.find((m) => m.id === messageId);
@@ -420,38 +417,38 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="fixed inset-0 flex bg-background w-full overflow-hidden">
-      <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+    <div className="flex-1 flex flex-col h-full w-full bg-background overflow-hidden">
+      <header className="sticky top-0 z-40 w-full h-16 bg-background border-b border-border flex items-center px-4 md:px-6 font-bold text-sky-600 justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          {!isSidebarOpen && (
+            <button
+              onClick={toggleSidebar}
+              title="Open Menu"
+              className="md:hidden h-8 w-8 rounded-xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+          )}
+          <Link href="/" className="flex items-center gap-2">
+            <div className="text-sky-600 truncate max-w-[120px] sm:max-w-none font-black text-xl">
+              ChatGPT <span className="hidden sm:inline">Kids</span>
+            </div>
+          </Link>
+        </div>
+        <div className="flex items-center gap-2">
+          {currentSessionId && <ShareLink sessionId={currentSessionId} />}
+          <Navbar />
+        </div>
+      </header>
 
-      <main className="flex-1 flex flex-col justify-between h-full overflow-hidden relative bg-background min-h-0">
-        <header className="sticky top-0 z-50 w-full h-16 bg-background border-b border-border flex items-center px-4 md:px-6 font-bold text-sky-600 justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            {!isSidebarOpen && (
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="md:hidden h-8 w-8 rounded-xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95"
-              >
-                <Sparkles className="w-4 h-4" />
-              </button>
-            )}
-            <Link href="/" className="flex items-center gap-2">
-              <div className="text-sky-600 truncate max-w-[120px] sm:max-w-none font-black text-xl">
-                ChatGPT <span className="hidden sm:inline">Kids</span>
-              </div>
-            </Link>
-          </div>
-          <div className="flex items-center gap-2">
-            {currentSessionId && <ShareLink sessionId={currentSessionId} />}
-            <Navbar />
-          </div>
-        </header>
-
+      <main className="flex-1 flex flex-col overflow-hidden min-h-0 bg-background">
         {messages.length === 0 ? (
-          <div className="flex justify-center overflow-auto min-h-0">
-            <div className="w-full max-w-4xl mx-auto text-center pt-8 sm:pt-16 p-4 sm:p-6 md:p-8">
+          <div className="flex flex-1 items-center justify-center overflow-auto min-h-0">
+            <div className="w-full max-w-4xl mx-auto text-center p-4 sm:p-6 md:p-8">
               <h2 className="text-2xl sm:text-3xl font-black mb-4 text-foreground">
                 What should we explore today?
               </h2>
+
               <p className="text-muted-foreground mb-6 sm:mb-10 text-base sm:text-lg">
                 Ask me anything and let’s learn together.
               </p>

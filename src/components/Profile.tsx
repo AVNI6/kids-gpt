@@ -1,6 +1,4 @@
 "use client";
-
-import { useEffect, useState, useRef } from "react";
 import {
   UserRound,
   PanelLeftClose,
@@ -11,81 +9,23 @@ import {
   Moon,
   Monitor,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { APP_ROUTES } from "@/constant/AppRoutes";
-
-const supabase = createClient();
+import { useAuth } from "@/context/AuthContext";
 
 interface ProfileProps {
   isCollapsed?: boolean;
 }
 
 export default function Profile({ isCollapsed }: ProfileProps) {
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const inFlightRef = useRef(false);
+  const { user: authUser, isUserLoggedIn, logout } = useAuth();
   const { setTheme, theme } = useTheme();
 
-  useEffect(() => {
-    let mounted = true;
-    // prevent concurrent in-flight checks from colliding under React Strict Mode
-    const inFlight = inFlightRef;
-
-    const checkUser = async () => {
-      if (inFlight.current) return;
-      inFlight.current = true;
-      try {
-        // getSession checks local cache first and avoids triggering network locks
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!mounted) return;
-
-        if (session?.user) {
-          setIsUserLoggedIn(true);
-          setUser(session.user);
-        } else {
-          setIsUserLoggedIn(false);
-          setUser(null);
-        }
-      } catch (err) {
-        console.error("Profile: failed to get session", err);
-      } finally {
-        inFlight.current = false;
-      }
-    };
-
-    checkUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
-      if (session?.user) {
-        setIsUserLoggedIn(true);
-        setUser(session.user);
-      } else {
-        setIsUserLoggedIn(false);
-        setUser(null);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      try {
-        subscription.unsubscribe();
-      } catch {
-        /* ignore */
-      }
-    };
-  }, []);
+  const user = authUser;
 
   const getInitials = (name?: string, email?: string) => {
     if (name) {
@@ -98,13 +38,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
   };
 
   const handleLogOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error(error);
-    }
-    setIsUserLoggedIn(false);
-    setUser(null);
-    window.location.href = "/";
+    await logout();
   };
 
   if (!isUserLoggedIn || !user) return null;

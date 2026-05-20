@@ -1,9 +1,11 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createClient } from "@/lib/supabase/client";
 import { FcGoogle } from "react-icons/fc";
 import { Mail, Lock, CheckCircle, BookOpen, Brain, Sparkles } from "lucide-react";
 import Link from "next/link";
+
 import { useRouter, useSearchParams } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
