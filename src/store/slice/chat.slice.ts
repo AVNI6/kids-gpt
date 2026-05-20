@@ -32,6 +32,10 @@ const chatSlice = createSlice({
         session.title = action.payload.title;
       }
     },
+    clearTransientState: (state) => {
+      state.messages = [];
+      state.currentSessionId = null;
+    },
   },
 });
 
@@ -42,6 +46,7 @@ export const {
   addMessage,
   addSession,
   updateSessionTitleInList,
+  clearTransientState,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

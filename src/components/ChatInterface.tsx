@@ -23,14 +23,16 @@ import {
   uploadFileToStorage,
 } from "@/actions/chat.actions";
 import { Message, ChatMessageRow } from "@/types/chat.types";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
+import { getSessionManager } from "@/lib/ai/session-manager";
 
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
 
 export default function ChatInterface() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const messages = useAppSelector((state) => state.chat.messages);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -42,32 +44,26 @@ export default function ChatInterface() {
   const [fileName, setFileName] = useState<string | null>(null);
 
   const { toggleSidebar, isSidebarOpen } = useSidebar();
-  const { isUserLoggedIn } = useAuth();
+  const { isUserLoggedIn, userRole } = useAuth();
   const searchParams = useSearchParams();
   const urlSessionId = searchParams?.get("id") || null;
 
-  // Sync Redux with URL session ID - always ensure state matches URL
+  // Sync and load messages based on URL session ID
   useEffect(() => {
-    // Immediately clear messages if no session ID
-    if (!urlSessionId) {
-      dispatch(setCurrentSessionId(null));
-      dispatch(setMessages([]));
-      return;
-    }
+    if (urlSessionId) {
+      // Sync Redux with URL session ID if they differ
+      if (urlSessionId !== currentSessionId) {
+        dispatch(setCurrentSessionId(urlSessionId));
+      }
 
-    // Update session ID if URL changed
-    if (urlSessionId !== currentSessionId) {
-      dispatch(setCurrentSessionId(urlSessionId));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlSessionId, dispatch]);
+      // If messages are already loaded for this session, skip reloading from DB
+      if (currentSessionId === urlSessionId && messages.length > 0) {
+        return;
+      }
 
-  // Load messages when currentSessionId changes
-  useEffect(() => {
-    if (currentSessionId) {
       const loadMessages = async () => {
         try {
-          const dbMessages = await fetchSessionMessages(currentSessionId);
+          const dbMessages = await fetchSessionMessages(urlSessionId);
           const mappedMessages: Message[] = dbMessages.map((m: ChatMessageRow) => {
             const isImage =
               m.content.includes("supabase.co/storage/") || m.attachment_url?.includes("image/");
@@ -81,7 +77,7 @@ export default function ChatInterface() {
               content: m.content,
               isImage,
               isPdfRequest: isPdf,
-              pdfContent: m.content, // Restore as fallback for PDF generation
+              pdfContent: m.content,
               attachmentUrl: m.attachment_url,
             };
           });
@@ -91,8 +87,21 @@ export default function ChatInterface() {
         }
       };
       loadMessages();
+    } else {
+      // No URL session ID: clear Redux state
+      if (currentSessionId !== null) {
+        dispatch(setCurrentSessionId(null));
+      }
+      dispatch(setMessages([]));
     }
-  }, [currentSessionId, dispatch]);
+  }, [urlSessionId, currentSessionId, messages.length, dispatch]);
+
+  // Abort in-flight requests when component unmounts
+  useEffect(() => {
+    return () => {
+      getSessionManager().abortActiveRequest();
+    };
+  }, []);
 
   // Close sidebar on mobile by default
   useEffect(() => {
@@ -147,7 +156,15 @@ export default function ChatInterface() {
       const { PdfDocument } = await import("./PdfDocument");
 
       const blob = await pdf(
-        <PdfDocument content={message.pdfContent || message.content} />
+        <PdfDocument
+          content={message.pdfContent || message.content}
+          role={
+            (message.pdfTheme === "clean" ? "parent" : message.pdfTheme || userRole || "kid") as
+              | "kid"
+              | "parent"
+              | "teacher"
+          }
+        />
       ).toBlob();
 
       // Upload to storage if not already there
@@ -280,7 +297,7 @@ export default function ChatInterface() {
         dispatch(addSession(newSession));
         dispatch(setCurrentSessionId(sessionId));
         // Replace URL without full reload to maintain state
-        window.history.replaceState(null, "", `/?id=${sessionId}`);
+        router.replace(`/?id=${sessionId}`, { scroll: false });
       } catch (error) {
         console.error("Failed to create session/save message:", error);
       }
@@ -294,6 +311,10 @@ export default function ChatInterface() {
     }
 
     setIsLoading(true);
+
+    const sessionManager = getSessionManager();
+    const requestId = crypto.randomUUID();
+    const signal = sessionManager.registerRequest(requestId);
 
     try {
       const isImageRequest =
@@ -310,12 +331,14 @@ export default function ChatInterface() {
             message: finalInputForAI,
             image: currentImage,
             history: chatHistory,
+            role: userRole || "kid",
           };
 
       const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
+        signal,
       });
 
       const data = await res.json();
@@ -397,7 +420,9 @@ export default function ChatInterface() {
           try {
             const { pdf } = await import("@react-pdf/renderer");
             const { PdfDocument } = await import("./PdfDocument");
-            const pdfBlob = await pdf(<PdfDocument content={data.pdfContent} />).toBlob();
+            const pdfBlob = await pdf(
+              <PdfDocument content={data.pdfContent} role={userRole || "kid"} />
+            ).toBlob();
             const fileName = `pdf/${sessionId}_${Date.now()}.pdf`;
             attachmentUrl = await uploadFileToStorage(pdfBlob, fileName);
 
@@ -420,6 +445,7 @@ export default function ChatInterface() {
         isPdfRequest: data?.isPdfRequest,
         token_used: tokens,
         attachmentUrl: attachmentUrl,
+        pdfTheme: data?.isPdfRequest ? data.pdfTheme : undefined,
       };
 
       dispatch(addMessage(aiMessage));
@@ -436,6 +462,10 @@ export default function ChatInterface() {
         }).catch(console.error);
       }
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        console.log("Request aborted gracefully");
+        return;
+      }
       console.error("Chat error:", error);
       const errResponse = "Sorry, something went wrong. Please try again.";
       const errMessage: Message = {
@@ -445,6 +475,7 @@ export default function ChatInterface() {
       };
       dispatch(addMessage(errMessage));
     } finally {
+      sessionManager.completeRequest(requestId);
       setIsLoading(false);
     }
   };

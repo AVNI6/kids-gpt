@@ -2,6 +2,7 @@ import React from "react";
 import { Document, Page, Text, StyleSheet, View, Image, Font } from "@react-pdf/renderer";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { UserRole } from "@/types/chat.types";
 
 // Register Emoji Source for color emojis (Twemoji)
 Font.registerEmojiSource({
@@ -9,7 +10,8 @@ Font.registerEmojiSource({
   url: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/",
 });
 
-const styles = StyleSheet.create({
+// ===== KID STYLE SHEET =====
+const kidStyles = StyleSheet.create({
   page: {
     padding: 50,
     fontSize: 12,
@@ -42,6 +44,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 25,
+    borderRadius: 12,
   },
   h1: {
     fontSize: 22,
@@ -81,9 +84,8 @@ const styles = StyleSheet.create({
   },
   bulletRow: {
     flexDirection: "row",
-    marginBottom: 18,
+    marginBottom: 10,
     paddingLeft: 5,
-    minHeight: 20,
   },
   bullet: {
     width: 25,
@@ -96,7 +98,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#1e293b",
     lineHeight: 1.7,
-    marginTop: 7,
   },
   footer: {
     position: "absolute",
@@ -109,6 +110,207 @@ const styles = StyleSheet.create({
   },
 });
 
+// ===== PARENT STYLE SHEET (Clean & Minimalist) =====
+const parentStyles = StyleSheet.create({
+  page: {
+    padding: 50,
+    fontSize: 11,
+    lineHeight: 1.6,
+    fontFamily: "Helvetica",
+    backgroundColor: "#fafafa",
+  },
+  backgroundContainer: {
+    display: "none",
+  },
+  backgroundImage: {
+    display: "none",
+  },
+  header: {
+    fontSize: 22,
+    marginBottom: 20,
+    color: "#1e293b",
+    fontWeight: "bold",
+    textAlign: "left",
+    borderBottomWidth: 1.5,
+    borderBottomColor: "#cbd5e1",
+    paddingBottom: 8,
+  },
+  section: {
+    marginBottom: 15,
+    backgroundColor: "#ffffff",
+    padding: 25,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  h1: {
+    fontSize: 18,
+    marginBottom: 12,
+    marginTop: 20,
+    fontWeight: "bold",
+    color: "#0f172a",
+  },
+  h2: {
+    fontSize: 15,
+    marginBottom: 10,
+    marginTop: 16,
+    fontWeight: "bold",
+    color: "#1e293b",
+  },
+  h3: {
+    fontSize: 13,
+    marginBottom: 8,
+    marginTop: 12,
+    fontWeight: "bold",
+    color: "#334155",
+  },
+  paragraph: {
+    marginBottom: 12,
+  },
+  text: {
+    fontSize: 11,
+    color: "#334155",
+    lineHeight: 1.6,
+  },
+  bold: {
+    fontWeight: "bold",
+    color: "#0f172a",
+  },
+  italic: {
+    fontStyle: "italic",
+  },
+  bulletRow: {
+    flexDirection: "row",
+    marginBottom: 8,
+    paddingLeft: 5,
+  },
+  bullet: {
+    width: 20,
+    fontSize: 12,
+    color: "#64748b",
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 11,
+    color: "#334155",
+    lineHeight: 1.6,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 25,
+    left: 50,
+    right: 50,
+    textAlign: "center",
+    fontSize: 9,
+    color: "#64748b",
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+    paddingTop: 10,
+  },
+});
+
+// ===== TEACHER STYLE SHEET (Structured Worksheet) =====
+const teacherStyles = StyleSheet.create({
+  page: {
+    padding: 50,
+    fontSize: 11.5,
+    lineHeight: 1.5,
+    fontFamily: "Helvetica",
+    backgroundColor: "#ffffff",
+  },
+  backgroundContainer: {
+    display: "none",
+  },
+  backgroundImage: {
+    display: "none",
+  },
+  header: {
+    fontSize: 24,
+    marginBottom: 25,
+    color: "#1e3a8a",
+    fontWeight: "bold",
+    textAlign: "center",
+    borderWidth: 2,
+    borderColor: "#1e3a8a",
+    padding: 10,
+    backgroundColor: "#eff6ff",
+  },
+  section: {
+    marginBottom: 15,
+    backgroundColor: "#ffffff",
+    padding: 25,
+    borderWidth: 1.5,
+    borderColor: "#1e3a8a",
+  },
+  h1: {
+    fontSize: 20,
+    marginBottom: 12,
+    marginTop: 20,
+    fontWeight: "bold",
+    color: "#1e3a8a",
+    borderBottomWidth: 1,
+    borderBottomColor: "#1e3a8a",
+    paddingBottom: 4,
+  },
+  h2: {
+    fontSize: 16,
+    marginBottom: 10,
+    marginTop: 16,
+    fontWeight: "bold",
+    color: "#2563eb",
+  },
+  h3: {
+    fontSize: 14,
+    marginBottom: 8,
+    marginTop: 12,
+    fontWeight: "bold",
+    color: "#1d4ed8",
+  },
+  paragraph: {
+    marginBottom: 12,
+  },
+  text: {
+    fontSize: 11.5,
+    color: "#0f172a",
+    lineHeight: 1.6,
+  },
+  bold: {
+    fontWeight: "bold",
+    color: "#000000",
+  },
+  italic: {
+    fontStyle: "italic",
+  },
+  bulletRow: {
+    flexDirection: "row",
+    marginBottom: 8,
+    paddingLeft: 5,
+  },
+  bullet: {
+    width: 22,
+    fontSize: 13,
+    color: "#1e3a8a",
+    fontWeight: "bold",
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 11.5,
+    color: "#0f172a",
+    lineHeight: 1.6,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 25,
+    left: 50,
+    right: 50,
+    textAlign: "center",
+    fontSize: 9.5,
+    color: "#475569",
+    borderTopWidth: 1.5,
+    borderTopColor: "#1e3a8a",
+    paddingTop: 10,
+  },
+});
+
 // Clean and prepare markdown content
 const cleanMarkdown = (content: string) => {
   if (!content) return "";
@@ -118,14 +320,18 @@ const cleanMarkdown = (content: string) => {
     .trim();
 };
 
-const MarkdownToPdf = ({ content }: { content: string }) => {
+interface MarkdownToPdfProps {
+  content: string;
+  styles: typeof kidStyles;
+}
+
+const MarkdownToPdf = ({ content, styles }: MarkdownToPdfProps) => {
   const cleanedContent = cleanMarkdown(content);
 
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
-        // Standard block elements use View to avoid "orphan string" issues
         h1: ({ children }) => (
           <View>
             <Text style={styles.h1}>{children}</Text>
@@ -146,13 +352,10 @@ const MarkdownToPdf = ({ content }: { content: string }) => {
             <Text style={styles.text}>{children}</Text>
           </View>
         ),
-
         strong: ({ children }) => <Text style={styles.bold}>{children}</Text>,
         em: ({ children }) => <Text style={styles.italic}>{children}</Text>,
-
         ul: ({ children }) => <View style={{ marginBottom: 10 }}>{children}</View>,
         ol: ({ children }) => <View style={{ marginBottom: 10 }}>{children}</View>,
-
         li: ({ children }) => (
           <View style={styles.bulletRow} wrap={false}>
             <Text style={styles.bullet}>•</Text>
@@ -161,11 +364,9 @@ const MarkdownToPdf = ({ content }: { content: string }) => {
             </View>
           </View>
         ),
-
         code: ({ children }) => (
           <Text style={{ backgroundColor: "#f1f5f9", padding: 2 }}>{children}</Text>
         ),
-
         blockquote: ({ children }) => (
           <View
             style={{
@@ -187,14 +388,41 @@ const MarkdownToPdf = ({ content }: { content: string }) => {
 
 type PdfDocumentProps = {
   content: string;
+  role?: UserRole;
 };
 
-export const PdfDocument = ({ content }: PdfDocumentProps) => {
-  // Randomly select a doodle background (1-5)
-  // We use a simple hash of the content to keep the background consistent for the same content
+export const PdfDocument = ({ content, role = "kid" }: PdfDocumentProps) => {
+  // Select active stylesheet based on user's role
+  const getStyles = () => {
+    switch (role) {
+      case "parent":
+        return parentStyles;
+      case "teacher":
+        return teacherStyles;
+      case "kid":
+      default:
+        return kidStyles;
+    }
+  };
+
+  const styles = getStyles();
+
+  // Select header title based on user's role
+  const getHeaderTitle = () => {
+    switch (role) {
+      case "parent":
+        return "📋 Educational Summary";
+      case "teacher":
+        return "📖 Educational Worksheet";
+      case "kid":
+      default:
+        return "✨ Learning Adventure ✨";
+    }
+  };
+
+  // Randomly select a doodle background (1-5) - Only for kid role
   const getDoodleIndex = () => {
     if (!content) return 1;
-    // Simple hash of content to pick a number between 1 and 5
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
       hash = (hash << 2) - hash + content.charCodeAt(i);
@@ -209,26 +437,32 @@ export const PdfDocument = ({ content }: PdfDocumentProps) => {
   return (
     <Document title="Learning Material" author="ChatGPT Kids">
       <Page size="A4" style={styles.page}>
-        {/* Background Doodles */}
-        <View style={styles.backgroundContainer} fixed>
-          {/* eslint-disable-next-line jsx-a11y/alt-text */}
-          <Image src={backgroundSrc} style={styles.backgroundImage} />
-        </View>
+        {/* Background Doodles - Only for Kid Theme */}
+        {role === "kid" && (
+          <View style={styles.backgroundContainer} fixed>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <Image src={backgroundSrc} style={styles.backgroundImage} />
+          </View>
+        )}
 
         {/* Header Section */}
         <View fixed>
-          <Text style={styles.header}>✨ Learning Adventure ✨</Text>
+          <Text style={styles.header}>{getHeaderTitle()}</Text>
         </View>
 
         {/* Content Section */}
         <View style={styles.section}>
-          <MarkdownToPdf content={content} />
+          <MarkdownToPdf content={content} styles={styles as typeof kidStyles} />
         </View>
 
         {/* Footer Section */}
         <View style={styles.footer} fixed>
           <Text>
-            Created with love by ChatGPT Kids 🚀 | Page{" "}
+            {role === "kid"
+              ? "Created with love by ChatGPT Kids 🚀 | Page "
+              : role === "teacher"
+                ? "ChatGPT Teacher Resource Hub | Page "
+                : "ChatGPT Parent Portal Summary | Page "}
             <Text render={({ pageNumber, totalPages }) => `${pageNumber} of ${totalPages}`} />
           </Text>
         </View>
