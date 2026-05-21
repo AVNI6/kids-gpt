@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Palette, ArrowLeft, Award, RotateCcw, Loader2, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,33 +9,35 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
+import { getActivityXp } from "@/actions/activity.actions";
 import { toast } from "sonner";
 
 interface MixLevel {
-  level: number;
   targetColorName: string;
   targetHex: string;
   requiredColors: string[]; // e.g., ["Red", "Yellow"]
   hint: string;
 }
 
-const levels: MixLevel[] = [
+interface ColorMixerPageProps {
+  mixerTitle?: string;
+  levels?: MixLevel[];
+}
+
+const defaultLevels: MixLevel[] = [
   {
-    level: 1,
     targetColorName: "Orange 🍊",
     targetHex: "bg-orange-500",
     requiredColors: ["Red", "Yellow"],
     hint: "Mix the color of a sweet strawberry (Red) with a bright sunny day (Yellow)!",
   },
   {
-    level: 2,
     targetColorName: "Green 🌳",
     targetHex: "bg-green-500",
     requiredColors: ["Yellow", "Blue"],
     hint: "Combine a ripe lemon (Yellow) with the deep ocean waves (Blue)!",
   },
   {
-    level: 3,
     targetColorName: "Purple 🍇",
     targetHex: "bg-purple-600",
     requiredColors: ["Red", "Blue"],
@@ -43,7 +45,10 @@ const levels: MixLevel[] = [
   },
 ];
 
-export default function ColorMixerPage() {
+export default function ColorMixerPage({
+  mixerTitle = "Color Mixer",
+  levels = defaultLevels,
+}: ColorMixerPageProps) {
   const router = useRouter();
   const [currentLevel, setCurrentLevel] = useState(0);
   const [addedDrops, setAddedDrops] = useState<string[]>([]);
@@ -51,6 +56,11 @@ export default function ColorMixerPage() {
   const [mixSuccess, setMixSuccess] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const [xpReward, setXpReward] = useState<number>(110);
+
+  useEffect(() => {
+    getActivityXp("color-mixer").then(setXpReward);
+  }, []);
 
   const levelInfo = levels[currentLevel] || levels[0];
   const progress = (currentLevel / levels.length) * 100;
@@ -109,16 +119,21 @@ export default function ColorMixerPage() {
   const handleFinishMission = async () => {
     setIsSavingProgress(true);
     try {
+      const slug = mixerTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
       const res = await saveKidActivityProgress(
-        "color-mixer",
-        150, // Standardize to +150 XP
-        "Color Mixer 🎨",
+        slug || "color-mixer",
+        xpReward,
+        `${mixerTitle} 🎨`,
         "100% Correct"
       );
 
       if (res.success) {
         toast.success("Progress Saved!", {
-          description: "+150 XP earned! Streak updated! 🎉",
+          description: `+${xpReward} XP earned! Streak updated! 🎉`,
         });
         router.push(APP_ROUTES.Activities);
       } else {
@@ -208,7 +223,9 @@ export default function ColorMixerPage() {
                   <h4 className="text-[10px] font-black uppercase text-purple-600 tracking-wider">
                     Levels
                   </h4>
-                  <p className="text-xl md:text-2xl font-black text-purple-600 mt-1">3 / 3</p>
+                  <p className="text-xl md:text-2xl font-black text-purple-600 mt-1">
+                    {levels.length} / {levels.length}
+                  </p>
                 </div>
                 <div className="bg-blue-500/10 rounded-2xl p-3 border border-blue-500/20 flex flex-col justify-center items-center">
                   <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-wider">
@@ -220,7 +237,9 @@ export default function ColorMixerPage() {
                   <h4 className="text-[10px] font-black uppercase text-green-600 tracking-wider">
                     Reward
                   </h4>
-                  <p className="text-xl md:text-2xl font-black text-green-600 mt-1">+150 XP</p>
+                  <p className="text-xl md:text-2xl font-black text-green-600 mt-1">
+                    +{xpReward} XP
+                  </p>
                 </div>
               </div>
 

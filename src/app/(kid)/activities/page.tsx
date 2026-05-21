@@ -17,6 +17,9 @@ import {
   generateMathChallenge,
   generateScienceLab,
   generateLogicPuzzle,
+  generateColorMixer,
+  generateMatchPairs,
+  getActivityXpSettings,
 } from "@/actions/activity.actions";
 import { type ActivitySlug } from "@/types/activities.type";
 
@@ -45,6 +48,13 @@ export default function ActivitiesPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [activeActivitySlug, setActiveActivitySlug] = useState<ActivitySlug | null>(null);
+  const [xpSettings, setXpSettings] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    getActivityXpSettings().then((data) => {
+      setXpSettings(data);
+    });
+  }, []);
 
   useEffect(() => {
     if (!isGenerating) return;
@@ -63,7 +73,9 @@ export default function ActivitiesPage() {
       slug === "word-scrambles" ||
       slug === "math-challenges" ||
       slug === "science-lab" ||
-      slug === "logic-puzzles";
+      slug === "logic-puzzles" ||
+      slug === "color-mixer" ||
+      slug === "match-following";
 
     if (isAiPowered) {
       setActiveActivitySlug(slug);
@@ -139,6 +151,24 @@ export default function ActivitiesPage() {
           toast.success("Logic Puzzles ready! 🚀");
           router.push(`/activities/logic-puzzles/${result.activityId}`);
         }
+      } else if (activeActivitySlug === "color-mixer") {
+        const result = await generateColorMixer(finalTopic);
+        if (result.error) {
+          toast.error("Generation failed", { description: result.error });
+          setIsGenerating(false);
+        } else if (result.success && result.activityId) {
+          toast.success("Color Mixer ready! 🚀");
+          router.push(`/activities/color-mixer/${result.activityId}`);
+        }
+      } else if (activeActivitySlug === "match-following") {
+        const result = await generateMatchPairs(finalTopic);
+        if (result.error) {
+          toast.error("Generation failed", { description: result.error });
+          setIsGenerating(false);
+        } else if (result.success && result.activityId) {
+          toast.success("Match Pairs ready! 🚀");
+          router.push(`/activities/match-following/${result.activityId}`);
+        }
       }
     } catch (error) {
       console.error(error);
@@ -171,13 +201,20 @@ export default function ActivitiesPage() {
               activity.slug === "word-scrambles" ||
               activity.slug === "math-challenges" ||
               activity.slug === "science-lab" ||
-              activity.slug === "logic-puzzles";
+              activity.slug === "logic-puzzles" ||
+              activity.slug === "color-mixer" ||
+              activity.slug === "match-following";
 
             return (
               <Card
                 key={activity.id}
-                className="border-2 border-border shadow-sm hover:shadow-xl hover:border-sky-500/50 transition-all duration-300 bg-card text-foreground flex flex-col h-full rounded-[24px] overflow-hidden"
+                className="border-2 border-border shadow-sm hover:shadow-xl hover:border-sky-500/50 transition-all duration-300 bg-card text-foreground flex flex-col h-full rounded-[24px] overflow-visible relative"
               >
+                {/* Premium Dynamic XP Badge */}
+                <div className="absolute -top-3 -right-2 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white font-black text-xs px-3.5 py-1.5 rounded-2xl shadow-md border-2 border-card z-20 hover:scale-105 transition-transform duration-200 cursor-default select-none animate-pulse">
+                  +{xpSettings[activity.slug] || 150} XP
+                </div>
+
                 <CardContent className="p-6 flex flex-col h-full justify-between">
                   <div>
                     <div
@@ -200,16 +237,10 @@ export default function ActivitiesPage() {
                   <div className="flex items-end justify-between mt-6">
                     <div>
                       <div className="flex flex-wrap gap-2 mb-3">
-                        {isAiPowered ? (
+                        {isAiPowered && (
                           <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/20 font-bold">
                             ✨ AI Powered
                           </Badge>
-                        ) : (
-                          activity.xp && (
-                            <Badge className="bg-sky-500/10 text-sky-500 border-sky-500/20 font-bold">
-                              {activity.xp}
-                            </Badge>
-                          )
                         )}
                         {activity.badge && (
                           <Badge variant="secondary" className="font-bold">
@@ -289,7 +320,11 @@ export default function ActivitiesPage() {
                         ? "Create Science Lab! 🧪"
                         : activeActivitySlug === "logic-puzzles"
                           ? "Create Logic Puzzle! 🧩"
-                          : "Create Flashcards! 📚"}
+                          : activeActivitySlug === "color-mixer"
+                            ? "Create Color Mixer! 🎨"
+                            : activeActivitySlug === "match-following"
+                              ? "Create Match Pairs! 🔗"
+                              : "Create Flashcards! 📚"}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {activeActivitySlug === "quizzes"
@@ -302,7 +337,11 @@ export default function ActivitiesPage() {
                         ? "Choose a preset topic or write your own to generate custom experiments!"
                         : activeActivitySlug === "logic-puzzles"
                           ? "Choose a preset topic or write your own to generate custom puzzles!"
-                          : "Choose a preset topic or write your own to generate a custom deck!"}
+                          : activeActivitySlug === "color-mixer"
+                            ? "Choose a preset topic or write your own to generate custom mixing levels!"
+                            : activeActivitySlug === "match-following"
+                              ? "Choose a preset topic or write your own to generate custom matching pairs!"
+                              : "Choose a preset topic or write your own to generate a custom deck!"}
               </p>
             </div>
 

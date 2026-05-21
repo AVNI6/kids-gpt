@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   RefreshCcw,
   CheckCircle2,
@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
+import { getActivityXp } from "@/actions/activity.actions";
 import { toast } from "sonner";
 
 interface Flashcard {
@@ -58,6 +59,11 @@ export default function FlashcardsPage({
   const [reviewIds, setReviewIds] = useState<number[]>([]);
   const [deckCompleted, setDeckCompleted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [xpReward, setXpReward] = useState<number>(100);
+
+  useEffect(() => {
+    getActivityXp("flashcards").then(setXpReward);
+  }, []);
 
   const card = flashcards[currentCard] || flashcards[0];
   const progress = ((currentCard + 1) / flashcards.length) * 100;
@@ -105,14 +111,14 @@ export default function FlashcardsPage({
 
       const res = await saveKidActivityProgress(
         slug || "flashcards",
-        150, // +150 XP
+        xpReward,
         deckTitle,
         `${masteredIds.length}/${flashcards.length} Mastered`
       );
 
       if (res.success) {
         toast.success("Deck Completed! 🎉", {
-          description: "+150 XP awarded to your kid profile!",
+          description: `+${xpReward} XP awarded to your kid profile!`,
         });
         router.push(APP_ROUTES.Activities);
       } else {
@@ -182,7 +188,7 @@ export default function FlashcardsPage({
                     XP Reward
                   </h4>
                   <p className="text-3xl font-black text-sky-600 mt-1 flex items-center justify-center gap-1">
-                    +150 <Star className="h-5 w-5 fill-sky-500 text-sky-500 inline" />
+                    +{xpReward} <Star className="h-5 w-5 fill-sky-500 text-sky-500 inline" />
                   </p>
                 </div>
               </div>

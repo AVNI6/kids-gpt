@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
+import { getActivityXp } from "@/actions/activity.actions";
 import { toast } from "sonner";
 
 interface MatchItem {
@@ -25,14 +26,22 @@ interface MatchItem {
   rightText: string; // e.g. "Wild Animal"
 }
 
-const matchPairsList: MatchItem[] = [
+interface MatchFollowingPageProps {
+  matchTitle?: string;
+  pairs?: MatchItem[];
+}
+
+const defaultPairs: MatchItem[] = [
   { id: "1", leftText: "🦁 Lion", rightText: "Wild Animal 🐾" },
   { id: "2", leftText: "🍎 Apple", rightText: "Fruit 🌳" },
   { id: "3", leftText: "🚀 Rocket", rightText: "Space Vehicle 🌌" },
   { id: "4", leftText: "🐳 Whale", rightText: "Ocean Animal 🌊" },
 ];
 
-export default function MatchFollowingPage() {
+export default function MatchFollowingPage({
+  matchTitle = "Match Pairs",
+  pairs = defaultPairs,
+}: MatchFollowingPageProps) {
   const router = useRouter();
   const [leftSelected, setLeftSelected] = useState<string | null>(null);
   const [rightSelected, setRightSelected] = useState<string | null>(null);
@@ -42,9 +51,14 @@ export default function MatchFollowingPage() {
   const [gameCompleted, setGameCompleted] = useState(false);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [xpReward, setXpReward] = useState<number>(90);
+
+  useEffect(() => {
+    getActivityXp("match-following").then(setXpReward);
+  }, []);
 
   const resetGame = () => {
-    const scrambled = [...matchPairsList].sort(() => Math.random() - 0.5);
+    const scrambled = [...pairs].sort(() => Math.random() - 0.5);
     setRightOrder(scrambled);
     setLeftSelected(null);
     setRightSelected(null);
@@ -60,7 +74,8 @@ export default function MatchFollowingPage() {
       resetGame();
     }, 0);
     return () => clearTimeout(timer);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pairs]);
 
   const handleLeftClick = (id: string) => {
     if (matchedIds.includes(id)) return;
@@ -92,7 +107,7 @@ export default function MatchFollowingPage() {
       toast.success("Correct Match! 🎉", { duration: 800 });
 
       // Check if all matched
-      if (matchedIds.length + 1 === matchPairsList.length) {
+      if (matchedIds.length + 1 === pairs.length) {
         setTimeout(() => {
           setGameCompleted(true);
         }, 800);
@@ -112,23 +127,25 @@ export default function MatchFollowingPage() {
   const handleFinishMission = async () => {
     setIsSavingProgress(true);
     // Score calculation (fewer attempts means higher efficiency)
-    const efficiency = Math.max(
-      30,
-      Math.min(100, Math.round((matchPairsList.length / attemptCount) * 100))
-    );
+    const efficiency = Math.max(30, Math.min(100, Math.round((pairs.length / attemptCount) * 100)));
     const scoreStr = `${efficiency}% Accuracy`;
 
     try {
+      const slug = matchTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
       const res = await saveKidActivityProgress(
-        "match-following",
-        150, // Standardize to +150 XP
-        "Match Pairs 🔗",
+        slug || "match-following",
+        xpReward,
+        matchTitle,
         scoreStr
       );
 
       if (res.success) {
         toast.success("Progress Saved!", {
-          description: "+150 XP earned! Streak updated! 🎉",
+          description: `+${xpReward} XP earned! Streak updated! 🎉`,
         });
         router.push(APP_ROUTES.Activities);
       } else {
@@ -144,13 +161,10 @@ export default function MatchFollowingPage() {
     }
   };
 
-  const progress = (matchedIds.length / matchPairsList.length) * 100;
+  const progress = (matchedIds.length / pairs.length) * 100;
 
   if (gameCompleted) {
-    const accuracy = Math.max(
-      30,
-      Math.min(100, Math.round((matchPairsList.length / attemptCount) * 100))
-    );
+    const accuracy = Math.max(30, Math.min(100, Math.round((pairs.length / attemptCount) * 100)));
 
     return (
       <div className="h-full bg-background overflow-hidden flex flex-col relative min-h-screen">
@@ -194,7 +208,9 @@ export default function MatchFollowingPage() {
                   <h4 className="text-[10px] font-black uppercase text-orange-600 tracking-wider">
                     Pairs Matched
                   </h4>
-                  <p className="text-xl md:text-2xl font-black text-orange-600 mt-1">4 / 4</p>
+                  <p className="text-xl md:text-2xl font-black text-orange-600 mt-1">
+                    {pairs.length} / {pairs.length}
+                  </p>
                 </div>
                 <div className="bg-yellow-500/10 rounded-2xl p-3 border border-yellow-500/20 flex flex-col justify-center items-center">
                   <h4 className="text-[10px] font-black uppercase text-yellow-600 tracking-wider">
@@ -206,7 +222,9 @@ export default function MatchFollowingPage() {
                   <h4 className="text-[10px] font-black uppercase text-green-600 tracking-wider">
                     Reward
                   </h4>
-                  <p className="text-xl md:text-2xl font-black text-green-600 mt-1">+150 XP</p>
+                  <p className="text-xl md:text-2xl font-black text-green-600 mt-1">
+                    +{xpReward} XP
+                  </p>
                 </div>
               </div>
 
@@ -255,7 +273,7 @@ export default function MatchFollowingPage() {
             </Link>
 
             <div className="rounded-full bg-card px-4 py-1.5 shadow-sm border border-border text-xs shrink-0 font-bold text-orange-600">
-              Matched: {matchedIds.length} / 4
+              Matched: {matchedIds.length} / {pairs.length}
             </div>
           </div>
 
@@ -279,7 +297,7 @@ export default function MatchFollowingPage() {
               <p className="text-xs font-black uppercase text-orange-600 text-center tracking-wider mb-1">
                 Emoji Prompts
               </p>
-              {matchPairsList.map((item) => {
+              {pairs.map((item) => {
                 const isMatched = matchedIds.includes(item.id);
                 const isSelected = leftSelected === item.id;
 

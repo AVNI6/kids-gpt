@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
+import { getActivityXp } from "@/actions/activity.actions";
 import { toast } from "sonner";
 
 interface MemoryCard {
@@ -29,6 +30,11 @@ export default function MemoryMatchPage() {
   const [flipsCount, setFlipsCount] = useState(0);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const [xpReward, setXpReward] = useState<number>(80);
+
+  useEffect(() => {
+    getActivityXp("memory-match").then(setXpReward);
+  }, []);
 
   const resetGame = () => {
     // Generate pairs of 6 unique emojis for a 3x4 grid (12 cards total) or 8 unique emojis for 4x4 (16 cards total)
@@ -102,14 +108,14 @@ export default function MemoryMatchPage() {
     try {
       const res = await saveKidActivityProgress(
         "memory-match",
-        150, // Standardize to +150 XP
+        xpReward,
         "Memory Match 🧠",
         scoreStr
       );
 
       if (res.success) {
         toast.success("Progress Saved!", {
-          description: "+150 XP earned! Streak updated! 🎉",
+          description: `+${xpReward} XP earned! Streak updated! 🎉`,
         });
         router.push(APP_ROUTES.Activities);
       } else {
@@ -184,7 +190,9 @@ export default function MemoryMatchPage() {
                   <h4 className="text-[10px] font-black uppercase text-green-600 tracking-wider">
                     Reward
                   </h4>
-                  <p className="text-xl md:text-2xl font-black text-green-600 mt-1">+150 XP</p>
+                  <p className="text-xl md:text-2xl font-black text-green-600 mt-1">
+                    +{xpReward} XP
+                  </p>
                 </div>
               </div>
 

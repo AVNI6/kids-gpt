@@ -401,6 +401,18 @@ export async function saveKidActivityProgress(
     const { userId } = await verifyUserRole("kid");
     const supabase = await getSupabaseClient();
 
+    // Securely query dynamic XP settings from DB, falling back to the client-provided parameter
+    let actualXp = xpEarned;
+    const { data: activitySetting } = await supabase
+      .from("activity_settings")
+      .select("xp_reward")
+      .eq("slug", activitySlug)
+      .maybeSingle();
+
+    if (activitySetting?.xp_reward) {
+      actualXp = activitySetting.xp_reward;
+    }
+
     // 1. Fetch current profile stats for streak computation
     const { data: profile, error: profileError } = await supabase
       .from("profile")
@@ -466,10 +478,10 @@ export async function saveKidActivityProgress(
       longestStreak = currentStreak;
     }
 
-    // 3. Insert reward record
+    // 3. Insert reward record with dynamic XP
     const { error: insertError } = await supabase.from("rewards").insert({
       user_id: userId,
-      rewards_amount: xpEarned,
+      rewards_amount: actualXp,
       source_type: "activity",
       description: `Completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
     });
@@ -478,8 +490,8 @@ export async function saveKidActivityProgress(
       return { success: false, error: insertError.message };
     }
 
-    // 4. Update profile
-    const newXp = (profile.total_experience_points ?? 0) + xpEarned;
+    // 4. Update profile with dynamic XP
+    const newXp = (profile.total_experience_points ?? 0) + actualXp;
     const { error: updateError } = await supabase
       .from("profile")
       .update({

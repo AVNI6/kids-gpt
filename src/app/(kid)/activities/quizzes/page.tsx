@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
 import { type QuizQuestionItem } from "@/types/activities.type";
+import { getActivityXp } from "@/actions/activity.actions";
 
 interface QuizzesPageProps {
   quizTitle?: string;
@@ -65,6 +66,11 @@ export default function QuizzesPage({
   const [correctCount, setCorrectCount] = useState(0);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [xpReward, setXpReward] = useState<number>(120);
+
+  useEffect(() => {
+    getActivityXp("quizzes").then(setXpReward);
+  }, []);
 
   const safeQuestions = questions.length > 0 ? questions : defaultQuestions;
   const rawQuiz = safeQuestions[currentQuestion] || safeQuestions[0];
@@ -124,16 +130,11 @@ export default function QuizzesPage({
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
 
-      const res = await saveKidActivityProgress(
-        slug || "quizzes",
-        150, // Standardize to +150 XP
-        quizTitle,
-        scoreStr
-      );
+      const res = await saveKidActivityProgress(slug || "quizzes", xpReward, quizTitle, scoreStr);
 
       if (res.success) {
         toast.success("Progress Saved!", {
-          description: "+150 XP earned! streak updated! 🎉",
+          description: `+${xpReward} XP earned! streak updated! 🎉`,
         });
         router.push(APP_ROUTES.Activities);
       } else {
@@ -248,7 +249,7 @@ export default function QuizzesPage({
                     XP Earned
                   </h4>
                   <p className="text-3xl font-black text-yellow-600 mt-1 flex items-center justify-center gap-1">
-                    +150{" "}
+                    +{xpReward}{" "}
                     <Star className="h-5 w-5 fill-yellow-500 text-yellow-500 inline animate-spin-slow" />
                   </p>
                 </div>

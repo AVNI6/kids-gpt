@@ -765,3 +765,305 @@ Ensure the language is encouraging, energetic, and uses active, fun words. Keep 
     };
   }
 }
+
+// =========================================================
+// 8. DYNAMIC XP SETTINGS ACTIONS
+// =========================================================
+
+/**
+ * Fetch the dynamic XP reward configured in the database for a specific activity slug.
+ * Returns a fallback default value if the query fails or settings do not exist.
+ */
+export async function getActivityXp(slug: string): Promise<number> {
+  const fallbacks: Record<string, number> = {
+    flashcards: 100,
+    quizzes: 120,
+    "logic-puzzles": 150,
+    "word-scrambles": 140,
+    "math-challenges": 130,
+    "science-lab": 160,
+    "memory-match": 80,
+    "color-mixer": 110,
+    "match-following": 90,
+  };
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("activity_settings")
+      .select("xp_reward")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (error || !data) {
+      return fallbacks[slug] || 150;
+    }
+    return data.xp_reward;
+  } catch {
+    return fallbacks[slug] || 150;
+  }
+}
+
+/**
+ * Fetch all dynamic XP settings for educational activity slug structures.
+ */
+export async function getActivityXpSettings(): Promise<Record<string, number>> {
+  const fallbacks: Record<string, number> = {
+    flashcards: 100,
+    quizzes: 120,
+    "logic-puzzles": 150,
+    "word-scrambles": 140,
+    "math-challenges": 130,
+    "science-lab": 160,
+    "memory-match": 80,
+    "color-mixer": 110,
+    "match-following": 90,
+  };
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("activity_settings").select("slug, xp_reward");
+
+    if (error || !data) {
+      return fallbacks;
+    }
+    const result: Record<string, number> = {};
+    for (const item of data) {
+      result[item.slug] = item.xp_reward;
+    }
+    return { ...fallbacks, ...result };
+  } catch {
+    return fallbacks;
+  }
+}
+
+// =========================================================
+// 9. COLOR MIXER SCHEMAS & ACTIONS
+// =========================================================
+
+// Define the schema for a single color mixing level
+const colorMixerItemSchema = z.object({
+  targetColorName: z
+    .string()
+    .describe(
+      "A fun, creative target color name related to the topic, including a relevant emoji (e.g. 'Sunset Orange 🌅', 'Goblin Slime Green 🟢')."
+    ),
+  targetHex: z
+    .string()
+    .describe(
+      "A valid tailwind background class representing the target color, e.g. bg-orange-500, bg-green-500, bg-purple-600, bg-amber-500, bg-rose-500."
+    ),
+  requiredColors: z
+    .array(z.string())
+    .describe(
+      "The primary colors needed to mix this target color. MUST only contain combinations of 'Red', 'Yellow', and/or 'Blue'."
+    ),
+  hint: z.string().describe("A fun, kid-friendly hint relating the topic to the colors needed."),
+});
+
+// Define the full schema for generated color mixer activity
+const colorMixerSchema = z.object({
+  levels: z
+    .array(colorMixerItemSchema)
+    .length(3)
+    .describe("An array containing exactly 3 color-mixing levels."),
+});
+
+export type ColorMixerActivityContent = z.infer<typeof colorMixerSchema>;
+
+/**
+ * Server Action to dynamically generate 3 color-mixing levels
+ * on a given topic for a kid user using the Vercel AI SDK and Gemini model, and save it in Supabase.
+ */
+export async function generateColorMixer(topic: string) {
+  try {
+    const trimmedTopic = topic.trim();
+    if (!trimmedTopic) {
+      return { error: "Please provide a topic for your color mixing!" };
+    }
+
+    // 1. Authenticate user & retrieve session/user_id
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { error: "Unauthorized. Please sign in to continue." };
+    }
+
+    // 2. Double-check profile role is 'kid' to comply with RLS and user flows
+    const { data: profile, error: profileError } = await supabase
+      .from("profile")
+      .select("role")
+      .eq("user_id", user.id)
+      .is("deleted_at", null)
+      .single();
+
+    if (profileError || !profile || profile.role !== "kid") {
+      return { error: "Only kid accounts are authorized to generate new activities!" };
+    }
+
+    if (!geminiApiKey) {
+      return {
+        error: "AI generation is currently unavailable. Please contact support or try again later.",
+      };
+    }
+
+    // 3. Generate structured color mixer object using Vercel AI SDK
+    const { object } = await generateObject({
+      model: googleProvider("gemini-2.5-flash"),
+      schema: colorMixerSchema,
+      system: `You are an awesome, encouraging AI kid-teacher who makes science and color mixing incredibly fun and accessible.
+Your goal is to generate exactly 3 color-mixing levels for a child about the topic: "${trimmedTopic}".
+Since they only have Red, Yellow, and Blue pipettes, you must make sure that "requiredColors" only contains a mix of "Red", "Yellow", and/or "Blue".
+Create fun, creative target names tailored to the topic (e.g. if topic is 'Magic', Yellow + Blue could be 'Goblin Slime Green 🟢').
+
+Each level must contain:
+1. 'targetColorName': A creative target color name related to the topic, including an emoji.
+2. 'targetHex': A valid tailwind background class representing the color (like "bg-orange-500", "bg-green-500", "bg-purple-600").
+3. 'requiredColors': Array of strings containing only "Red", "Yellow", and/or "Blue".
+4. 'hint': A fun, kid-friendly hint relating the topic to the colors needed.
+
+Ensure the language is encouraging, age-appropriate, energetic, and uses colorful verbs. Avoid complex jargon.`,
+      prompt: `Generate 3 creative color-mixing levels themed around the topic: "${trimmedTopic}".`,
+    });
+
+    // 4. Save the generated activity structure to 'generated_activities' table in Supabase
+    const { data: insertedRow, error: insertError } = await supabase
+      .from("generated_activities")
+      .insert({
+        kid_user_id: user.id,
+        activity_type: "color_mixer",
+        content: object,
+      })
+      .select("id")
+      .single();
+
+    if (insertError) {
+      console.error("Database error saving generated color mixer activity:", insertError);
+      return { error: `Failed to save color mixer activity: ${insertError.message}` };
+    }
+
+    return {
+      success: true,
+      activityId: insertedRow.id,
+      data: object,
+    };
+  } catch (err) {
+    console.error("Error in generateColorMixer server action:", err);
+    return {
+      error:
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred during color mixer generation.",
+    };
+  }
+}
+
+// =========================================================
+// 10. MATCH FOLLOWING SCHEMAS & ACTIONS
+// =========================================================
+
+// Define the schema for a single match pair item
+const matchPairsItemSchema = z.object({
+  id: z.string().describe("A unique numeric string like '1', '2', '3', '4'."),
+  leftText: z.string().describe("The first part of the pair, including an emoji."),
+  rightText: z.string().describe("The matching partner of the pair, including an emoji."),
+});
+
+// Define the full schema for generated match pairs activity
+const matchPairsSchema = z.object({
+  pairs: z
+    .array(matchPairsItemSchema)
+    .length(4)
+    .describe("An array containing exactly 4 educational matching pairs based on the topic."),
+});
+
+export type MatchPairsActivityContent = z.infer<typeof matchPairsSchema>;
+
+/**
+ * Server Action to dynamically generate 4 educational matching pairs
+ * on a given topic for a kid user using the Vercel AI SDK and Gemini model, and save it in Supabase.
+ */
+export async function generateMatchPairs(topic: string) {
+  try {
+    const trimmedTopic = topic.trim();
+    if (!trimmedTopic) {
+      return { error: "Please provide a topic for your match pairs!" };
+    }
+
+    // 1. Authenticate user & retrieve session/user_id
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { error: "Unauthorized. Please sign in to continue." };
+    }
+
+    // 2. Double-check profile role is 'kid' to comply with RLS and user flows
+    const { data: profile, error: profileError } = await supabase
+      .from("profile")
+      .select("role")
+      .eq("user_id", user.id)
+      .is("deleted_at", null)
+      .single();
+
+    if (profileError || !profile || profile.role !== "kid") {
+      return { error: "Only kid accounts are authorized to generate new activities!" };
+    }
+
+    if (!geminiApiKey) {
+      return {
+        error: "AI generation is currently unavailable. Please contact support or try again later.",
+      };
+    }
+
+    // 3. Generate structured match pairs object using Vercel AI SDK
+    const { object } = await generateObject({
+      model: googleProvider("gemini-2.5-flash"),
+      schema: matchPairsSchema,
+      system: `You are an awesome, encouraging AI kid-teacher who makes associative learning incredibly fun and accessible.
+Your goal is to generate exactly 4 educational matching pairs for a child about the topic: "${trimmedTopic}".
+Each pair in the array must contain:
+1. 'id': A unique numeric string like "1", "2", "3", "4".
+2. 'leftText': The first part of the pair, including an emoji (e.g. animal to habitat, word to definition, or category match).
+3. 'rightText': The matching partner of the pair, including an emoji.
+
+Ensure the associations are educational, clear, age-appropriate, and use exciting emojis. Avoid complex jargon.`,
+      prompt: `Generate exactly 4 educational matching pairs themed around the topic: "${trimmedTopic}".`,
+    });
+
+    // 4. Save the generated activity structure to 'generated_activities' table in Supabase
+    const { data: insertedRow, error: insertError } = await supabase
+      .from("generated_activities")
+      .insert({
+        kid_user_id: user.id,
+        activity_type: "match_pairs",
+        content: object,
+      })
+      .select("id")
+      .single();
+
+    if (insertError) {
+      console.error("Database error saving generated match pairs activity:", insertError);
+      return { error: `Failed to save match pairs activity: ${insertError.message}` };
+    }
+
+    return {
+      success: true,
+      activityId: insertedRow.id,
+      data: object,
+    };
+  } catch (err) {
+    console.error("Error in generateMatchPairs server action:", err);
+    return {
+      error:
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred during match pairs generation.",
+    };
+  }
+}

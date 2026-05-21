@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Type, Sparkles, CheckCircle2, ArrowLeft, Award, RotateCcw, Loader2 } from "lucide-react";
+import { getActivityXp } from "@/actions/activity.actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,11 @@ export default function WordScramblesPage({
   const [correctCount, setCorrectCount] = useState(0);
   const [scrambleCompleted, setScrambleCompleted] = useState(false);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const [xpReward, setXpReward] = useState<number>(140);
+
+  useEffect(() => {
+    getActivityXp("word-scrambles").then(setXpReward);
+  }, []);
 
   const safeWords = words.length > 0 ? words : defaultWords;
   const word = safeWords[currentWord] || safeWords[0];
@@ -73,14 +79,14 @@ export default function WordScramblesPage({
 
       const res = await saveKidActivityProgress(
         slugKey || "word-scrambles",
-        150, // Standardize to +150 XP
+        xpReward,
         scrambleTitle,
         scoreStr
       );
 
       if (res.success) {
         toast.success("Progress Saved!", {
-          description: "+150 XP earned! Streak updated! 🎉",
+          description: `+${xpReward} XP earned! Streak updated! 🎉`,
         });
         router.push(APP_ROUTES.Activities);
       } else {
@@ -165,7 +171,9 @@ export default function WordScramblesPage({
                   <h4 className="text-[10px] font-black uppercase text-green-600 tracking-wider">
                     Reward
                   </h4>
-                  <p className="text-xl md:text-2xl font-black text-green-600 mt-1">+150 XP</p>
+                  <p className="text-xl md:text-2xl font-black text-green-600 mt-1">
+                    +{xpReward} XP
+                  </p>
                 </div>
               </div>
 

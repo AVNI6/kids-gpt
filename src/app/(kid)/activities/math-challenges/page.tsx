@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trophy, ArrowLeft, Award, RotateCcw, Loader2 } from "lucide-react";
+import { getActivityXp } from "@/actions/activity.actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,11 @@ export default function MathChallengesPage({
   const [correctCount, setCorrectCount] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const [xpReward, setXpReward] = useState<number>(130);
+
+  useEffect(() => {
+    getActivityXp("math-challenges").then(setXpReward);
+  }, []);
 
   const safeEquations = equations.length > 0 ? equations : defaultEquations;
   const eq = safeEquations[currentIndex] || safeEquations[0];
@@ -69,14 +75,14 @@ export default function MathChallengesPage({
 
       const res = await saveKidActivityProgress(
         slugKey || "math-challenges",
-        150, // Standardize to +150 XP
+        xpReward,
         challengeTitle,
         scoreStr
       );
 
       if (res.success) {
         toast.success("Progress Saved!", {
-          description: "+150 XP earned! Streak updated! 🎉",
+          description: `+${xpReward} XP earned! Streak updated! 🎉`,
         });
         router.push(APP_ROUTES.Activities);
       } else {
@@ -160,7 +166,9 @@ export default function MathChallengesPage({
                   <h4 className="text-[10px] font-black uppercase text-green-600 tracking-wider">
                     Reward
                   </h4>
-                  <p className="text-xl md:text-2xl font-black text-green-600 mt-1">+150 XP</p>
+                  <p className="text-xl md:text-2xl font-black text-green-600 mt-1">
+                    +{xpReward} XP
+                  </p>
                 </div>
               </div>
 

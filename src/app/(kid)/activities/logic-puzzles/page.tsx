@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getActivityXp } from "@/actions/activity.actions";
 import { Puzzle, Star, Brain, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,11 @@ export default function LogicPuzzlesPage({
   const [selected, setSelected] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [xpReward, setXpReward] = useState<number>(150);
+
+  useEffect(() => {
+    getActivityXp("logic-puzzles").then(setXpReward);
+  }, []);
 
   // Fallback to avoid out-of-bounds error
   const safePuzzles = puzzles.length > 0 ? puzzles : defaultPuzzles;
@@ -99,13 +105,13 @@ export default function LogicPuzzlesPage({
 
       const res = await saveKidActivityProgress(
         slug || "logic-puzzles",
-        150, // +150 XP
+        xpReward,
         puzzleTitle,
         scoreStr
       );
       if (res.success) {
         toast.success("Mission Completed!", {
-          description: "+150 XP earned! Streak updated! 🎉",
+          description: `+${xpReward} XP earned! Streak updated! 🎉`,
         });
       } else {
         toast.error("Failed to save progress", {

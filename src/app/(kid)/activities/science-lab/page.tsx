@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Beaker, CheckCircle2, FlaskConical, ArrowLeft } from "lucide-react";
+import { getActivityXp } from "@/actions/activity.actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,11 @@ export default function ScienceLabPage({
   const [correctCount, setCorrectCount] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const [xpReward, setXpReward] = useState<number>(160);
+
+  useEffect(() => {
+    getActivityXp("science-lab").then(setXpReward);
+  }, []);
 
   const safeExperiments = experiments.length > 0 ? experiments : defaultExperiments;
   const rawExp = safeExperiments[currentExp] || safeExperiments[0];
@@ -85,14 +91,14 @@ export default function ScienceLabPage({
 
       const res = await saveKidActivityProgress(
         slug || "science-lab",
-        150, // +150 XP
+        xpReward,
         labTitle,
         scoreStr
       );
 
       if (res.success) {
         toast.success("Lab Mission Completed!", {
-          description: "+150 XP earned! Streak updated! 🎉",
+          description: `+${xpReward} XP earned! Streak updated! 🎉`,
         });
         router.push(APP_ROUTES.Activities);
       } else {
@@ -160,7 +166,7 @@ export default function ScienceLabPage({
                 <span className="text-xs text-muted-foreground font-black uppercase tracking-wider">
                   XP Reward
                 </span>
-                <p className="text-xl font-extrabold text-purple-600">+150 XP</p>
+                <p className="text-xl font-extrabold text-purple-600">+{xpReward} XP</p>
               </div>
             </div>
 
