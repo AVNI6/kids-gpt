@@ -9,7 +9,7 @@ import { aiLogger } from "./logger";
 // ===== MODEL CONFIGURATION =====
 
 // Gemini models in priority order (free-tier compatible)
-const GEMINI_MODELS = ["gemini-2.5-flash-preview-05-20", "gemini-2.0-flash", "gemini-1.5-flash"];
+const GEMINI_MODELS = ["gemini-2.5-flash-preview", "gemini-2.0-flash", "gemini-1.5-flash"];
 
 // Groq fallback models
 const GROQ_MODELS = ["llama-3.3-70b-versatile", "mixtral-8x7b-32768", "llama-3.1-8b-instant"];

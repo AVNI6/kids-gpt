@@ -10,47 +10,78 @@ import { APP_ROUTES } from "@/constant/AppRoutes";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
 import { toast } from "sonner";
 
-const puzzles = [
+interface OptionItem {
+  label: string;
+  correct: boolean;
+}
+
+interface PuzzleItem {
+  sequence: string[];
+  options: OptionItem[];
+  hint: string;
+}
+
+interface LogicPuzzlesPageProps {
+  puzzleTitle?: string;
+  puzzles?: PuzzleItem[];
+}
+
+const defaultPuzzles: PuzzleItem[] = [
   {
     sequence: ["🔴", "🔵", "🔴", "🔵", "🔴", "?"],
     options: [
-      { id: "A", label: "🔴" },
-      { id: "B", label: "🔵", correct: true },
-      { id: "C", label: "🟡" },
+      { label: "🔴", correct: false },
+      { label: "🔵", correct: true },
+      { label: "🟡", correct: false },
     ],
     hint: "Notice how it alternates between red and blue!",
   },
   {
     sequence: ["⭐", "🌙", "⭐", "🌙", "⭐", "?"],
     options: [
-      { id: "A", label: "⭐" },
-      { id: "B", label: "🌙", correct: true },
-      { id: "C", label: "☀️" },
+      { label: "⭐", correct: false },
+      { label: "🌙", correct: true },
+      { label: "☀️", correct: false },
     ],
     hint: "It goes star, moon, star, moon...",
   },
   {
     sequence: ["1", "2", "3", "1", "2", "?"],
     options: [
-      { id: "A", label: "1" },
-      { id: "B", label: "2" },
-      { id: "C", label: "3", correct: true },
+      { label: "1", correct: false },
+      { label: "2", correct: false },
+      { label: "3", correct: true },
     ],
     hint: "The pattern is 1, 2, 3 repeating.",
   },
 ];
 
-export default function LogicPuzzlesPage() {
+export default function LogicPuzzlesPage({
+  puzzleTitle = "Logic Puzzles",
+  puzzles = defaultPuzzles,
+}: LogicPuzzlesPageProps) {
   const [currentPuzzle, setCurrentPuzzle] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
 
-  const puzzle = puzzles[currentPuzzle];
-  const progress = ((currentPuzzle + 1) / puzzles.length) * 100;
+  // Fallback to avoid out-of-bounds error
+  const safePuzzles = puzzles.length > 0 ? puzzles : defaultPuzzles;
+  const rawPuzzle = safePuzzles[currentPuzzle] || safePuzzles[0];
+
+  // Map options to include stable string IDs dynamically
+  const puzzle = {
+    ...rawPuzzle,
+    options: rawPuzzle.options.map((opt, index) => ({
+      ...opt,
+      id: index === 0 ? "A" : index === 1 ? "B" : "C",
+    })),
+  };
+
+  const progress = ((currentPuzzle + 1) / safePuzzles.length) * 100;
 
   const handleNext = () => {
-    if (currentPuzzle < puzzles.length - 1) {
+    if (currentPuzzle < safePuzzles.length - 1) {
       setCurrentPuzzle((prev) => prev + 1);
       setSelected(null);
     }
@@ -58,17 +89,23 @@ export default function LogicPuzzlesPage() {
 
   const handleFinish = async () => {
     setIsSaving(true);
-    const scoreStr = `${Math.round((correctCount / puzzles.length) * 100)}%`;
+    const scoreStr = `${Math.round((correctCount / safePuzzles.length) * 100)}%`;
     try {
+      // Slugify the puzzle title
+      const slug = puzzleTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
       const res = await saveKidActivityProgress(
-        "logic-puzzles",
-        100,
-        "Logic Puzzles Mini-Mission",
+        slug || "logic-puzzles",
+        150, // +150 XP
+        puzzleTitle,
         scoreStr
       );
       if (res.success) {
         toast.success("Mission Completed!", {
-          description: "+100 XP earned! Streak updated! 🎉",
+          description: "+150 XP earned! Streak updated! 🎉",
         });
       } else {
         toast.error("Failed to save progress", {
@@ -85,8 +122,12 @@ export default function LogicPuzzlesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="px-8 py-8">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background aesthetics */}
+      <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-purple-500/5 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 right-10 h-80 w-80 rounded-full bg-sky-500/5 blur-3xl pointer-events-none" />
+
+      <main className="px-8 py-8 relative z-10">
         <div className="mx-auto max-w-5xl space-y-8">
           <Link
             href={APP_ROUTES.Activities}
@@ -97,9 +138,10 @@ export default function LogicPuzzlesPage() {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm text-purple-600 font-bold">
-              <span>Detective Progress</span>
+              <span>{puzzleTitle} 🧩</span>
               <span className="flex items-center gap-2 rounded-full bg-card px-3 py-1 shadow-sm border border-border">
-                <Brain className="h-4 w-4 text-purple-500" /> Level {currentPuzzle + 1}
+                <Brain className="h-4 w-4 text-purple-500" /> Level {currentPuzzle + 1} of{" "}
+                {safePuzzles.length}
               </span>
             </div>
             <Progress
@@ -149,7 +191,7 @@ export default function LogicPuzzlesPage() {
                   disabled={selected !== null}
                   className={`relative flex flex-col items-center justify-center gap-4 rounded-[2rem] border-4 p-8 text-4xl transition-all duration-300 ${
                     showSuccess
-                      ? "border-green-500 bg-green-500/10 scale-105"
+                      ? "border-green-500 bg-green-500/10 scale-105 animate-in zoom-in-95 duration-200"
                       : showError
                         ? "border-red-500 bg-red-500/10 opacity-50"
                         : "border-purple-500/20 bg-card hover:-translate-y-2 hover:shadow-xl hover:border-purple-500/50"
@@ -157,7 +199,7 @@ export default function LogicPuzzlesPage() {
                 >
                   {option.label}
                   {showSuccess && (
-                    <CheckCircle2 className="absolute top-4 right-4 h-8 w-8 text-green-500" />
+                    <CheckCircle2 className="absolute top-4 right-4 h-8 w-8 text-green-500 animate-in zoom-in-50 duration-200" />
                   )}
                 </button>
               );
@@ -166,7 +208,7 @@ export default function LogicPuzzlesPage() {
 
           {selected && (
             <div className="flex justify-center animate-in fade-in slide-in-from-bottom-4">
-              {currentPuzzle === puzzles.length - 1 ? (
+              {currentPuzzle === safePuzzles.length - 1 ? (
                 <Button
                   onClick={handleFinish}
                   disabled={isSaving}

@@ -8,8 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { kidActivities, activityColorStyles, activityButtonStyles } from "@/lib/kid-activities";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 
-export default function ActivityDetailPage({ params }: { params: { slug: string } }) {
-  const activity = kidActivities.find((item) => item.slug === params.slug);
+interface PageProps {
+  params: Promise<{
+    slug: string;
+  }>;
+}
+
+export default async function ActivityDetailPage({ params }: PageProps) {
+  // Await the params as required by Next.js 15/16 rules
+  const { slug } = await params;
+  const activity = kidActivities.find((item) => item.slug === slug);
 
   if (!activity) {
     return notFound();
@@ -22,7 +30,7 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
       <div className="max-w-4xl mx-auto space-y-8">
         <Link
           href={APP_ROUTES.Activities}
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground font-bold"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Activities
         </Link>
@@ -39,9 +47,13 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
               <CardTitle className="text-3xl font-black text-foreground">
                 {activity.title}
               </CardTitle>
-              {activity.badge && <Badge variant="secondary">{activity.badge}</Badge>}
+              {activity.badge && (
+                <Badge variant="secondary" className="font-bold">
+                  {activity.badge}
+                </Badge>
+              )}
               {activity.xp && (
-                <Badge className="bg-sky-500/10 text-sky-500 border-sky-500/20">
+                <Badge className="bg-sky-500/10 text-sky-500 border-sky-500/20 font-bold">
                   {activity.xp}
                 </Badge>
               )}
@@ -51,10 +63,10 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground font-bold">
               {activity.duration && (
                 <span className="inline-flex items-center gap-2">
-                  <Timer className="h-4 w-4" /> {activity.duration}
+                  <Timer className="h-4 w-4 text-sky-500" /> {activity.duration}
                 </span>
               )}
               {activity.stars && (
@@ -70,7 +82,10 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
               <h3 className="text-lg font-bold text-foreground">How it works</h3>
               <ul className="space-y-2">
                 {activity.steps.map((step, index) => (
-                  <li key={step} className="flex items-center gap-3 text-muted-foreground">
+                  <li
+                    key={step}
+                    className="flex items-center gap-3 text-muted-foreground font-semibold"
+                  >
                     <span className="h-6 w-6 rounded-full bg-sky-500/10 text-sky-500 text-xs font-bold flex items-center justify-center">
                       {index + 1}
                     </span>
@@ -80,38 +95,41 @@ export default function ActivityDetailPage({ params }: { params: { slug: string 
               </ul>
             </div>
 
-            <Button
-              render={<Link href={activity.href} />}
-              nativeButton={false}
-              className={`${activityButtonStyles[activity.color]} w-full rounded-2xl text-base font-semibold shadow-lg`}
-            >
-              Start {activity.title}
-            </Button>
+            <Link href={activity.href} className="block w-full">
+              <Button
+                className={`${activityButtonStyles[activity.color]} w-full rounded-2xl text-base font-bold py-6 text-white shadow-lg`}
+              >
+                Start {activity.title}
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-3 gap-4 font-semibold">
           <Card className="border-2 border-border bg-card">
             <CardContent className="py-6 space-y-2">
-              <h4 className="font-semibold text-foreground">Difficulty</h4>
+              <h4 className="font-bold text-foreground">Difficulty</h4>
               <p className="text-sm text-muted-foreground">Beginner friendly</p>
             </CardContent>
           </Card>
           <Card className="border-2 border-border bg-card">
             <CardContent className="py-6 space-y-2">
-              <h4 className="font-semibold text-foreground">Rewards</h4>
-              <p className="text-sm text-muted-foreground">Stars, streaks, and XP</p>
+              <h4 className="font-bold text-foreground">Rewards</h4>
+              <p className="text-sm text-muted-foreground">Streaks, XP, and badges</p>
             </CardContent>
           </Card>
           <Card className="border-2 border-border bg-card">
             <CardContent className="py-6 space-y-2">
-              <h4 className="font-semibold text-foreground">Progress</h4>
+              <h4 className="font-bold text-foreground">Progress</h4>
               <p className="text-sm text-muted-foreground">Track growth each round</p>
             </CardContent>
           </Card>
         </div>
 
-        <Button variant="outline" className="w-full rounded-2xl border-border hover:bg-muted">
+        <Button
+          variant="outline"
+          className="w-full rounded-2xl border-border hover:bg-muted font-bold text-foreground"
+        >
           <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Favorite
         </Button>
       </div>

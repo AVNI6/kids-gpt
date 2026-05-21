@@ -4,27 +4,11 @@ import {
   Calculator,
   FlaskConical,
   Grid3X3,
-  Code2,
   Sparkles,
-  type LucideIcon,
+  Palette,
+  Layers,
 } from "lucide-react";
-
-export type KidActivity = {
-  id: number;
-  slug: string;
-  href: string;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  color: "sky" | "green" | "orange" | "purple" | "pink" | "slate";
-  badge?: string;
-  xp?: string;
-  duration?: string;
-  stars?: number;
-  users?: string[];
-  dark?: boolean;
-  steps: string[];
-};
+import { type KidActivity } from "@/types/activities.type";
 
 export const kidActivities: KidActivity[] = [
   {
@@ -36,10 +20,13 @@ export const kidActivities: KidActivity[] = [
     icon: Grid3X3,
     color: "sky",
     duration: "10 Mins",
+    badge: "AI Generated",
+    xp: "+150 XP",
     steps: [
+      "Choose a custom topic",
       "Flip the card to reveal answers",
       "Mark it as mastered or review",
-      "Track your progress",
+      "Track your knowledge!",
     ],
   },
   {
@@ -50,8 +37,15 @@ export const kidActivities: KidActivity[] = [
     description: "Answer quick questions and level up with every correct choice.",
     icon: Sparkles,
     color: "green",
-    xp: "+120 XP",
-    steps: ["Pick the best answer", "Collect rewards", "Move to the next challenge"],
+    duration: "5 Mins",
+    badge: "AI Generated",
+    xp: "+150 XP",
+    steps: [
+      "Choose a custom topic",
+      "Pick the best answer of four",
+      "Read fun feedback and facts",
+      "Score 100% and win!",
+    ],
   },
   {
     id: 3,
@@ -61,8 +55,15 @@ export const kidActivities: KidActivity[] = [
     description: "Test your brain with tricky patterns and sequences. Great for problem solving!",
     icon: Puzzle,
     color: "sky",
-    users: ["JD", "AL"],
-    steps: ["Solve pattern questions", "Unlock bonus rounds", "Earn streak rewards"],
+    duration: "5 Mins",
+    badge: "AI Generated",
+    xp: "+150 XP",
+    steps: [
+      "Choose a custom topic",
+      "Find the missing item in the sequence",
+      "Click the correct emoji pattern",
+      "Earn streak rewards!",
+    ],
   },
   {
     id: 4,
@@ -72,30 +73,52 @@ export const kidActivities: KidActivity[] = [
     description: "Unscramble letters to find hidden words. Boost your vocabulary while playing!",
     icon: SpellCheck,
     color: "green",
+    duration: "8 Mins",
+    badge: "AI Generated",
     xp: "+150 XP",
-    steps: ["Drag letters into place", "Find bonus words", "Share your best score"],
+    steps: [
+      "Choose a custom topic",
+      "Rearrange letters to spell words",
+      "Use helpful clues and hints",
+      "Master spelling speed!",
+    ],
   },
   {
     id: 5,
     slug: "math-challenges",
     href: "/activities/math-challenges",
     title: "Math Challenges",
-    description: "Fast-paced math fun! Solve as many as you can before the timer runs out.",
+    description:
+      "Fast-paced math fun! Solve as many as you can themed around your favorite topics.",
     icon: Calculator,
     color: "orange",
     duration: "5 Mins",
-    steps: ["Pick a speed level", "Solve timed problems", "Beat your best streak"],
+    badge: "AI Generated",
+    xp: "+150 XP",
+    steps: [
+      "Choose a custom theme",
+      "Solve math problems or word stories",
+      "Select correct multiple-choice answers",
+      "Train arithmetic skills!",
+    ],
   },
   {
     id: 6,
     slug: "science-lab",
     href: "/activities/science-lab",
     title: "Science Lab",
-    description: "Mix elements and learn about the world through interactive experiments.",
+    description: "Mix virtual elements and learn about the world through interactive experiments.",
     icon: FlaskConical,
     color: "purple",
-    badge: "New!",
-    steps: ["Choose an experiment", "Follow safe lab steps", "Discover new facts"],
+    duration: "10 Mins",
+    badge: "AI Generated",
+    xp: "+150 XP",
+    steps: [
+      "Choose a custom scientific topic",
+      "Answer hypotheses of experiments",
+      "Discover the scientific reasons",
+      "Earn laboratory stars!",
+    ],
   },
   {
     id: 7,
@@ -105,19 +128,52 @@ export const kidActivities: KidActivity[] = [
     description: "Find the matching pairs and level up your focus and concentration.",
     icon: Grid3X3,
     color: "pink",
-    stars: 2,
-    steps: ["Flip cards to match", "Track your time", "Unlock higher levels"],
+    duration: "5 Mins",
+    badge: "Playground",
+    xp: "+150 XP",
+    steps: [
+      "Flip over standard card tiles",
+      "Match identical animal emojis",
+      "Match all tiles in few flips",
+      "Boost memory power!",
+    ],
   },
   {
     id: 8,
-    slug: "code-quest",
-    href: "/activities/code-quest",
-    title: "Code Quest",
-    description: "Learn the basics of coding by directing a robot through a maze!",
-    icon: Code2,
-    color: "slate",
-    badge: "Expert",
-    steps: ["Arrange commands", "Debug the path", "Finish the quest"],
+    slug: "color-mixer",
+    href: "/activities/color-mixer",
+    title: "Color Mixer",
+    description:
+      "Become a virtual color scientist! Mix primary colors to match hidden target formulas.",
+    icon: Palette,
+    color: "purple",
+    duration: "6 Mins",
+    badge: "New Game",
+    xp: "+150 XP",
+    steps: [
+      "Observe the target mixture color",
+      "Drip Red, Blue, or Yellow fluids",
+      "Mix primary drops inside the flask",
+      "Achieve exact secondary targets!",
+    ],
+  },
+  {
+    id: 9,
+    slug: "match-following",
+    href: "/activities/match-following",
+    title: "Match Pairs",
+    description: "Draw lines and connect related items to match their correct partners.",
+    icon: Layers,
+    color: "orange",
+    duration: "5 Mins",
+    badge: "New Game",
+    xp: "+150 XP",
+    steps: [
+      "Read the left-hand emoji prompts",
+      "Find correct matches in the right grid",
+      "Click matching pairs to lock bonds",
+      "Complete all correct associations!",
+    ],
   },
 ];
 
