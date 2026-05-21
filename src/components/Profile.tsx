@@ -21,27 +21,29 @@ interface ProfileProps {
   isCollapsed?: boolean;
 }
 
+function getInitials(name?: string, email?: string): string {
+  if (name) {
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return parts[0][0].toUpperCase();
+  }
+  if (email) return email[0].toUpperCase();
+  return "U";
+}
+
 export default function Profile({ isCollapsed }: ProfileProps) {
-  const { user: authUser, isUserLoggedIn, logout } = useAuth();
+  const { user, userProfile, isUserLoggedIn, logout } = useAuth();
   const { setTheme, theme } = useTheme();
 
-  const user = authUser;
-
-  const getInitials = (name?: string, email?: string) => {
-    if (name) {
-      const parts = name.split(" ");
-      if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-      return parts[0][0].toUpperCase();
-    }
-    if (email) return email[0].toUpperCase();
-    return "U";
-  };
-
-  const handleLogOut = async () => {
-    await logout();
-  };
-
   if (!isUserLoggedIn || !user) return null;
+
+  const displayName = userProfile?.first_name
+    ? `${userProfile.first_name} ${userProfile.last_name ?? ""}`.trim()
+    : (user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "User");
+
+  const avatarUrl =
+    userProfile?.avatar_url ?? (user.user_metadata?.avatar_url as string | undefined);
+  const dashboardRole = userProfile?.role ?? "kid";
 
   return (
     <div className="w-full pt-4">
@@ -53,20 +55,21 @@ export default function Profile({ isCollapsed }: ProfileProps) {
           )}
         >
           <Avatar size="lg" className="border-2 border-emerald-500/20 shadow-sm shrink-0">
-            <AvatarImage src={user.user_metadata?.avatar_url} />
+            <AvatarImage src={avatarUrl} />
             <AvatarFallback className="bg-emerald-500/10 text-emerald-600 font-bold text-base">
-              {getInitials(user.user_metadata?.full_name, user.email)}
+              {getInitials(displayName, user.email)}
             </AvatarFallback>
           </Avatar>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0 text-left flex-1">
               <span className="text-sm font-bold text-sidebar-foreground truncate uppercase tracking-tight">
-                {user.user_metadata?.full_name || user.email?.split("@")[0] || "Explorer"}
+                {displayName}
               </span>
               <span className="text-xs font-medium text-sidebar-foreground/50">Free</span>
             </div>
           )}
         </PopoverTrigger>
+
         <PopoverContent
           className="w-64 p-2 rounded-2xl shadow-xl border-sidebar-border bg-popover"
           side={isCollapsed ? "right" : "top"}
@@ -80,7 +83,8 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                 <span>Try Premium</span>
               </button>
             </Link>
-            <Link href={`/dashboard/${user.user_metadata?.role || "kid"}`}>
+
+            <Link href={`/dashboard/${dashboardRole}`}>
               <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold">
                 <UserRound className="h-4 w-4" />
                 <span>View Profile</span>
@@ -124,7 +128,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
             <div className="border-t border-border/50 my-1" />
 
             <button
-              onClick={handleLogOut}
+              onClick={logout}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-semibold"
             >
               <PanelLeftClose className="h-4 w-4 rotate-180" />
