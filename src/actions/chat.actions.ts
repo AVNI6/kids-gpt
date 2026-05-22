@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { ChatSessionRow, ChatMessageRow } from "@/types/chat.types";
+import { SubscriptionPlanRow } from "@/types/subscription.types";
 
 const supabase = createClient();
 
@@ -261,4 +262,20 @@ export async function deleteChatSession(sessionId: string) {
     console.error("Hard delete failed:", finalError);
     throw finalError;
   }
+}
+
+export async function fetchSubscriptionPlans(): Promise<SubscriptionPlanRow[]> {
+  const { data, error } = await supabase
+    .from("subscriptions_plans")
+    .select("*")
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .order("price", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching subscription plans:", error);
+    return [];
+  }
+
+  return (data as SubscriptionPlanRow[]) || [];
 }

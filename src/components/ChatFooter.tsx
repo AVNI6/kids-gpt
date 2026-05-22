@@ -249,7 +249,7 @@ export default function ChatFooter({
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask anything"
                 onKeyDown={(e) => e.key === "Enter" && onSend()}
-                className="border-0 bg-transparent shadow-none focus-visible:ring-0 h-14 text-base"
+                className="border-0 shadow-none focus-visible:ring-0 h-14 text-base"
               />
 
               <Button

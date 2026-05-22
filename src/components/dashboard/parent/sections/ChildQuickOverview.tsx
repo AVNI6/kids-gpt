@@ -8,13 +8,31 @@ import { BookOpen, GraduationCap, ChevronRight, LayoutDashboard } from "lucide-r
 import type { LinkedChildProfile, ChildDetailsResult } from "@/types/dashboard.types";
 import { useRouter } from "next/navigation";
 
-function getGradeFromAge(dob: string | null) {
+function getGradeFromAge(dob: string | null, standard?: string | null) {
+  if (standard) return standard;
   if (!dob) return "N/A";
   const birthDate = new Date(dob);
-  const age = new Date().getFullYear() - birthDate.getFullYear();
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
   if (age < 5) return "Pre-K";
   if (age > 18) return "Graduated";
   return `Grade ${age - 5}`;
+}
+
+function getAgePrecise(dob: string | null): number | null {
+  if (!dob) return null;
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
 }
 
 export default function ChildQuickOverview({
@@ -91,11 +109,16 @@ export default function ChildQuickOverview({
                     <h3 className="text-lg font-black text-slate-900 dark:text-white truncate">
                       {child.first_name} {child.last_name}
                     </h3>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                         <GraduationCap className="w-3 h-3" />
-                        {getGradeFromAge(child.date_of_birth)}
+                        {getGradeFromAge(child.date_of_birth, child.standard)}
                       </span>
+                      {child.date_of_birth && (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30 px-2 py-0.5 rounded-md">
+                          Age {getAgePrecise(child.date_of_birth)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

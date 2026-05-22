@@ -14,12 +14,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.79",
     "@base-ui/react": "^1.4.1",
     "@google/genai": "^1.51.0",
     "@react-pdf/renderer": "^4.5.1",
     "@reduxjs/toolkit": "^2.11.2",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.1",
+    "ai": "^6.0.185",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.11.0",

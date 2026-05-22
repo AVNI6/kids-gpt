@@ -36,6 +36,7 @@ export type LinkedChildProfile = {
   total_experience_points: number | null;
   current_streak: number | null;
   longest_streak: number | null;
+  standard: string | null;
 };
 
 export type LinkedStudentProfile = LinkedChildProfile;

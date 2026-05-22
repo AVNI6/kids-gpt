@@ -45,6 +45,7 @@ export default function ChildOverviewCard({ child }: ChildOverviewCardProps) {
     : `@${child.first_name?.toLowerCase() || "student"}`;
 
   let gradeText = "Explorer";
+  let ageText = "";
   if (child.date_of_birth) {
     const dob = new Date(child.date_of_birth);
     const today = new Date();
@@ -53,14 +54,22 @@ export default function ChildOverviewCard({ child }: ChildOverviewCardProps) {
     if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
       age--;
     }
-    const grade = age - 5;
-    if (grade > 0) {
-      gradeText = `Grade ${grade} Explorer`;
-    } else if (grade === 0) {
-      gradeText = "Kindergarten Explorer";
+    ageText = `Age ${age}`;
+
+    if (child.standard) {
+      gradeText = `${child.standard} Explorer`;
     } else {
-      gradeText = "Preschool Explorer";
+      const grade = age - 5;
+      if (grade > 0) {
+        gradeText = `Grade ${grade} Explorer`;
+      } else if (grade === 0) {
+        gradeText = "Kindergarten Explorer";
+      } else {
+        gradeText = "Preschool Explorer";
+      }
     }
+  } else if (child.standard) {
+    gradeText = `${child.standard} Explorer`;
   }
   return (
     <Card className="rounded-[32px] border-slate-200/50 dark:border-slate-800/50 bg-white dark:bg-slate-900/40 shadow-sm relative overflow-hidden backdrop-blur-xl">
@@ -87,13 +96,21 @@ export default function ChildOverviewCard({ child }: ChildOverviewCardProps) {
               {fullName}
             </h2>
             <p className="text-base font-semibold text-slate-500 dark:text-slate-400">{username}</p>
-            <div className="pt-2">
+            <div className="pt-2 flex flex-wrap gap-2 justify-center md:justify-start">
               <Badge
                 variant="secondary"
                 className="bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-500/30 text-sm px-4 py-1.5 font-bold border-none rounded-full shadow-sm backdrop-blur-sm"
               >
                 {gradeText}
               </Badge>
+              {ageText && (
+                <Badge
+                  variant="secondary"
+                  className="bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-500/30 text-sm px-4 py-1.5 font-bold border-none rounded-full shadow-sm backdrop-blur-sm"
+                >
+                  {ageText}
+                </Badge>
+              )}
             </div>
           </div>
         </div>

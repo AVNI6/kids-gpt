@@ -92,9 +92,7 @@ export default function KidProfileEditorDialog({ profile }: Props) {
 
       <DialogContent className="max-w-xl rounded-[28px] p-0">
         <DialogHeader className="border-b px-6 pt-6 pb-4">
-          <DialogTitle className="text-xl font-black tracking-tight text-slate-950">
-            Edit your profile
-          </DialogTitle>
+          <DialogTitle className="text-xl font-black">Edit your profile</DialogTitle>
           <DialogDescription className="text-sm leading-6 text-slate-500">
             Update your avatar, name, and birthday without leaving the dashboard.
           </DialogDescription>

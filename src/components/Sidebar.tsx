@@ -39,6 +39,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getSessionManager } from "@/lib/ai/session-manager";
 
+import SearchChatModal from "./SearchChatModal";
+
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
@@ -50,11 +52,23 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const pathname = usePathname() || "";
   const sessions = useAppSelector((state) => state.chat.sessions);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
-  const { user, isUserLoggedIn, isLoading: isLoadingAuth } = useAuth();
+  const { user, userProfile, isUserLoggedIn, isLoading: isLoadingAuth } = useAuth();
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { setTheme, theme } = useTheme();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     const loadSessions = async () => {
@@ -72,6 +86,9 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     getSessionManager().abortActiveRequest();
     dispatch(setCurrentSessionId(null));
     dispatch(setMessages([]));
+    if (isMobile && isOpen) {
+      onToggle();
+    }
     router.push("/");
   };
 
@@ -79,8 +96,9 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     if (editingSessionId === sessionId) return;
     getSessionManager().abortActiveRequest();
     setOpenPopoverId(null);
-    dispatch(setCurrentSessionId(sessionId));
-    dispatch(setMessages([]));
+    if (isMobile && isOpen) {
+      onToggle();
+    }
     router.push(`/?id=${sessionId}`);
   };
 
@@ -124,10 +142,14 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     }
   };
 
+  const userRole = userProfile?.role ?? "kid";
+
   const navItems = [
     { label: "New Chat", icon: PlusCircle, href: "/", onClick: handleNewChat },
-    { label: "Search Chats", icon: Search, href: "/search" },
-    { label: "Activities", icon: ClipboardList, href: "/activities" },
+    { label: "Search Chats", icon: Search },
+    ...(userRole === "kid"
+      ? [{ label: "Activities", icon: ClipboardList, href: "/activities" }]
+      : []),
   ];
 
   return (
@@ -145,16 +167,16 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       >
         <div
           className={cn(
-            "flex items-center mb-8 shrink-0",
+            "flex items-center mb-3 shrink-0",
             isOpen ? "justify-between" : "justify-center"
           )}
         >
           <button
             onClick={onToggle}
             title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-            className="h-10 w-10 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95"
+            className="h-7 w-7 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95"
           >
-            <Sparkles className="w-5 h-5" />
+            <Sparkles className="w-4 h-4" />
           </button>
           {isOpen && (
             <Button
@@ -169,64 +191,130 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           )}
         </div>
 
-        <nav className="space-y-2 flex-1 overflow-y-auto pr-2 custom-scrollbar overflow-x-hidden">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href || "___NEVER_MATCH___");
-            const showActiveStyle = item.label !== "New Chat" && isActive;
+        <nav className="flex flex-col flex-1 overflow-hidden pr-1">
+          <div className="space-y-2 shrink-0">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : item.href
+                    ? pathname.startsWith(item.href)
+                    : false;
+              const showActiveStyle = item.label !== "New Chat" && isActive;
 
-            if (item.href) {
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={item.onClick}
-                  className={cn(
-                    "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group",
-                    showActiveStyle
-                      ? "bg-sidebar-accent text-sky-500 font-bold"
-                      : "text-sidebar-foreground",
-                    !isOpen && "justify-center px-0 h-10 w-10 mx-auto"
-                  )}
-                  title={!isOpen ? item.label : undefined}
-                >
+              const isSearch = item.label === "Search Chats";
+              const renderItemContent = () => (
+                <>
                   <Icon className="w-5 h-5 shrink-0" />
                   {isOpen && <span className="whitespace-nowrap truncate">{item.label}</span>}
-                </Link>
+                </>
               );
-            }
 
-            return (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                title={!isOpen ? item.label : undefined}
-                className={cn(
-                  "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold text-sidebar-foreground transition-colors group",
-                  !isOpen && "justify-center px-0 h-10 w-10 mx-auto"
-                )}
-              >
-                <Icon className="w-5 h-5 shrink-0" />
-                {isOpen && <span className="whitespace-nowrap truncate">{item.label}</span>}
-              </button>
-            );
-          })}
+              const commonClasses = cn(
+                "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group",
+                showActiveStyle
+                  ? "bg-sidebar-accent text-sky-500 font-bold"
+                  : "text-sidebar-foreground",
+                !isOpen && "justify-center px-0 h-10 w-10 mx-auto"
+              );
+
+              // Handle Search
+              if (isSearch) {
+                if (!isUserLoggedIn) {
+                  return (
+                    <Popover key={item.label}>
+                      <PopoverTrigger
+                        title={!isOpen ? item.label : undefined}
+                        className={commonClasses}
+                      >
+                        {renderItemContent()}
+                      </PopoverTrigger>
+                      <PopoverContent
+                        side={isMobile ? "bottom" : isOpen ? "right" : "right"}
+                        align={isMobile ? "center" : "start"}
+                        sideOffset={isMobile ? 8 : 15}
+                        className="w-64 p-4 rounded-2xl shadow-xl border-sidebar-border bg-popover text-sm"
+                      >
+                        <div className="flex flex-col gap-3 text-center items-center">
+                          <div className="p-2 bg-sky-500/10 rounded-full text-sky-500">
+                            <Search className="w-6 h-6" />
+                          </div>
+                          <h4 className="font-bold text-popover-foreground">Search Chats</h4>
+                          <p className="text-muted-foreground text-xs">
+                            Sign in or sign up to search your chat history and pick up right where
+                            you left off!
+                          </p>
+                          <Link href={APP_ROUTES.Signin} className="w-full mt-2">
+                            <Button className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-xl">
+                              Sign In
+                            </Button>
+                          </Link>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  );
+                }
+
+                return (
+                  <button
+                    key={item.label}
+                    title={!isOpen ? item.label : undefined}
+                    className={cn(commonClasses, "text-sidebar-foreground")}
+                    onClick={() => {
+                      if (isMobile && isOpen) {
+                        onToggle();
+                      }
+                      setSearchOpen(true);
+                    }}
+                  >
+                    {renderItemContent()}
+                  </button>
+                );
+              }
+
+              if (item.href) {
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={item.onClick}
+                    className={commonClasses}
+                    title={!isOpen ? item.label : undefined}
+                  >
+                    {renderItemContent()}
+                  </Link>
+                );
+              }
+
+              return (
+                <button
+                  key={item.label}
+                  onClick={item.onClick}
+                  title={!isOpen ? item.label : undefined}
+                  className={cn(commonClasses, "text-sidebar-foreground")}
+                >
+                  {renderItemContent()}
+                </button>
+              );
+            })}
+          </div>
 
           {isUserLoggedIn && (
             <div
-              className={cn("mt-6 transition-all", !isOpen && "mt-4 flex flex-col items-center")}
+              className={cn(
+                "mt-6 flex flex-col flex-1 min-h-0 transition-all",
+                !isOpen && "mt-4 items-center"
+              )}
             >
               {isOpen ? (
-                <h3 className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 truncate">
+                <h3 className="px-3 shrink-0 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 truncate">
                   Recent Chats
                 </h3>
               ) : (
-                <div className="h-px w-8 bg-sidebar-border mb-4" />
+                <div className="h-px w-8 bg-sidebar-border mb-4 shrink-0" />
               )}
-              <div className="space-y-1 w-full">
+              <div className="space-y-1 w-full flex-1 overflow-y-auto min-h-0 custom-scrollbar pr-1">
                 {sessions.length > 0
                   ? sessions.map((session) => (
                       <div key={session.id} className="group relative">
@@ -398,6 +486,16 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           <Profile isCollapsed={!isOpen} />
         </div>
       </aside>
+
+      {/* Search modal - rendered outside sidebar to avoid nesting issues */}
+      {isUserLoggedIn && (
+        <SearchChatModal
+          open={searchOpen}
+          onOpenChange={setSearchOpen}
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+        />
+      )}
     </>
   );
 }

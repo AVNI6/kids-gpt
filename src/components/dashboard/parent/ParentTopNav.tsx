@@ -32,7 +32,7 @@ type Props = {
 export default function ParentTopNav({ profile }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = searchParams.get("tab") || "home";
+  const activeTab = searchParams?.get("tab") || "home";
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

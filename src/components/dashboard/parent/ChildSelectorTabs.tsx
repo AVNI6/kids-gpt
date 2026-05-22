@@ -16,7 +16,7 @@ export default function ChildSelectorTabs({ linkedChildren }: ChildSelectorTabsP
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const currentChildId = searchParams.get("childId") ?? linkedChildren[0]?.user_id ?? "";
+  const currentChildId = searchParams?.get("childId") ?? linkedChildren[0]?.user_id ?? "";
 
   if (linkedChildren.length === 0) {
     return (
@@ -40,7 +40,7 @@ export default function ChildSelectorTabs({ linkedChildren }: ChildSelectorTabsP
 
   const handleSelect = (id: string) => {
     if (id === currentChildId) return;
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
     params.set("childId", id);
 
     startTransition(() => {

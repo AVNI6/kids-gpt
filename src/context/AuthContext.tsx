@@ -3,10 +3,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { UserRole } from "@/types/chat.types";
+import { UserRole, UserProfile } from "@/types/auth";
 
 interface AuthContextType {
   user: User | null;
+  userProfile: UserProfile | null;
   userRole: UserRole | null;
   isLoading: boolean;
   isUserLoggedIn: boolean;
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
@@ -33,23 +35,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (currentUser) {
           setUser(currentUser);
           setIsUserLoggedIn(true);
-          // Fetch role
+          // Fetch profile
           const { data: profile } = await supabase
             .from("profile")
-            .select("role")
+            .select("*")
             .eq("user_id", currentUser.id)
             .maybeSingle();
-          if (profile?.role) {
-            setUserRole(profile.role as UserRole);
+          if (profile) {
+            setUserProfile(profile);
+            if (profile.role) {
+              setUserRole(profile.role as UserRole);
+            }
           }
         } else {
           setUser(null);
+          setUserProfile(null);
           setUserRole(null);
           setIsUserLoggedIn(false);
         }
       } catch (error) {
         console.error("Error checking user:", error);
         setUser(null);
+        setUserProfile(null);
         setUserRole(null);
         setIsUserLoggedIn(false);
       } finally {
@@ -66,17 +73,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         setUser(session.user);
         setIsUserLoggedIn(true);
-        // Fetch role
+        // Fetch profile
         const { data: profile } = await supabase
           .from("profile")
-          .select("role")
+          .select("*")
           .eq("user_id", session.user.id)
           .maybeSingle();
-        if (profile?.role) {
-          setUserRole(profile.role as UserRole);
+        if (profile) {
+          setUserProfile(profile);
+          if (profile.role) {
+            setUserRole(profile.role as UserRole);
+          }
         }
       } else {
         setUser(null);
+        setUserProfile(null);
         setUserRole(null);
         setIsUserLoggedIn(false);
       }
@@ -91,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await supabase.auth.signOut();
       setUser(null);
+      setUserProfile(null);
       setUserRole(null);
       setIsUserLoggedIn(false);
       window.location.href = "/";
@@ -101,6 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
+    userProfile,
     userRole,
     isLoading,
     isUserLoggedIn,

@@ -36,6 +36,7 @@ export default function ChatInterface() {
   const messages = useAppSelector((state) => state.chat.messages);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastLoadedSessionRef = useRef<string | null>(null);
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -51,17 +52,23 @@ export default function ChatInterface() {
   // Sync and load messages based on URL session ID
   useEffect(() => {
     if (urlSessionId) {
-      // Sync Redux with URL session ID if they differ
+      // Sync Redux session ID
       if (urlSessionId !== currentSessionId) {
         dispatch(setCurrentSessionId(urlSessionId));
       }
 
-      // If messages are already loaded for this session, skip reloading from DB
-      if (currentSessionId === urlSessionId && messages.length > 0) {
+      // If we are loading a different session, clear old messages first to avoid flash
+      if (lastLoadedSessionRef.current !== urlSessionId) {
+        dispatch(setMessages([]));
+      }
+
+      // Skip reload if this session's messages are already loaded
+      if (lastLoadedSessionRef.current === urlSessionId && messages.length > 0) {
         return;
       }
 
       const loadMessages = async () => {
+        lastLoadedSessionRef.current = urlSessionId;
         try {
           const dbMessages = await fetchSessionMessages(urlSessionId);
           const mappedMessages: Message[] = dbMessages.map((m: ChatMessageRow) => {
@@ -70,7 +77,6 @@ export default function ChatInterface() {
             const isPdf =
               m.attachment_url?.includes(".pdf") ||
               (m.content.includes("pdf/") && m.content.includes(".pdf"));
-
             return {
               id: m.id,
               role: (m.sender_role as string) === "assistant" ? "model" : m.sender_role,
@@ -88,13 +94,15 @@ export default function ChatInterface() {
       };
       loadMessages();
     } else {
-      // No URL session ID: clear Redux state
+      // No URL session ID: clear state
+      lastLoadedSessionRef.current = null;
       if (currentSessionId !== null) {
         dispatch(setCurrentSessionId(null));
       }
       dispatch(setMessages([]));
     }
-  }, [urlSessionId, currentSessionId, messages.length, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSessionId]);
 
   // Abort in-flight requests when component unmounts
   useEffect(() => {
@@ -103,24 +111,15 @@ export default function ChatInterface() {
     };
   }, []);
 
-  // Close sidebar on mobile by default
-  useEffect(() => {
-    const checkMobile = () => {
-      if (window.innerWidth < 768) {
-        // Mobile logic handled by MainLayout
-      }
-    };
-    checkMobile();
-  }, []);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
-  // Auto-scroll to bottom
+  // Scroll to bottom whenever messages update; use instant on first load of a session
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    const isFirstLoad = lastLoadedSessionRef.current === urlSessionId && messages.length > 0;
+    scrollToBottom(isFirstLoad ? "instant" : "smooth");
+  }, [messages, isLoading, urlSessionId]);
 
   // Render nothing while chat is syncing to prevent showing old chat data
   if (!urlSessionId && currentSessionId) {
