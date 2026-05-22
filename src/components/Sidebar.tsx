@@ -16,6 +16,8 @@ import {
   Trash2,
   Edit2,
   Share2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
@@ -31,10 +33,17 @@ import { ChatSessionRow } from "@/types/chat.types";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import Profile from "./Profile";
 import { APP_ROUTES } from "@/constant/AppRoutes";
-import ShareLink from "./ShareLink";
-import DeleteSessionDialog from "./DeleteSessionDialog";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getSessionManager } from "@/lib/ai/session-manager";
@@ -58,6 +67,12 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const [editTitle, setEditTitle] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  // Lifted delete confirmation state — dialog lives OUTSIDE the popover tree
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  // Lifted share dialog state — same reason: avoids Base UI popover unmount race condition
+  const [sessionToShare, setSessionToShare] = useState<string | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
   const { setTheme, theme } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -99,7 +114,11 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     if (isMobile && isOpen) {
       onToggle();
     }
-    router.push(`/?id=${sessionId}`);
+    if (pathname.startsWith("/chat/")) {
+      router.push(`${pathname}?id=${sessionId}`);
+    } else {
+      router.push(`/?id=${sessionId}`);
+    }
   };
 
   const handleDeleteSession = async (sessionId: string) => {
@@ -115,6 +134,28 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     } catch {
       dispatch(setSessions(originalSessions));
       alert("Failed to delete chat.");
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!sessionToDelete) return;
+    setIsDeleting(true);
+    try {
+      await handleDeleteSession(sessionToDelete);
+      setSessionToDelete(null);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCopyShareLink = async (sessionId: string) => {
+    const shareUrl = `${window.location.origin}/share/${sessionId}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy share link:", err);
     }
   };
 
@@ -162,13 +203,15 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-[70] md:static md:z-auto md:relative transition-all duration-300 ease-in-out border-r border-sidebar-border bg-sidebar flex flex-col min-h-0 h-screen md:h-auto",
-          isOpen ? "w-72 p-4 translate-x-0" : "w-72 md:w-20 p-4 -translate-x-full md:translate-x-0"
+          isOpen
+            ? "w-72 pt-4 pb-4 pl-4 pr-0 translate-x-0"
+            : "w-72 md:w-20 p-4 -translate-x-full md:translate-x-0"
         )}
       >
         <div
           className={cn(
             "flex items-center mb-3 shrink-0",
-            isOpen ? "justify-between" : "justify-center"
+            isOpen ? "justify-between pr-4" : "justify-center"
           )}
         >
           <button
@@ -191,8 +234,8 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           )}
         </div>
 
-        <nav className="flex flex-col flex-1 overflow-hidden pr-1">
-          <div className="space-y-2 shrink-0">
+        <nav className="flex flex-col flex-1 overflow-hidden pr-0">
+          <div className={cn("space-y-2 shrink-0", isOpen && "pr-4")}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -204,6 +247,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               const showActiveStyle = item.label !== "New Chat" && isActive;
 
               const isSearch = item.label === "Search Chats";
+              const isActivities = item.label === "Activities";
               const renderItemContent = () => (
                 <>
                   <Icon className="w-5 h-5 shrink-0" />
@@ -218,6 +262,44 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   : "text-sidebar-foreground",
                 !isOpen && "justify-center px-0 h-10 w-10 mx-auto"
               );
+
+              // Handle Activities Popover if not logged in
+              if (isActivities && !isUserLoggedIn) {
+                return (
+                  <Popover key={item.label}>
+                    <PopoverTrigger
+                      title={!isOpen ? item.label : undefined}
+                      className={commonClasses}
+                    >
+                      {renderItemContent()}
+                    </PopoverTrigger>
+                    <PopoverContent
+                      side={isMobile ? "bottom" : isOpen ? "right" : "right"}
+                      align={isMobile ? "center" : "start"}
+                      sideOffset={isMobile ? 8 : 15}
+                      className="w-64 p-4 rounded-2xl shadow-xl border-sidebar-border bg-popover text-sm"
+                    >
+                      <div className="flex flex-col gap-3 text-center items-center">
+                        <div className="p-2 bg-sky-500/10 rounded-full text-sky-500">
+                          <ClipboardList className="w-6 h-6" />
+                        </div>
+                        <h4 className="font-bold text-popover-foreground">
+                          Interactive Activities
+                        </h4>
+                        <p className="text-muted-foreground text-xs">
+                          Sign in or sign up to play custom games, complete quiz challenges, and
+                          practice vocabulary!
+                        </p>
+                        <Link href={APP_ROUTES.Signin} className="w-full mt-2">
+                          <Button className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-xl">
+                            Sign In
+                          </Button>
+                        </Link>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                );
+              }
 
               // Handle Search
               if (isSearch) {
@@ -314,10 +396,15 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               ) : (
                 <div className="h-px w-8 bg-sidebar-border mb-4 shrink-0" />
               )}
-              <div className="space-y-1 w-full flex-1 overflow-y-auto min-h-0 custom-scrollbar pr-1">
+              <div
+                className={cn(
+                  "space-y-1 w-full flex-1 overflow-y-auto min-h-0 custom-scrollbar",
+                  isOpen ? "pr-0" : "pr-1"
+                )}
+              >
                 {sessions.length > 0
                   ? sessions.map((session) => (
-                      <div key={session.id} className="group relative">
+                      <div key={session.id} className={cn("group relative", isOpen && "pr-4")}>
                         {editingSessionId === session.id && isOpen ? (
                           <form
                             onSubmit={(e) => handleSaveRename(e, session.id)}
@@ -373,23 +460,26 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                     >
                                       <Edit2 className="w-4 h-4" /> Rename
                                     </button>
-                                    <ShareLink
-                                      sessionId={session.id}
-                                      trigger={
-                                        <button className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-sky-500 w-full text-left">
-                                          <Share2 className="w-4 h-4" /> Share
-                                        </button>
-                                      }
-                                    />
-                                    <DeleteSessionDialog
-                                      sessionId={session.id}
-                                      onDelete={handleDeleteSession}
-                                      trigger={
-                                        <button className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-red-500 w-full text-left group/del">
-                                          <Trash2 className="w-4 h-4 pointer-events-none" /> Delete
-                                        </button>
-                                      }
-                                    />
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenPopoverId(null);
+                                        setSessionToShare(session.id);
+                                      }}
+                                      className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-sky-500 w-full text-left"
+                                    >
+                                      <Share2 className="w-4 h-4" /> Share
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenPopoverId(null);
+                                        setSessionToDelete(session.id);
+                                      }}
+                                      className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-red-500 w-full text-left"
+                                    >
+                                      <Trash2 className="w-4 h-4 pointer-events-none" /> Delete
+                                    </button>
                                   </div>
                                 </PopoverContent>
                               </Popover>
@@ -407,7 +497,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         <div
           className={cn(
             "space-y-2 pt-4 border-t border-sidebar-border",
-            !isOpen && "flex flex-col items-center justify-center"
+            isOpen ? "pr-4" : "flex flex-col items-center justify-center"
           )}
         >
           {!isLoadingAuth && !isUserLoggedIn && (
@@ -496,6 +586,93 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           onQueryChange={setSearchQuery}
         />
       )}
+
+      {/* Delete confirmation dialog - outside Popover tree (Base UI unmount race condition fix) */}
+      <Dialog
+        open={sessionToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setSessionToDelete(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[425px] rounded-2xl border-border bg-background">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground">Delete Chat?</DialogTitle>
+            <DialogDescription className="text-muted-foreground pt-2">
+              This will permanently delete this chat session and all its messages. This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setSessionToDelete(null)}
+              disabled={isDeleting}
+              className="rounded-xl border-border hover:bg-accent hover:text-accent-foreground"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share dialog - outside Popover tree (same Base UI unmount race condition fix) */}
+      <Dialog
+        open={sessionToShare !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSessionToShare(null);
+            setShareCopied(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md rounded-2xl border-border bg-background">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Share this chat</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Anyone with this link will be able to view all messages in this session.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2 pt-4">
+            <div className="grid flex-1 gap-2">
+              <label htmlFor="share-link" className="sr-only">
+                Link
+              </label>
+              <Input
+                id="share-link"
+                readOnly
+                className="h-9"
+                value={
+                  typeof window !== "undefined" && sessionToShare
+                    ? `${window.location.origin}/share/${sessionToShare}`
+                    : ""
+                }
+              />
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              className="px-3"
+              onClick={() => sessionToShare && handleCopyShareLink(sessionToShare)}
+              variant={shareCopied ? "outline" : "default"}
+            >
+              <span className="sr-only">Copy</span>
+              {shareCopied ? (
+                <Check className="h-4 w-4 text-green-600" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

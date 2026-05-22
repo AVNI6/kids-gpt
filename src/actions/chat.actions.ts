@@ -161,55 +161,152 @@ export async function saveGeneratedMaterial(
 
 export async function trackDailyUsage(
   tokens: number,
-  metrics: { isPdf?: boolean; isImage?: boolean } = {}
+  metrics: { isPdf?: boolean; isImage?: boolean; durationMs?: number } = {}
 ) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
 
-  const today = new Date().toISOString().split("T")[0];
-  const roundedTokens = Math.round(tokens);
+    const today = new Date().toISOString().split("T")[0];
+    const roundedTokens = Math.round(tokens);
+    const roundedDuration = metrics.durationMs ? Math.round(metrics.durationMs) : 0;
 
-  // Get current subscription
-  const { data: subData } = await supabase
-    .from("subscriptions")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .maybeSingle();
+    // 1. Get active subscription and retrieve the plan details
+    const { data: subData, error: subError } = await supabase
+      .from("subscriptions")
+      .select("id, plan_id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle();
 
-  // Try to find existing usage for today
-  const { data: usageData } = await supabase
-    .from("daily_usage_tracking")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("usage_date", today)
-    .maybeSingle();
+    if (subError) {
+      console.error("[trackDailyUsage] Error fetching subscription:", subError);
+    }
 
-  if (usageData) {
-    // Update existing
-    await supabase
+    let monthlyTokenLimit: number | null = null;
+    if (subData?.plan_id) {
+      const { data: planData, error: planError } = await supabase
+        .from("subscriptions_plans")
+        .select("monthly_token_limit")
+        .eq("id", subData.plan_id)
+        .maybeSingle();
+
+      if (planError) {
+        console.error("[trackDailyUsage] Error fetching plan limits:", planError);
+      } else if (planData) {
+        monthlyTokenLimit = planData.monthly_token_limit;
+      }
+    }
+
+    // 2. Track Daily Usage (daily_usage_tracking)
+    // Remove "images_generated" since it is not a database column
+    const { data: usageData, error: fetchDailyError } = await supabase
       .from("daily_usage_tracking")
-      .update({
-        token_used: (usageData.token_used || 0) + roundedTokens,
-        messages_sent: (usageData.messages_sent || 0) + 1,
-        pdfs_generated: (usageData.pdfs_generated || 0) + (metrics.isPdf ? 1 : 0),
-        images_generated: (usageData.images_generated || 0) + (metrics.isImage ? 1 : 0),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", usageData.id);
-  } else {
-    // Insert new
-    await supabase.from("daily_usage_tracking").insert({
-      user_id: user.id,
-      subscription_id: subData?.id,
-      usage_date: today,
-      token_used: roundedTokens,
-      messages_sent: 1,
-      pdfs_generated: metrics.isPdf ? 1 : 0,
-      images_generated: metrics.isImage ? 1 : 0,
-    });
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("usage_date", today)
+      .maybeSingle();
+
+    if (fetchDailyError) {
+      console.error("[trackDailyUsage] Error fetching daily usage:", fetchDailyError);
+    }
+
+    if (usageData) {
+      const { error: updateDailyError } = await supabase
+        .from("daily_usage_tracking")
+        .update({
+          token_used: (usageData.token_used || 0) + roundedTokens,
+          messages_sent: (usageData.messages_sent || 0) + 1,
+          pdfs_generated: (usageData.pdfs_generated || 0) + (metrics.isPdf ? 1 : 0),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", usageData.id);
+
+      if (updateDailyError) {
+        console.error("[trackDailyUsage] Error updating daily usage:", updateDailyError);
+      }
+    } else {
+      const { error: insertDailyError } = await supabase.from("daily_usage_tracking").insert({
+        user_id: user.id,
+        subscription_id: subData?.id || null,
+        usage_date: today,
+        token_used: roundedTokens,
+        messages_sent: 1,
+        pdfs_generated: metrics.isPdf ? 1 : 0,
+      });
+
+      if (insertDailyError) {
+        console.error("[trackDailyUsage] Error inserting daily usage:", insertDailyError);
+      }
+    }
+
+    // 3. Track Cumulative Overall Usage (whole_usage_tracking)
+    let wholeQuery = supabase
+      .from("whole_usage_tracking")
+      .select("*")
+      .eq("user_id", user.id)
+      .is("deleted_at", null);
+
+    if (subData?.id) {
+      wholeQuery = wholeQuery.eq("subscription_id", subData.id);
+    } else {
+      wholeQuery = wholeQuery.is("subscription_id", null);
+    }
+
+    const { data: wholeData, error: fetchWholeError } = await wholeQuery.maybeSingle();
+
+    if (fetchWholeError) {
+      console.error("[trackDailyUsage] Error fetching whole usage:", fetchWholeError);
+    }
+
+    const defaultLimit = 50000; // Fallback monthly limit (50,000 tokens)
+    const limit = monthlyTokenLimit !== null ? monthlyTokenLimit : defaultLimit;
+
+    if (wholeData) {
+      const newTotalTokenUsed = (wholeData.total_token_used || 0) + roundedTokens;
+      const tokensRemaining = Math.max(0, limit - newTotalTokenUsed);
+      const limitReached = newTotalTokenUsed >= limit;
+
+      const { error: updateWholeError } = await supabase
+        .from("whole_usage_tracking")
+        .update({
+          total_token_used: newTotalTokenUsed,
+          tokens_remaining: tokensRemaining,
+          messages_sent: (wholeData.messages_sent || 0) + 1,
+          pdfs_generated: (wholeData.pdfs_generated || 0) + (metrics.isPdf ? 1 : 0),
+          total_session_duration_ms: (wholeData.total_session_duration_ms || 0) + roundedDuration,
+          limit_reached: limitReached,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", wholeData.id);
+
+      if (updateWholeError) {
+        console.error("[trackDailyUsage] Error updating whole usage:", updateWholeError);
+      }
+    } else {
+      const tokensRemaining = Math.max(0, limit - roundedTokens);
+      const limitReached = roundedTokens >= limit;
+
+      const { error: insertWholeError } = await supabase.from("whole_usage_tracking").insert({
+        user_id: user.id,
+        subscription_id: subData?.id || null,
+        usage_date: today,
+        total_token_used: roundedTokens,
+        tokens_remaining: tokensRemaining,
+        messages_sent: 1,
+        pdfs_generated: metrics.isPdf ? 1 : 0,
+        total_session_duration_ms: roundedDuration,
+        limit_reached: limitReached,
+      });
+
+      if (insertWholeError) {
+        console.error("[trackDailyUsage] Error inserting whole usage:", insertWholeError);
+      }
+    }
+  } catch (err) {
+    console.error("[trackDailyUsage] Fatal tracking error:", err);
   }
 }
 

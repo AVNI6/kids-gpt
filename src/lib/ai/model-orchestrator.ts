@@ -9,7 +9,7 @@ import { aiLogger } from "./logger";
 // ===== MODEL CONFIGURATION =====
 
 // Gemini models in priority order (free-tier compatible)
-const GEMINI_MODELS = ["gemini-2.5-flash-preview", "gemini-2.0-flash", "gemini-1.5-flash"];
+const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
 // Groq fallback models
 const GROQ_MODELS = ["llama-3.3-70b-versatile", "mixtral-8x7b-32768", "llama-3.1-8b-instant"];
@@ -37,6 +37,7 @@ function getGroqApiKey(): string | null {
 
 export interface OrchestratorOptions {
   contents: GeminiContent[];
+  systemPrompt?: string;
   generationConfig?: Record<string, unknown>;
   signal?: AbortSignal;
   timeout?: number;
@@ -45,7 +46,7 @@ export interface OrchestratorOptions {
 // ===== MAIN ORCHESTRATOR =====
 
 export async function generateAIResponse(options: OrchestratorOptions): Promise<AIResponse> {
-  const { contents, generationConfig, signal, timeout = 30000 } = options;
+  const { contents, systemPrompt, generationConfig, signal, timeout = 35000 } = options;
 
   // Check abort before starting
   if (signal?.aborted) {
@@ -75,6 +76,7 @@ export async function generateAIResponse(options: OrchestratorOptions): Promise<
           model,
           apiKey,
           contents,
+          systemPrompt,
           generationConfig,
           signal,
           timeout,
@@ -107,11 +109,15 @@ export async function generateAIResponse(options: OrchestratorOptions): Promise<
           continue;
         }
 
-        // Other error → try next model (skip remaining keys for this model)
-        aiLogger.warn("Orchestrator", `Model error: ${model}, moving to next model`, {
-          error: errorMsg,
-        });
-        break;
+        // Other transient/500/network error → try next key instead of breaking!
+        aiLogger.warn(
+          "Orchestrator",
+          `Transient key failure on ${model} with ${keyLabel}, trying next key`,
+          {
+            error: errorMsg,
+          }
+        );
+        continue;
       }
     }
   }
@@ -131,7 +137,15 @@ export async function generateAIResponse(options: OrchestratorOptions): Promise<
             ? { type: "json_object" }
             : undefined;
 
-        const response = await callGroq(model, groqKey, contents, signal, timeout, responseFormat);
+        const response = await callGroq(
+          model,
+          groqKey,
+          contents,
+          systemPrompt,
+          signal,
+          timeout,
+          responseFormat
+        );
 
         aiLogger.info("Orchestrator", `Groq success: ${model}`, {
           tokens: response.usage.totalTokens,
@@ -158,11 +172,25 @@ export async function generateAIResponse(options: OrchestratorOptions): Promise<
     errors: errors.slice(-5), // Last 5 errors
   });
 
+  const isTokenOrQuotaError = errors.some(
+    (e) =>
+      e.error.toLowerCase().includes("429") ||
+      e.error.toLowerCase().includes("quota") ||
+      e.error.toLowerCase().includes("exhausted") ||
+      e.error.toLowerCase().includes("limit") ||
+      e.error.toLowerCase().includes("403") ||
+      e.error.toLowerCase().includes("401")
+  );
+
+  const fallbackMessage = isTokenOrQuotaError
+    ? "I'm sorry, I have run out of daily tokens. Please try again after."
+    : "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
+
   return {
     success: false,
     provider: "gemini",
     model: "none",
-    content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+    content: fallbackMessage,
     usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
     fallbackUsed: true,
     error: `All ${errors.length} attempts failed. Last error: ${errors[errors.length - 1]?.error || "Unknown"}`,

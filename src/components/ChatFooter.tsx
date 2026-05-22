@@ -17,6 +17,7 @@ type Props = {
   setImage: (val: string | null) => void;
   setFileContent: (val: string | null) => void;
   setFileName: (val: string | null) => void;
+  fileName: string | null;
 };
 
 export default function ChatFooter({
@@ -28,10 +29,10 @@ export default function ChatFooter({
   setImage,
   setFileContent,
   setFileName,
+  fileName,
 }: Props) {
   const [isDragging, setIsDragging] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [localFileName, setLocalFileName] = useState<string | null>(null);
   const [isParsing, setIsParsing] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,12 +48,19 @@ export default function ChatFooter({
     };
   }, []);
 
+  // Sync native file inputs when image/fileName state is cleared by parent or user
+  useEffect(() => {
+    if (!image && !fileName) {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (mediaInputRef.current) mediaInputRef.current.value = "";
+    }
+  }, [image, fileName]);
+
   const handleFile = async (file: File) => {
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => setImage(reader.result as string);
       reader.readAsDataURL(file);
-      setLocalFileName(null);
       setFileContent(null);
       setFileName(null);
     } else if (file.type === "application/pdf") {
@@ -61,7 +69,6 @@ export default function ChatFooter({
         const getPDFText = (await import("react-pdftotext")).default;
         const text = await getPDFText(file);
         setImage(null);
-        setLocalFileName(file.name);
         setFileName(file.name);
         setFileContent(text);
       } catch (e) {
@@ -75,7 +82,6 @@ export default function ChatFooter({
       const reader = new FileReader();
       reader.onload = (e) => {
         setImage(null);
-        setLocalFileName(file.name);
         setFileName(file.name);
         setFileContent(e.target?.result as string);
       };
@@ -85,7 +91,6 @@ export default function ChatFooter({
 
   const removeAttachment = () => {
     setImage(null);
-    setLocalFileName(null);
     setFileContent(null);
     setFileName(null);
   };
@@ -125,6 +130,7 @@ export default function ChatFooter({
               accept="image/*"
               ref={mediaInputRef}
               className="hidden"
+              style={{ display: "none" }}
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) handleFile(file);
@@ -137,6 +143,7 @@ export default function ChatFooter({
               accept=".pdf,.doc,.docx,.txt"
               ref={fileInputRef}
               className="hidden"
+              style={{ display: "none" }}
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) handleFile(file);
@@ -146,7 +153,7 @@ export default function ChatFooter({
             />
 
             {/* Previews */}
-            {(image || localFileName || isParsing) && (
+            {(image || fileName || isParsing) && (
               <div className="px-3 pt-3">
                 <div className="relative inline-block group">
                   {isParsing ? (
@@ -166,7 +173,7 @@ export default function ChatFooter({
                     <div className="w-28 h-28 rounded-2xl bg-blue-50 border border-blue-200 flex flex-col items-center justify-center p-2 text-center overflow-hidden">
                       <FileText className="w-8 h-8 text-blue-500 mb-1" />
                       <span className="text-[10px] font-medium text-blue-700 truncate w-full px-1">
-                        {localFileName}
+                        {fileName}
                       </span>
                     </div>
                   )}
@@ -255,7 +262,7 @@ export default function ChatFooter({
               <Button
                 onClick={onSend}
                 size="icon"
-                disabled={(!input.trim() && !image && !localFileName) || isLoading || isParsing}
+                disabled={(!input.trim() && !image && !fileName) || isLoading || isParsing}
                 className="mr-2 rounded-full bg-sky-500 hover:bg-sky-600 active:scale-95 shrink-0"
               >
                 <Send className="w-4 h-4" />

@@ -401,6 +401,35 @@ export async function saveKidActivityProgress(
     const { userId } = await verifyUserRole("kid");
     const supabase = await getSupabaseClient();
 
+    // 1. Attempt to execute the atomic database RPC function first
+    const { data: rpcData, error: rpcError } = await supabase.rpc("save_kid_activity_progress", {
+      p_user_id: userId,
+      p_activity_slug: activitySlug,
+      p_activity_title: activityTitle,
+      p_score_str: score || null,
+    });
+
+    // Check if RPC was successful
+    if (
+      !rpcError &&
+      rpcData &&
+      typeof rpcData === "object" &&
+      "success" in rpcData &&
+      (rpcData as Record<string, unknown>).success === true
+    ) {
+      revalidatePath("/dashboard/kid");
+      revalidatePath("/dashboard/parent");
+      return { success: true };
+    }
+
+    if (rpcError) {
+      console.warn(
+        "save_kid_activity_progress RPC failed, executing client-side fallback:",
+        rpcError.message
+      );
+    }
+
+    // 2. Client-side Fallback (in case migration is not fully deployed or has temporary failure)
     // Securely query dynamic XP settings from DB, falling back to the client-provided parameter
     let actualXp = xpEarned;
     const { data: activitySetting } = await supabase
@@ -413,7 +442,26 @@ export async function saveKidActivityProgress(
       actualXp = activitySetting.xp_reward;
     }
 
-    // 1. Fetch current profile stats for streak computation
+    // Parse score percentage if available (e.g. "80%" -> 80)
+    let parsedScore: number | null = null;
+    if (score) {
+      const match = score.match(/([0-9]+)/);
+      if (match) {
+        parsedScore = parseInt(match[1], 10);
+      }
+    }
+
+    // Apply score-based XP scaling (100% correct score = full XP, else proportional)
+    if (parsedScore !== null) {
+      if (parsedScore === 100) {
+        // Full XP points
+      } else {
+        actualXp = Math.round(actualXp * (parsedScore / 100));
+      }
+    }
+    actualXp = Math.max(0, actualXp);
+
+    // Fetch current profile stats for streak computation
     const { data: profile, error: profileError } = await supabase
       .from("profile")
       .select("total_experience_points, current_streak, longest_streak")
@@ -424,7 +472,7 @@ export async function saveKidActivityProgress(
       return { success: false, error: "Profile not found." };
     }
 
-    // 2. Query the latest activity reward for this kid to calculate streak
+    // Query the latest activity reward for this kid to calculate streak
     const { data: lastRewards, error: lastRewardsError } = await supabase
       .from("rewards")
       .select("created_at")
@@ -478,19 +526,20 @@ export async function saveKidActivityProgress(
       longestStreak = currentStreak;
     }
 
-    // 3. Insert reward record with dynamic XP
+    // Insert reward record with dynamic XP, description, and score column
     const { error: insertError } = await supabase.from("rewards").insert({
       user_id: userId,
       rewards_amount: actualXp,
       source_type: "activity",
       description: `Completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
+      score: parsedScore,
     });
 
     if (insertError) {
       return { success: false, error: insertError.message };
     }
 
-    // 4. Update profile with dynamic XP
+    // Update profile with dynamic XP and streaks
     const newXp = (profile.total_experience_points ?? 0) + actualXp;
     const { error: updateError } = await supabase
       .from("profile")
@@ -607,7 +656,33 @@ export async function getChildDetails(childUserId: string): Promise<ChildDetails
     coding: Math.min(100, 20 + codingCount * 20),
   };
 
-  const learningTimeMins = totalCompleted * 10 + (totalCompleted > 0 ? 15 : 0);
+  // Dynamically retrieve dynamic minutes from activity_settings
+  let learningTimeMins = 0;
+  try {
+    const { data: settings } = await supabase.from("activity_settings").select("title, minutes");
+
+    const settingsList = settings ?? [];
+
+    timeline.forEach((item) => {
+      const desc = item.description ?? "";
+      // Find matching activity setting by title within description
+      const matchedSetting = settingsList.find((s) =>
+        desc.toLowerCase().includes(s.title.toLowerCase())
+      );
+      if (matchedSetting) {
+        learningTimeMins += matchedSetting.minutes;
+      } else {
+        learningTimeMins += 10; // default fallback if title is not matched
+      }
+    });
+  } catch {
+    // If activity_settings table query fails, fallback to static duration calculation
+    learningTimeMins = totalCompleted * 10;
+  }
+
+  if (totalCompleted > 0) {
+    learningTimeMins += 15;
+  }
 
   let totalScore = 0;
   let scoreCount = 0;

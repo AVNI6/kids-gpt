@@ -55,6 +55,7 @@ export interface ProviderCallOptions {
   model: string;
   apiKey: string;
   contents: GeminiContent[];
+  systemPrompt?: string;
   generationConfig?: Record<string, unknown>;
   signal?: AbortSignal;
   timeout?: number;

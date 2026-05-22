@@ -6,20 +6,74 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
-// Get available Gemini API key
-const geminiApiKey =
+// Check if at least one Google Gemini API key is configured
+const hasAnyGeminiApiKey = !!(
   process.env.GOOGLE_GEMINI_API_KEY ||
   process.env.GOOGLE_GEMINI_API_KEY2 ||
-  process.env.GOOGLE_GEMINI_API_KEY3;
+  process.env.GOOGLE_GEMINI_API_KEY3
+);
 
-if (!geminiApiKey) {
-  console.warn("WARNING: No Google Gemini API key configured in environment variables.");
+if (!hasAnyGeminiApiKey) {
+  console.warn("WARNING: No Google Gemini API keys configured in environment variables.");
 }
 
-// Initialize the Google Gemini provider
-const googleProvider = createGoogleGenerativeAI({
-  apiKey: geminiApiKey || "",
-});
+/**
+ * Universal helper for robust structured object generation with key rotation and model fallbacks
+ */
+async function generateStructuredObject<T extends z.ZodTypeAny>({
+  schema,
+  system,
+  prompt,
+}: {
+  schema: T;
+  system: string;
+  prompt: string;
+}) {
+  const keys: string[] = [];
+  if (process.env.GOOGLE_GEMINI_API_KEY) keys.push(process.env.GOOGLE_GEMINI_API_KEY);
+  if (process.env.GOOGLE_GEMINI_API_KEY2) keys.push(process.env.GOOGLE_GEMINI_API_KEY2);
+  if (process.env.GOOGLE_GEMINI_API_KEY3) keys.push(process.env.GOOGLE_GEMINI_API_KEY3);
+
+  if (keys.length === 0) {
+    throw new Error("No Google Gemini API keys configured in environment variables.");
+  }
+
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+  const errors: string[] = [];
+
+  for (const modelName of models) {
+    for (let i = 0; i < keys.length; i++) {
+      const apiKey = keys[i];
+      try {
+        console.log(`[Activity AI] Trying model ${modelName} with API Key ${i + 1}/${keys.length}`);
+
+        const googleProviderInstance = createGoogleGenerativeAI({
+          apiKey,
+        });
+
+        const result = await generateObject({
+          model: googleProviderInstance(modelName),
+          schema,
+          system,
+          prompt,
+        });
+
+        console.log(
+          `[Activity AI] Successfully generated object using ${modelName} with key index ${i}`
+        );
+        return result;
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.warn(`[Activity AI] Failed with ${modelName} using key index ${i}: ${errMsg}`);
+        errors.push(`${modelName} (Key ${i + 1}): ${errMsg}`);
+      }
+    }
+  }
+
+  throw new Error(
+    `AI generation failed after trying all keys and models. Errors:\n- ${errors.join("\n- ")}`
+  );
+}
 
 // =========================================================
 // 1. FLASHCARDS SCHEMAS & ACTIONS
@@ -77,15 +131,14 @@ export async function generateFlashcards(topic: string) {
       return { error: "Only kid accounts are authorized to generate new activities!" };
     }
 
-    if (!geminiApiKey) {
+    if (!hasAnyGeminiApiKey) {
       return {
         error: "AI generation is currently unavailable. Please contact support or try again later.",
       };
     }
 
-    // 3. Generate structured flashcards object using Vercel AI SDK
-    const { object } = await generateObject({
-      model: googleProvider("gemini-2.5-flash"),
+    // 3. Generate structured flashcards object using our robust fallback orchestrator
+    const { object } = await generateStructuredObject({
       schema: flashcardSchema,
       system: `You are an awesome, encouraging AI kid-teacher who makes learning incredibly fun and accessible.
 Your goal is to generate exactly 5 educational flashcards for a child about the topic: "${trimmedTopic}".
@@ -204,15 +257,14 @@ export async function generateQuiz(topic: string) {
       return { error: "Only kid accounts are authorized to generate new activities!" };
     }
 
-    if (!geminiApiKey) {
+    if (!hasAnyGeminiApiKey) {
       return {
         error: "AI generation is currently unavailable. Please contact support or try again later.",
       };
     }
 
-    // 3. Generate structured quiz object using Vercel AI SDK with Gemini model
-    const { object } = await generateObject({
-      model: googleProvider("gemini-2.5-flash"),
+    // 3. Generate structured quiz object using our robust fallback orchestrator
+    const { object } = await generateStructuredObject({
       schema: quizSchema,
       system: `You are an awesome, encouraging AI kid-teacher who makes learning incredibly fun and accessible.
 Your goal is to generate a highly engaging, 3-question multiple-choice educational quiz for a child about the topic: "${trimmedTopic}".
@@ -321,15 +373,14 @@ export async function generateWordScramble(topic: string) {
       return { error: "Only kid accounts are authorized to generate new activities!" };
     }
 
-    if (!geminiApiKey) {
+    if (!hasAnyGeminiApiKey) {
       return {
         error: "AI generation is currently unavailable. Please contact support or try again later.",
       };
     }
 
-    // 3. Generate structured word scramble object using Vercel AI SDK with Gemini model
-    const { object } = await generateObject({
-      model: googleProvider("gemini-2.5-flash"),
+    // 3. Generate structured word scramble object using our robust fallback orchestrator
+    const { object } = await generateStructuredObject({
       schema: wordScrambleSchema,
       system: `You are an awesome, encouraging AI kid-teacher who makes spelling incredibly fun and accessible.
 Your goal is to generate a highly engaging, 5-word spelling scramble game for a child about the topic: "${trimmedTopic}".
@@ -438,15 +489,14 @@ export async function generateMathChallenge(topic: string) {
       return { error: "Only kid accounts are authorized to generate new activities!" };
     }
 
-    if (!geminiApiKey) {
+    if (!hasAnyGeminiApiKey) {
       return {
         error: "AI generation is currently unavailable. Please contact support or try again later.",
       };
     }
 
-    // 3. Generate structured math challenge object using Vercel AI SDK with Gemini model
-    const { object } = await generateObject({
-      model: googleProvider("gemini-2.5-flash"),
+    // 3. Generate structured math challenge object using our robust fallback orchestrator
+    const { object } = await generateStructuredObject({
       schema: mathChallengeSchema,
       system: `You are an awesome, encouraging AI kid-teacher who makes mathematics incredibly fun, visual, and accessible.
 Your goal is to generate an engaging, 5-question math challenge for a kid aged 6-12 based on the theme: "${trimmedTopic}".
@@ -577,15 +627,14 @@ export async function generateScienceLab(topic: string) {
       return { error: "Only kid accounts are authorized to generate new activities!" };
     }
 
-    if (!geminiApiKey) {
+    if (!hasAnyGeminiApiKey) {
       return {
         error: "AI generation is currently unavailable. Please contact support or try again later.",
       };
     }
 
-    // 3. Generate structured science lab object using Vercel AI SDK with Gemini model
-    const { object } = await generateObject({
-      model: googleProvider("gemini-2.5-flash"),
+    // 3. Generate structured science lab object using our robust fallback orchestrator
+    const { object } = await generateStructuredObject({
       schema: scienceLabSchema,
       system: `You are an awesome, encouraging AI kid-teacher who makes science experiments incredibly fun, safe, and accessible.
 Your goal is to generate exactly 3 highly engaging and safe kid-friendly experiments or scenarios about the topic: "${trimmedTopic}".
@@ -714,15 +763,14 @@ export async function generateLogicPuzzle(topic: string) {
       return { error: "Only kid accounts are authorized to generate new activities!" };
     }
 
-    if (!geminiApiKey) {
+    if (!hasAnyGeminiApiKey) {
       return {
         error: "AI generation is currently unavailable. Please contact support or try again later.",
       };
     }
 
-    // 3. Generate structured logic puzzles object using Vercel AI SDK with Gemini model
-    const { object } = await generateObject({
-      model: googleProvider("gemini-2.5-flash"),
+    // 3. Generate structured logic puzzles object using our robust fallback orchestrator
+    const { object } = await generateStructuredObject({
       schema: logicPuzzleSchema,
       system: `You are an awesome, encouraging AI kid-teacher who makes logic, patterns, and sequences incredibly fun and accessible.
 Your goal is to generate exactly 3 pattern-matching logic puzzles (using emojis, shapes, or numbers) based on the topic: "${trimmedTopic}".
@@ -904,15 +952,14 @@ export async function generateColorMixer(topic: string) {
       return { error: "Only kid accounts are authorized to generate new activities!" };
     }
 
-    if (!geminiApiKey) {
+    if (!hasAnyGeminiApiKey) {
       return {
         error: "AI generation is currently unavailable. Please contact support or try again later.",
       };
     }
 
-    // 3. Generate structured color mixer object using Vercel AI SDK
-    const { object } = await generateObject({
-      model: googleProvider("gemini-2.5-flash"),
+    // 3. Generate structured color mixer object using our robust fallback orchestrator
+    const { object } = await generateStructuredObject({
       schema: colorMixerSchema,
       system: `You are an awesome, encouraging AI kid-teacher who makes science and color mixing incredibly fun and accessible.
 Your goal is to generate exactly 3 color-mixing levels for a child about the topic: "${trimmedTopic}".
@@ -1016,15 +1063,14 @@ export async function generateMatchPairs(topic: string) {
       return { error: "Only kid accounts are authorized to generate new activities!" };
     }
 
-    if (!geminiApiKey) {
+    if (!hasAnyGeminiApiKey) {
       return {
         error: "AI generation is currently unavailable. Please contact support or try again later.",
       };
     }
 
-    // 3. Generate structured match pairs object using Vercel AI SDK
-    const { object } = await generateObject({
-      model: googleProvider("gemini-2.5-flash"),
+    // 3. Generate structured match pairs object using our robust fallback orchestrator
+    const { object } = await generateStructuredObject({
       schema: matchPairsSchema,
       system: `You are an awesome, encouraging AI kid-teacher who makes associative learning incredibly fun and accessible.
 Your goal is to generate exactly 4 educational matching pairs for a child about the topic: "${trimmedTopic}".

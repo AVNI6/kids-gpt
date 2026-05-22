@@ -17,15 +17,24 @@ interface DeleteSessionDialogProps {
   sessionId: string;
   onDelete: (sessionId: string) => Promise<void>;
   trigger?: React.ReactElement;
+  onOpenDialog?: () => void;
 }
 
 export default function DeleteSessionDialog({
   sessionId,
   onDelete,
   trigger,
+  onOpenDialog,
 }: DeleteSessionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleOpenChange = (open: boolean) => {
+    if (open && onOpenDialog) {
+      onOpenDialog();
+    }
+    setIsOpen(open);
+  };
 
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
@@ -40,7 +49,7 @@ export default function DeleteSessionDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
           trigger || (

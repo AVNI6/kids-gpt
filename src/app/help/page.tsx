@@ -124,11 +124,10 @@ export default function HelpPage() {
           <div className="grid md:grid-cols-3 gap-6">
             {roleGuides.map((role) => {
               const Icon = role.icon;
-
               return (
                 <Card
                   key={role.title}
-                  className="group transition-all hover:shadow-xl hover:-translate-y-2 cursor-pointer bg-card border-2 border-border/50 rounded-3xl overflow-hidden"
+                  className="bg-card border-2 border-border/50 rounded-3xl overflow-hidden"
                 >
                   <CardHeader className="space-y-4">
                     <div className="w-16 h-16 rounded-2xl bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors">

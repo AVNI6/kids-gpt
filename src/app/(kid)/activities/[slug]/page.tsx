@@ -1,5 +1,8 @@
+"use client";
+
+import { useState, use } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Star, Timer } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { kidActivities, activityColorStyles, activityButtonStyles } from "@/lib/kid-activities";
 import { APP_ROUTES } from "@/constant/AppRoutes";
+import ActivityTopicModal from "@/components/ActivityTopicModal";
 
 interface PageProps {
   params: Promise<{
@@ -14,14 +18,34 @@ interface PageProps {
   }>;
 }
 
-export default async function ActivityDetailPage({ params }: PageProps) {
-  // Await the params as required by Next.js 15/16 rules
-  const { slug } = await params;
+export default function ActivityDetailPage({ params }: PageProps) {
+  // Unwrap parameters with modern Next.js client use hook
+  const { slug } = use(params);
+  const router = useRouter();
+  const [showTopicModal, setShowTopicModal] = useState(false);
+
   const activity = kidActivities.find((item) => item.slug === slug);
 
   if (!activity) {
     return notFound();
   }
+
+  const isAiPowered =
+    activity.slug === "flashcards" ||
+    activity.slug === "quizzes" ||
+    activity.slug === "word-scrambles" ||
+    activity.slug === "math-challenges" ||
+    activity.slug === "science-lab" ||
+    activity.slug === "logic-puzzles" ||
+    activity.slug === "match-following";
+
+  const handleStartClick = () => {
+    if (isAiPowered) {
+      setShowTopicModal(true);
+    } else {
+      router.push(activity.href);
+    }
+  };
 
   const Icon = activity.icon;
 
@@ -95,13 +119,12 @@ export default async function ActivityDetailPage({ params }: PageProps) {
               </ul>
             </div>
 
-            <Link href={activity.href} className="block w-full">
-              <Button
-                className={`${activityButtonStyles[activity.color]} w-full rounded-2xl text-base font-bold py-6 text-white shadow-lg`}
-              >
-                Start {activity.title}
-              </Button>
-            </Link>
+            <Button
+              onClick={handleStartClick}
+              className={`${activityButtonStyles[activity.color]} w-full rounded-2xl text-base font-bold py-6 text-white shadow-lg`}
+            >
+              Start {activity.title}
+            </Button>
           </CardContent>
         </Card>
 
@@ -133,6 +156,12 @@ export default async function ActivityDetailPage({ params }: PageProps) {
           <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Favorite
         </Button>
       </div>
+
+      <ActivityTopicModal
+        isOpen={showTopicModal}
+        onClose={() => setShowTopicModal(false)}
+        activitySlug={activity.slug}
+      />
     </main>
   );
 }

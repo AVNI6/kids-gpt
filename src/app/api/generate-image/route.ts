@@ -43,110 +43,128 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GEMINI_API_KEY });
+    const keys: string[] = [];
+    if (process.env.GOOGLE_GEMINI_API_KEY) keys.push(process.env.GOOGLE_GEMINI_API_KEY);
+    if (process.env.GOOGLE_GEMINI_API_KEY2) keys.push(process.env.GOOGLE_GEMINI_API_KEY2);
+    if (process.env.GOOGLE_GEMINI_API_KEY3) keys.push(process.env.GOOGLE_GEMINI_API_KEY3);
+
+    if (keys.length === 0) {
+      return NextResponse.json({ error: "No API keys configured" }, { status: 500 });
+    }
 
     const modelList = isEditRequest ? EDIT_MODELS : GENERATION_MODELS;
 
     for (const modelName of modelList) {
-      try {
-        console.log(`[Image API] ${isEditRequest ? "EDIT" : "GENERATE"} with ${modelName}`);
+      for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+        const apiKey = keys[keyIndex];
+        try {
+          console.log(
+            `[Image API] ${isEditRequest ? "EDIT" : "GENERATE"} with ${modelName} using Key ${keyIndex + 1}/${keys.length}`
+          );
+          const ai = new GoogleGenAI({ apiKey });
 
-        // Build contents array — text prompt + optional reference image
-        const contents: Array<
-          { text: string } | { inlineData: { mimeType: string; data: string } }
-        > = [];
+          // Build contents array — text prompt + optional reference image
+          const contents: Array<
+            { text: string } | { inlineData: { mimeType: string; data: string } }
+          > = [];
 
-        // Text instruction
-        const textPrompt = isEditRequest
-          ? `Edit this image: ${userPrompt}. Keep all existing subjects and layout exactly the same, only apply the requested changes.`
-          : userPrompt;
+          // Text instruction
+          const textPrompt = isEditRequest
+            ? `Edit this image: ${userPrompt}. Keep all existing subjects and layout exactly the same, only apply the requested changes.`
+            : userPrompt;
 
-        contents.push({ text: textPrompt });
+          contents.push({ text: textPrompt });
 
-        // Reference image for editing
-        if (inputImageBase64) {
-          let cleanBase64 = inputImageBase64;
-          let mimeType = "image/png";
+          // Reference image for editing
+          if (inputImageBase64) {
+            let cleanBase64 = inputImageBase64;
+            let mimeType = "image/png";
 
-          if (inputImageBase64.startsWith("http")) {
-            console.log("[Image API] Fetching image from URL...");
-            const imageRes = await fetch(inputImageBase64);
-            if (!imageRes.ok) {
-              console.error("[Image API] Failed to fetch image URL");
-              continue;
+            if (inputImageBase64.startsWith("http")) {
+              console.log("[Image API] Fetching image from URL...");
+              const imageRes = await fetch(inputImageBase64);
+              if (!imageRes.ok) {
+                console.error("[Image API] Failed to fetch image URL");
+                continue;
+              }
+              const arrayBuffer = await imageRes.arrayBuffer();
+              cleanBase64 = Buffer.from(arrayBuffer).toString("base64");
+              mimeType = imageRes.headers.get("Content-Type") || "image/png";
+            } else if (inputImageBase64.startsWith("data:")) {
+              const parts = inputImageBase64.split(",");
+              mimeType = parts[0].split(":")[1].split(";")[0];
+              cleanBase64 = parts[1];
             }
-            const arrayBuffer = await imageRes.arrayBuffer();
-            cleanBase64 = Buffer.from(arrayBuffer).toString("base64");
-            mimeType = imageRes.headers.get("Content-Type") || "image/png";
-          } else if (inputImageBase64.startsWith("data:")) {
-            const parts = inputImageBase64.split(",");
-            mimeType = parts[0].split(":")[1].split(";")[0];
-            cleanBase64 = parts[1];
+
+            console.log(
+              `[Image API] Image ready. Mime: ${mimeType}, Size: ${cleanBase64.length} chars`
+            );
+
+            contents.push({
+              inlineData: {
+                mimeType,
+                data: cleanBase64,
+              },
+            });
           }
 
-          console.log(
-            `[Image API] Image ready. Mime: ${mimeType}, Size: ${cleanBase64.length} chars`
-          );
-
-          contents.push({
-            inlineData: {
-              mimeType,
-              data: cleanBase64,
+          // Use ai.models.generateContent — the correct method for @google/genai SDK
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: contents,
+            config: {
+              responseModalities: ["TEXT", "IMAGE"],
             },
           });
-        }
 
-        // Use ai.models.generateContent — the correct method for @google/genai SDK
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: contents,
-          config: {
-            responseModalities: ["TEXT", "IMAGE"],
-          },
-        });
+          let resultImageBase64: string | null = null;
+          let resultMimeType = "image/png";
+          let textResponse = "";
 
-        let resultImageBase64: string | null = null;
-        let resultMimeType = "image/png";
-        let textResponse = "";
-
-        if (response.candidates?.[0]?.content?.parts) {
-          for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData) {
-              resultImageBase64 = part.inlineData.data ?? null;
-              resultMimeType = part.inlineData.mimeType || "image/png";
-            } else if (part.text) {
-              textResponse = part.text;
+          if (response.candidates?.[0]?.content?.parts) {
+            for (const part of response.candidates[0].content.parts) {
+              if (part.inlineData) {
+                resultImageBase64 = part.inlineData.data ?? null;
+                resultMimeType = part.inlineData.mimeType || "image/png";
+              } else if (part.text) {
+                textResponse = part.text;
+              }
             }
           }
-        }
 
-        if (resultImageBase64) {
-          console.log(`[Image API] Success with ${modelName}`);
-          return NextResponse.json({
-            type: "image",
-            image: `data:${resultMimeType};base64,${resultImageBase64}`,
-            message: textResponse || undefined,
-            modelUsed: modelName,
-          });
-        }
+          if (resultImageBase64) {
+            console.log(`[Image API] Success with ${modelName} using Key index ${keyIndex}`);
+            return NextResponse.json({
+              type: "image",
+              image: `data:${resultMimeType};base64,${resultImageBase64}`,
+              message: textResponse || undefined,
+              modelUsed: modelName,
+            });
+          }
 
-        console.warn(`[Image API] ${modelName} returned no image, trying next...`);
-        continue;
-      } catch (modelError: unknown) {
-        const errorMsg = getErrorMessage(modelError);
-        const status = getErrorStatus(modelError);
-        console.error(`[Image API] Error with ${modelName}:`, errorMsg);
-
-        if (
-          status === 429 ||
-          errorMsg.includes("429") ||
-          errorMsg.includes("quota") ||
-          errorMsg.includes("RESOURCE_EXHAUSTED")
-        ) {
-          console.log(`[Image API] Rate limited on ${modelName}, trying next...`);
+          console.warn(`[Image API] ${modelName} returned no image, trying next key...`);
           continue;
+        } catch (modelError: unknown) {
+          const errorMsg = getErrorMessage(modelError);
+          const status = getErrorStatus(modelError);
+          console.error(
+            `[Image API] Error with ${modelName} using Key index ${keyIndex}:`,
+            errorMsg
+          );
+
+          if (
+            status === 429 ||
+            errorMsg.includes("429") ||
+            errorMsg.includes("quota") ||
+            errorMsg.includes("RESOURCE_EXHAUSTED")
+          ) {
+            console.log(
+              `[Image API] Rate limited on ${modelName} with Key index ${keyIndex}, trying next...`
+            );
+            continue;
+          }
+          break;
         }
-        break;
       }
     }
 

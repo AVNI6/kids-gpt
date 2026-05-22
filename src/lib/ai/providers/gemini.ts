@@ -24,7 +24,15 @@ interface GeminiResponse {
 }
 
 export async function callGemini(options: ProviderCallOptions): Promise<AIResponse> {
-  const { model, apiKey, contents, generationConfig, signal, timeout = 30000 } = options;
+  const {
+    model,
+    apiKey,
+    contents,
+    systemPrompt,
+    generationConfig,
+    signal,
+    timeout = 35000,
+  } = options;
   const url = `${GEMINI_API_BASE}/${model}:generateContent?key=${apiKey}`;
 
   aiLogger.info("Gemini", `Calling model: ${model}`);
@@ -33,22 +41,29 @@ export async function callGemini(options: ProviderCallOptions): Promise<AIRespon
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   // Link external signal to our controller
+  const abortHandler = () => controller.abort();
   if (signal) {
-    signal.addEventListener("abort", () => controller.abort(), { once: true });
+    signal.addEventListener("abort", abortHandler);
   }
 
   try {
+    const body: Record<string, unknown> = {
+      contents,
+      generationConfig,
+    };
+
+    if (systemPrompt) {
+      body.systemInstruction = {
+        parts: [{ text: systemPrompt }],
+      };
+    }
+
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents,
-        generationConfig,
-      }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorBody = await response.text();
@@ -99,8 +114,6 @@ export async function callGemini(options: ProviderCallOptions): Promise<AIRespon
       fallbackUsed: false,
     };
   } catch (error) {
-    clearTimeout(timeoutId);
-
     if (error instanceof DOMException && error.name === "AbortError") {
       throw error; // Let abort propagate
     }
@@ -110,5 +123,10 @@ export async function callGemini(options: ProviderCallOptions): Promise<AIRespon
     });
 
     throw error;
+  } finally {
+    clearTimeout(timeoutId);
+    if (signal) {
+      signal.removeEventListener("abort", abortHandler);
+    }
   }
 }
