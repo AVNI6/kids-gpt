@@ -3,11 +3,18 @@ import { Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
+import { getKidComprehensiveDetails } from "@/actions/dashboard.actions";
+
 import KidProfileManager from "@/components/dashboard/kid/KidProfileManager";
 import KidStreakBanner from "@/components/dashboard/kid/KidStreakBanner";
 import HomeworkPendingCard from "@/components/dashboard/kid/HomeworkPendingCard";
-import RecentChatsCard from "@/components/dashboard/kid/RecentChatsCard";
-import TodaysLessonsGrid from "@/components/dashboard/kid/TodaysLessonsGrid";
+
+import {
+  GameHistory,
+  GameHistorySkeleton,
+  ClassroomOverview,
+  ClassroomOverviewSkeleton,
+} from "@/components/dashboard/kid/sections";
 
 function KidStreakBannerSkeleton() {
   return (
@@ -29,15 +36,6 @@ function KidStreakBannerSkeleton() {
   );
 }
 
-function TodaysLessonsGridSkeleton() {
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <Skeleton className="h-56 rounded-[28px] bg-white" />
-      <Skeleton className="h-56 rounded-[28px] bg-white" />
-    </div>
-  );
-}
-
 function KidProfileManagerSkeleton() {
   return (
     <Card className="rounded-[28px] border-sky-100 bg-white shadow-sm">
@@ -54,23 +52,6 @@ function KidProfileManagerSkeleton() {
           <Skeleton className="h-20 rounded-2xl bg-slate-100" />
         </div>
         <Skeleton className="h-10 rounded-full bg-slate-100" />
-      </CardContent>
-    </Card>
-  );
-}
-
-function RecentChatsCardSkeleton() {
-  return (
-    <Card className="rounded-[28px] border-sky-100 bg-white shadow-sm">
-      <CardContent className="space-y-4 p-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-6 w-40 bg-slate-100" />
-          <Skeleton className="h-4 w-16 bg-slate-100" />
-        </div>
-        <div className="space-y-3">
-          <Skeleton className="h-16 rounded-2xl bg-slate-100" />
-          <Skeleton className="h-16 rounded-2xl bg-slate-100" />
-        </div>
       </CardContent>
     </Card>
   );
@@ -96,6 +77,7 @@ function HomeworkPendingCardSkeleton() {
 
 export default async function KidDashboardPage() {
   await checkDashboardAccess(["kid"]);
+  const details = await getKidComprehensiveDetails();
 
   return (
     <main className="min-h-full bg-linear-to-br from-sky-50 via-white to-emerald-50 px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8">
@@ -104,24 +86,24 @@ export default async function KidDashboardPage() {
           <KidStreakBanner />
         </Suspense>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.75fr)]">
-          <div className="space-y-6">
-            <Suspense fallback={<TodaysLessonsGridSkeleton />}>
-              <TodaysLessonsGrid />
-            </Suspense>
-
-            <Suspense fallback={<RecentChatsCardSkeleton />}>
-              <RecentChatsCard />
-            </Suspense>
-          </div>
-
-          <div className="space-y-6">
+        <div className="grid gap-6 xl:grid-cols-[minmax(320px,0.80fr)_minmax(0,1.4fr)]">
+          <div className="space-y-6 flex flex-col">
             <Suspense fallback={<KidProfileManagerSkeleton />}>
               <KidProfileManager />
             </Suspense>
 
             <Suspense fallback={<HomeworkPendingCardSkeleton />}>
               <HomeworkPendingCard />
+            </Suspense>
+          </div>
+
+          <div className="space-y-6 flex flex-col">
+            <Suspense fallback={<GameHistorySkeleton />}>
+              <GameHistory timeline={details.timeline} />
+            </Suspense>
+
+            <Suspense fallback={<ClassroomOverviewSkeleton />}>
+              <ClassroomOverview />
             </Suspense>
           </div>
         </div>

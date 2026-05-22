@@ -62,7 +62,8 @@ CREATE OR REPLACE FUNCTION public.save_kid_activity_progress(
   p_user_id uuid,
   p_activity_slug varchar,
   p_activity_title varchar,
-  p_score_str varchar
+  p_score_str varchar,
+  p_timezone varchar DEFAULT 'Asia/Kolkata'
 ) RETURNS json AS $$
 DECLARE
   v_xp_reward int;
@@ -126,10 +127,10 @@ BEGIN
     v_longest_streak := 0;
   END IF;
 
-  -- 5. Calculate streak logic (matching dashboard.actions.ts timezone-neutral logic)
-  v_today := current_date;
+  -- 5. Calculate streak logic (timezone-aware)
+  v_today := (timezone(p_timezone, now()))::date;
   
-  SELECT created_at::date INTO v_last_activity_date
+  SELECT (timezone(p_timezone, created_at))::date INTO v_last_activity_date
   FROM public.rewards
   WHERE user_id = p_user_id AND source_type = 'activity'
   ORDER BY created_at DESC

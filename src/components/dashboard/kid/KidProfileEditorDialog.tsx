@@ -85,7 +85,7 @@ export default function KidProfileEditorDialog({ profile }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" className="w-full rounded-full" />}>
+      <DialogTrigger render={<Button variant="outline" className="w-full rounded-full py-4!" />}>
         <PencilLine className="mr-2 h-4 w-4" />
         Edit Profile
       </DialogTrigger>
