@@ -25,8 +25,11 @@ import {
 import { Message, ChatMessageRow } from "@/types/chat.types";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useSidebar } from "@/context/SidebarContext";
+import { useSidebar } from "@/components/ui/sidebar";
 import { getSessionManager } from "@/lib/ai/session-manager";
+
+// Global client-side message cache for instant chat switching
+const messagesCache = new Map<string, Message[]>();
 
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
 
@@ -37,6 +40,7 @@ export default function ChatInterface() {
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastLoadedSessionRef = useRef<string | null>(null);
+  const justCreatedSessionRef = useRef(false);
   // Use a ref to read current messages without adding them to useEffect deps
   const messagesRef = useRef(messages);
 
@@ -50,14 +54,33 @@ export default function ChatInterface() {
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
 
-  const { toggleSidebar, isSidebarOpen } = useSidebar();
-  const { isUserLoggedIn, userRole } = useAuth();
+  const { toggleSidebar, openMobile } = useSidebar();
+  const { isUserLoggedIn, userRole, isLoading: isLoadingAuth } = useAuth();
   const searchParams = useSearchParams();
   const urlSessionId = searchParams?.get("id") || null;
+
+  // Clear message cache on logout
+  useEffect(() => {
+    if (!isUserLoggedIn) {
+      messagesCache.clear();
+    }
+  }, [isUserLoggedIn]);
+
+  // Keep cache synced with Redux messages state
+  useEffect(() => {
+    if (currentSessionId && messages.length > 0) {
+      messagesCache.set(currentSessionId, messages);
+    }
+  }, [messages, currentSessionId]);
 
   // Sync and load messages based on URL session ID
   useEffect(() => {
     const loadMessages = async () => {
+      // Return early if authentication is still loading to avoid race conditions with Supabase RLS
+      if (isLoadingAuth) {
+        return;
+      }
+
       // Use ref to read current messages without adding the array to the dep array
       const currentMessages = messagesRef.current;
 
@@ -76,9 +99,9 @@ export default function ChatInterface() {
         return;
       }
 
-      // If we are transitioning from a new chat (lastLoadedSessionRef.current is null)
-      // to a newly created session that we already have loaded locally (currentSessionId === urlSessionId)
-      if (lastLoadedSessionRef.current === null && urlSessionId === currentSessionId) {
+      // If we just created the session locally, we don't need to load messages from DB
+      if (justCreatedSessionRef.current && urlSessionId === currentSessionId) {
+        justCreatedSessionRef.current = false;
         lastLoadedSessionRef.current = urlSessionId;
         return;
       }
@@ -94,6 +117,16 @@ export default function ChatInterface() {
       }
 
       lastLoadedSessionRef.current = urlSessionId;
+
+      // 1. Check cache first for instant chat loading
+      if (messagesCache.has(urlSessionId)) {
+        const cached = messagesCache.get(urlSessionId);
+        if (cached) {
+          dispatch(setMessages(cached));
+          return;
+        }
+      }
+
       if (currentMessages.length > 0) {
         dispatch(setMessages([])); // Clear old messages first to avoid flash
       }
@@ -117,6 +150,7 @@ export default function ChatInterface() {
           };
         });
         dispatch(setMessages(mappedMessages));
+        messagesCache.set(urlSessionId, mappedMessages);
       } catch (error) {
         console.error("Failed to load messages:", error);
       }
@@ -124,7 +158,7 @@ export default function ChatInterface() {
 
     loadMessages();
     // `messages` is intentionally omitted — accessed via messagesRef to avoid dep-array size changes
-  }, [urlSessionId, currentSessionId, isLoading, dispatch]);
+  }, [urlSessionId, currentSessionId, isLoading, isLoadingAuth, isUserLoggedIn, dispatch]);
 
   // Abort in-flight requests when component unmounts
   useEffect(() => {
@@ -310,6 +344,7 @@ export default function ChatInterface() {
         });
         await trackDailyUsage(userTokens);
 
+        justCreatedSessionRef.current = true;
         dispatch(addSession(newSession));
         dispatch(setCurrentSessionId(sessionId));
         // Replace URL without full reload to maintain state
@@ -515,11 +550,12 @@ export default function ChatInterface() {
     <div className="flex-1 flex flex-col h-full w-full bg-background overflow-hidden">
       <header className="sticky top-0 z-40 w-full h-16 bg-background border-b border-border flex items-center px-4 md:px-6 font-bold text-sky-600 justify-between shrink-0">
         <div className="flex items-center gap-3">
-          {!isSidebarOpen && (
+          {!openMobile && (
             <button
               onClick={toggleSidebar}
               title="Open Menu"
-              className="md:hidden h-8 w-8 rounded-xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95"
+              suppressHydrationWarning={true}
+              className="md:hidden h-8 w-8 rounded-xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95 cursor-pointer"
             >
               <Menu className="w-4 h-4" />
             </button>

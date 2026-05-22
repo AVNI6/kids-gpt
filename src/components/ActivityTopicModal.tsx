@@ -153,48 +153,71 @@ export default function ActivityTopicModal({
           </div>
 
           {/* Preset Suggestions Grid */}
-          <div className="space-y-3 mb-6">
+          <div>
             <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
               Select a Premium Presets Topic
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-1">
-              {presets.map((preset) => (
-                <button
-                  key={preset.name}
-                  onClick={() => handleGenerate(preset.name)}
-                  className={`flex flex-col justify-between p-3 rounded-2xl border text-left transition-all duration-200 bg-card hover:scale-[1.02] active:scale-[0.98] ${colorTheme.border}`}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl shrink-0">{preset.emoji}</span>
-                    <span className="font-extrabold text-sm text-foreground truncate">
-                      {preset.name}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 items-center">
-                    {preset.category && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] py-0.5 px-2 font-bold opacity-75"
-                      >
-                        {preset.category}
-                      </Badge>
+
+            <div className="max-h-[220px] overflow-y-auto pr-1 py-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {presets.map((preset) => (
+                  <button
+                    key={preset.name}
+                    onClick={() => handleGenerate(preset.name)}
+                    className={`
+            flex flex-col
+            items-start
+            gap-3
+            p-3
+            rounded-2xl
+            border
+            text-left
+            bg-card
+            transition-all duration-200
+            hover:-translate-y-0.5
+            active:translate-y-0
+            ${colorTheme.border}
+          `}
+                  >
+                    <div className="flex items-center gap-2 w-full min-w-0">
+                      <span className="text-xl shrink-0">{preset.emoji}</span>
+
+                      <span className="font-extrabold text-sm text-foreground truncate">
+                        {preset.name}
+                      </span>
+                    </div>
+
+                    {(preset.category || preset.difficulty) && (
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        {preset.category && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] py-0.5 px-2 font-bold opacity-75"
+                          >
+                            {preset.category}
+                          </Badge>
+                        )}
+
+                        {preset.difficulty && (
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] py-0.5 px-2 border font-bold ${getDifficultyColor(
+                              preset.difficulty
+                            )}`}
+                          >
+                            {preset.difficulty}
+                          </Badge>
+                        )}
+                      </div>
                     )}
-                    {preset.difficulty && (
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] py-0.5 px-2 border font-bold ${getDifficultyColor(preset.difficulty)}`}
-                      >
-                        {preset.difficulty}
-                      </Badge>
-                    )}
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Custom Topic Input */}
-          <div className="space-y-3 pt-4 border-t border-border">
+          <div className="pt-2">
             <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
               Or Type Your Own Custom Adventure
             </label>
@@ -211,7 +234,7 @@ export default function ActivityTopicModal({
               />
               <Button
                 onClick={() => handleGenerate(topic)}
-                className={`${colorTheme.primary} text-white rounded-2xl font-black px-6 h-12 shadow-md transition-all shrink-0`}
+                className={`${colorTheme.primary} text-white rounded-2xl font-black px-6 h-12 transition-all shrink-0`}
               >
                 Go! 🚀
               </Button>
@@ -229,7 +252,7 @@ export default function ActivityTopicModal({
               <Loader2 className="absolute h-24 w-24 text-sky-500/40 animate-spin" />
             </div>
 
-            <h3 className="text-3xl font-black text-foreground">AI Wizard Crafting World... 🧙‍♂️</h3>
+            <h3 className="text-3xl font-black text-foreground">GPT-KID Crafting World... 🧙‍♂️</h3>
             <div className="mt-4 px-6 py-3 bg-sky-500/10 text-sky-600 rounded-full font-bold text-sm sm:text-base animate-pulse min-h-[48px] flex items-center justify-center border border-sky-500/20">
               {uiConfig.loadingWording[loadingStep]}
             </div>

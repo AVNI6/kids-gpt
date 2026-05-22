@@ -1,12 +1,7 @@
-// Model Fallback Orchestrator — Enterprise-grade AI request handling
-// Supports: multi-model fallback, API key rotation, provider failover, abort control
-
 import { AIResponse, GeminiContent } from "./types";
 import { callGemini } from "./providers/gemini";
 import { callGroq } from "./providers/groq";
 import { aiLogger } from "./logger";
-
-// ===== MODEL CONFIGURATION =====
 
 // Gemini models in priority order (free-tier compatible)
 const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];

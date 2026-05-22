@@ -16,6 +16,17 @@ import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { useAuth } from "@/context/AuthContext";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ProfileProps {
   isCollapsed?: boolean;
@@ -34,6 +45,8 @@ function getInitials(name?: string, email?: string): string {
 export default function Profile({ isCollapsed }: ProfileProps) {
   const { user, userProfile, isUserLoggedIn, logout } = useAuth();
   const { setTheme, theme } = useTheme();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   if (!isUserLoggedIn || !user) return null;
 
@@ -47,11 +60,11 @@ export default function Profile({ isCollapsed }: ProfileProps) {
 
   return (
     <div className="w-full pt-4">
-      <Popover>
+      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
         <PopoverTrigger
           className={cn(
             "w-full flex items-center gap-3 p-2 rounded-2xl hover:bg-sidebar-accent transition-all duration-300 group",
-            isCollapsed && "justify-center p-0 h-10 w-10 mx-auto"
+            isCollapsed && "justify-center p-0! h-10! w-10! mx-auto"
           )}
         >
           <Avatar size="lg" className="border-2 border-emerald-500/20 shadow-sm shrink-0">
@@ -77,25 +90,28 @@ export default function Profile({ isCollapsed }: ProfileProps) {
           sideOffset={12}
         >
           <div className="space-y-1">
-            <Link href={APP_ROUTES.Subscription}>
-              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sky-500 hover:bg-sky-50 transition-colors text-sm font-bold">
-                <Sparkles className="h-4 w-4" />
-                <span>Try Premium</span>
-              </button>
+            <Link
+              href={APP_ROUTES.Subscription}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sky-500 hover:bg-sky-50 transition-colors text-sm font-bold"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>Try Premium</span>
             </Link>
 
-            <Link href={`/dashboard/${dashboardRole}`}>
-              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold">
-                <UserRound className="h-4 w-4" />
-                <span>View Profile</span>
-              </button>
+            <Link
+              href={`/dashboard/${dashboardRole}`}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
+            >
+              <UserRound className="h-4 w-4" />
+              <span>View Profile</span>
             </Link>
 
-            <Link href={APP_ROUTES.Help}>
-              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold">
-                <HelpCircle className="h-4 w-4" />
-                <span>Help</span>
-              </button>
+            <Link
+              href={APP_ROUTES.Help}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span>Help</span>
             </Link>
 
             <div className="py-4 px-3">
@@ -128,8 +144,12 @@ export default function Profile({ isCollapsed }: ProfileProps) {
             <div className="border-t border-border/50 my-1" />
 
             <button
-              onClick={logout}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-semibold"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsPopoverOpen(false);
+                setShowLogoutConfirm(true);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-semibold cursor-pointer"
             >
               <PanelLeftClose className="h-4 w-4 rotate-180" />
               <span>Log Out</span>
@@ -137,6 +157,33 @@ export default function Profile({ isCollapsed }: ProfileProps) {
           </div>
         </PopoverContent>
       </Popover>
+
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent className="sm:max-w-[400px] rounded-2xl border-border bg-background">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold text-foreground">
+              Log Out?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground pt-2">
+              Are you sure you want to log out of your session? You will need to sign in again to
+              access your learning adventure.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 pt-4">
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                setShowLogoutConfirm(false);
+                await logout();
+              }}
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm cursor-pointer"
+            >
+              Log Out
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -19,7 +19,6 @@ export const kidActivities: KidActivity[] = [
     icon: Grid3X3,
     color: "sky",
     duration: "10 Mins",
-    badge: "AI Generated",
     xp: "+150 XP",
     steps: [
       "Choose a custom topic",
@@ -37,7 +36,6 @@ export const kidActivities: KidActivity[] = [
     icon: Sparkles,
     color: "green",
     duration: "5 Mins",
-    badge: "AI Generated",
     xp: "+150 XP",
     steps: [
       "Choose a custom topic",
@@ -55,7 +53,6 @@ export const kidActivities: KidActivity[] = [
     icon: Puzzle,
     color: "sky",
     duration: "5 Mins",
-    badge: "AI Generated",
     xp: "+150 XP",
     steps: [
       "Choose a custom topic",
@@ -73,7 +70,6 @@ export const kidActivities: KidActivity[] = [
     icon: SpellCheck,
     color: "green",
     duration: "8 Mins",
-    badge: "AI Generated",
     xp: "+150 XP",
     steps: [
       "Choose a custom topic",
@@ -92,7 +88,6 @@ export const kidActivities: KidActivity[] = [
     icon: Calculator,
     color: "orange",
     duration: "5 Mins",
-    badge: "AI Generated",
     xp: "+150 XP",
     steps: [
       "Choose a custom theme",
@@ -110,7 +105,6 @@ export const kidActivities: KidActivity[] = [
     icon: FlaskConical,
     color: "purple",
     duration: "10 Mins",
-    badge: "AI Generated",
     xp: "+150 XP",
     steps: [
       "Choose a custom scientific topic",

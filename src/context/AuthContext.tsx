@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { type AuthChangeEvent, type Session, type User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { UserRole, UserProfile } from "@/types/auth";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
     let isMounted = true;
@@ -122,7 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserProfile(null);
       setUserRole(null);
       setIsUserLoggedIn(false);
-      window.location.href = "/";
+      router.push("/");
+      router.refresh();
     } catch (error) {
       console.error("Error logging out:", error);
     }

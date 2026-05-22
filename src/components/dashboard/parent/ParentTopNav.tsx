@@ -13,8 +13,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { DashboardUserProfile } from "@/types/dashboard.types";
-import { createClient } from "@/lib/supabase/client";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const PARENT_NAV_ITEMS = [
   { id: "home", label: "Home" },
@@ -33,17 +43,17 @@ export default function ParentTopNav({ profile }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeTab = searchParams?.get("tab") || "home";
+  const { logout } = useAuth();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const getInitials = (firstName: string | null, lastName: string | null) => {
     return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.trim() || "P";
   };
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/auth/login");
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
   };
 
   const setActiveTab = (id: string) => {
@@ -150,6 +160,33 @@ export default function ParentTopNav({ profile }: Props) {
           </div>
         </div>
       )}
+
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent className="sm:max-w-[400px] rounded-2xl border-border bg-background">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold text-foreground">
+              Log Out?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground pt-2">
+              Are you sure you want to log out of your session? You will need to sign in again to
+              access your learning adventure.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 pt-4">
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                setShowLogoutConfirm(false);
+                await logout();
+              }}
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm cursor-pointer"
+            >
+              Log Out
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </nav>
   );
 }

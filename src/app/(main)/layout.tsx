@@ -2,23 +2,17 @@
 
 import { ReactNode } from "react";
 import Sidebar from "@/components/Sidebar";
-import { SidebarProvider, useSidebar } from "@/context/SidebarContext";
-
-function MainLayoutContent({ children }: { children: ReactNode }) {
-  const { isSidebarOpen, toggleSidebar } = useSidebar();
-
-  return (
-    <div className="w-full h-screen flex flex-col md:flex-row bg-white overflow-hidden">
-      <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
-      <div className="flex-1 min-w-0 h-full overflow-y-auto">{children}</div>
-    </div>
-  );
-}
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
-      <MainLayoutContent>{children}</MainLayoutContent>
+      <div className="w-full h-screen flex bg-white overflow-hidden">
+        <Sidebar />
+        <SidebarInset className="flex-1 min-w-0 h-full overflow-hidden flex flex-col">
+          <div className="flex-1 min-w-0 h-full overflow-y-auto bg-background">{children}</div>
+        </SidebarInset>
+      </div>
     </SidebarProvider>
   );
 }
