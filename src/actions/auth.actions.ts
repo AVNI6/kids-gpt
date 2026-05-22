@@ -43,7 +43,7 @@ export async function signUpUser(input: SignUpUserInput) {
       data: {
         role,
       },
-      ...(siteUrl ? { emailRedirectTo: `${siteUrl}/signin` } : {}),
+      ...(siteUrl ? { emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding` } : {}),
     },
   });
 

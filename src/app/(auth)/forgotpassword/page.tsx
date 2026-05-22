@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/constant/AppRoutes";
+import { useState } from "react";
 
 const supabase = createClient();
 export default function ForgotPasswordPage() {
@@ -14,19 +15,27 @@ export default function ForgotPasswordPage() {
   };
 
   const { register, handleSubmit } = useForm<FormValue>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
+    setIsSubmitting(true);
     const { data, error } = await supabase.auth.resetPasswordForEmail(e.email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/resetpassword`,
+      redirectTo: `${window.location.origin}/resetpassword`,
     });
     if (error) {
-      console.error(error);
+      toast.error("Reset link failed to send", {
+        description: error.message,
+      });
+      setIsSubmitting(false);
+      return;
     }
     if (data) {
       toast.success("Reset link sent!", {
         description: "Please check your email for instructions.",
       });
     }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -86,9 +95,10 @@ export default function ForgotPasswordPage() {
               {/* Submit Button */}
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="w-full h-16 bg-[#00658d] text-white text-xl font-bold rounded-2xl border-b-8 border-[#004c6b] hover:-translate-y-1 active:translate-y-1 active:border-b-2 transition-all duration-200 flex items-center justify-center gap-2"
               >
-                <span>Send Reset Link</span>
+                <span>{isSubmitting ? "Sending..." : "Send Reset Link"}</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
             </form>

@@ -22,6 +22,7 @@ function LoginPageContent() {
   const from = searchParams?.get("from");
   const fromRole = searchParams?.get("role");
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   type FormValue = {
     email: string;
     password: string;
@@ -33,21 +34,24 @@ function LoginPageContent() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/`,
       },
     });
     if (error) {
-      console.error(error);
+      toast.error("Google sign in failed", { description: error.message });
     }
   };
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
+    setIsSubmitting(true);
     const { data, error } = await supabase.auth.signInWithPassword({
       email: e.email,
       password: e.password,
     });
     if (error) {
-      console.log(error);
+      toast.error("Sign in failed", { description: error.message });
+      setIsSubmitting(false);
+      return;
     }
     if (data) {
       // Attempt to read profile and route first-time users to onboarding.
@@ -80,6 +84,8 @@ function LoginPageContent() {
         description: "Login successful!",
       });
     }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -209,9 +215,10 @@ function LoginPageContent() {
 
             <button
               type="submit"
+              disabled={isSubmitting}
               className="w-full rounded-full py-4 font-bold text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
             >
-              Sign In
+              {isSubmitting ? "Signing In..." : "Sign In"}
             </button>
           </form>
 

@@ -40,21 +40,16 @@ export default function ChatGPTKidSignupPage() {
         data: {
           fullname: e.name,
         },
-        emailRedirectTo: `${window.location.origin}/onboarding`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
       },
     });
 
     if (error) {
-      console.error(error);
       setSignupState("idle");
 
-      // Handle the common Supabase 500 error (SMTP/Redirect URL configuration)
-      const isConfirmationError = error.message.toLowerCase().includes("confirmation email");
-      const errorMessage = isConfirmationError
-        ? "Signup server error: Please ensure your Supabase SMTP and Redirect URLs are configured."
-        : error.message;
-
-      toast.error("Signup failed", { description: errorMessage });
+      toast.error("Signup failed", {
+        description: error.message,
+      });
       return;
     }
     if (data) {

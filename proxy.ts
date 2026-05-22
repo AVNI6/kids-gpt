@@ -5,13 +5,16 @@ import { createClient } from "./src/lib/supabase/middleware";
 const VALID_ROLES = ["kid", "parent", "teacher"] as const;
 type UserRole = (typeof VALID_ROLES)[number];
 
+const AUTH_CALLBACK_ROUTE = "/auth/callback";
+const RESET_PASSWORD_ROUTE = "/resetpassword";
+
 type ProfileRow = {
   role: UserRole | null;
   is_onboarded: boolean | null;
 };
 
 const authRoutes = new Set(["/signup", "/signin", "/login", "/forgotpassword"]);
-const publicRoutes = new Set(["/", ...authRoutes]);
+const publicRoutes = new Set(["/", ...authRoutes, AUTH_CALLBACK_ROUTE, RESET_PASSWORD_ROUTE]);
 
 function isValidRole(role: string | null | undefined): role is UserRole {
   return VALID_ROLES.includes(role as UserRole);
@@ -58,6 +61,10 @@ export async function proxy(request: NextRequest) {
     return redirectWithCookies(response, request, "/signin");
   }
 
+  if (pathname === AUTH_CALLBACK_ROUTE || pathname === RESET_PASSWORD_ROUTE) {
+    return response;
+  }
+
   const { data: profile } = await supabase
     .from("profile")
     .select("role, is_onboarded")
@@ -80,6 +87,10 @@ export async function proxy(request: NextRequest) {
 
     if (isAuthRoute) {
       return redirectWithCookies(response, request, canonicalHome);
+    }
+
+    if (pathname === RESET_PASSWORD_ROUTE) {
+      return response;
     }
 
     if (isOnboardingRoute) {

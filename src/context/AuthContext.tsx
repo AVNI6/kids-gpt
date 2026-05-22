@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
+import { type AuthChangeEvent, type Session, type User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { UserRole, UserProfile } from "@/types/auth";
 
@@ -25,76 +25,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   useEffect(() => {
-    // Check current user on mount
-    const checkUser = async () => {
+    let isMounted = true;
+
+    const loadProfile = async (userId: string) => {
+      try {
+        const { data: profile } = await supabase
+          .from("profile")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (!isMounted) {
+          return;
+        }
+
+        setUserProfile(profile ?? null);
+        setUserRole(profile?.role ? (profile.role as UserRole) : null);
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      }
+    };
+
+    const bootstrapAuth = async () => {
       try {
         const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!isMounted) {
+          return;
+        }
+
+        const currentUser = session?.user ?? null;
+
+        setUser(currentUser);
+        setIsUserLoggedIn(Boolean(currentUser));
 
         if (currentUser) {
-          setUser(currentUser);
+          await loadProfile(currentUser.id);
+        } else {
+          setUserProfile(null);
+          setUserRole(null);
+        }
+      } catch (error) {
+        console.error("Error checking user:", error);
+        if (isMounted) {
+          setUser(null);
+          setUserProfile(null);
+          setUserRole(null);
+          setIsUserLoggedIn(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    bootstrapAuth();
+
+    // Subscribe to auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      async (_event: AuthChangeEvent, session: Session | null) => {
+        if (!isMounted) {
+          return;
+        }
+
+        if (session?.user) {
+          setUser(session.user);
           setIsUserLoggedIn(true);
-          // Fetch profile
-          const { data: profile } = await supabase
-            .from("profile")
-            .select("*")
-            .eq("user_id", currentUser.id)
-            .maybeSingle();
-          if (profile) {
-            setUserProfile(profile);
-            if (profile.role) {
-              setUserRole(profile.role as UserRole);
-            }
-          }
+          await loadProfile(session.user.id);
         } else {
           setUser(null);
           setUserProfile(null);
           setUserRole(null);
           setIsUserLoggedIn(false);
         }
-      } catch (error) {
-        console.error("Error checking user:", error);
-        setUser(null);
-        setUserProfile(null);
-        setUserRole(null);
-        setIsUserLoggedIn(false);
-      } finally {
+
         setIsLoading(false);
       }
+    );
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
     };
-
-    checkUser();
-
-    // Subscribe to auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        setIsUserLoggedIn(true);
-        // Fetch profile
-        const { data: profile } = await supabase
-          .from("profile")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-        if (profile) {
-          setUserProfile(profile);
-          if (profile.role) {
-            setUserRole(profile.role as UserRole);
-          }
-        }
-      } else {
-        setUser(null);
-        setUserProfile(null);
-        setUserRole(null);
-        setIsUserLoggedIn(false);
-      }
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
