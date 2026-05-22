@@ -6,7 +6,6 @@ import {
   Settings,
   HelpCircle,
   Sparkles,
-  X,
   PanelLeftClose,
   Search,
   Sun,
@@ -35,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -42,20 +42,55 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Profile from "./Profile";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getSessionManager } from "@/lib/ai/session-manager";
-
+import {
+  Sidebar as ShadcnSidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  useSidebar,
+} from "@/components/ui/sidebar";
 import SearchChatModal from "./SearchChatModal";
 
-interface SidebarProps {
-  isOpen: boolean;
-  onToggle: () => void;
+function AuthPromptPopoverContent({
+  title,
+  description,
+  icon: Icon,
+}: {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  return (
+    <div className="flex flex-col gap-3 text-center items-center">
+      <div className="p-2 bg-sky-500/10 rounded-full text-sky-500">
+        <Icon className="w-6 h-6" />
+      </div>
+      <h4 className="font-bold text-popover-foreground">{title}</h4>
+      <p className="text-muted-foreground text-xs">{description}</p>
+      <Link
+        href={APP_ROUTES.Signin}
+        className={cn(
+          buttonVariants({ variant: "default" }),
+          "w-full mt-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl cursor-pointer flex items-center justify-center h-10 text-sm font-semibold"
+        )}
+      >
+        Sign In
+      </Link>
+    </div>
+  );
 }
 
-export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export default function Sidebar() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const pathname = usePathname() || "";
@@ -67,23 +102,14 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const [editTitle, setEditTitle] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  // Lifted delete confirmation state — dialog lives OUTSIDE the popover tree
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  // Lifted share dialog state — same reason: avoids Base UI popover unmount race condition
   const [sessionToShare, setSessionToShare] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
   const { setTheme, theme } = useTheme();
-  const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const { state, toggleSidebar, isMobile } = useSidebar();
+  const isOpen = state === "expanded";
 
   useEffect(() => {
     const loadSessions = async () => {
@@ -102,7 +128,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     dispatch(setCurrentSessionId(null));
     dispatch(setMessages([]));
     if (isMobile && isOpen) {
-      onToggle();
+      toggleSidebar();
     }
     router.push("/");
   };
@@ -112,7 +138,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     getSessionManager().abortActiveRequest();
     setOpenPopoverId(null);
     if (isMobile && isOpen) {
-      onToggle();
+      toggleSidebar();
     }
     if (pathname.startsWith("/chat/")) {
       router.push(`${pathname}?id=${sessionId}`);
@@ -195,217 +221,308 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
   return (
     <>
-      <div
-        className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] md:hidden transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-        onClick={onToggle}
-      />
-
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-[70] md:static md:z-auto md:relative transition-all duration-300 ease-in-out border-r border-sidebar-border bg-sidebar flex flex-col min-h-0 h-screen md:h-auto",
-          isOpen
-            ? "w-72 pt-4 pb-4 pl-4 pr-0 translate-x-0"
-            : "w-72 md:w-20 p-4 -translate-x-full md:translate-x-0"
-        )}
+      <ShadcnSidebar
+        collapsible="icon"
+        className="border-r border-sidebar-border bg-sidebar h-screen shrink-0"
       >
-        <div
-          className={cn(
-            "flex items-center mb-3 shrink-0",
-            isOpen ? "justify-between pr-4" : "justify-center"
-          )}
-        >
-          <button
-            onClick={onToggle}
-            title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-            className="h-7 w-7 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95"
+        <SidebarHeader className="p-4 flex flex-col shrink-0 gap-3">
+          <div
+            className={cn(
+              "flex items-center w-full",
+              isOpen ? "justify-between" : "justify-center"
+            )}
           >
-            <Sparkles className="w-4 h-4" />
-          </button>
-          {isOpen && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggle}
-              className="text-slate-500 hover:text-slate-700 h-10 w-10 flex items-center justify-center"
+            <button
+              onClick={toggleSidebar}
+              title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+              suppressHydrationWarning={true}
+              className="h-7 w-7 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95 cursor-pointer"
             >
-              <X className="w-6 h-6 md:hidden block" />
-              <PanelLeftClose className="w-5 h-5 hidden md:block" />
-            </Button>
-          )}
-        </div>
+              <Sparkles className="w-4 h-4" />
+            </button>
+            {isOpen && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                suppressHydrationWarning={true}
+                className="text-slate-500 hover:text-slate-700 h-10 w-10 flex items-center justify-center cursor-pointer"
+              >
+                <PanelLeftClose className="w-5 h-5" />
+              </Button>
+            )}
+          </div>
+        </SidebarHeader>
 
-        <nav className="flex flex-col flex-1 overflow-hidden pr-0">
-          <div className={cn("space-y-2 shrink-0", isOpen && "pr-4")}>
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : item.href
-                    ? pathname.startsWith(item.href)
-                    : false;
-              const showActiveStyle = item.label !== "New Chat" && isActive;
+        <SidebarContent className="flex flex-col flex-1 min-h-0 py-2 gap-4 px-0">
+          {isOpen ? (
+            // --- OPEN SIDEBAR STATE ---
+            // Render plain standard buttons and links to bypass Shadcn list styling overrides and maintain generous original sizing
+            <div className="space-y-2 shrink-0 px-4">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : item.href
+                      ? pathname.startsWith(item.href)
+                      : false;
+                const showActiveStyle = item.label !== "New Chat" && isActive;
 
-              const isSearch = item.label === "Search Chats";
-              const isActivities = item.label === "Activities";
-              const renderItemContent = () => (
-                <>
-                  <Icon className="w-5 h-5 shrink-0" />
-                  {isOpen && <span className="whitespace-nowrap truncate">{item.label}</span>}
-                </>
-              );
+                const isSearch = item.label === "Search Chats";
+                const isActivities = item.label === "Activities";
 
-              const commonClasses = cn(
-                "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group",
-                showActiveStyle
-                  ? "bg-sidebar-accent text-sky-500 font-bold"
-                  : "text-sidebar-foreground",
-                !isOpen && "justify-center px-0 h-10 w-10 mx-auto"
-              );
-
-              // Handle Activities Popover if not logged in
-              if (isActivities && !isUserLoggedIn) {
-                return (
-                  <Popover key={item.label}>
-                    <PopoverTrigger
-                      title={!isOpen ? item.label : undefined}
-                      className={commonClasses}
-                    >
-                      {renderItemContent()}
-                    </PopoverTrigger>
-                    <PopoverContent
-                      side={isMobile ? "bottom" : isOpen ? "right" : "right"}
-                      align={isMobile ? "center" : "start"}
-                      sideOffset={isMobile ? 8 : 15}
-                      className="w-64 p-4 rounded-2xl shadow-xl border-sidebar-border bg-popover text-sm"
-                    >
-                      <div className="flex flex-col gap-3 text-center items-center">
-                        <div className="p-2 bg-sky-500/10 rounded-full text-sky-500">
-                          <ClipboardList className="w-6 h-6" />
-                        </div>
-                        <h4 className="font-bold text-popover-foreground">
-                          Interactive Activities
-                        </h4>
-                        <p className="text-muted-foreground text-xs">
-                          Sign in or sign up to play custom games, complete quiz challenges, and
-                          practice vocabulary!
-                        </p>
-                        <Link href={APP_ROUTES.Signin} className="w-full mt-2">
-                          <Button className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-xl">
-                            Sign In
-                          </Button>
-                        </Link>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                const buttonClass = cn(
+                  "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group/nav cursor-pointer",
+                  showActiveStyle
+                    ? "bg-sidebar-accent text-sky-500 font-bold"
+                    : "text-sidebar-foreground"
                 );
-              }
 
-              // Handle Search
-              if (isSearch) {
-                if (!isUserLoggedIn) {
+                const itemContent = (
+                  <>
+                    <Icon className="w-5 h-5 shrink-0 text-slate-500 group-hover/nav:text-slate-700 dark:text-slate-400 dark:group-hover/nav:text-slate-200 transition-colors" />
+                    <span className="whitespace-nowrap truncate">{item.label}</span>
+                  </>
+                );
+
+                if (isActivities && !isUserLoggedIn) {
                   return (
                     <Popover key={item.label}>
-                      <PopoverTrigger
-                        title={!isOpen ? item.label : undefined}
-                        className={commonClasses}
-                      >
-                        {renderItemContent()}
+                      <PopoverTrigger className={buttonClass} suppressHydrationWarning={true}>
+                        {itemContent}
                       </PopoverTrigger>
                       <PopoverContent
-                        side={isMobile ? "bottom" : isOpen ? "right" : "right"}
+                        side={isMobile ? "bottom" : "right"}
                         align={isMobile ? "center" : "start"}
                         sideOffset={isMobile ? 8 : 15}
                         className="w-64 p-4 rounded-2xl shadow-xl border-sidebar-border bg-popover text-sm"
                       >
-                        <div className="flex flex-col gap-3 text-center items-center">
-                          <div className="p-2 bg-sky-500/10 rounded-full text-sky-500">
-                            <Search className="w-6 h-6" />
-                          </div>
-                          <h4 className="font-bold text-popover-foreground">Search Chats</h4>
-                          <p className="text-muted-foreground text-xs">
-                            Sign in or sign up to search your chat history and pick up right where
-                            you left off!
-                          </p>
-                          <Link href={APP_ROUTES.Signin} className="w-full mt-2">
-                            <Button className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-xl">
-                              Sign In
-                            </Button>
-                          </Link>
-                        </div>
+                        <AuthPromptPopoverContent
+                          title="Interactive Activities"
+                          description="Sign in or sign up to play custom games, complete quiz challenges, and practice vocabulary!"
+                          icon={ClipboardList}
+                        />
                       </PopoverContent>
                     </Popover>
+                  );
+                }
+
+                if (isSearch) {
+                  if (!isUserLoggedIn) {
+                    return (
+                      <Popover key={item.label}>
+                        <PopoverTrigger className={buttonClass} suppressHydrationWarning={true}>
+                          {itemContent}
+                        </PopoverTrigger>
+                        <PopoverContent
+                          side={isMobile ? "bottom" : "right"}
+                          align={isMobile ? "center" : "start"}
+                          sideOffset={isMobile ? 8 : 15}
+                          className="w-64 p-4 rounded-2xl shadow-xl border-sidebar-border bg-popover text-sm"
+                        >
+                          <AuthPromptPopoverContent
+                            title="Search Chats"
+                            description="Sign in or sign up to search your chat history and pick up right where you left off!"
+                            icon={Search}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={item.label}
+                      onClick={() => {
+                        if (isMobile && isOpen) {
+                          toggleSidebar();
+                        }
+                        setSearchOpen(true);
+                      }}
+                      suppressHydrationWarning={true}
+                      className={buttonClass}
+                    >
+                      {itemContent}
+                    </button>
+                  );
+                }
+
+                if (item.href) {
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={item.onClick}
+                      className={buttonClass}
+                    >
+                      {itemContent}
+                    </Link>
                   );
                 }
 
                 return (
                   <button
                     key={item.label}
-                    title={!isOpen ? item.label : undefined}
-                    className={cn(commonClasses, "text-sidebar-foreground")}
-                    onClick={() => {
-                      if (isMobile && isOpen) {
-                        onToggle();
-                      }
-                      setSearchOpen(true);
-                    }}
+                    onClick={item.onClick}
+                    suppressHydrationWarning={true}
+                    className={buttonClass}
                   >
-                    {renderItemContent()}
+                    {itemContent}
                   </button>
                 );
-              }
+              })}
+            </div>
+          ) : (
+            // --- CLOSED SIDEBAR STATE ---
+            // Render compact icons with perfect centering, tooltips, and correct icon sizing. Bypasses px-4 layout constraints.
+            <div className="space-y-3 shrink-0 px-0 flex flex-col items-center justify-center w-full">
+              <SidebarMenu className="w-full flex flex-col items-center gap-3">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive =
+                    item.href === "/"
+                      ? pathname === "/"
+                      : item.href
+                        ? pathname.startsWith(item.href)
+                        : false;
+                  const showActiveStyle = item.label !== "New Chat" && isActive;
 
-              if (item.href) {
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={item.onClick}
-                    className={commonClasses}
-                    title={!isOpen ? item.label : undefined}
-                  >
-                    {renderItemContent()}
-                  </Link>
-                );
-              }
+                  const isSearch = item.label === "Search Chats";
+                  const isActivities = item.label === "Activities";
 
-              return (
-                <button
-                  key={item.label}
-                  onClick={item.onClick}
-                  title={!isOpen ? item.label : undefined}
-                  className={cn(commonClasses, "text-sidebar-foreground")}
-                >
-                  {renderItemContent()}
-                </button>
-              );
-            })}
-          </div>
+                  // Perfect 40px circular buttons with size-6! (24px) icons so they are clearly visible and match original premium custom sidebar
+                  const collapsedButtonEl = (
+                    <SidebarMenuButton
+                      isActive={showActiveStyle}
+                      tooltip={item.label}
+                      className={cn(
+                        "flex items-center justify-center rounded-xl transition-colors cursor-pointer w-10 h-10 mx-auto p-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        showActiveStyle
+                          ? "bg-sidebar-accent text-sky-500 font-bold"
+                          : "text-sidebar-foreground"
+                      )}
+                    >
+                      <Icon className="w-6 h-6 !w-6 !h-6 size-6! shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
+                    </SidebarMenuButton>
+                  );
 
-          {isUserLoggedIn && (
-            <div
-              className={cn(
-                "mt-6 flex flex-col flex-1 min-h-0 transition-all",
-                !isOpen && "mt-4 items-center"
-              )}
-            >
-              {isOpen ? (
-                <h3 className="px-3 shrink-0 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 truncate">
-                  Recent Chats
-                </h3>
-              ) : (
-                <div className="h-px w-8 bg-sidebar-border mb-4 shrink-0" />
-              )}
-              <div
-                className={cn(
-                  "space-y-1 w-full flex-1 overflow-y-auto min-h-0 custom-scrollbar",
-                  isOpen ? "pr-0" : "pr-1"
-                )}
-              >
-                {sessions.length > 0
-                  ? sessions.map((session) => (
-                      <div key={session.id} className={cn("group relative", isOpen && "pr-4")}>
-                        {editingSessionId === session.id && isOpen ? (
+                  if (isActivities && !isUserLoggedIn) {
+                    return (
+                      <SidebarMenuItem key={item.label} className="w-full flex justify-center">
+                        <Popover>
+                          <PopoverTrigger render={collapsedButtonEl} />
+                          <PopoverContent
+                            side="right"
+                            align="start"
+                            sideOffset={15}
+                            className="w-64 p-4 rounded-2xl shadow-xl border-sidebar-border bg-popover text-sm"
+                          >
+                            <AuthPromptPopoverContent
+                              title="Interactive Activities"
+                              description="Sign in or sign up to play custom games, complete quiz challenges, and practice vocabulary!"
+                              icon={ClipboardList}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </SidebarMenuItem>
+                    );
+                  }
+
+                  if (isSearch) {
+                    if (!isUserLoggedIn) {
+                      return (
+                        <SidebarMenuItem key={item.label} className="w-full flex justify-center">
+                          <Popover>
+                            <PopoverTrigger render={collapsedButtonEl} />
+                            <PopoverContent
+                              side="right"
+                              align="start"
+                              sideOffset={15}
+                              className="w-64 p-4 rounded-2xl shadow-xl border-sidebar-border bg-popover text-sm"
+                            >
+                              <AuthPromptPopoverContent
+                                title="Search Chats"
+                                description="Sign in or sign up to search your chat history and pick up right where you left off!"
+                                icon={Search}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </SidebarMenuItem>
+                      );
+                    }
+
+                    return (
+                      <SidebarMenuItem key={item.label} className="w-full flex justify-center">
+                        <SidebarMenuButton
+                          onClick={() => setSearchOpen(true)}
+                          tooltip={item.label}
+                          className={cn(
+                            "flex items-center justify-center rounded-xl transition-colors cursor-pointer w-10 h-10 mx-auto p-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                            showActiveStyle
+                              ? "bg-sidebar-accent text-sky-500 font-bold"
+                              : "text-sidebar-foreground"
+                          )}
+                        >
+                          <Icon className="w-6 h-6 !w-6 !h-6 size-6! shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  }
+
+                  if (item.href) {
+                    return (
+                      <SidebarMenuItem key={item.label} className="w-full flex justify-center">
+                        <SidebarMenuButton
+                          isActive={showActiveStyle}
+                          tooltip={item.label}
+                          render={<Link href={item.href} onClick={item.onClick} />}
+                          className={cn(
+                            "flex items-center justify-center rounded-xl transition-colors cursor-pointer w-10 h-10 mx-auto p-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                            showActiveStyle
+                              ? "bg-sidebar-accent text-sky-500 font-bold"
+                              : "text-sidebar-foreground"
+                          )}
+                        >
+                          <Icon className="w-6 h-6 !w-6 !h-6 size-6! shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  }
+
+                  return (
+                    <SidebarMenuItem key={item.label} className="w-full flex justify-center">
+                      <SidebarMenuButton
+                        onClick={item.onClick}
+                        tooltip={item.label}
+                        className={cn(
+                          "flex items-center justify-center rounded-xl transition-colors cursor-pointer w-10 h-10 mx-auto p-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                          showActiveStyle
+                            ? "bg-sidebar-accent text-sky-500 font-bold"
+                            : "text-sidebar-foreground"
+                        )}
+                      >
+                        <Icon className="w-6 h-6 !w-6 !h-6 size-6! shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </div>
+          )}
+
+          {/* Recent chats is strictly gated under isOpen - completely absent in closed sidebar */}
+          {isUserLoggedIn && isOpen && (
+            <div className="flex flex-col flex-1 min-h-0 transition-all">
+              <h3 className="px-4 shrink-0 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 truncate">
+                Recent Chats
+              </h3>
+              <ScrollArea className="w-full flex-1 min-h-0">
+                <div className="space-y-1 w-full pl-4 pr-3 py-1">
+                  {sessions.length > 0 ? (
+                    sessions.map((session) => (
+                      <div key={session.id}>
+                        {editingSessionId === session.id ? (
                           <form
                             onSubmit={(e) => handleSaveRename(e, session.id)}
                             className="flex items-center gap-2 p-1"
@@ -423,104 +540,102 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                           <div
                             onClick={() => handleSelectSession(session.id)}
                             className={cn(
-                              "w-full flex items-center justify-between rounded-xl px-3 py-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors cursor-pointer group",
+                              "w-full flex items-center justify-between rounded-xl px-3 py-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors cursor-pointer group/chat",
                               pathname === "/" && currentSessionId === session.id
                                 ? "bg-sidebar-accent text-sky-500"
-                                : "text-sidebar-foreground",
-                              !isOpen && "justify-center px-0"
+                                : "text-sidebar-foreground"
                             )}
                           >
-                            {isOpen && (
-                              <span className="whitespace-nowrap overflow-hidden text-sm pointer-events-none truncate mr-2">
-                                {session.title}
-                              </span>
-                            )}
+                            <span className="whitespace-nowrap overflow-hidden text-sm pointer-events-none truncate mr-2">
+                              {session.title}
+                            </span>
 
-                            {isOpen && (
-                              <Popover
-                                open={openPopoverId === session.id}
-                                onOpenChange={(open) => setOpenPopoverId(open ? session.id : null)}
+                            <Popover
+                              open={openPopoverId === session.id}
+                              onOpenChange={(open) => setOpenPopoverId(open ? session.id : null)}
+                            >
+                              <PopoverTrigger
+                                onClick={(e) => e.stopPropagation()}
+                                suppressHydrationWarning={true}
+                                className={cn(
+                                  "p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-opacity cursor-pointer shrink-0",
+                                  openPopoverId === session.id
+                                    ? "opacity-100"
+                                    : "opacity-0 group-hover/chat:opacity-100"
+                                )}
                               >
-                                <PopoverTrigger
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-opacity cursor-pointer shrink-0"
-                                >
-                                  <MoreVertical className="w-4 h-4 text-slate-400" />
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  className="w-40 p-1"
-                                  side="right"
-                                  align="start"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <div className="flex flex-col">
-                                    <button
-                                      onClick={(e) => handleStartRename(e, session)}
-                                      className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors"
-                                    >
-                                      <Edit2 className="w-4 h-4" /> Rename
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenPopoverId(null);
-                                        setSessionToShare(session.id);
-                                      }}
-                                      className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-sky-500 w-full text-left"
-                                    >
-                                      <Share2 className="w-4 h-4" /> Share
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenPopoverId(null);
-                                        setSessionToDelete(session.id);
-                                      }}
-                                      className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-red-500 w-full text-left"
-                                    >
-                                      <Trash2 className="w-4 h-4 pointer-events-none" /> Delete
-                                    </button>
-                                  </div>
-                                </PopoverContent>
-                              </Popover>
-                            )}
+                                <MoreVertical className="w-4 h-4 text-slate-400" />
+                              </PopoverTrigger>
+                              <PopoverContent
+                                className="w-40 p-1"
+                                side="right"
+                                align="start"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="flex flex-col">
+                                  <button
+                                    onClick={(e) => handleStartRename(e, session)}
+                                    className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors cursor-pointer text-left"
+                                  >
+                                    <Edit2 className="w-4 h-4" /> Rename
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenPopoverId(null);
+                                      setSessionToShare(session.id);
+                                    }}
+                                    className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-sky-500 w-full text-left cursor-pointer"
+                                  >
+                                    <Share2 className="w-4 h-4" /> Share
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenPopoverId(null);
+                                      setSessionToDelete(session.id);
+                                    }}
+                                    className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-red-500 w-full text-left cursor-pointer"
+                                  >
+                                    <Trash2 className="w-4 h-4 pointer-events-none" /> Delete
+                                  </button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           </div>
                         )}
                       </div>
                     ))
-                  : isOpen && <p className="text-xs text-slate-400 ml-3 italic">No recent chats</p>}
-              </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 ml-3 italic">No recent chats</p>
+                  )}
+                </div>
+              </ScrollArea>
             </div>
           )}
-        </nav>
+        </SidebarContent>
 
-        <div
-          className={cn(
-            "space-y-2 pt-4 border-t border-sidebar-border",
-            isOpen ? "pr-4" : "flex flex-col items-center justify-center"
-          )}
-        >
+        <SidebarFooter className="p-4 flex flex-col shrink-0 gap-2 border-t border-sidebar-border">
           {!isLoadingAuth && !isUserLoggedIn && (
             <>
               <Link
                 href={APP_ROUTES.Subscription}
-                className={cn("w-full", !isOpen && "flex justify-center")}
+                className={cn(
+                  buttonVariants({ variant: "default" }),
+                  "rounded-xl bg-sky-500 text-white hover:bg-sky-600 shadow-lg shadow-sky-500/20 cursor-pointer flex items-center justify-center",
+                  isOpen ? "w-full h-10" : "h-10! w-10! p-0! mx-auto",
+                  !isOpen && "flex justify-center"
+                )}
               >
-                <Button
-                  className={cn(
-                    "rounded-xl bg-sky-500 text-white hover:bg-sky-600 shadow-lg shadow-sky-500/20",
-                    isOpen ? "w-full" : "h-10 w-10 p-0"
-                  )}
-                >
-                  {isOpen ? "Try Premium" : <Sparkles className="w-5 h-5" />}
-                </Button>
+                {isOpen ? "Try Premium" : <Sparkles className="w-5 h-5" />}
               </Link>
               <Popover>
                 <PopoverTrigger
+                  suppressHydrationWarning={true}
                   className={cn(
                     buttonVariants({ variant: "ghost" }),
-                    "w-full justify-start mt-1 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-xl",
-                    !isOpen && "justify-center p-0 h-10 w-10"
+                    "w-full justify-start mt-1 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-xl cursor-pointer",
+                    !isOpen && "justify-center p-0! h-10! w-10! mx-auto"
                   )}
                 >
                   <Settings className={cn("w-5 h-5", isOpen && "mr-2")} />
@@ -536,46 +651,39 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     <h4 className="font-bold text-popover-foreground px-2 py-1.5 text-sm uppercase tracking-wider opacity-50">
                       Theme
                     </h4>
-                    <button
-                      onClick={() => setTheme("light")}
-                      className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors ${theme === "light" ? "bg-sky-500/10 text-sky-500 font-bold" : "text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground"}`}
-                    >
-                      <Sun className="h-4 w-4" />
-                      <span>Light</span>
-                    </button>
-                    <button
-                      onClick={() => setTheme("dark")}
-                      className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors ${theme === "dark" ? "bg-sky-500/10 text-sky-500 font-bold" : "text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground"}`}
-                    >
-                      <Moon className="h-4 w-4" />
-                      <span>Dark</span>
-                    </button>
-                    <button
-                      onClick={() => setTheme("system")}
-                      className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors ${theme === "system" ? "bg-sky-500/10 text-sky-500 font-bold" : "text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground"}`}
-                    >
-                      <Monitor className="h-4 w-4" />
-                      <span>System</span>
-                    </button>
+                    {[
+                      { name: "light", label: "Light", icon: Sun },
+                      { name: "dark", label: "Dark", icon: Moon },
+                      { name: "system", label: "System", icon: Monitor },
+                    ].map(({ name, label, icon: Icon }) => (
+                      <button
+                        key={name}
+                        onClick={() => setTheme(name)}
+                        suppressHydrationWarning={true}
+                        className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors cursor-pointer ${theme === name ? "bg-sky-500/10 text-sky-500 font-bold" : "text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground"}`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{label}</span>
+                      </button>
+                    ))}
                   </div>
                 </PopoverContent>
               </Popover>
-              <Link href={APP_ROUTES.Help} className="w-full">
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-xl",
-                    !isOpen && "justify-center px-0"
-                  )}
-                >
-                  <HelpCircle className={cn("w-5 h-5", isOpen && "mr-2")} /> {isOpen && "Help"}
-                </Button>
+              <Link
+                href={APP_ROUTES.Help}
+                className={cn(
+                  buttonVariants({ variant: "ghost" }),
+                  "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-xl cursor-pointer flex items-center h-10",
+                  !isOpen && "justify-center p-0! h-10! w-10! mx-auto"
+                )}
+              >
+                <HelpCircle className={cn("w-5 h-5", isOpen && "mr-2")} /> {isOpen && "Help"}
               </Link>
             </>
           )}
           <Profile isCollapsed={!isOpen} />
-        </div>
-      </aside>
+        </SidebarFooter>
+      </ShadcnSidebar>
 
       {/* Search modal - rendered outside sidebar to avoid nesting issues */}
       {isUserLoggedIn && (
@@ -607,7 +715,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               variant="outline"
               onClick={() => setSessionToDelete(null)}
               disabled={isDeleting}
-              className="rounded-xl border-border hover:bg-accent hover:text-accent-foreground"
+              className="rounded-xl border-border hover:bg-accent hover:text-accent-foreground cursor-pointer"
             >
               Cancel
             </Button>
@@ -615,7 +723,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={isDeleting}
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm"
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm cursor-pointer"
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </Button>
@@ -635,18 +743,18 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       >
         <DialogContent className="sm:max-w-md rounded-2xl border-border bg-background">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Share this chat</DialogTitle>
+            <DialogTitle className="text-foreground">Share link</DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Anyone with this link will be able to view all messages in this session.
+              Anyone who has this link will be able to view this.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center space-x-2 pt-4">
+          <div className="flex items-center gap-2 pt-4">
             <div className="grid flex-1 gap-2">
-              <label htmlFor="share-link" className="sr-only">
+              <Label htmlFor="link" className="sr-only">
                 Link
-              </label>
+              </Label>
               <Input
-                id="share-link"
+                id="link"
                 readOnly
                 className="h-9"
                 value={
@@ -659,7 +767,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
             <Button
               type="button"
               size="sm"
-              className="px-3"
+              className="px-3 cursor-pointer"
               onClick={() => sessionToShare && handleCopyShareLink(sessionToShare)}
               variant={shareCopied ? "outline" : "default"}
             >
@@ -671,6 +779,15 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               )}
             </Button>
           </div>
+          <DialogFooter className="sm:justify-start pt-4">
+            <DialogClose
+              render={
+                <button className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")} />
+              }
+            >
+              Close
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

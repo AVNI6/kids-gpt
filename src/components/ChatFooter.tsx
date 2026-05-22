@@ -193,6 +193,7 @@ export default function ChatFooter({
                   render={
                     <button
                       type="button"
+                      suppressHydrationWarning={true}
                       className={cn(
                         "ml-2 h-10 w-10 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-muted shrink-0",
                         isPopoverOpen && "bg-muted"
@@ -257,6 +258,7 @@ export default function ChatFooter({
                 placeholder="Ask anything"
                 onKeyDown={(e) => e.key === "Enter" && onSend()}
                 className="border-0 shadow-none focus-visible:ring-0 h-14 text-base"
+                suppressHydrationWarning={true}
               />
 
               <Button
@@ -264,6 +266,7 @@ export default function ChatFooter({
                 size="icon"
                 disabled={(!input.trim() && !image && !fileName) || isLoading || isParsing}
                 className="mr-2 rounded-full bg-sky-500 hover:bg-sky-600 active:scale-95 shrink-0"
+                suppressHydrationWarning={true}
               >
                 <Send className="w-4 h-4" />
               </Button>

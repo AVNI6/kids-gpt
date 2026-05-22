@@ -54,6 +54,7 @@
 }
 
 :root {
+  color-scheme: light;
   --font-sans:
     "Plus Jakarta Sans", Lexend, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial;
@@ -104,6 +105,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -142,16 +144,18 @@
     border: outline-ring/50;
   }
 
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
     margin: 0;
     padding: 0;
     height: 100%;
-  }
-
-  html {
-    font-family: var(--font-sans);
   }
 
   button {

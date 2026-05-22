@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createClient } from "@/lib/supabase/client";
 import { FcGoogle } from "react-icons/fc";
-import { Mail, Lock, CheckCircle, BookOpen, Brain, Sparkles } from "lucide-react";
+import { Mail, Lock, CheckCircle, BookOpen, Brain, Sparkles, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -21,7 +21,9 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const from = searchParams?.get("from");
   const fromRole = searchParams?.get("role");
+  const errorParam = searchParams?.get("error");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   type FormValue = {
     email: string;
     password: string;
@@ -42,43 +44,60 @@ function LoginPageContent() {
   };
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: e.email,
-      password: e.password,
-    });
-    if (error) {
-      console.log(error);
-    }
-    if (data) {
-      // Attempt to read profile and route first-time users to onboarding.
-      try {
-        const userId = data.user?.id;
-        if (userId) {
-          const { data: profileData } = await supabase
-            .from("profile")
-            .select("role, is_onboarded")
-            .eq("user_id", userId)
-            .maybeSingle();
-
-          const role = profileData?.role ?? data.user?.user_metadata?.role;
-          const isOnboarded = Boolean(profileData?.is_onboarded);
-
-          if (!isOnboarded) {
-            // If role is already set, we can still go to that specific onboarding,
-            // but the root /onboarding will now handle role selection if needed.
-            const target = role ? `/onboarding/${role}` : "/onboarding";
-            router.push(target);
-            return;
-          }
-        }
-      } catch (err) {
-        console.error("Error checking profile after sign-in:", err);
-      }
-
-      router.push("/");
-      toast.success("Welcome back!", {
-        description: "Login successful!",
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: e.email,
+        password: e.password,
       });
+      if (error) {
+        console.error(error);
+        toast.error("Sign In Failed", {
+          description: error.message || "Please check your email and password.",
+        });
+        return;
+      }
+      if (data) {
+        // Attempt to read profile and route first-time users to onboarding.
+        try {
+          const userId = data.user?.id;
+          if (userId) {
+            const { data: profileData } = await supabase
+              .from("profile")
+              .select("role, is_onboarded")
+              .eq("user_id", userId)
+              .maybeSingle();
+
+            const role = profileData?.role ?? data.user?.user_metadata?.role;
+            const isOnboarded = Boolean(profileData?.is_onboarded);
+
+            if (!isOnboarded) {
+              // If role is already set, we can still go to that specific onboarding,
+              // but the root /onboarding will now handle role selection if needed.
+              const target = role ? `/onboarding/${role}` : "/onboarding";
+              router.push(target);
+              router.refresh();
+              return;
+            }
+          }
+        } catch (err) {
+          console.error("Error checking profile after sign-in:", err);
+        }
+
+        router.push("/");
+        router.refresh();
+        toast.success("Welcome back!", {
+          description: "Login successful!",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Sign In Failed", {
+        description:
+          err instanceof Error ? err.message : "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -142,6 +161,22 @@ function LoginPageContent() {
         </div>
 
         <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl md:p-10">
+          {errorParam === "auth_failed" && (
+            <div className="mb-6 rounded-2xl border-2 border-red-500/20 bg-red-500/5 p-5 flex gap-4 items-start relative overflow-hidden dark:bg-red-500/10">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-red-500" />
+              <ShieldAlert className="w-6 h-6 text-red-500 shrink-0 mt-1" />
+              <div>
+                <h3 className="text-base font-bold text-foreground mb-1">Verification Failed</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  We couldn&apos;t verify your secure link. This can happen if the link has expired,
+                  already been used, or if the security token is invalid.
+                </p>
+                <p className="text-sky-500 font-semibold text-xs mt-2 leading-normal">
+                  💡 Tip: Try requesting a new password reset link below.
+                </p>
+              </div>
+            </div>
+          )}
           {from === "signup" && (
             <div className="mb-4 rounded-lg border border-sky-500/20 bg-sky-500/10 px-4 py-3 text-sm text-foreground">
               Account created. Please sign in to continue to onboarding
@@ -209,9 +244,10 @@ function LoginPageContent() {
 
             <button
               type="submit"
-              className="w-full rounded-full py-4 font-bold text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
+              disabled={isLoading}
+              className="w-full rounded-full py-4 font-bold text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              Sign In
+              {isLoading ? "Signing In..." : "Sign In"}
             </button>
           </form>
 
