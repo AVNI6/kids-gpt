@@ -1,32 +1,89 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, ArrowRight, Lightbulb, ArrowLeft, HelpCircle, Shield, Bot } from "lucide-react";
+import { ArrowRight, Lightbulb, HelpCircle, Shield, Bot, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/constant/AppRoutes";
+import { useEffect, useState } from "react";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import { useRouter } from "next/navigation";
 
 const supabase = createClient();
 export default function ForgotPasswordPage() {
   type FormValue = {
-    email: string;
+    password: string;
   };
 
   const { register, handleSubmit } = useForm<FormValue>();
+  const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isSessionReady, setIsSessionReady] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeSession = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (isMounted) {
+        setIsSessionReady(Boolean(data.session));
+      }
+    };
+
+    initializeSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) {
+        setIsSessionReady(Boolean(session));
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(e.email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/resetpassword`,
+    if (!isSessionReady) {
+      toast.error("Your reset link is still being verified. Please wait and try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const { data, error } = await supabase.auth.updateUser({
+      password: e.password,
     });
+
     if (error) {
       console.error(error);
-    }
-    if (data) {
-      toast.success("Reset link sent!", {
-        description: "Please check your email for instructions.",
+      toast.error("Password reset failed.", {
+        description: error.message,
       });
+      setIsSubmitting(false);
+      return;
     }
+
+    if (data?.user) {
+      toast.success("Password reset successful!", {
+        description: "You can now log in with your new password.",
+      });
+      setMessage("Password updated successfully! Redirecting to sign in...");
+      await supabase.auth.signOut();
+      setTimeout(() => {
+        router.replace(APP_ROUTES.Signin);
+      }, 2000);
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -54,41 +111,54 @@ export default function ForgotPasswordPage() {
               <Lightbulb className="w-8 h-8 text-[#00658d] shrink-0" />
 
               <div>
-                <h3 className="text-2xl font-bold text-[#00658d] mb-2">Forgot your key?</h3>
-
+                <h3 className="text-2xl font-bold text-[#00658d] mb-2">Reset Your Password</h3>
                 <p className="text-[#3e484f] leading-relaxed">
-                  Don’t worry! Enter your email below, and we’ll send you a special reset link to
-                  continue your learning adventure.
+                  {isSessionReady
+                    ? "Enter a new password to finish updating your account."
+                    : "Verifying your secure reset link..."}
                 </p>
               </div>
+              {message && (
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md">{message}</div>
+              )}
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
               <div>
                 <label className="block text-sm font-bold text-[#3e484f] mb-3 px-2">
-                  ENTER YOUR EMAIL
+                  ENTER YOUR PASSWORD
                 </label>
 
                 <div className="relative">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-
-                  <input
-                    type="email"
-                    {...register("email", { required: true })}
-                    placeholder="student@learning.com"
-                    required
-                    className="w-full h-16 pl-14 pr-5 bg-white border-2 border-gray-300 focus:border-[#00658d] rounded-2xl text-lg outline-none transition-all"
+                  <Lock
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50"
+                    size={20}
                   />
+                  <input
+                    {...register("password", { required: true })}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="w-full rounded-full border-2 border-border bg-muted/50 py-4 pl-12 pr-12 outline-none transition focus:border-sky-500 text-foreground"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors z-10"
+                  >
+                    {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+                  </button>
                 </div>
               </div>
 
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full h-16 bg-[#00658d] text-white text-xl font-bold rounded-2xl border-b-8 border-[#004c6b] hover:-translate-y-1 active:translate-y-1 active:border-b-2 transition-all duration-200 flex items-center justify-center gap-2"
+                disabled={!isSessionReady || isSubmitting}
+                className="w-full h-16 bg-[#00658d] text-white text-xl font-bold rounded-2xl border-b-8 border-[#004c6b] hover:-translate-y-1 active:translate-y-1 active:border-b-2 transition-all duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
               >
-                <span>Send Reset Link</span>
+                <span>{isSubmitting ? "Resetting..." : "Reset password"}</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
             </form>
@@ -96,14 +166,6 @@ export default function ForgotPasswordPage() {
             {/* Back to Login */}
             <div className="mt-4 pt-4 border-t-2 border-gray-200 flex flex-col items-center gap-4">
               <p className="text-[#3e484f]">Remembered your password?</p>
-
-              <Link
-                href={APP_ROUTES.Signin}
-                className="flex items-center gap-2 font-bold text-[#00658d] hover:text-[#004c6b] transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to sign in
-              </Link>
             </div>
           </section>
 

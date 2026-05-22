@@ -7,6 +7,6 @@ export const APP_ROUTES = {
   Signup: "/signup",
   Signin: "/signin",
   ForgotPassword: "/forgotpassword",
-  ResetPassword: "/reset-password",
+  ResetPassword: "/resetpassword",
   Activities: "/activities",
 };
