@@ -90,28 +90,33 @@ export default function KidProfileEditorDialog({ profile }: Props) {
         Edit Profile
       </DialogTrigger>
 
-      <DialogContent className="max-w-xl rounded-[28px] p-0">
-        <DialogHeader className="border-b px-6 pt-6 pb-4">
-          <DialogTitle className="text-xl font-black">Edit your profile</DialogTitle>
-          <DialogDescription className="text-sm leading-6 text-slate-500">
+      <DialogContent className="max-w-xl rounded-[28px] p-0 dark:border-slate-800 dark:bg-slate-900">
+        <DialogHeader className="border-b px-6 pt-6 pb-4 dark:border-slate-800">
+          <DialogTitle className="text-xl font-black text-slate-950 dark:text-slate-50">
+            Edit your profile
+          </DialogTitle>
+          <DialogDescription className="text-sm leading-6 text-slate-500 dark:text-slate-400">
             Update your avatar, name, and birthday without leaving the dashboard.
           </DialogDescription>
         </DialogHeader>
 
         <form action={handleSubmit} className="space-y-5 px-6 py-5">
-          <div className="flex items-center gap-4 rounded-3xl bg-slate-50 p-4">
-            <Avatar size="lg" className="h-16 w-16 rounded-3xl border-2 border-sky-100">
+          <div className="flex items-center gap-4 rounded-3xl bg-slate-50 p-4 dark:bg-slate-950">
+            <Avatar
+              size="lg"
+              className="h-16 w-16 rounded-3xl border-2 border-sky-100 dark:border-slate-800"
+            >
               <AvatarImage src={previewUrl ?? undefined} />
-              <AvatarFallback className="rounded-3xl bg-sky-100 text-sky-700 font-black">
+              <AvatarFallback className="rounded-3xl bg-sky-100 text-sky-700 font-black dark:bg-sky-950/60 dark:text-sky-400">
                 {getInitials(profile.first_name, profile.last_name)}
               </AvatarFallback>
             </Avatar>
 
             <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-200">
                 Current avatar
               </div>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Upload a new image to replace the current one.
               </p>
             </div>
@@ -153,12 +158,12 @@ export default function KidProfileEditorDialog({ profile }: Props) {
           </div>
 
           {errorMessage ? (
-            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-950/50 dark:text-red-400">
               {errorMessage}
             </p>
           ) : null}
 
-          <DialogFooter className="border-t bg-slate-50 px-6 py-4">
+          <DialogFooter className="border-t bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
             <Button type="submit" className="rounded-full px-6">
               <Upload className="mr-2 h-4 w-4" />
               Save changes
