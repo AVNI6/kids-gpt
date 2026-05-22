@@ -7,7 +7,9 @@ const GROQ_API_BASE = "https://api.groq.com/openai/v1/chat/completions";
 
 interface GroqMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content:
+    | string
+    | Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }>;
 }
 
 interface GroqResponse {
@@ -29,17 +31,36 @@ interface GroqResponse {
 
 /**
  * Convert Gemini-format contents to OpenAI-compatible messages.
+ * Maps text and image_url parameters natively to prevent silent multimodal data loss.
  */
 function convertToGroqMessages(contents: GeminiContent[]): GroqMessage[] {
   return contents.map((c) => {
-    const textParts = c.parts
-      .filter((p) => p.text)
-      .map((p) => p.text!)
-      .join("\n");
+    const parts: Array<
+      { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
+    > = [];
+
+    for (const p of c.parts) {
+      if (p.text) {
+        parts.push({ type: "text", text: p.text });
+      }
+      if (p.inlineData) {
+        parts.push({
+          type: "image_url",
+          image_url: {
+            url: `data:${p.inlineData.mimeType};base64,${p.inlineData.data}`,
+          },
+        });
+      }
+    }
+
+    // Collapse to string if no images exist for backward compatibility and performance
+    const content = parts.some((p) => p.type === "image_url")
+      ? parts
+      : parts.map((p) => (p.type === "text" ? p.text : "")).join("\n");
 
     return {
-      role: c.role === "model" ? "assistant" : c.role === "user" ? "user" : "system",
-      content: textParts,
+      role: c.role === "model" ? "assistant" : "user",
+      content,
     } as GroqMessage;
   });
 }
@@ -48,8 +69,9 @@ export async function callGroq(
   model: string,
   apiKey: string,
   contents: GeminiContent[],
+  systemPrompt?: string,
   signal?: AbortSignal,
-  timeout: number = 30000,
+  timeout: number = 35000,
   responseFormat?: { type: string }
 ): Promise<AIResponse> {
   aiLogger.info("Groq", `Calling model: ${model}`);
@@ -57,11 +79,19 @@ export async function callGroq(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+  const abortHandler = () => controller.abort();
   if (signal) {
-    signal.addEventListener("abort", () => controller.abort(), { once: true });
+    signal.addEventListener("abort", abortHandler);
   }
 
-  const messages = convertToGroqMessages(contents);
+  const messages: GroqMessage[] = [];
+  if (systemPrompt) {
+    messages.push({
+      role: "system",
+      content: systemPrompt,
+    });
+  }
+  messages.push(...convertToGroqMessages(contents));
 
   try {
     const body: Record<string, unknown> = {
@@ -84,8 +114,6 @@ export async function callGroq(
       body: JSON.stringify(body),
       signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorBody = await response.text();
@@ -129,8 +157,6 @@ export async function callGroq(
       fallbackUsed: true,
     };
   } catch (error) {
-    clearTimeout(timeoutId);
-
     if (error instanceof DOMException && error.name === "AbortError") {
       throw error;
     }
@@ -140,5 +166,10 @@ export async function callGroq(
     });
 
     throw error;
+  } finally {
+    clearTimeout(timeoutId);
+    if (signal) {
+      signal.removeEventListener("abort", abortHandler);
+    }
   }
 }

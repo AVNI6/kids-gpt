@@ -8,7 +8,6 @@ export type ActivitySlug =
   | "math-challenges"
   | "science-lab"
   | "memory-match"
-  | "color-mixer"
   | "match-following";
 
 export interface KidActivity {

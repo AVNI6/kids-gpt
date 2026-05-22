@@ -5,7 +5,6 @@ import {
   FlaskConical,
   Grid3X3,
   Sparkles,
-  Palette,
   Layers,
 } from "lucide-react";
 import { type KidActivity } from "@/types/activities.type";
@@ -136,25 +135,6 @@ export const kidActivities: KidActivity[] = [
       "Match identical animal emojis",
       "Match all tiles in few flips",
       "Boost memory power!",
-    ],
-  },
-  {
-    id: 8,
-    slug: "color-mixer",
-    href: "/activities/color-mixer",
-    title: "Color Mixer",
-    description:
-      "Become a virtual color scientist! Mix primary colors to match hidden target formulas.",
-    icon: Palette,
-    color: "purple",
-    duration: "6 Mins",
-    badge: "New Game",
-    xp: "+150 XP",
-    steps: [
-      "Observe the target mixture color",
-      "Drip Red, Blue, or Yellow fluids",
-      "Mix primary drops inside the flask",
-      "Achieve exact secondary targets!",
     ],
   },
   {

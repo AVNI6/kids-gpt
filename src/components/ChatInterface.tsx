@@ -37,6 +37,12 @@ export default function ChatInterface() {
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastLoadedSessionRef = useRef<string | null>(null);
+  // Use a ref to read current messages without adding them to useEffect deps
+  const messagesRef = useRef(messages);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -51,58 +57,74 @@ export default function ChatInterface() {
 
   // Sync and load messages based on URL session ID
   useEffect(() => {
-    if (urlSessionId) {
+    const loadMessages = async () => {
+      // Use ref to read current messages without adding the array to the dep array
+      const currentMessages = messagesRef.current;
+
+      if (!urlSessionId) {
+        // Don't reset during an active request or while a guest has visible history
+        if (isLoading) {
+          return;
+        }
+        lastLoadedSessionRef.current = null;
+        if (currentSessionId !== null) {
+          dispatch(setCurrentSessionId(null));
+        }
+        if (currentMessages.length > 0) {
+          dispatch(setMessages([]));
+        }
+        return;
+      }
+
+      // If we are transitioning from a new chat (lastLoadedSessionRef.current is null)
+      // to a newly created session that we already have loaded locally (currentSessionId === urlSessionId)
+      if (lastLoadedSessionRef.current === null && urlSessionId === currentSessionId) {
+        lastLoadedSessionRef.current = urlSessionId;
+        return;
+      }
+
       // Sync Redux session ID
       if (urlSessionId !== currentSessionId) {
         dispatch(setCurrentSessionId(urlSessionId));
       }
 
-      // If we are loading a different session, clear old messages first to avoid flash
-      if (lastLoadedSessionRef.current !== urlSessionId) {
-        dispatch(setMessages([]));
-      }
-
-      // Skip reload if this session's messages are already loaded
-      if (lastLoadedSessionRef.current === urlSessionId && messages.length > 0) {
+      // Skip reload if this session's messages are already loaded in this lifecycle
+      if (lastLoadedSessionRef.current === urlSessionId) {
         return;
       }
 
-      const loadMessages = async () => {
-        lastLoadedSessionRef.current = urlSessionId;
-        try {
-          const dbMessages = await fetchSessionMessages(urlSessionId);
-          const mappedMessages: Message[] = dbMessages.map((m: ChatMessageRow) => {
-            const isImage =
-              m.content.includes("supabase.co/storage/") || m.attachment_url?.includes("image/");
-            const isPdf =
-              m.attachment_url?.includes(".pdf") ||
-              (m.content.includes("pdf/") && m.content.includes(".pdf"));
-            return {
-              id: m.id,
-              role: (m.sender_role as string) === "assistant" ? "model" : m.sender_role,
-              content: m.content,
-              isImage,
-              isPdfRequest: isPdf,
-              pdfContent: m.content,
-              attachmentUrl: m.attachment_url,
-            };
-          });
-          dispatch(setMessages(mappedMessages));
-        } catch (error) {
-          console.error("Failed to load messages:", error);
-        }
-      };
-      loadMessages();
-    } else {
-      // No URL session ID: clear state
-      lastLoadedSessionRef.current = null;
-      if (currentSessionId !== null) {
-        dispatch(setCurrentSessionId(null));
+      lastLoadedSessionRef.current = urlSessionId;
+      if (currentMessages.length > 0) {
+        dispatch(setMessages([])); // Clear old messages first to avoid flash
       }
-      dispatch(setMessages([]));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlSessionId]);
+
+      try {
+        const dbMessages = await fetchSessionMessages(urlSessionId);
+        const mappedMessages: Message[] = dbMessages.map((m: ChatMessageRow) => {
+          const isImage =
+            m.content.includes("supabase.co/storage/") || m.attachment_url?.includes("image/");
+          const isPdf =
+            m.attachment_url?.includes(".pdf") ||
+            (m.content.includes("pdf/") && m.content.includes(".pdf"));
+          return {
+            id: m.id,
+            role: (m.sender_role as string) === "assistant" ? "model" : m.sender_role,
+            content: m.content,
+            isImage,
+            isPdfRequest: isPdf,
+            pdfContent: m.content,
+            attachmentUrl: m.attachment_url,
+          };
+        });
+        dispatch(setMessages(mappedMessages));
+      } catch (error) {
+        console.error("Failed to load messages:", error);
+      }
+    };
+
+    loadMessages();
+    // `messages` is intentionally omitted — accessed via messagesRef to avoid dep-array size changes
+  }, [urlSessionId, currentSessionId, isLoading, dispatch]);
 
   // Abort in-flight requests when component unmounts
   useEffect(() => {
@@ -120,11 +142,6 @@ export default function ChatInterface() {
     const isFirstLoad = lastLoadedSessionRef.current === urlSessionId && messages.length > 0;
     scrollToBottom(isFirstLoad ? "instant" : "smooth");
   }, [messages, isLoading, urlSessionId]);
-
-  // Render nothing while chat is syncing to prevent showing old chat data
-  if (!urlSessionId && currentSessionId) {
-    return null; // Still syncing, don't render old chat
-  }
 
   const handleDownloadPDF = async (messageId: string) => {
     const message = messages.find((m) => m.id === messageId);
@@ -333,6 +350,7 @@ export default function ChatInterface() {
             role: userRole || "kid",
           };
 
+      const apiStartTime = Date.now();
       const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -341,6 +359,7 @@ export default function ChatInterface() {
       });
 
       const data = await res.json();
+      const responseTime = Date.now() - apiStartTime;
       let aiResponseContent = "";
       let isImageResponse = false;
       const rawTokens =
@@ -409,7 +428,7 @@ export default function ChatInterface() {
             await saveGeneratedMaterial(sessionId, "image", "image/jpeg", attachmentUrl, {
               prompt: currentInput,
             });
-            await trackDailyUsage(Math.round(100), { isImage: true });
+            await trackDailyUsage(Math.round(100), { isImage: true, durationMs: responseTime });
           } catch {
             console.error("Failed to upload image");
           }
@@ -428,7 +447,7 @@ export default function ChatInterface() {
             await saveGeneratedMaterial(sessionId, "pdf", "application/pdf", attachmentUrl, {
               prompt: currentInput,
             });
-            await trackDailyUsage(tokens, { isPdf: true });
+            await trackDailyUsage(tokens, { isPdf: true, durationMs: responseTime });
           } catch {
             console.error("Failed to upload pdf");
           }
@@ -454,11 +473,21 @@ export default function ChatInterface() {
 
       if (sessionId && isUserLoggedIn) {
         // Save model message to DB
+        const modelName =
+          data.model ||
+          data.modelUsed ||
+          (isImageResponse ? "imagen-4-fast-generate" : "gemini-2.5-flash");
         await saveChatMessage(sessionId, "model", finalContent, {
           tokens,
-          model: isImageRequest ? "image-preview" : "gemini-flash",
+          model: modelName,
           attachmentUrl: attachmentUrl,
+          responseTime: responseTime,
         }).catch(console.error);
+
+        // Track model tokens and duration in daily/whole usage for regular text responses as well
+        if (!isImageResponse && !data.isPdfRequest) {
+          trackDailyUsage(tokens, { durationMs: responseTime }).catch(console.error);
+        }
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
@@ -476,6 +505,9 @@ export default function ChatInterface() {
     } finally {
       sessionManager.completeRequest(requestId);
       setIsLoading(false);
+      setFileContent(null);
+      setFileName(null);
+      setImage(null);
     }
   };
 
@@ -667,6 +699,7 @@ export default function ChatInterface() {
           setImage={setImage}
           setFileContent={setFileContent}
           setFileName={setFileName}
+          fileName={fileName}
         />
       </main>
     </div>

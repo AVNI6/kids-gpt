@@ -47,7 +47,6 @@ export function trimMessages(
  * Build the complete Gemini contents array from system prompt, history, and current message.
  */
 export function buildGeminiContents(
-  systemPrompt: string,
   history: HistoryMessage[],
   currentMessage: string,
   image?: string
@@ -67,7 +66,7 @@ export function buildGeminiContents(
 
   // Build current user message parts
   const currentParts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [
-    { text: `${systemPrompt}\n\nUser Question: ${currentMessage}` },
+    { text: currentMessage },
   ];
 
   // Add image if provided

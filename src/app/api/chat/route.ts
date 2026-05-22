@@ -5,6 +5,32 @@ import { buildChatPrompt, buildPdfPrompt } from "@/lib/ai/prompts";
 import { buildGeminiContents } from "@/lib/ai/context-window";
 import { aiLogger } from "@/lib/ai/logger";
 
+function extractAndParseJSON(content: string) {
+  let cleanContent = content.trim();
+
+  // 1. Remove markdown code fences if present (e.g. ```json or ```)
+  const codeBlockRegex = /^```(?:json)?\s*([\s\S]*?)\s*```$/i;
+  const match = cleanContent.match(codeBlockRegex);
+  if (match) {
+    cleanContent = match[1].trim();
+  }
+
+  // 2. Locate first '{' and last '}' to strip extra text before/after
+  const startIdx = cleanContent.indexOf("{");
+  const endIdx = cleanContent.lastIndexOf("}");
+
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    try {
+      const jsonCandidate = cleanContent.slice(startIdx, endIdx + 1);
+      return JSON.parse(jsonCandidate);
+    } catch {
+      // Fall through to standard parsing if slice fails
+    }
+  }
+
+  return JSON.parse(cleanContent);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { message, image, history, role = "kid" }: ChatRequestBody = await req.json();
@@ -19,13 +45,14 @@ export async function POST(req: NextRequest) {
     const activePrompt = isPdfRequest ? buildPdfPrompt(role) : buildChatPrompt(role);
 
     // Build optimized contents array using context window memory management
-    const contents = buildGeminiContents(activePrompt, history || [], message, image);
+    const contents = buildGeminiContents(history || [], message, image);
 
     const generationConfig = isPdfRequest ? { responseMimeType: "application/json" } : undefined;
 
     // Delegate to the model fallback orchestrator
     const response = await generateAIResponse({
       contents,
+      systemPrompt: activePrompt,
       generationConfig,
       signal: req.signal,
     });
@@ -39,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     if (isPdfRequest) {
       try {
-        const parsed = JSON.parse(response.content);
+        const parsed = extractAndParseJSON(response.content);
         return NextResponse.json({
           type: "text",
           message: parsed.overview || "Here is your completed PDF material.",

@@ -7,7 +7,7 @@ import { UserRole } from "@/types/chat.types";
 // Register Emoji Source for color emojis (Twemoji)
 Font.registerEmojiSource({
   format: "png",
-  url: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/",
+  url: "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/",
 });
 
 // ===== KID STYLE SHEET =====
@@ -94,7 +94,6 @@ const kidStyles = StyleSheet.create({
     fontWeight: "bold",
   },
   bulletText: {
-    flex: 1,
     fontSize: 13,
     color: "#1e293b",
     lineHeight: 1.7,
@@ -189,7 +188,6 @@ const parentStyles = StyleSheet.create({
     color: "#64748b",
   },
   bulletText: {
-    flex: 1,
     fontSize: 11,
     color: "#334155",
     lineHeight: 1.6,
@@ -292,7 +290,6 @@ const teacherStyles = StyleSheet.create({
     fontWeight: "bold",
   },
   bulletText: {
-    flex: 1,
     fontSize: 11.5,
     color: "#0f172a",
     lineHeight: 1.6,
@@ -320,9 +317,74 @@ const cleanMarkdown = (content: string) => {
     .trim();
 };
 
+type MarkdownBlockProps = {
+  node?: {
+    tagName?: string;
+  };
+};
+
+type PdfStyles = typeof kidStyles;
+
+const isBlockElement = (child: React.ReactNode): boolean => {
+  if (!React.isValidElement(child)) return false;
+
+  const type = child.type;
+  if (typeof type === "string") {
+    return ["ul", "ol", "blockquote", "div", "section"].includes(type.toLowerCase());
+  }
+
+  if (typeof type === "function") {
+    const name = type.name || "";
+    if (["ul", "ol", "blockquote", "View"].includes(name)) {
+      return true;
+    }
+  }
+
+  const props = child.props as MarkdownBlockProps;
+  if (props.node?.tagName) {
+    return ["ul", "ol", "blockquote", "div", "section"].includes(props.node.tagName.toLowerCase());
+  }
+
+  return false;
+};
+
+const renderListItemChildren = (
+  children: React.ReactNode,
+  styles: Pick<PdfStyles, "bulletText">
+) => {
+  const result: React.ReactNode[] = [];
+  let inlineBuffer: React.ReactNode[] = [];
+
+  const flushBuffer = (key: number) => {
+    if (inlineBuffer.length > 0) {
+      result.push(
+        <Text key={`inline-${key}`} style={styles.bulletText}>
+          {inlineBuffer}
+        </Text>
+      );
+      inlineBuffer = [];
+    }
+  };
+
+  React.Children.forEach(children, (child, index) => {
+    if (child === null || child === undefined) return;
+    if (typeof child === "string" && child.trim() === "") return;
+
+    if (isBlockElement(child)) {
+      flushBuffer(index);
+      result.push(child);
+    } else {
+      inlineBuffer.push(child);
+    }
+  });
+
+  flushBuffer(999);
+  return result;
+};
+
 interface MarkdownToPdfProps {
   content: string;
-  styles: typeof kidStyles;
+  styles: PdfStyles;
 }
 
 const MarkdownToPdf = ({ content, styles }: MarkdownToPdfProps) => {
@@ -332,36 +394,34 @@ const MarkdownToPdf = ({ content, styles }: MarkdownToPdfProps) => {
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
-        h1: ({ children }) => (
-          <View>
-            <Text style={styles.h1}>{children}</Text>
-          </View>
-        ),
-        h2: ({ children }) => (
-          <View>
-            <Text style={styles.h2}>{children}</Text>
-          </View>
-        ),
-        h3: ({ children }) => (
-          <View>
-            <Text style={styles.h3}>{children}</Text>
-          </View>
-        ),
-        p: ({ children }) => (
-          <View style={styles.paragraph}>
-            <Text style={styles.text}>{children}</Text>
-          </View>
-        ),
+        h1: ({ children }) => <Text style={styles.h1}>{children}</Text>,
+        h2: ({ children }) => <Text style={styles.h2}>{children}</Text>,
+        h3: ({ children }) => <Text style={styles.h3}>{children}</Text>,
+        p: ({ children }) => <Text style={[styles.text, styles.paragraph]}>{children}</Text>,
         strong: ({ children }) => <Text style={styles.bold}>{children}</Text>,
         em: ({ children }) => <Text style={styles.italic}>{children}</Text>,
-        ul: ({ children }) => <View style={{ marginBottom: 10 }}>{children}</View>,
-        ol: ({ children }) => <View style={{ marginBottom: 10 }}>{children}</View>,
+        div: ({ children }) => {
+          const cleanChildren = React.Children.toArray(children).filter(
+            (c) => typeof c !== "string" || c.trim() !== ""
+          );
+          return <View>{cleanChildren}</View>;
+        },
+        ul: ({ children }) => {
+          const cleanChildren = React.Children.toArray(children).filter(
+            (c) => typeof c !== "string" || c.trim() !== ""
+          );
+          return <View style={{ marginBottom: 10 }}>{cleanChildren}</View>;
+        },
+        ol: ({ children }) => {
+          const cleanChildren = React.Children.toArray(children).filter(
+            (c) => typeof c !== "string" || c.trim() !== ""
+          );
+          return <View style={{ marginBottom: 10 }}>{cleanChildren}</View>;
+        },
         li: ({ children }) => (
           <View style={styles.bulletRow} wrap={false}>
             <Text style={styles.bullet}>•</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.bulletText}>{children}</Text>
-            </View>
+            <View style={{ flex: 1 }}>{renderListItemChildren(children, styles)}</View>
           </View>
         ),
         code: ({ children }) => (
@@ -420,7 +480,7 @@ export const PdfDocument = ({ content, role = "kid" }: PdfDocumentProps) => {
     }
   };
 
-  // Randomly select a doodle background (1-5) - Only for kid role
+  // Randomly select a doodle background (1-3) - Only for kid role
   const getDoodleIndex = () => {
     if (!content) return 1;
     let hash = 0;
@@ -428,7 +488,7 @@ export const PdfDocument = ({ content, role = "kid" }: PdfDocumentProps) => {
       hash = (hash << 2) - hash + content.charCodeAt(i);
       hash |= 0;
     }
-    return (Math.abs(hash) % 5) + 1;
+    return (Math.abs(hash) % 3) + 1;
   };
 
   const doodleIndex = getDoodleIndex();

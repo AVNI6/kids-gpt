@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ArrowLeft, School, WandSparkles, LineChart, FileDown } from "lucide-react";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
@@ -124,7 +123,7 @@ export default function TeacherHelpPage() {
             </AccordionItem>
           </Accordion>
         </section>
-
+        {/* 
         <Card className="bg-gradient-to-r from-sky-600 to-sky-700 text-white border-0 rounded-3xl overflow-hidden shadow-xl shadow-sky-500/20">
           <CardContent className="py-10 px-8 text-center space-y-6">
             <div className="space-y-2">
@@ -138,17 +137,11 @@ export default function TeacherHelpPage() {
                 variant="secondary"
                 className="rounded-full px-8 h-12 text-sky-700 font-bold hover:bg-white transition-colors"
               >
-                Live Chat Support
-              </Button>
-              <Button
-                variant="secondary"
-                className="rounded-full px-8 h-12 text-sky-700 font-bold hover:bg-white transition-colors"
-              >
                 Email Support
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </main>
   );
