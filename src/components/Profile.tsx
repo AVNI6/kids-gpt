@@ -52,14 +52,14 @@ export default function Profile({ isCollapsed }: ProfileProps) {
 
   const displayName = userProfile?.first_name
     ? `${userProfile.first_name} ${userProfile.last_name ?? ""}`.trim()
-    : (user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "User");
+    : user.email?.split("@")[0];
 
   const avatarUrl =
     userProfile?.avatar_url ?? (user.user_metadata?.avatar_url as string | undefined);
   const dashboardRole = userProfile?.role ?? "kid";
 
   return (
-    <div className="w-full pt-4">
+    <div className="w-full">
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
         <PopoverTrigger
           className={cn(

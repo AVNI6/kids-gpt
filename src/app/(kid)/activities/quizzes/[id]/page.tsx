@@ -39,7 +39,7 @@ export default async function QuizActivityPage({ params }: PageProps) {
     notFound();
   }
 
-  const content = activity.content as unknown as QuizActivityContent;
+  const content = activity.content as QuizActivityContent;
 
   // Ensure content has questions
   if (!content || !Array.isArray(content.questions)) {

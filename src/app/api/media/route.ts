@@ -7,8 +7,7 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GEMINI_API_KEY!,
 });
 
-const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : String(error);
+const getErrorMessage = (error: Error) => error.message || "Unknown error";
 
 export async function POST(req: Request) {
   try {
@@ -59,9 +58,10 @@ export async function POST(req: Request) {
       file: uploadedFile,
       text: result.text,
     });
-  } catch (err: unknown) {
-    console.error(err);
-    return Response.json({ error: getErrorMessage(err) || "Upload failed" }, { status: 500 });
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    console.error(error);
+    return Response.json({ error: getErrorMessage(error) || "Upload failed" }, { status: 500 });
   }
 }
 
@@ -85,8 +85,9 @@ export async function GET(req: Request) {
       success: true,
       file,
     });
-  } catch (err: unknown) {
-    console.error(err);
-    return Response.json({ error: getErrorMessage(err) || "Fetch failed" }, { status: 500 });
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    console.error(error);
+    return Response.json({ error: getErrorMessage(error) || "Fetch failed" }, { status: 500 });
   }
 }

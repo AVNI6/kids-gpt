@@ -1,6 +1,7 @@
 // Gemini API provider
 
 import { AIResponse, ProviderCallOptions } from "../types";
+import type { JsonObject } from "@/types/json";
 import { aiLogger } from "../logger";
 
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
@@ -21,6 +22,12 @@ interface GeminiResponse {
     message?: string;
     status?: string;
   };
+}
+
+interface GeminiRequestBody {
+  contents: ProviderCallOptions["contents"];
+  generationConfig?: JsonObject;
+  systemInstruction?: { parts: Array<{ text: string }> };
 }
 
 export async function callGemini(options: ProviderCallOptions): Promise<AIResponse> {
@@ -47,7 +54,7 @@ export async function callGemini(options: ProviderCallOptions): Promise<AIRespon
   }
 
   try {
-    const body: Record<string, unknown> = {
+    const body: GeminiRequestBody = {
       contents,
       generationConfig,
     };
@@ -98,7 +105,7 @@ export async function callGemini(options: ProviderCallOptions): Promise<AIRespon
     }
 
     aiLogger.info("Gemini", `Success with ${model}`, {
-      tokens: usage.totalTokenCount,
+      tokens: usage.totalTokenCount ?? 0,
     });
 
     return {

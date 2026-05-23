@@ -39,7 +39,7 @@ export default async function FlashcardActivityPage({ params }: PageProps) {
     notFound();
   }
 
-  const content = activity.content as unknown as FlashcardActivityContent;
+  const content = activity.content as FlashcardActivityContent;
 
   // Ensure content has flashcards
   if (!content || !Array.isArray(content.flashcards)) {

@@ -56,7 +56,7 @@ export interface ProviderCallOptions {
   apiKey: string;
   contents: GeminiContent[];
   systemPrompt?: string;
-  generationConfig?: Record<string, unknown>;
+  generationConfig?: import("@/types/json").JsonObject;
   signal?: AbortSignal;
   timeout?: number;
 }

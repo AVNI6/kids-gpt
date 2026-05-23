@@ -32,6 +32,18 @@ const chatSlice = createSlice({
         session.title = action.payload.title;
       }
     },
+    updateMessage: (
+      state,
+      action: PayloadAction<{ id: string; content: string; attachmentUrl?: string }>
+    ) => {
+      const msg = state.messages.find((m) => m.id === action.payload.id);
+      if (msg) {
+        msg.content = action.payload.content;
+        if (action.payload.attachmentUrl !== undefined) {
+          msg.attachmentUrl = action.payload.attachmentUrl;
+        }
+      }
+    },
     clearTransientState: (state) => {
       state.messages = [];
       state.currentSessionId = null;
@@ -46,6 +58,7 @@ export const {
   addMessage,
   addSession,
   updateSessionTitleInList,
+  updateMessage,
   clearTransientState,
 } = chatSlice.actions;
 

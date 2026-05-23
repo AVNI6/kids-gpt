@@ -32,16 +32,23 @@ export async function fetchUserSessions(userId?: string): Promise<ChatSessionRow
   return (data as ChatSessionRow[]) || [];
 }
 
-export async function createChatSession(title: string = "New chat"): Promise<ChatSessionRow> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+export async function createChatSession(
+  title: string = "New chat",
+  userId?: string
+): Promise<ChatSessionRow> {
+  let finalUserId = userId;
+  if (!finalUserId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    finalUserId = user?.id;
+  }
+  if (!finalUserId) throw new Error("Unauthorized");
 
   const { data, error } = await supabase
     .from("chat_sessions")
     .insert({
-      user_id: user.id,
+      user_id: finalUserId,
       title,
       is_active: true,
     })
@@ -58,19 +65,26 @@ export async function saveChatMessage(
   role: "user" | "model",
   content: string,
   metadata?: {
+    id?: string;
     tokens?: number;
     model?: string;
     responseTime?: number;
     attachmentUrl?: string;
-  }
+  },
+  userId?: string
 ) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  let finalUserId = userId;
+  if (!finalUserId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    finalUserId = user?.id;
+  }
+  if (!finalUserId) throw new Error("Unauthorized");
 
   const { error } = await supabase.from("chat_messages").insert({
-    user_id: user.id,
+    id: metadata?.id || undefined,
+    user_id: finalUserId,
     session_id: sessionId,
     sender_role: role,
     content,
@@ -92,11 +106,31 @@ export async function saveChatMessage(
     .eq("id", sessionId);
 }
 
-export async function uploadFileToStorage(file: Blob | File, path: string): Promise<string> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+export async function updateChatMessageAttachment(messageId: string, attachmentUrl: string) {
+  const { error } = await supabase
+    .from("chat_messages")
+    .update({ attachment_url: attachmentUrl })
+    .eq("id", messageId);
+
+  if (error) {
+    console.error("Error updating message attachment:", error);
+    throw error;
+  }
+}
+
+export async function uploadFileToStorage(
+  file: Blob | File,
+  path: string,
+  userId?: string
+): Promise<string> {
+  let finalUserId = userId;
+  if (!finalUserId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    finalUserId = user?.id;
+  }
+  if (!finalUserId) throw new Error("Unauthorized");
 
   // Path format: folder/filename (e.g., pdf/filename.pdf)
   const fullPath = `${path}`;
@@ -124,16 +158,21 @@ export async function saveGeneratedMaterial(
   type: string,
   format: string,
   fileUrl: string,
-  metadata?: Record<string, unknown>
+  metadata?: import("@/types/json").JsonObject,
+  userId?: string
 ) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  let finalUserId = userId;
+  if (!finalUserId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    finalUserId = user?.id;
+  }
+  if (!finalUserId) throw new Error("Unauthorized");
 
   // We use a try-catch for metadata in case the column is missing in older schemas
-  const payload: Record<string, unknown> = {
-    user_id: user.id,
+  const payload: import("@/types/json").JsonObject = {
+    user_id: finalUserId,
     chat_session_id: sessionId,
     type: type,
     format: format,
@@ -161,13 +200,18 @@ export async function saveGeneratedMaterial(
 
 export async function trackDailyUsage(
   tokens: number,
-  metrics: { isPdf?: boolean; isImage?: boolean; durationMs?: number } = {}
+  metrics: { isPdf?: boolean; isImage?: boolean; durationMs?: number } = {},
+  userId?: string
 ) {
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
+    let finalUserId = userId;
+    if (!finalUserId) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      finalUserId = user?.id;
+    }
+    if (!finalUserId) return;
 
     const today = new Date().toISOString().split("T")[0];
     const roundedTokens = Math.round(tokens);
@@ -177,7 +221,7 @@ export async function trackDailyUsage(
     const { data: subData, error: subError } = await supabase
       .from("subscriptions")
       .select("id, plan_id")
-      .eq("user_id", user.id)
+      .eq("user_id", finalUserId)
       .eq("status", "active")
       .maybeSingle();
 
@@ -205,7 +249,7 @@ export async function trackDailyUsage(
     const { data: usageData, error: fetchDailyError } = await supabase
       .from("daily_usage_tracking")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", finalUserId)
       .eq("usage_date", today)
       .maybeSingle();
 
@@ -229,7 +273,7 @@ export async function trackDailyUsage(
       }
     } else {
       const { error: insertDailyError } = await supabase.from("daily_usage_tracking").insert({
-        user_id: user.id,
+        user_id: finalUserId,
         subscription_id: subData?.id || null,
         usage_date: today,
         token_used: roundedTokens,
@@ -246,7 +290,7 @@ export async function trackDailyUsage(
     let wholeQuery = supabase
       .from("whole_usage_tracking")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", finalUserId)
       .is("deleted_at", null);
 
     if (subData?.id) {
@@ -290,7 +334,7 @@ export async function trackDailyUsage(
       const limitReached = roundedTokens >= limit;
 
       const { error: insertWholeError } = await supabase.from("whole_usage_tracking").insert({
-        user_id: user.id,
+        user_id: finalUserId,
         subscription_id: subData?.id || null,
         usage_date: today,
         total_token_used: roundedTokens,
@@ -331,28 +375,22 @@ export async function updateSessionTitle(sessionId: string, title: string) {
 }
 
 export async function deleteChatSession(sessionId: string) {
-  // 1. Delete generated materials associated with this session
-  const { error: matError } = await supabase
-    .from("generated_materials")
-    .delete()
-    .eq("chat_session_id", sessionId);
+  // 1. Delete generated materials and messages concurrently to reduce sequential roundtrips
+  const [matRes, msgRes] = await Promise.all([
+    supabase.from("generated_materials").delete().eq("chat_session_id", sessionId),
+    supabase.from("chat_messages").delete().eq("session_id", sessionId),
+  ]);
 
-  if (matError) {
-    console.warn("Failed to delete generated materials (might not exist):", matError.message);
+  if (matRes.error) {
+    console.warn("Failed to delete generated materials (might not exist):", matRes.error.message);
   }
 
-  // 2. Delete all messages associated with this session
-  const { error: msgError } = await supabase
-    .from("chat_messages")
-    .delete()
-    .eq("session_id", sessionId);
-
-  if (msgError) {
-    console.error("Failed to delete messages for session:", msgError);
-    throw msgError;
+  if (msgRes.error) {
+    console.error("Failed to delete messages for session:", msgRes.error);
+    throw msgRes.error;
   }
 
-  // 3. Finally delete the session itself
+  // 2. Finally delete the session itself
   const { error: finalError } = await supabase.from("chat_sessions").delete().eq("id", sessionId);
 
   if (finalError) {

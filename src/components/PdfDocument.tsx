@@ -1,8 +1,10 @@
 import React from "react";
-import { Document, Page, Text, StyleSheet, View, Image, Font } from "@react-pdf/renderer";
+import { Document, Page, Text, StyleSheet, View, Image, Font, Link } from "@react-pdf/renderer";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { UserRole } from "@/types/chat.types";
+
+type ReactPdfStyle = NonNullable<Parameters<typeof StyleSheet.create>[0]>[string];
 
 // Register Emoji Source for color emojis (Twemoji)
 Font.registerEmojiSource({
@@ -317,75 +319,86 @@ const cleanMarkdown = (content: string) => {
     .trim();
 };
 
-type MarkdownBlockProps = {
-  node?: {
-    tagName?: string;
-  };
-};
-
 type PdfStyles = typeof kidStyles;
 
-const isBlockElement = (child: React.ReactNode): boolean => {
-  if (!React.isValidElement(child)) return false;
+interface MarkdownToPdfProps {
+  content: string;
+  styles: PdfStyles;
+}
 
-  const type = child.type;
-  if (typeof type === "string") {
-    return ["ul", "ol", "blockquote", "div", "section"].includes(type.toLowerCase());
-  }
-
-  if (typeof type === "function") {
-    const name = type.name || "";
-    if (["ul", "ol", "blockquote", "View"].includes(name)) {
-      return true;
-    }
-  }
-
-  const props = child.props as MarkdownBlockProps;
-  if (props.node?.tagName) {
-    return ["ul", "ol", "blockquote", "div", "section"].includes(props.node.tagName.toLowerCase());
-  }
-
-  return false;
-};
-
-const renderListItemChildren = (
+/**
+ * Safely processes children array for react-pdf.
+ * It guarantees that:
+ * 1. Raw text strings and inline components are wrapped in a single <Text> node.
+ * 2. Block-level components (represented as <View> in react-pdf) are rendered outside of <Text> nodes.
+ * This completely prevents the crash-prone "View inside Text" nested hierarchy in @react-pdf/renderer.
+ */
+const renderSafeContent = (
   children: React.ReactNode,
-  styles: Pick<PdfStyles, "bulletText">
+  textStyle: ReactPdfStyle | ReactPdfStyle[] | undefined
 ) => {
-  const result: React.ReactNode[] = [];
+  if (!children) return null;
+
+  const childrenArray = React.Children.toArray(children);
+  const elements: React.ReactNode[] = [];
   let inlineBuffer: React.ReactNode[] = [];
 
-  const flushBuffer = (key: number) => {
+  const flushBuffer = (key: string | number) => {
     if (inlineBuffer.length > 0) {
-      result.push(
-        <Text key={`inline-${key}`} style={styles.bulletText}>
-          {inlineBuffer}
+      elements.push(
+        <Text key={`inline-${key}`} style={textStyle}>
+          {...inlineBuffer}
         </Text>
       );
       inlineBuffer = [];
     }
   };
 
-  React.Children.forEach(children, (child, index) => {
-    if (child === null || child === undefined) return;
-    if (typeof child === "string" && child.trim() === "") return;
+  childrenArray.forEach((child, idx) => {
+    if (typeof child === "string" || typeof child === "number") {
+      inlineBuffer.push(child);
+    } else if (React.isValidElement(child)) {
+      const typeStr =
+        typeof child.type === "string"
+          ? child.type
+          : (child.type as { displayName?: string; name?: string }).displayName ||
+            (child.type as { displayName?: string; name?: string }).name ||
+            "";
 
-    if (isBlockElement(child)) {
-      flushBuffer(index);
-      result.push(child);
+      const isBlock = [
+        "View",
+        "Document",
+        "Page",
+        "Image",
+        "p",
+        "ul",
+        "ol",
+        "li",
+        "blockquote",
+        "pre",
+        "div",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "th",
+        "td",
+      ].includes(typeStr);
+
+      if (isBlock) {
+        flushBuffer(idx);
+        elements.push(child);
+      } else {
+        inlineBuffer.push(child);
+      }
     } else {
       inlineBuffer.push(child);
     }
   });
 
-  flushBuffer(999);
-  return result;
+  flushBuffer("final");
+  return elements;
 };
-
-interface MarkdownToPdfProps {
-  content: string;
-  styles: PdfStyles;
-}
 
 const MarkdownToPdf = ({ content, styles }: MarkdownToPdfProps) => {
   const cleanedContent = cleanMarkdown(content);
@@ -397,46 +410,146 @@ const MarkdownToPdf = ({ content, styles }: MarkdownToPdfProps) => {
         h1: ({ children }) => <Text style={styles.h1}>{children}</Text>,
         h2: ({ children }) => <Text style={styles.h2}>{children}</Text>,
         h3: ({ children }) => <Text style={styles.h3}>{children}</Text>,
-        p: ({ children }) => <Text style={[styles.text, styles.paragraph]}>{children}</Text>,
+        h4: ({ children }) => <Text style={styles.h3}>{children}</Text>,
+        h5: ({ children }) => <Text style={styles.h3}>{children}</Text>,
+        h6: ({ children }) => <Text style={styles.h3}>{children}</Text>,
+        p: ({ children }) => (
+          <View style={styles.paragraph}>{renderSafeContent(children, styles.text)}</View>
+        ),
         strong: ({ children }) => <Text style={styles.bold}>{children}</Text>,
         em: ({ children }) => <Text style={styles.italic}>{children}</Text>,
-        div: ({ children }) => {
-          const cleanChildren = React.Children.toArray(children).filter(
-            (c) => typeof c !== "string" || c.trim() !== ""
-          );
-          return <View>{cleanChildren}</View>;
-        },
-        ul: ({ children }) => {
-          const cleanChildren = React.Children.toArray(children).filter(
-            (c) => typeof c !== "string" || c.trim() !== ""
-          );
-          return <View style={{ marginBottom: 10 }}>{cleanChildren}</View>;
-        },
-        ol: ({ children }) => {
-          const cleanChildren = React.Children.toArray(children).filter(
-            (c) => typeof c !== "string" || c.trim() !== ""
-          );
-          return <View style={{ marginBottom: 10 }}>{cleanChildren}</View>;
-        },
-        li: ({ children }) => (
+        div: ({ children }) => <View>{children}</View>,
+        ul: ({ children }) => <View style={{ marginBottom: 8, paddingLeft: 5 }}>{children}</View>,
+        ol: ({ children }) => <View style={{ marginBottom: 8, paddingLeft: 5 }}>{children}</View>,
+        li: ({
+          children,
+          index,
+          ordered,
+        }: {
+          children?: React.ReactNode;
+          index?: number;
+          ordered?: boolean;
+        }) => (
           <View style={styles.bulletRow} wrap={false}>
-            <Text style={styles.bullet}>•</Text>
-            <View style={{ flex: 1 }}>{renderListItemChildren(children, styles)}</View>
+            <Text style={styles.bullet}>
+              {ordered ? `${index !== undefined ? index + 1 : 1}.` : "•"}
+            </Text>
+            <View style={{ flex: 1 }}>{renderSafeContent(children, styles.bulletText)}</View>
           </View>
         ),
-        code: ({ children }) => (
-          <Text style={{ backgroundColor: "#f1f5f9", padding: 2 }}>{children}</Text>
+        pre: ({ children }) => (
+          <View
+            style={{
+              backgroundColor: "#f8fafc",
+              borderWidth: 1,
+              borderColor: "#cbd5e1",
+              borderRadius: 6,
+              padding: 10,
+              marginVertical: 10,
+            }}
+            wrap={false}
+          >
+            {children}
+          </View>
         ),
+        code: ({ children }) => {
+          const codeString = String(children).replace(/\n$/, "");
+          const isInline = !codeString.includes("\n");
+
+          if (isInline) {
+            return (
+              <Text
+                style={{
+                  fontFamily: "Courier",
+                  backgroundColor: "#f1f5f9",
+                  color: "#0f172a",
+                  paddingHorizontal: 3,
+                  paddingVertical: 1,
+                  fontSize: 10,
+                  borderRadius: 3,
+                }}
+              >
+                {codeString}
+              </Text>
+            );
+          }
+
+          return (
+            <Text
+              style={{
+                fontFamily: "Courier",
+                fontSize: 9.5,
+                color: "#334155",
+                lineHeight: 1.4,
+              }}
+            >
+              {codeString}
+            </Text>
+          );
+        },
         blockquote: ({ children }) => (
           <View
             style={{
-              borderLeftWidth: 2,
-              borderLeftColor: "#bae6fd",
+              borderLeftWidth: 3,
+              borderLeftColor: "#cbd5e1",
               paddingLeft: 12,
-              marginBottom: 15,
+              marginVertical: 10,
             }}
           >
-            <Text style={[styles.text, styles.italic, { color: "#475569" }]}>{children}</Text>
+            {renderSafeContent(children, [styles.text, styles.italic, { color: "#475569" }])}
+          </View>
+        ),
+        a: ({ href, children }) => (
+          <Link src={href} style={{ color: "#0284c7", textDecoration: "underline" }}>
+            {children}
+          </Link>
+        ),
+        hr: () => (
+          <View
+            style={{
+              marginVertical: 15,
+              borderBottomWidth: 1,
+              borderBottomColor: "#cbd5e1",
+            }}
+          />
+        ),
+        br: () => <Text>{"\n"}</Text>,
+        del: ({ children }) => <Text style={{ textDecoration: "line-through" }}>{children}</Text>,
+        s: ({ children }) => <Text style={{ textDecoration: "line-through" }}>{children}</Text>,
+        table: ({ children }) => (
+          <View
+            style={{ marginVertical: 12, borderWidth: 1, borderColor: "#cbd5e1", borderRadius: 4 }}
+          >
+            {children}
+          </View>
+        ),
+        thead: ({ children }) => (
+          <View
+            style={{
+              backgroundColor: "#f1f5f9",
+              borderBottomWidth: 1,
+              borderBottomColor: "#cbd5e1",
+            }}
+          >
+            {children}
+          </View>
+        ),
+        tbody: ({ children }) => <View>{children}</View>,
+        tr: ({ children }) => (
+          <View
+            style={{ flexDirection: "row", borderBottomWidth: 0.5, borderBottomColor: "#e2e8f0" }}
+          >
+            {children}
+          </View>
+        ),
+        th: ({ children }) => (
+          <View style={{ flex: 1, padding: 6 }}>
+            <Text style={{ fontWeight: "bold", fontSize: 10, color: "#1e293b" }}>{children}</Text>
+          </View>
+        ),
+        td: ({ children }) => (
+          <View style={{ flex: 1, padding: 6 }}>
+            <Text style={{ fontSize: 9.5, color: "#334155" }}>{children}</Text>
           </View>
         ),
       }}
