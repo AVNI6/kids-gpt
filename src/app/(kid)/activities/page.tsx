@@ -31,7 +31,6 @@ export default function ActivitiesPage() {
       slug === "math-challenges" ||
       slug === "science-lab" ||
       slug === "logic-puzzles" ||
-      slug === "jigsaw-puzzle" ||
       slug === "match-following";
 
     if (isAiPowered) {
@@ -67,7 +66,6 @@ export default function ActivitiesPage() {
               activity.slug === "math-challenges" ||
               activity.slug === "science-lab" ||
               activity.slug === "logic-puzzles" ||
-              activity.slug === "jigsaw-puzzle" ||
               activity.slug === "match-following";
 
             return (

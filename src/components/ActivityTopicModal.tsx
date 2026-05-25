@@ -16,7 +16,6 @@ import {
   generateMathChallenge,
   generateScienceLab,
   generateLogicPuzzle,
-  generateJigsawPuzzle,
   generateMatchPairs,
 } from "@/actions/activity.actions";
 import { type ActivitySlug } from "@/types/activities.type";
@@ -37,7 +36,6 @@ const ACTIVITY_GENERATORS: Record<
   "math-challenges": generateMathChallenge,
   "science-lab": generateScienceLab,
   "logic-puzzles": generateLogicPuzzle,
-  "jigsaw-puzzle": generateJigsawPuzzle,
   "match-following": generateMatchPairs,
 };
 
@@ -95,68 +93,6 @@ export default function ActivityTopicModal({
     setIsGenerating(true);
 
     try {
-      // Special-case: make `jigsaw-puzzle` static and client-only.
-      if (activitySlug === "jigsaw-puzzle") {
-        const presetsFor = ACTIVITY_TOPICS_PRESETS[activitySlug] || [];
-        const preset = presetsFor.find((p) => p.name === selectedTopic);
-
-        // Choose image by difficulty or fallback to default.
-        const imageByDifficulty: Record<string, string> = {
-          Easy: "/jigsaw-puzzle/metaverse-portrait.webp",
-          Medium: "/jigsaw-puzzle/cityscape-of-hong-kong-and-junkboat-at-twilight.webp",
-          Hard: "/jigsaw-puzzle/360_F_832252608_Aj6e38MCjkf6XwppkLCRLUkAzbnpbywI.webp",
-          Expert: "/jigsaw-puzzle/315751175_6424346414249018_4776111044190949685_n.webp",
-        };
-
-        const difficulty = (preset?.difficulty as string) || "Medium";
-        const rowsColsByDifficulty: Record<string, { rows: number; columns: number }> = {
-          Easy: { rows: 3, columns: 3 },
-          Medium: { rows: 5, columns: 5 },
-          Hard: { rows: 6, columns: 6 },
-          Expert: { rows: 8, columns: 8 },
-        };
-
-        const grid = rowsColsByDifficulty[difficulty] || { rows: 5, columns: 5 };
-
-        const content = {
-          correctedTopic: finalTopic,
-          selectedImage: imageByDifficulty[difficulty] || "/jigsaw-puzzle/metaverse-portrait.webp",
-          difficulty: difficulty.toLowerCase(),
-          rows: grid.rows,
-          columns: grid.columns,
-          totalPieces: grid.rows * grid.columns,
-          imageInstructions: `Slice the image into a balanced ${grid.rows}x${grid.columns} puzzle for topic ${finalTopic}.`,
-          gameplayTips: `Start from corners and group by color for ${finalTopic}.`,
-          puzzleStyle: "classic-jigsaw",
-          recommendedPieceSize: "92px",
-          shufflePieces: true,
-          snapSensitivity: "medium",
-          previewEnabled: true,
-          timerRecommended: false,
-          hintsAllowed: true,
-        };
-
-        // Encode content into compact base64 to pass via query param
-        const toBase64 = (obj: unknown): string => {
-          try {
-            const str = JSON.stringify(obj);
-            return typeof window !== "undefined"
-              ? window.btoa(unescape(encodeURIComponent(str)))
-              : Buffer.from(str).toString("base64");
-          } catch (err) {
-            console.error("Failed to encode content:", err);
-            return "";
-          }
-        };
-
-        const encoded = toBase64(content);
-        onClose();
-        setIsGenerating(false);
-        toast.success("Your puzzle is ready locally! 🧩");
-        router.push(`/activities/jigsaw-puzzle/play?c=${encodeURIComponent(encoded)}`);
-        return;
-      }
-
       // Fallback: call server generator for other activities
       const generator = ACTIVITY_GENERATORS[activitySlug];
       if (!generator) {

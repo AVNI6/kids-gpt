@@ -109,21 +109,3 @@ export interface LogicPuzzleItem {
 export interface LogicPuzzleActivityContent {
   puzzles: LogicPuzzleItem[];
 }
-
-export interface JigsawPuzzleActivityContent {
-  correctedTopic: string;
-  selectedImage: string;
-  difficulty: "easy" | "medium" | "hard" | "extreme";
-  rows: number;
-  columns: number;
-  totalPieces: number;
-  imageInstructions: string;
-  gameplayTips: string;
-  puzzleStyle: "square" | "classic-jigsaw";
-  recommendedPieceSize: string;
-  shufflePieces: boolean;
-  snapSensitivity: "easy" | "medium" | "strict";
-  previewEnabled: boolean;
-  timerRecommended: boolean;
-  hintsAllowed: boolean;
-}
