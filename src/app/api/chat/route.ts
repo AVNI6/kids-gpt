@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ChatRequestBody } from "@/types/chat.types";
 import { generateAIResponse, generateAIResponseStream } from "@/lib/ai/model-orchestrator";
-import { buildChatPrompt, buildPdfPrompt } from "@/lib/ai/prompts";
+import { buildChatPrompt, buildPdfPrompt, buildQuizPrompt } from "@/lib/ai/prompts";
 import { buildGeminiContents } from "@/lib/ai/context-window";
 import { aiLogger } from "@/lib/ai/logger";
+
+function getConversationText(message: string, history: ChatRequestBody["history"] = []) {
+  return [message, ...(history || []).map((entry) => entry.content || "")].join("\n").toLowerCase();
+}
+
+function isQuizMode(message: string, history: ChatRequestBody["history"] = []) {
+  const text = getConversationText(message, history);
+  return /start\s+quiz|quiz\s+mode|quiz me|ask me one question at a time|one question at a time|begin quiz/i.test(
+    text
+  );
+}
+
+function isStopCommand(message: string) {
+  return /^(stop|exit|quit|end quiz|end|stop quiz)$/i.test(message.trim());
+}
 
 function extractAndParseJSON(content: string) {
   let cleanContent = content.trim();
@@ -42,7 +57,29 @@ export async function POST(req: NextRequest) {
     aiLogger.info("ChatAPI", `Received request. Role: ${role}, Is PDF: ${isPdfRequest}`);
 
     // Build the system prompt based on user's role and request type
-    const activePrompt = isPdfRequest ? buildPdfPrompt(role) : buildChatPrompt(role);
+    const quizMode = isQuizMode(message || "", history || []);
+    const activePrompt = isPdfRequest
+      ? buildPdfPrompt(role)
+      : quizMode
+        ? buildQuizPrompt(role)
+        : buildChatPrompt(role);
+
+    if (!isPdfRequest && quizMode && isStopCommand(message || "")) {
+      const stopMessage =
+        role === "teacher"
+          ? "Quiz stopped. You can start a new quiz anytime."
+          : role === "parent"
+            ? "Quiz stopped. You can start again whenever you're ready."
+            : 'Quiz stopped. Say "Start Quiz" whenever you want to play again.';
+
+      return new Response(`data: ${JSON.stringify({ text: stopMessage })}\n\ndata: [DONE]\n\n`, {
+        headers: {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
 
     // Build optimized contents array using context window memory management
     const contents = buildGeminiContents(history || [], message, image);
