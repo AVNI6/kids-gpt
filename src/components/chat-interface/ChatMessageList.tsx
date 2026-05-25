@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { Bot, Download, FileText } from "lucide-react";
+import React, { useState } from "react";
+import { Bot, Check, Copy, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -29,6 +29,19 @@ export default function ChatMessageList({
   handleDownloadPDF,
   messagesEndRef,
 }: ChatMessageListProps) {
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+
+  const handleCopy = async (messageId: string, content: string) => {
+    if (!content) return;
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedMessageId(messageId);
+      setTimeout(() => setCopiedMessageId(null), 1200);
+    } catch (error) {
+      console.error("Failed to copy message:", error);
+    }
+  };
+
   return (
     <div className="flex-1 min-h-0 overflow-hidden relative">
       <ScrollArea className="h-full w-full">
@@ -75,10 +88,26 @@ export default function ChatMessageList({
                         }`}
                       >
                         {showModelHeader && (
-                          <div className="flex items-center justify-between gap-1.5 mb-2">
+                          <div className="flex items-center justify-between gap-2 mb-2">
                             <div className="flex items-center gap-1.5 text-sky-600 font-bold text-sm">
                               <Bot className="w-4 h-4" /> AI Buddy
                             </div>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(message.id, message.content)}
+                              className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                              title="Copy response"
+                            >
+                              {copiedMessageId === message.id ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5" /> Copied
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5" /> Copy
+                                </>
+                              )}
+                            </button>
                           </div>
                         )}
 
