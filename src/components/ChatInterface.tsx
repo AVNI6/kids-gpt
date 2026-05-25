@@ -29,6 +29,7 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const justCreatedSessionRef = useRef(false);
   const isFirstScrollRef = useRef(true);
+  const lastUrlSessionIdRef = useRef<string | null>(null);
 
   const [input, setInput] = useState("");
   const [image, setImage] = useState<string | null>(null);
@@ -86,6 +87,12 @@ export default function ChatInterface() {
 
   // Sync URL search parameter id to Redux reactively
   useEffect(() => {
+    if (lastUrlSessionIdRef.current === urlSessionId) {
+      return;
+    }
+
+    lastUrlSessionIdRef.current = urlSessionId;
+
     if (!urlSessionId && currentSessionId) {
       return;
     }
