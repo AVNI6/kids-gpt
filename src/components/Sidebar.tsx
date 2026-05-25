@@ -67,6 +67,9 @@ export default function Sidebar() {
   // Load chat sessions for authenticated user
   useEffect(() => {
     const loadSessions = async () => {
+      // if (isLoadingAuth) {
+      //   return;
+      // }
       if (user) {
         const userSessions = await fetchUserSessions(user.id);
         dispatch(setSessions(userSessions));
@@ -75,7 +78,7 @@ export default function Sidebar() {
       }
     };
     loadSessions();
-  }, [user, dispatch]);
+  }, [user, isLoadingAuth, dispatch]);
 
   const handleNewChat = () => {
     getSessionManager().abortActiveRequest();

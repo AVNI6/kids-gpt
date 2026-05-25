@@ -110,10 +110,6 @@ export default function ChatInterface() {
     }
 
     if (urlSessionId !== currentSessionId) {
-      console.log(
-        "[ChatInterface] Syncing Redux currentSessionId to match URL search param:",
-        urlSessionId
-      );
       dispatch(setCurrentSessionId(urlSessionId));
     }
   }, [urlSessionId, currentSessionId, dispatch]);

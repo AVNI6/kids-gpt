@@ -49,17 +49,9 @@ export function useChatMessages({
     const loadMessages = async () => {
       // 1. Return early if authentication is still loading to avoid RLS race conditions
       if (isLoadingAuth) {
-        console.log("[ChatInterface] Auth loading, deferring message fetch.");
         setIsSessionLoading(false);
         return;
       }
-
-      console.log(
-        "[ChatInterface] loadMessages triggered for currentSessionId:",
-        currentSessionId,
-        "isLoggedIn:",
-        isUserLoggedIn
-      );
 
       // 2. Handle new/empty chat session
       if (!currentSessionId) {
@@ -70,9 +62,6 @@ export function useChatMessages({
 
       // 3. Skip database fetch and UI clearing if we just created this session locally
       if (justCreatedSessionRef.current) {
-        console.log(
-          "[ChatInterface] Session just created locally. Skipping DB fetch to prevent clearing local state."
-        );
         justCreatedSessionRef.current = false;
         setIsSessionLoading(false);
         return;
@@ -83,12 +72,6 @@ export function useChatMessages({
       if (messagesCache.has(currentSessionId)) {
         const cached = messagesCache.get(currentSessionId);
         if (cached) {
-          console.log(
-            "[ChatInterface] Instant cache hit for session:",
-            currentSessionId,
-            "messages count:",
-            cached.length
-          );
           dispatch(setMessages(cached));
           hasCache = true;
         }
@@ -102,15 +85,10 @@ export function useChatMessages({
 
       // 5. Fetch fresh messages from Supabase DB (either to populate cache or revalidate it)
       try {
-        console.log("[ChatInterface] Fetching messages from DB for session:", currentSessionId);
         const dbMessages = await fetchSessionMessages(currentSessionId);
 
         // If this effect run was cleaned up in the meantime (e.g., user clicked another chat), ignore result
         if (!active) {
-          console.log(
-            "[ChatInterface] Deferring stale fetch result for session:",
-            currentSessionId
-          );
           return;
         }
 
@@ -186,19 +164,9 @@ export function useChatMessages({
           !cachedMessages || JSON.stringify(cachedMessages) !== JSON.stringify(mappedMessages);
 
         if (hasDataChanged) {
-          console.log(
-            "[ChatInterface] Messages updated from DB for session:",
-            currentSessionId,
-            "count:",
-            mappedMessages.length
-          );
           dispatch(setMessages(mappedMessages));
           messagesCache.set(currentSessionId, mappedMessages);
         } else {
-          console.log(
-            "[ChatInterface] DB messages matched cache, skipping Redux update for:",
-            currentSessionId
-          );
         }
       } catch (error) {
         console.error("[ChatInterface] Failed to fetch session messages from DB:", error);

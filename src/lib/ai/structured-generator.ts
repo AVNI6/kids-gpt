@@ -41,8 +41,6 @@ export async function generateStructuredObject<T extends z.ZodTypeAny>({
     for (let i = 0; i < keys.length; i++) {
       const apiKey = keys[i];
       try {
-        console.log(`[Activity AI] Trying model ${modelName} with API Key ${i + 1}/${keys.length}`);
-
         const googleProviderInstance = createGoogleGenerativeAI({
           apiKey,
         });
@@ -54,9 +52,6 @@ export async function generateStructuredObject<T extends z.ZodTypeAny>({
           prompt,
         });
 
-        console.log(
-          `[Activity AI] Successfully generated object using ${modelName} with key index ${i}`
-        );
         return result;
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);

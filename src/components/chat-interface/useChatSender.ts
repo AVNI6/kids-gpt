@@ -491,7 +491,6 @@ export function useChatSender({
                 },
                 user?.id
               );
-              console.log("[ChatInterface] Instant DB save completed for message:", aiMessageId);
 
               // Asynchronously compile and upload images in the background
               if (isImageResponse) {
@@ -539,10 +538,6 @@ export function useChatSender({
                       Math.round(100),
                       { isImage: true, durationMs: responseTime },
                       user?.id
-                    );
-                    console.log(
-                      "[ChatInterface] Background image storage completed:",
-                      imgAttachmentUrl
                     );
                   } catch (imgUploadErr) {
                     console.error("[ChatInterface] Background image upload failed:", imgUploadErr);
@@ -592,10 +587,6 @@ export function useChatSender({
                       { isPdf: true, durationMs: responseTime },
                       user?.id
                     );
-                    console.log(
-                      "[ChatInterface] Background PDF storage completed:",
-                      pdfAttachmentUrl
-                    );
                   } catch (pdfUploadErr) {
                     console.error("[ChatInterface] Background PDF upload failed:", pdfUploadErr);
                   }
@@ -617,7 +608,6 @@ export function useChatSender({
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
-        console.log("Request aborted gracefully");
         return;
       }
       console.error("Chat error:", error);

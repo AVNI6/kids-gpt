@@ -189,10 +189,6 @@ Before responding, internally verify that the list contains exactly ${clampedCou
 
     while (attempts < maxAttempts) {
       try {
-        console.log(
-          `[generateWordScramble] AI generation attempt ${attempts + 1} of ${maxAttempts}...`
-        );
-
         const { object } = await generateStructuredObject({
           schema: aiWordScrambleSchema,
           system: systemPrompt,
