@@ -47,7 +47,9 @@ export default function TeacherTasks() {
 
   return (
     <section className="space-y-4 h-full flex flex-col">
-      <h2 className="text-2xl font-black text-slate-900 tracking-tight">Homework & Tasks 📝</h2>
+      <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
+        Homework & Tasks 📝
+      </h2>
       <Card className="rounded-[32px] border-violet-200 bg-linear-to-br from-violet-500 to-fuchsia-600 shadow-sm flex-1">
         <CardContent className="p-6 text-white h-full flex flex-col">
           <div className="flex justify-between items-center mb-6">

@@ -64,7 +64,7 @@ export default function GamesHub() {
   return (
     <section className="space-y-4 h-full flex flex-col">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+        <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight flex items-center gap-2">
           Games Hub 🎮
         </h2>
         <Button
@@ -90,12 +90,14 @@ export default function GamesHub() {
                   <Icon className="w-8 h-8" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-black text-lg truncate text-slate-900">{game.title}</h3>
+                  <h3 className="font-black text-lg truncate text-slate-900 dark:text-white">
+                    {game.title}
+                  </h3>
                   <div className="flex flex-wrap items-center gap-2 mt-1">
                     <span className="text-xs font-bold uppercase tracking-wider opacity-80">
                       {game.difficulty}
                     </span>
-                    <span className="text-xs font-bold flex items-center gap-1 bg-white/50 px-2 py-0.5 rounded-full text-slate-700">
+                    <span className="text-xs font-bold flex items-center gap-1 bg-white/50 dark:bg-black/20 px-2 py-0.5 rounded-full text-slate-700 dark:text-slate-200">
                       <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />+{game.xp} XP
                     </span>
                   </div>

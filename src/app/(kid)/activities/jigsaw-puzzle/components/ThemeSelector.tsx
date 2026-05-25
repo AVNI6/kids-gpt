@@ -24,13 +24,13 @@ export default function ThemeSelector({
 
       {/* Scrollable Container with fixed height and custom scrollbar classes */}
       <div
-        className="w-full max-h-[260px] overflow-y-auto pr-2 flex flex-col gap-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent"
+        className="w-full max-h-120 overflow-y-auto pr-2 flex flex-col gap-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent"
         style={{
           scrollbarWidth: "thin",
           scrollbarColor: "#334155 transparent",
         }}
       >
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 pt-4 pl-2">
           {JIGSAW_THEMES.map((theme) => {
             const isActive = selectedUrl === theme.url;
             return (

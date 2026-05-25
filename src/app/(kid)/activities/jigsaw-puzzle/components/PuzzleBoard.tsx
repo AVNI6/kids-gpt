@@ -1,97 +1,144 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { PuzzlePiece } from "@/types/puzzle";
 import PuzzleTile from "./PuzzleTile";
-import { motion } from "framer-motion";
 
 interface PuzzleBoardProps {
   pieces: PuzzlePiece[];
   gridSize: number;
   imageUrl: string;
-  selectedPieceId: string | null;
-  onPieceSelect: (pieceId: string | null) => void;
-  onPieceSwap: (pieceId1: string, pieceId2: string) => void;
   isSolved: boolean;
   isLoading?: boolean;
+  boardRef: React.RefObject<HTMLDivElement | null>;
+  onSnap: (pieceId: string) => void;
+  onResize?: (width: number) => void;
 }
 
 export default function PuzzleBoard({
   pieces,
   gridSize,
   imageUrl,
-  selectedPieceId,
-  onPieceSelect,
-  onPieceSwap,
   isSolved,
   isLoading,
+  boardRef,
+  onSnap,
+  onResize,
 }: PuzzleBoardProps) {
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [boardSize, setBoardSize] = useState(0);
 
-  // Sort pieces by currentIndex so they render in their shuffled positions
-  const renderedPieces = useMemo(() => {
-    return [...pieces].sort((a, b) => a.currentIndex - b.currentIndex);
-  }, [pieces]);
+  // ── Measure container size ───────────────────────────────────────────
+  useEffect(() => {
+    const el = boardRef.current;
+    if (!el) return;
 
-  // Handle tile click actions (Select vs Swap)
-  const handleTileClick = (pieceId: string) => {
-    if (isSolved || isLoading || isTransitioning) return;
+    const update = () => {
+      const w = Math.floor(el.getBoundingClientRect().width);
+      if (w > 0) {
+        setBoardSize(w);
+        onResize?.(w);
+      }
+    };
 
-    if (selectedPieceId === null) {
-      // First tap selects the piece
-      onPieceSelect(pieceId);
-    } else if (selectedPieceId === pieceId) {
-      // Tapping the same piece again deselects it
-      onPieceSelect(null);
-    } else {
-      // Second tap swaps selected with targeted piece
-      setIsTransitioning(true);
-      onPieceSwap(selectedPieceId, pieceId);
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    update();
 
-      // Lock interactions temporarily to prevent click spam and race conditions during motion swaps
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 350);
-    }
-  };
+    return () => observer.disconnect();
+  }, [boardRef, onResize]);
 
-  const gridStyles =
-    {
-      2: "grid-cols-2 gap-3 p-3 rounded-[28px]",
-      3: "grid-cols-3 gap-2.5 p-2.5 rounded-[30px]",
-      4: "grid-cols-4 gap-2 p-2 rounded-[32px]",
-      5: "grid-cols-5 gap-1.5 p-1.5 rounded-[32px]",
-    }[gridSize as 2 | 3 | 4 | 5] || "grid-cols-3 gap-2 p-2";
+  const tileSize = boardSize > 0 ? boardSize / gridSize : 0;
+
+  // Placed pieces go on the board
+  const placedPieces = useMemo(() => pieces.filter((p) => p.isPlaced), [pieces]);
 
   return (
     <div
-      className="relative w-full max-w-2xl aspect-square mx-auto"
+      ref={boardRef}
+      className="relative w-full aspect-square mx-auto rounded-[28px] overflow-visible select-none shadow-2xl border border-slate-800/80 bg-slate-950/60"
       role="grid"
       aria-label="Jigsaw Puzzle Board"
     >
-      {/* Dynamic CSS Grid for Tiles */}
+      {/* Faint image watermark guide for high-fidelity classic experience */}
       <div
-        className={`grid ${gridStyles} w-full h-full bg-slate-100 dark:bg-slate-950/80 border-2 border-sky-100/80 dark:border-slate-800 shadow-inner ring-4 ring-sky-100/50 dark:ring-slate-900/60 transition-all duration-300`}
-      >
-        {renderedPieces.map((piece) => (
-          <PuzzleTile
-            key={piece.id}
-            piece={piece}
-            gridSize={gridSize}
-            imageUrl={imageUrl}
-            isSelected={selectedPieceId === piece.id}
-            onClick={() => handleTileClick(piece.id)}
-            isDisabled={isSolved || isLoading || isTransitioning}
-          />
-        ))}
-      </div>
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: 26,
+          backgroundImage: `url("${imageUrl}")`,
+          backgroundSize: "100% 100%",
+          backgroundPosition: "0 0",
+          opacity: 0.12,
+          filter: "contrast(1.1) brightness(0.9)",
+          pointerEvents: "none",
+        }}
+      />
 
-      {/* Solved overlay state for celebration visual feedback */}
+      {/* Decorative inner backing border highlight */}
+      <div
+        aria-hidden
+        className="absolute inset-0 rounded-[28px] pointer-events-none"
+        style={{
+          boxShadow: "inset 0 4px 20px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.03)",
+        }}
+      />
+
+      {/* Grid line indicator dots for high-fidelity alignments */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: 26,
+          backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)",
+          backgroundSize: tileSize > 0 ? `${tileSize}px ${tileSize}px` : "60px 60px",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Absolutely positioned placed tile layer */}
+      {tileSize > 0 && !isLoading && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: boardSize,
+            height: boardSize,
+            overflow: "visible",
+            pointerEvents: "none", // placed pieces ignore events so you can drop overlapping items
+          }}
+        >
+          {placedPieces.map((piece) => (
+            <PuzzleTile
+              key={piece.id}
+              piece={piece}
+              gridSize={gridSize}
+              tileSize={tileSize}
+              imageUrl={imageUrl}
+              boardRef={boardRef}
+              onSnap={onSnap}
+              isDisabled={true} // Locked
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Solve state board border glow */}
       {isSolved && (
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="absolute inset-0 pointer-events-none rounded-[32px] ring-8 ring-emerald-500 ring-offset-4 animate-pulse duration-1000"
+          transition={{ duration: 0.45, ease: "easeOut" }}
+          aria-hidden
+          className="absolute inset-0 rounded-[28px] pointer-events-none"
+          style={{
+            border: "3px solid rgba(16,185,129,0.85)",
+            boxShadow: "0 0 40px rgba(16,185,129,0.3), inset 0 0 20px rgba(16,185,129,0.15)",
+          }}
         />
       )}
     </div>

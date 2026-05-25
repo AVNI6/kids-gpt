@@ -82,10 +82,10 @@ export default async function DashboardRoute({ params }: { params: Promise<{ rol
   const RoleIcon = roleIcon;
 
   return (
-    <main className="min-h-screen bg-linear-to-br from-sky-50 via-white to-emerald-50 px-6 py-8 text-slate-900">
+    <main className="min-h-screen bg-linear-to-br from-sky-50 via-white to-emerald-50 px-6 py-8 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-50">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center">
         <div className="grid w-full gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="rounded-[36px] border border-sky-100 bg-white/90 p-8 shadow-[0_24px_80px_rgba(0,101,141,0.1)]">
+          <section className="rounded-[36px] border border-sky-100 bg-white/90 p-8 shadow-[0_24px_80px_rgba(0,101,141,0.1)] dark:border-slate-800 dark:bg-slate-900/90">
             <Badge variant="secondary" className="rounded-full px-3 py-1">
               Onboarding complete
             </Badge>
@@ -98,23 +98,32 @@ export default async function DashboardRoute({ params }: { params: Promise<{ rol
               </div>
               <div>
                 <h1 className="text-4xl font-black tracking-tight">{copy.title}</h1>
-                <p className="mt-2 text-base leading-7 text-slate-600">{copy.subtitle}</p>
+                <p className="mt-2 text-base leading-7 text-slate-600 dark:text-slate-400">
+                  {copy.subtitle}
+                </p>
               </div>
             </div>
 
-            <p className="mt-8 max-w-2xl text-lg leading-relaxed text-slate-600">{copy.summary}</p>
+            <p className="mt-8 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-400">
+              {copy.summary}
+            </p>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               {quickCards.map((card) => {
                 const Icon = card.icon;
                 return (
-                  <Card key={card.title} className="rounded-[28px] border-sky-100 shadow-sm">
+                  <Card
+                    key={card.title}
+                    className="rounded-[28px] border-sky-100 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                  >
                     <CardContent className="space-y-3 p-5">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400">
                         <Icon className="h-5 w-5" />
                       </div>
-                      <h2 className="font-bold text-slate-950">{card.title}</h2>
-                      <p className="text-sm leading-6 text-slate-500">{card.text}</p>
+                      <h2 className="font-bold text-slate-950 dark:text-slate-50">{card.title}</h2>
+                      <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
+                        {card.text}
+                      </p>
                     </CardContent>
                   </Card>
                 );
@@ -141,13 +150,15 @@ export default async function DashboardRoute({ params }: { params: Promise<{ rol
               </CardContent>
             </Card>
 
-            <Card className="rounded-[32px] border-sky-100 shadow-sm">
+            <Card className="rounded-[32px] border-sky-100 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <CardContent className="space-y-4 p-6">
-                <p className="text-sm font-semibold text-slate-500">Current route</p>
-                <div className="rounded-3xl bg-sky-50 px-4 py-3 font-mono text-sm text-slate-700">
+                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                  Current route
+                </p>
+                <div className="rounded-3xl bg-sky-50 px-4 py-3 font-mono text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                   /dashboard/{role}
                 </div>
-                <p className="text-sm leading-6 text-slate-500">
+                <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
                   Authenticated users with this role can access dashboard and chat routes only for
                   the same role.
                 </p>
