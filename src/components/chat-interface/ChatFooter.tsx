@@ -256,7 +256,9 @@ export default function ChatFooter({
 
                   <button
                     onClick={() => {
-                      setInput("Let's start a fun educational quiz!");
+                      setInput(
+                        "Start Quiz: ask me one question at a time, wait for my answer, tell me if I'm right, then automatically ask the next question. Stop if I say stop, exit, quit, or end quiz."
+                      );
                       setIsPopoverOpen(false);
                     }}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
@@ -296,7 +298,7 @@ export default function ChatFooter({
       </footer>
 
       {isDragging && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center border-4 border-dashed border-sky-400 bg-sky-500/20 backdrop-blur-sm pointer-events-none">
+        <div className="fixed inset-0 z-100 flex items-center justify-center border-4 border-dashed border-sky-400 bg-sky-500/20 backdrop-blur-sm pointer-events-none">
           <p className="text-lg font-semibold text-sky-700">Drop your files here</p>
         </div>
       )}

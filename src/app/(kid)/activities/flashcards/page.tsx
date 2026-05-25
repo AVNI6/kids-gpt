@@ -104,21 +104,16 @@ export default function FlashcardsPage({
   const handleFinish = async () => {
     setIsSaving(true);
     try {
-      const slug = deckTitle
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+      const correctCount = masteredIds.length;
+      const scorePercent =
+        flashcards.length > 0 ? Math.round((correctCount / flashcards.length) * 100) : 0;
+      const scoreStr = `${scorePercent}% Mastered (${correctCount}/${flashcards.length})`;
 
-      const res = await saveKidActivityProgress(
-        slug || "flashcards",
-        xpReward,
-        deckTitle,
-        `${masteredIds.length}/${flashcards.length} Mastered`
-      );
+      const res = await saveKidActivityProgress("flashcards", xpReward, deckTitle, scoreStr);
 
       if (res.success) {
         toast.success("Deck Completed! 🎉", {
-          description: `+${xpReward} XP awarded to your kid profile!`,
+          description: `+${Math.round((xpReward * scorePercent) / 100)} XP awarded to your kid profile!`,
         });
         router.push(APP_ROUTES.Activities);
       } else {
@@ -225,7 +220,7 @@ export default function FlashcardsPage({
 
               <div className="relative flex-1 flex flex-col min-h-0 mt-2">
                 <div className="absolute -top-12 right-2 md:right-4 z-20">
-                  <div className="rounded-2xl border-2 border-sky-500/20 bg-card px-3 py-1.5 shadow-md max-w-[200px]">
+                  <div className="rounded-2xl border-2 border-sky-500/20 bg-card px-3 py-1.5 shadow-md max-w-50">
                     <p className="text-xs font-bold text-sky-600 truncate-3-lines">{card?.fact}</p>
                   </div>
                 </div>

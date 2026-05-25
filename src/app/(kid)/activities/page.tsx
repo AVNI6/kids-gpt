@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Star, Timer, Zap } from "lucide-react";
+import { Star, Timer, Zap, ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { kidActivities, activityButtonStyles, activityColorStyles } from "@/lib/kid-activities";
-import { getActivityXpSettings } from "@/actions/activity.actions";
+import { useSidebar } from "@/components/ui/sidebar";
+import { getActivitySettings, type ActivityDbSettings } from "@/actions/activity.actions";
 import { type ActivitySlug } from "@/types/activities.type";
 import ActivityTopicModal from "@/components/ActivityTopicModal";
 
@@ -15,11 +16,13 @@ export default function ActivitiesPage() {
   const router = useRouter();
   const [showTopicModal, setShowTopicModal] = useState(false);
   const [activeActivitySlug, setActiveActivitySlug] = useState<ActivitySlug | null>(null);
-  const [xpSettings, setXpSettings] = useState<Record<string, number>>({});
+  const [activitySettings, setActivitySettings] = useState<Record<string, ActivityDbSettings>>({});
+  const { state, isMobile } = useSidebar();
+  const isSidebarExpanded = state === "expanded" && !isMobile;
 
   useEffect(() => {
-    getActivityXpSettings().then((data) => {
-      setXpSettings(data);
+    getActivitySettings().then((data) => {
+      setActivitySettings(data);
     });
   }, []);
 
@@ -42,21 +45,38 @@ export default function ActivitiesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background px-6 py-8 relative">
+    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 relative">
       <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-sky-500/5 blur-3xl pointer-events-none" />
       <div className="absolute bottom-20 right-10 h-80 w-80 rounded-full bg-green-500/5 blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="mb-10">
-          <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">
-            Learning Activities
-          </h1>
-          <p className="text-muted-foreground mt-2 text-lg">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              className="h-12 w-12 rounded-2xl border-2 border-border bg-card hover:bg-accent hover:border-sky-500/30 text-foreground shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </Button>
+            <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+              Learning Activities
+            </h1>
+          </div>
+          <p className="text-muted-foreground mt-3 text-lg sm:ml-16">
             Pick a fun educational challenge to level up your brain!
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div
+          className={
+            isSidebarExpanded
+              ? "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+              : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-6"
+          }
+        >
           {kidActivities.map((activity) => {
             const Icon = activity.icon;
             const isAiPowered =
@@ -75,7 +95,7 @@ export default function ActivitiesPage() {
               >
                 {/* Premium Dynamic XP Badge on the corner of the card (overlapping the corner, locked to the card layout during scroll) */}
                 <div className="absolute -top-3 -right-3 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white font-black text-xs px-3.5 py-1.5 rounded-2xl shadow-md hover:scale-105 transition-transform duration-200 cursor-default select-none animate-pulse z-10 transform-gpu">
-                  +{xpSettings[activity.slug] || 150} XP
+                  +{activitySettings[activity.slug]?.xp_reward || 150} XP
                 </div>
 
                 <CardContent className="p-6 flex flex-col h-full justify-between">
@@ -99,30 +119,31 @@ export default function ActivitiesPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-end justify-between mt-6">
-                    <div>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {isAiPowered && (
-                          <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/20 font-bold">
-                            ✨ AI Powered
-                          </Badge>
-                        )}
-                        {activity.badge && (
-                          <Badge variant="secondary" className="font-bold">
-                            {activity.badge}
-                          </Badge>
-                        )}
-                      </div>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                      {isAiPowered && (
+                        <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/20 font-bold shrink-0">
+                          ✨ AI Powered
+                        </Badge>
+                      )}
+                      {activity.badge && (
+                        <Badge variant="secondary" className="font-bold shrink-0">
+                          {activity.badge}
+                        </Badge>
+                      )}
 
-                      {activity.duration && (
-                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground mb-1">
+                      {(activitySettings[activity.slug]?.minutes !== undefined ||
+                        activity.duration) && (
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground shrink-0">
                           <Timer className="w-4 h-4" />
-                          {activity.duration}
+                          {activitySettings[activity.slug]?.minutes !== undefined
+                            ? `${activitySettings[activity.slug].minutes} Mins`
+                            : activity.duration}
                         </div>
                       )}
 
                       {activity.stars && (
-                        <div className="flex gap-1 mb-1">
+                        <div className="flex gap-1 shrink-0">
                           {Array.from({ length: activity.stars }).map((_, index) => (
                             <Star key={index} className="w-4 h-4 fill-sky-500 text-sky-500" />
                           ))}
@@ -130,7 +151,7 @@ export default function ActivitiesPage() {
                       )}
 
                       {activity.users && (
-                        <div className="flex -space-x-2 mt-1">
+                        <div className="flex -space-x-2 shrink-0">
                           {activity.users.map((user) => (
                             <div
                               key={user}
@@ -145,7 +166,7 @@ export default function ActivitiesPage() {
 
                     <Button
                       onClick={() => handleStartActivity(activity.slug, activity.href)}
-                      className={`${activityButtonStyles[activity.color]} rounded-[16px] py-6 px-6 shadow-md hover:shadow-lg font-bold text-white transition-all`}
+                      className={`${activityButtonStyles[activity.color]} w-full rounded-[16px] py-4 px-6 shadow-md hover:shadow-lg font-bold text-white transition-all shrink-0`}
                     >
                       Start Activity
                     </Button>

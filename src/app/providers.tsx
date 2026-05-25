@@ -13,7 +13,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     pathname === "/signup" ||
     pathname === "/forgotpassword" ||
     pathname === "/resetpassword" ||
-    pathname.startsWith("/auth/");
+    pathname?.startsWith("/auth/");
 
   return (
     <Provider store={store}>

@@ -196,10 +196,6 @@ export async function saveMemoryCampaignProgress(
 
     // 2. Upsert reward via SECURITY DEFINER RPC — bypasses RLS UPDATE restriction.
     //    INSERT on first stage for this world, UPDATE (accumulate XP) on subsequent stages.
-    console.log(
-      `[saveMemoryCampaignProgress] Calling RPC — World: ${worldId}, Step: ${stepNumber}, XP: ${actualXp}, Score: ${scoreStr}`
-    );
-
     const { error: rpcError } = await supabase.rpc("upsert_memory_reward", {
       p_user_id: userId,
       p_world_id: worldId,
@@ -212,10 +208,6 @@ export async function saveMemoryCampaignProgress(
       console.error("[saveMemoryCampaignProgress] RPC ERROR:", rpcError);
       return { success: false, error: rpcError.message };
     }
-
-    console.log(
-      `[saveMemoryCampaignProgress] RPC SUCCESS — World ${worldId} Step ${stepNumber} upserted. +${actualXp} XP.`
-    );
 
     // 3. Update profile with new XP and updated streak values
     const newXp = (profile.total_experience_points ?? 0) + actualXp;
@@ -235,10 +227,6 @@ export async function saveMemoryCampaignProgress(
       );
       return { success: false, error: profileUpdateError.message };
     }
-
-    console.log(
-      `[saveMemoryCampaignProgress] Profile updated — Total XP: ${newXp}, Streak: ${currentStreak}, Longest: ${longestStreak}`
-    );
 
     // Revalidate dashboard caches
     revalidatePath("/dashboard/kid");

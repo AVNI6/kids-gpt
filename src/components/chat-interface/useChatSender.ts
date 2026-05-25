@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useAppDispatch } from "@/store/hooks";
 import {
@@ -26,6 +26,7 @@ interface UseChatSenderArgs {
   messages: Message[];
   currentSessionId: string | null;
   isUserLoggedIn: boolean;
+  isLoadingAuth: boolean;
   user: User | null;
   userRole: UserRole | null;
   input: string;
@@ -43,6 +44,7 @@ export function useChatSender({
   messages,
   currentSessionId,
   isUserLoggedIn,
+  isLoadingAuth,
   user,
   userRole,
   input,
@@ -57,13 +59,25 @@ export function useChatSender({
 }: UseChatSenderArgs) {
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const pendingSendRef = useRef(false);
 
-  const sendMessage = async () => {
+  const sendMessage = useCallback(async () => {
+    if (isLoading) return;
+    if (isLoadingAuth) {
+      pendingSendRef.current = true;
+      return;
+    }
+
     const currentInput = input;
     const currentImage = image;
     const currentFileContent = fileContent;
     const currentFileName = fileName;
     let sessionId = currentSessionId;
+    const canPersist = !!user?.id;
+
+    if (!currentInput.trim() && !currentImage && !currentFileContent && !currentFileName) {
+      return;
+    }
 
     const isAttachmentPresent =
       !!currentFileContent || /\[Attachment:.*\.pdf\]/i.test(currentInput || "");
@@ -125,7 +139,7 @@ export function useChatSender({
     let userAttachmentUrl: string | undefined = undefined;
 
     // 1. Upload user attachment if exists (Images or PDFs)
-    if (isUserLoggedIn && (currentImage || currentFileContent)) {
+    if (canPersist && (currentImage || currentFileContent)) {
       try {
         if (currentImage) {
           const res = await fetch(currentImage);
@@ -163,7 +177,7 @@ export function useChatSender({
     }));
 
     // 2. Create session and save user message if it doesn't exist
-    if (!sessionId && isUserLoggedIn) {
+    if (!sessionId && canPersist) {
       try {
         const newSession = await createChatSession(currentInput.slice(0, 30) + "...", user?.id);
         sessionId = newSession.id;
@@ -197,7 +211,7 @@ export function useChatSender({
       } catch (error) {
         console.error("Failed to create session/save message:", error);
       }
-    } else if (sessionId && isUserLoggedIn) {
+    } else if (sessionId && canPersist) {
       const userTokens = Math.round(currentInput.length / 4);
       try {
         await saveChatMessage(
@@ -354,7 +368,7 @@ export function useChatSender({
         const tokens = Math.round(aiResponseContent.length / 4);
 
         // 3. Process database persistence and daily tracking in the background
-        if (sessionId && isUserLoggedIn) {
+        if (sessionId && canPersist) {
           (async () => {
             try {
               await saveChatMessage(
@@ -453,7 +467,7 @@ export function useChatSender({
         setImage(null);
 
         // 3. Process database persistence, file uploads, and daily tracking asynchronously in the background
-        if (sessionId && isUserLoggedIn) {
+        if (sessionId && canPersist) {
           (async () => {
             const finalContent = aiResponseContent;
 
@@ -477,7 +491,6 @@ export function useChatSender({
                 },
                 user?.id
               );
-              console.log("[ChatInterface] Instant DB save completed for message:", aiMessageId);
 
               // Asynchronously compile and upload images in the background
               if (isImageResponse) {
@@ -525,10 +538,6 @@ export function useChatSender({
                       Math.round(100),
                       { isImage: true, durationMs: responseTime },
                       user?.id
-                    );
-                    console.log(
-                      "[ChatInterface] Background image storage completed:",
-                      imgAttachmentUrl
                     );
                   } catch (imgUploadErr) {
                     console.error("[ChatInterface] Background image upload failed:", imgUploadErr);
@@ -578,10 +587,6 @@ export function useChatSender({
                       { isPdf: true, durationMs: responseTime },
                       user?.id
                     );
-                    console.log(
-                      "[ChatInterface] Background PDF storage completed:",
-                      pdfAttachmentUrl
-                    );
                   } catch (pdfUploadErr) {
                     console.error("[ChatInterface] Background PDF upload failed:", pdfUploadErr);
                   }
@@ -603,7 +608,6 @@ export function useChatSender({
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
-        console.log("Request aborted gracefully");
         return;
       }
       console.error("Chat error:", error);
@@ -621,7 +625,41 @@ export function useChatSender({
       setFileName(null);
       setImage(null);
     }
-  };
+  }, [
+    isLoading,
+    isLoadingAuth,
+    input,
+    image,
+    fileContent,
+    fileName,
+    currentSessionId,
+    user,
+    userRole,
+    isUserLoggedIn,
+    messages,
+    dispatch,
+    setInput,
+    setImage,
+    setFileContent,
+    setFileName,
+    justCreatedSessionRef,
+  ]);
+
+  useEffect(() => {
+    if (!pendingSendRef.current) return;
+    if (isLoadingAuth) return;
+
+    if (!input.trim() && !image && !fileContent && !fileName) {
+      pendingSendRef.current = false;
+      return;
+    }
+
+    pendingSendRef.current = false;
+    const timer = setTimeout(() => {
+      void sendMessage();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [isLoadingAuth, input, image, fileContent, fileName, sendMessage]);
 
   return { isLoading, sendMessage };
 }
