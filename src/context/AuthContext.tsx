@@ -125,7 +125,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserRole(null);
       setIsUserLoggedIn(false);
       router.push("/");
-      router.refresh();
     } catch (error) {
       console.error("Error logging out:", error);
     }
