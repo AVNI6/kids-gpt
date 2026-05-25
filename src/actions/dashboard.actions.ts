@@ -493,9 +493,23 @@ export async function saveKidActivityProgress(
     // Parse score percentage if available (e.g. "80%" -> 80)
     let parsedScore: number | null = null;
     if (score) {
-      const match = score.match(/([0-9]+)/);
-      if (match) {
-        parsedScore = parseInt(match[1], 10);
+      const percentMatch = score.match(/([0-9]+)\s*%/);
+      if (percentMatch) {
+        parsedScore = parseInt(percentMatch[1], 10);
+      } else {
+        const ratioMatch = score.match(/([0-9]+)\s*\/\s*([0-9]+)/);
+        if (ratioMatch) {
+          const correct = parseInt(ratioMatch[1], 10);
+          const total = parseInt(ratioMatch[2], 10);
+          if (total > 0) {
+            parsedScore = Math.round((correct / total) * 100);
+          }
+        } else {
+          const match = score.match(/([0-9]+)/);
+          if (match) {
+            parsedScore = parseInt(match[1], 10);
+          }
+        }
       }
     }
 
