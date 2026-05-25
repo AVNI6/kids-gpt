@@ -12,6 +12,7 @@ import { SubscriptionPlanRow } from "@/types/subscription.types";
 
 interface DisplayPlan {
   id?: string;
+  planType: string;
   name: string;
   price: number;
   description: string;
@@ -66,6 +67,7 @@ function mapPlans(dbPlans: SubscriptionPlanRow[]): DisplayPlan[] {
     const meta = planMetadata[planKey] || planMetadata.free;
     return {
       id: p.id,
+      planType: planKey,
       name: p.plan_name || "Unnamed Plan",
       price: p.price ?? 0,
       description: meta.description,
@@ -91,9 +93,22 @@ interface SubscriptionClientProps {
 
 export default function SubscriptionClient({ initialPlans }: SubscriptionClientProps) {
   const [annual, setAnnual] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("Pro");
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(initialPlans.length === 0);
   const [plans, setPlans] = useState<DisplayPlan[]>(() => mapPlans(initialPlans));
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const previousHeight = document.body.style.height;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.height = "100vh";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.height = previousHeight;
+    };
+  }, []);
 
   useEffect(() => {
     if (initialPlans.length > 0) return;
@@ -121,12 +136,12 @@ export default function SubscriptionClient({ initialPlans }: SubscriptionClientP
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-x-hidden">
+    <div className="fixed inset-0 bg-background overflow-hidden">
       <Link
         href="/"
-        className="absolute top-6 right-6 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 border border-slate-200 shadow-sm hover:bg-black/15 transition-colors"
+        className="absolute top-6 right-6 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-sky-50 border border-sky-200 shadow-sm hover:bg-sky-100 transition-colors"
       >
-        <X className="w-5 h-5 text-slate-500" />
+        <X className="w-5 h-5 text-sky-600" />
       </Link>
 
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -135,21 +150,21 @@ export default function SubscriptionClient({ initialPlans }: SubscriptionClientP
         <div className="absolute bottom-16 -right-20 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
       </div>
 
-      <main className="container mx-auto px-6 py-10">
-        <section className="text-center mb-16">
+      <main className="container mx-auto px-6 py-6 h-full flex flex-col overflow-hidden">
+        <section className="text-center mb-6 shrink-0">
           <Badge className="mb-5 rounded-full px-4 py-1 bg-indigo-100 text-indigo-700 border border-indigo-200">
             Flexible Plans for Every Learner
           </Badge>
 
-          <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4 text-foreground">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3 text-foreground">
             Choose Your Adventure
           </h1>
 
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8 leading-relaxed">
+          <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto mb-4 leading-relaxed">
             Unlock the full power of your AI learning companion.
           </p>
 
-          <div className="inline-flex items-center justify-center gap-4 rounded-full border bg-card px-5 py-3 shadow-sm">
+          <div className="inline-flex items-center justify-center gap-4 rounded-full border bg-card px-5 py-2.5 shadow-sm">
             <span className={!annual ? "font-semibold" : "text-muted-foreground"}>Monthly</span>
 
             <Switch checked={annual} onCheckedChange={setAnnual} />
@@ -162,7 +177,7 @@ export default function SubscriptionClient({ initialPlans }: SubscriptionClientP
               </Badge>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground mt-3">
+          <p className="text-sm text-muted-foreground mt-2">
             {annual
               ? "Billed yearly at a discounted rate"
               : "Switch to annual and keep 20% in your pocket"}
@@ -170,11 +185,11 @@ export default function SubscriptionClient({ initialPlans }: SubscriptionClientP
         </section>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
+          <div className="flex-1 flex items-center justify-center py-10 overflow-hidden">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
           </div>
         ) : (
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1 overflow-visible pb-2">
             {displayedPlans.map((plan) => {
               const Icon = plan.icon;
               const isSelected = selectedPlan === plan.name;
@@ -182,19 +197,17 @@ export default function SubscriptionClient({ initialPlans }: SubscriptionClientP
               return (
                 <Card
                   key={plan.name}
-                  className={`relative transition-all duration-300 cursor-pointer group ${
+                  className={`relative transition-all duration-300 cursor-pointer group overflow-visible ${
                     plan.popular ? "border-primary shadow-lg" : ""
                   } ${
                     isSelected
-                      ? "ring-2 ring-primary shadow-xl border-primary"
+                      ? "ring-2 ring-sky-500 ring-offset-2 ring-offset-background shadow-xl border-sky-500"
                       : "hover:shadow-xl hover:border-primary/40"
                   }`}
                   onClick={() => setSelectedPlan(plan.name)}
                 >
                   {isSelected && (
-                    <Badge className="absolute top-3 right-3 bg-emerald-600 text-white">
-                      Selected
-                    </Badge>
+                    <Badge className="absolute top-3 right-3 bg-sky-600 text-white">Selected</Badge>
                   )}
 
                   <CardHeader>
@@ -216,9 +229,13 @@ export default function SubscriptionClient({ initialPlans }: SubscriptionClientP
 
                     <Button
                       className={`w-full mb-4 font-semibold ${
-                        plan.popular
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : "bg-slate-900 text-white hover:bg-slate-800"
+                        isSelected
+                          ? "bg-white text-sky-600 hover:bg-sky-50 border border-sky-200"
+                          : plan.planType === "pro"
+                            ? "bg-sky-600 text-white hover:bg-sky-700"
+                            : plan.popular
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                              : "bg-sky-600 text-white hover:bg-sky-700"
                       }`}
                     >
                       {plan.buttonText}
@@ -227,7 +244,7 @@ export default function SubscriptionClient({ initialPlans }: SubscriptionClientP
                     <ul className="space-y-2 text-sm text-muted-foreground">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5" />
+                          <CheckCircle2 className="w-4 h-4 text-sky-500 mt-0.5" />
                           <span>{feature}</span>
                         </li>
                       ))}
