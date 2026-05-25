@@ -14,12 +14,13 @@ import { setCurrentSessionId } from "@/store/slice/chat.slice";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/components/ui/sidebar";
 import { getSessionManager } from "@/lib/ai/session-manager";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
 
 export default function ChatInterface() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const urlSessionId = searchParams ? searchParams.get("id") : null;
   const messages = useAppSelector((state) => state.chat.messages);
@@ -58,6 +59,7 @@ export default function ChatInterface() {
     messages,
     currentSessionId,
     isUserLoggedIn,
+    isLoadingAuth,
     user,
     userRole,
     input,
@@ -84,6 +86,10 @@ export default function ChatInterface() {
 
   // Sync URL search parameter id to Redux reactively
   useEffect(() => {
+    if (!urlSessionId && currentSessionId) {
+      return;
+    }
+
     if (urlSessionId !== currentSessionId) {
       console.log(
         "[ChatInterface] Syncing Redux currentSessionId to match URL search param:",
@@ -92,6 +98,19 @@ export default function ChatInterface() {
       dispatch(setCurrentSessionId(urlSessionId));
     }
   }, [urlSessionId, currentSessionId, dispatch]);
+
+  // Keep URL in sync when a new session is created client-side
+  useEffect(() => {
+    if (!currentSessionId) return;
+    if (urlSessionId === currentSessionId) return;
+
+    const targetUrl =
+      typeof window !== "undefined" && window.location.pathname.startsWith("/chat/")
+        ? `${window.location.pathname}?id=${currentSessionId}`
+        : `/?id=${currentSessionId}`;
+
+    router.replace(targetUrl);
+  }, [currentSessionId, urlSessionId, router]);
 
   // Abort in-flight requests when component unmounts
   useEffect(() => {
