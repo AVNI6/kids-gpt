@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : String(error);
+const getErrorMessage = (error: Error) => error.message || "Unknown error";
 
-const getErrorStatus = (error: unknown) => {
+const getErrorStatus = (error: Error) => {
   if (typeof error === "object" && error && "status" in error) {
-    const status = (error as { status?: number }).status;
+    const status = (error as Error & { status?: number }).status;
     return typeof status === "number" ? status : undefined;
   }
   return undefined;
@@ -28,6 +27,9 @@ const EDIT_MODELS = [
   "gemini-2.5-flash-image",
 ];
 
+// Global in-memory cache for generated images to improve URL retrieval times, reduce quota usage, and enable instant retrieval for identical prompts
+const imageCache = new Map<string, { image: string; modelUsed: string; message?: string }>();
+
 export async function POST(req: NextRequest) {
   let userPrompt = "";
   let inputImageBase64: string | null = null;
@@ -41,6 +43,23 @@ export async function POST(req: NextRequest) {
 
     if (!userPrompt) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
+    }
+
+    const cacheKey = userPrompt
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+
+    // Skip cache for edit requests
+    if (!isEditRequest && imageCache.has(cacheKey)) {
+      const cached = imageCache.get(cacheKey)!;
+      console.log(`[Image API] Cache hit for prompt: "${userPrompt}"`);
+      return NextResponse.json({
+        type: "image",
+        image: cached.image,
+        message: cached.message,
+        modelUsed: `${cached.modelUsed}-cached`,
+      });
     }
 
     const keys: string[] = [];
@@ -134,9 +153,25 @@ export async function POST(req: NextRequest) {
 
           if (resultImageBase64) {
             console.log(`[Image API] Success with ${modelName} using Key index ${keyIndex}`);
+            const base64Url = `data:${resultMimeType};base64,${resultImageBase64}`;
+
+            if (!isEditRequest) {
+              imageCache.set(cacheKey, {
+                image: base64Url,
+                modelUsed: modelName,
+                message: textResponse || undefined,
+              });
+
+              // Limit cache to 100 entries to prevent memory leaks
+              if (imageCache.size > 100) {
+                const firstKey = imageCache.keys().next().value;
+                if (firstKey) imageCache.delete(firstKey);
+              }
+            }
+
             return NextResponse.json({
               type: "image",
-              image: `data:${resultMimeType};base64,${resultImageBase64}`,
+              image: base64Url,
               message: textResponse || undefined,
               modelUsed: modelName,
             });
@@ -144,9 +179,10 @@ export async function POST(req: NextRequest) {
 
           console.warn(`[Image API] ${modelName} returned no image, trying next key...`);
           continue;
-        } catch (modelError: unknown) {
-          const errorMsg = getErrorMessage(modelError);
-          const status = getErrorStatus(modelError);
+        } catch (modelError) {
+          const error = modelError instanceof Error ? modelError : new Error(String(modelError));
+          const errorMsg = getErrorMessage(error);
+          const status = getErrorStatus(error);
           console.error(
             `[Image API] Error with ${modelName} using Key index ${keyIndex}:`,
             errorMsg
@@ -179,16 +215,32 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await fallbackResponse.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString("base64");
 
+    const fallbackBase64Url = `data:image/jpeg;base64,${base64}`;
+
+    if (!isEditRequest) {
+      imageCache.set(cacheKey, {
+        image: fallbackBase64Url,
+        modelUsed: "pollinations-fallback",
+      });
+
+      // Limit cache to 100 entries
+      if (imageCache.size > 100) {
+        const firstKey = imageCache.keys().next().value;
+        if (firstKey) imageCache.delete(firstKey);
+      }
+    }
+
     return NextResponse.json({
       type: "image",
-      image: `data:image/jpeg;base64,${base64}`,
+      image: fallbackBase64Url,
       modelUsed: "pollinations-fallback",
     });
-  } catch (fatalError: unknown) {
-    console.error("Fatal Image Generation Error:", fatalError);
+  } catch (fatalError) {
+    const error = fatalError instanceof Error ? fatalError : new Error(String(fatalError));
+    console.error("Fatal Image Generation Error:", error);
     return NextResponse.json({
       type: "text",
-      message: `I'm having trouble creating that image right now. Error: ${getErrorMessage(fatalError)}`,
+      message: `I'm having trouble creating that image right now. Error: ${getErrorMessage(error)}`,
     });
   }
 }

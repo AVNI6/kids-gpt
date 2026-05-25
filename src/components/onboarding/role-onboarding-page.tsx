@@ -49,9 +49,10 @@ export function RoleOnboardingPage({ role }: Props) {
 
       // Redirect to the role-specific onboarding page
       router.push(`/onboarding/${selected}`);
-    } catch (err: unknown) {
-      console.error(err);
-      const message = err instanceof Error ? err.message : "An unexpected error occurred";
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error(error);
+      const message = error.message || "An unexpected error occurred";
       setStatusMessage("Failed to set role: " + message);
     } finally {
       setIsSubmitting(false);

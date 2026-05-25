@@ -7,14 +7,14 @@ interface LogEntry {
   level: LogLevel;
   module: string;
   message: string;
-  data?: Record<string, unknown>;
+  data?: import("@/types/json").JsonObject;
 }
 
 function createLogEntry(
   level: LogLevel,
   module: string,
   message: string,
-  data?: Record<string, unknown>
+  data?: import("@/types/json").JsonObject
 ): LogEntry {
   return {
     timestamp: new Date().toISOString(),
@@ -32,21 +32,21 @@ function formatLog(entry: LogEntry): string {
 }
 
 export const aiLogger = {
-  debug(module: string, message: string, data?: Record<string, unknown>) {
+  debug(module: string, message: string, data?: import("@/types/json").JsonObject) {
     if (process.env.NODE_ENV === "development") {
       console.log(formatLog(createLogEntry("debug", module, message, data)));
     }
   },
 
-  info(module: string, message: string, data?: Record<string, unknown>) {
+  info(module: string, message: string, data?: import("@/types/json").JsonObject) {
     console.log(formatLog(createLogEntry("info", module, message, data)));
   },
 
-  warn(module: string, message: string, data?: Record<string, unknown>) {
+  warn(module: string, message: string, data?: import("@/types/json").JsonObject) {
     console.warn(formatLog(createLogEntry("warn", module, message, data)));
   },
 
-  error(module: string, message: string, data?: Record<string, unknown>) {
+  error(module: string, message: string, data?: import("@/types/json").JsonObject) {
     console.error(formatLog(createLogEntry("error", module, message, data)));
   },
 };

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ChatRequestBody } from "@/types/chat.types";
-import { generateAIResponse } from "@/lib/ai/model-orchestrator";
+import { generateAIResponse, generateAIResponseStream } from "@/lib/ai/model-orchestrator";
 import { buildChatPrompt, buildPdfPrompt } from "@/lib/ai/prompts";
 import { buildGeminiContents } from "@/lib/ai/context-window";
 import { aiLogger } from "@/lib/ai/logger";
@@ -49,22 +49,22 @@ export async function POST(req: NextRequest) {
 
     const generationConfig = isPdfRequest ? { responseMimeType: "application/json" } : undefined;
 
-    // Delegate to the model fallback orchestrator
-    const response = await generateAIResponse({
-      contents,
-      systemPrompt: activePrompt,
-      generationConfig,
-      signal: req.signal,
-    });
-
-    if (!response.success) {
-      return NextResponse.json(
-        { error: response.error || "Failed to generate AI response" },
-        { status: 500 }
-      );
-    }
-
     if (isPdfRequest) {
+      // Delegate to the model fallback orchestrator for structured JSON
+      const response = await generateAIResponse({
+        contents,
+        systemPrompt: activePrompt,
+        generationConfig,
+        signal: req.signal,
+      });
+
+      if (!response.success) {
+        return NextResponse.json(
+          { error: response.error || "Failed to generate AI response" },
+          { status: 500 }
+        );
+      }
+
       try {
         const parsed = extractAndParseJSON(response.content);
         return NextResponse.json({
@@ -110,18 +110,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      type: "text",
-      message: response.content,
-      isPdfRequest: false,
-      usage: {
-        promptTokenCount: response.usage.promptTokens,
-        candidatesTokenCount: response.usage.completionTokens,
-        totalTokenCount: response.usage.totalTokens,
+    // Standard chat responses stream in real-time
+    const stream = await generateAIResponseStream({
+      contents,
+      systemPrompt: activePrompt,
+      signal: req.signal,
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
       },
-      provider: response.provider,
-      model: response.model,
-      fallbackUsed: response.fallbackUsed,
     });
   } catch (error) {
     aiLogger.error("ChatAPI", "Fatal Chat API Error", {

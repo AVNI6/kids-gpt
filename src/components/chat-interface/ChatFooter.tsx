@@ -64,20 +64,43 @@ export default function ChatFooter({
       setFileContent(null);
       setFileName(null);
     } else if (file.type === "application/pdf") {
+      const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
+      if (file.size > MAX_PDF_SIZE) {
+        alert("The PDF file is too large. Please upload a file smaller than 10MB.");
+        return;
+      }
+
       setIsParsing(true);
       try {
         const getPDFText = (await import("react-pdftotext")).default;
-        const text = await getPDFText(file);
+
+        // Wrap parsing with a 20-second timeout to prevent deadlocks
+        const parsePromise = getPDFText(file);
+        const timeoutPromise = new Promise<string>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Timeout (20s) exceeded while parsing the PDF.")),
+            20000
+          )
+        );
+
+        const text = await Promise.race([parsePromise, timeoutPromise]);
         setImage(null);
         setFileName(file.name);
         setFileContent(text);
       } catch (e) {
         console.error("PDF parsing failed:", e);
-        alert("Failed to read PDF text. Please try another file.");
+        const errorMsg = e instanceof Error ? e.message : "Failed to read PDF text.";
+        alert(`${errorMsg} Please try another file.`);
       } finally {
         setIsParsing(false);
       }
     } else {
+      const MAX_TEXT_SIZE = 5 * 1024 * 1024; // 5MB
+      if (file.size > MAX_TEXT_SIZE) {
+        alert("The file is too large. Please upload a file smaller than 5MB.");
+        return;
+      }
+
       // Basic text file support
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -190,21 +213,17 @@ export default function ChatFooter({
             <div className="flex items-center">
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger
-                  render={
-                    <button
-                      type="button"
-                      suppressHydrationWarning={true}
-                      className={cn(
-                        "ml-2 h-10 w-10 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-muted shrink-0",
-                        isPopoverOpen && "bg-muted"
-                      )}
-                    >
-                      <Plus
-                        className={cn("w-5 h-5 transition-transform", isPopoverOpen && "rotate-45")}
-                      />
-                    </button>
-                  }
-                />
+                  type="button"
+                  suppressHydrationWarning={true}
+                  className={cn(
+                    "ml-2 h-10 w-10 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-muted shrink-0",
+                    isPopoverOpen && "bg-muted"
+                  )}
+                >
+                  <Plus
+                    className={cn("w-5 h-5 transition-transform", isPopoverOpen && "rotate-45")}
+                  />
+                </PopoverTrigger>
                 <PopoverContent
                   side="top"
                   align="start"
@@ -214,7 +233,6 @@ export default function ChatFooter({
                   <button
                     onClick={() => {
                       mediaInputRef.current?.click();
-                      setIsPopoverOpen(false);
                     }}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
                   >
@@ -227,7 +245,6 @@ export default function ChatFooter({
                   <button
                     onClick={() => {
                       fileInputRef.current?.click();
-                      setIsPopoverOpen(false);
                     }}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
                   >

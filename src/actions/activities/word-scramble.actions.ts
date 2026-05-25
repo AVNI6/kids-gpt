@@ -275,13 +275,19 @@ Before responding, internally verify that the list contains exactly ${clampedCou
       words: processedWords,
     };
 
+    const parsedContent = wordScrambleSchema.safeParse(finalContent);
+    if (!parsedContent.success) {
+      console.error("Generated word scramble content failed validation:", parsedContent.error);
+      return { error: "Generated scramble content failed validation." };
+    }
+
     // 5. Save the generated activity structure to 'generated_activities' table in Supabase
     const { data: insertedRow, error: insertError } = await supabase
       .from("generated_activities")
       .insert({
         kid_user_id: user.id,
         activity_type: "word_scramble",
-        content: finalContent,
+        content: parsedContent.data,
       })
       .select("id")
       .single();

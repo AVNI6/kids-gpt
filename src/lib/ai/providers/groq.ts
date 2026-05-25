@@ -29,6 +29,14 @@ interface GroqResponse {
   };
 }
 
+interface GroqRequestBody {
+  model: string;
+  messages: GroqMessage[];
+  temperature: number;
+  max_tokens: number;
+  response_format?: { type: string };
+}
+
 /**
  * Convert Gemini-format contents to OpenAI-compatible messages.
  * Maps text and image_url parameters natively to prevent silent multimodal data loss.
@@ -94,7 +102,7 @@ export async function callGroq(
   messages.push(...convertToGroqMessages(contents));
 
   try {
-    const body: Record<string, unknown> = {
+    const body: GroqRequestBody = {
       model,
       messages,
       temperature: 0.7,
@@ -141,7 +149,7 @@ export async function callGroq(
     }
 
     aiLogger.info("Groq", `Success with ${model}`, {
-      tokens: data.usage?.total_tokens,
+      tokens: data.usage?.total_tokens ?? 0,
     });
 
     return {

@@ -68,7 +68,7 @@ export interface GeneratedMaterialRow {
   type: "pdf" | "image";
   format: string;
   file_url: string;
-  metadata: Record<string, unknown> | null;
+  metadata: import("@/types/json").JsonObject | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

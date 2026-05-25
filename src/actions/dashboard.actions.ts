@@ -463,7 +463,7 @@ export async function saveKidActivityProgress(
       rpcData &&
       typeof rpcData === "object" &&
       "success" in rpcData &&
-      (rpcData as Record<string, unknown>).success === true
+      (rpcData as import("@/types/json").JsonObject).success === true
     ) {
       revalidatePath("/dashboard/kid");
       revalidatePath("/dashboard/parent");

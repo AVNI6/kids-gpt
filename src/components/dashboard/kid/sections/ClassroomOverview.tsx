@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Megaphone, Calendar, ChevronRight } from "lucide-react";
+import { GraduationCap, Megaphone } from "lucide-react";
 
 export function ClassroomOverviewSkeleton() {
   return (
