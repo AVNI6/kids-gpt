@@ -15,12 +15,12 @@ export default async function KidStreakBanner() {
   const greetingName = stats.first_name ?? "there";
 
   return (
-    <Card className="overflow-hidden rounded-[32px] border-amber-200/70 bg-linear-to-br from-amber-50 via-yellow-50 to-white shadow-sm">
+    <Card className="overflow-hidden rounded-[32px] border-amber-200/70 bg-linear-to-br from-amber-50 via-yellow-50 to-white shadow-sm dark:border-slate-800 dark:bg-linear-to-br dark:from-slate-900 dark:to-slate-950">
       <CardContent className="flex flex-col gap-6 p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
           <Avatar
             size="lg"
-            className="h-16 w-16 rounded-3xl border-2 border-white shadow-lg shadow-amber-200/60"
+            className="h-16 w-16 rounded-3xl border-2 border-white shadow-lg shadow-amber-200/60 dark:border-slate-800 dark:shadow-none"
           >
             <AvatarImage src={stats.avatar_url ?? undefined} />
             <AvatarFallback className="rounded-3xl bg-linear-to-br from-amber-400 to-yellow-500 text-white font-black">
@@ -28,43 +28,48 @@ export default async function KidStreakBanner() {
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            <p className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl dark:text-slate-550 dark:text-slate-50">
               Hi, {greetingName}! 👋
             </p>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base dark:text-slate-400">
               You&apos;re doing great. Keep learning, keep exploring, and protect your streak.
             </p>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:w-85">
-          <div className="rounded-[28px] border border-amber-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-amber-600">
+          <div className="rounded-[28px] border border-amber-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-amber-600 dark:text-amber-400">
               <Flame className="h-4 w-4" />
               Learning streak
             </div>
             <div className="mt-3 flex items-end gap-2">
-              <span className="text-4xl font-black leading-none text-slate-950">
+              <span className="text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
                 {stats.current_streak}
               </span>
-              <span className="pb-1 text-sm font-semibold text-slate-500">days straight!</span>
+              <span className="pb-1 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                days straight!
+              </span>
             </div>
             <div className="mt-3 flex items-center gap-2">
-              <Badge className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700 hover:bg-amber-100">
+              <Badge className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-400 dark:hover:bg-amber-950/60">
                 Today&apos;s streak
               </Badge>
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-amber-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
-            <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+          <div className="rounded-[28px] border border-amber-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
+            <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
               Experience points
             </div>
-            <div className="mt-3 text-4xl font-black leading-none text-slate-950">
+            <div className="mt-3 text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
               {stats.total_experience_points}
             </div>
-            <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
-              <Badge variant="secondary" className="rounded-full px-2.5 py-1">
+            <div className="mt-3 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <Badge
+                variant="secondary"
+                className="rounded-full px-2.5 py-1 dark:bg-slate-850 dark:text-slate-300"
+              >
                 Longest: {stats.longest_streak} days
               </Badge>
             </div>

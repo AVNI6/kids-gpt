@@ -139,6 +139,7 @@ export default function ActivitiesPage() {
                           {activitySettings[activity.slug]?.minutes !== undefined
                             ? `${activitySettings[activity.slug].minutes} Mins`
                             : activity.duration}
+                          -+{" "}
                         </div>
                       )}
 

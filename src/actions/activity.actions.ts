@@ -4,6 +4,7 @@ export * from "./activities/word-scramble.actions";
 export * from "./activities/math-challenge.actions";
 export * from "./activities/science-lab.actions";
 export * from "./activities/logic-puzzle.actions";
+export * from "./activities/jigsawpuzzle.actions";
 export * from "./activities/match-pairs.actions";
 export * from "./activities/memory-match.actions";
 export * from "./activities/xp-settings.actions";

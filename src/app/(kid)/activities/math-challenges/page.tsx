@@ -241,7 +241,7 @@ export default function MathChallengesPage({
               </h2>
             </div>
             <CardContent className="p-6 text-center flex-1 flex items-center justify-center min-h-0 overflow-y-auto bg-blue-500/5">
-              <div className="text-4xl md:text-5xl font-black text-foreground tracking-widest font-mono">
+              <div className="text-3xl md:text-4xl font-black text-foreground tracking-widest font-mono">
                 {eq.question.replace("?", selected !== null ? selected.toString() : "?")}
               </div>
             </CardContent>
