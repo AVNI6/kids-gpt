@@ -55,6 +55,14 @@ export const ACTIVITY_TOPICS_PRESETS: Record<ActivitySlug, TopicPreset[]> = {
     { emoji: "🗺️", name: "Treasure Clues", category: "Deduction", difficulty: "Medium" },
     { emoji: "🔺", name: "Shape Logic", category: "Geometry", difficulty: "Easy" },
   ],
+  "jigsaw-puzzle": [
+    { emoji: "🧩", name: "Ocean Mosaic", category: "Nature", difficulty: "Easy" },
+    { emoji: "🌆", name: "City Lights", category: "Places", difficulty: "Medium" },
+    { emoji: "🚀", name: "Space Explorer", category: "Adventure", difficulty: "Medium" },
+    { emoji: "🌌", name: "Cosmic Vortex", category: "Art", difficulty: "Hard" },
+    { emoji: "🎨", name: "Dreamscape Portrait", category: "Creative", difficulty: "Easy" },
+    { emoji: "✨", name: "Mystery Scene", category: "Fun", difficulty: "Expert" },
+  ],
   flashcards: [
     { emoji: "🗺️", name: "Countries", category: "Geography", difficulty: "Easy" },
     { emoji: "🏛️", name: "Capitals", category: "Geography", difficulty: "Medium" },
@@ -162,6 +170,25 @@ export const ACTIVITY_UI_CONFIGS: Record<ActivitySlug, ActivityUIConfig> = {
       bg: "bg-sky-500/10",
       text: "text-sky-600",
       glow: "bg-sky-500/5",
+    },
+  },
+  "jigsaw-puzzle": {
+    title: "Create Jigsaw Puzzle! 🧩",
+    subtitle:
+      "Choose a scene or type your own topic to build a beautiful puzzle with smart image slicing.",
+    placeholder: "e.g., Space Cat, Neon City, Ocean Sunset 🌅",
+    loadingWording: [
+      "🧩 Slicing the artwork into playful puzzle pieces...",
+      "🎨 Matching the best scene for your adventure...",
+      "✨ Preparing a polished puzzle studio layout...",
+      "🚀 Calibrating drag-and-drop puzzle behavior...",
+    ],
+    colorTheme: {
+      primary: "bg-orange-600 hover:bg-orange-700 focus:ring-orange-500",
+      border: "border-orange-500/20 hover:border-orange-500/40 hover:bg-orange-500/5",
+      bg: "bg-orange-500/10",
+      text: "text-orange-600",
+      glow: "bg-orange-500/5",
     },
   },
   flashcards: {

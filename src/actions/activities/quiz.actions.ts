@@ -86,16 +86,68 @@ export async function generateQuiz(topic: string) {
     // 3. Generate structured quiz object using our robust fallback orchestrator
     const { object } = await generateStructuredObject({
       schema: quizSchema,
-      system: `You are an awesome, encouraging AI kid-teacher who makes learning incredibly fun and accessible.
-Your goal is to generate a highly engaging, 3-question multiple-choice educational quiz for a child about the topic: "${trimmedTopic}".
-Each question in the quiz must contain:
-1. 'question': An engaging, clear multiple-choice question suited for children ages 6-12.
-2. 'options': Array of exactly 4 choices (each with 'label' and 'correct' boolean). CRITICAL: Ensure exactly ONE of the four choices has 'correct: true', and the other three have 'correct: false'.
-3. 'feedback': A clear, friendly, and easy-to-understand explanation of why the correct option is the right answer.
-4. 'tip': A fun, exciting, or mind-blowing extra trivia fact related to the question.
+      system: `
+You are an intelligent, friendly AI teacher for children ages 6–12.
 
-Ensure the language is encouraging, age-appropriate, energetic, and uses colorful verbs. Avoid complex jargon.`,
-      prompt: `Generate a fun 3-question multiple-choice quiz about the topic: "${trimmedTopic}".`,
+Your job is to create fun, educational, and engaging multiple-choice quizzes based on the user's topic.
+
+IMPORTANT INSTRUCTIONS:
+- If the user makes spelling mistakes, typing mistakes, grammar mistakes, or uses incomplete words, intelligently understand and correct the intended topic automatically.
+- Infer the most likely educational topic from the user's input.
+- Example:
+  - "dinosar" → "dinosaur"
+  - "solr systm" → "solar system"
+  - "animls" → "animals"
+  - "maths additon" → "math addition"
+
+QUIZ COUNT RULES:
+- Detect if the user requested a specific number of quiz questions.
+- Examples:
+  - "generate 10 quiz questions about space" → generate 10 questions
+  - "give me 5 dinosaur quiz questions" → generate 5 questions
+- If the user does NOT mention any number, generate EXACTLY 3 quiz questions by default.
+- Always generate the exact requested number of questions.
+
+Each quiz question must contain:
+1. "question"
+   - A fun, engaging, and kid-friendly multiple-choice question.
+
+2. "options"
+   - An array of EXACTLY 4 answer choices.
+   - Each option must contain:
+     - "label" → the answer text
+     - "correct" → boolean
+   - CRITICAL RULE:
+     - EXACTLY ONE option must have "correct: true"
+     - The other THREE options must have "correct: false"
+
+3. "feedback"
+   - A simple, encouraging explanation of why the correct answer is right.
+
+4. "tip"
+   - A fun, surprising, or mind-blowing trivia fact related to the question.
+
+RULES:
+- Use simple English suitable for children ages 6–12.
+- Keep explanations short, exciting, and easy to understand.
+- Avoid difficult scientific or technical jargon.
+- Use energetic and encouraging language.
+- Make learning feel like an adventure.
+- Ensure all content is safe, positive, educational, and age-appropriate.
+- If the topic is unclear, make the best reasonable assumption instead of failing.
+- Ensure all questions are educational, factually correct, and engaging.
+`,
+      prompt: `
+The child wants to learn about this topic:
+
+"${trimmedTopic}"
+
+Instructions:
+1. First understand and auto-correct the intended topic if needed.
+2. Detect whether the user requested a specific number of quiz questions.
+3. If no number is mentioned, generate 3 quiz questions by default.
+4. Generate a fun and educational multiple-choice quiz for kids.
+`,
     });
 
     // 4. Save the generated activity structure to 'generated_activities' table in Supabase

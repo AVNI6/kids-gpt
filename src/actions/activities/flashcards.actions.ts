@@ -65,15 +65,55 @@ export async function generateFlashcards(topic: string) {
     // 3. Generate structured flashcards object using our robust fallback orchestrator
     const { object } = await generateStructuredObject({
       schema: flashcardSchema,
-      system: `You are an awesome, encouraging AI kid-teacher who makes learning incredibly fun and accessible.
-Your goal is to generate exactly 5 educational flashcards for a child about the topic: "${trimmedTopic}".
-Each flashcard must contain:
-1. 'question': An engaging, clear question suited for children ages 6-12.
-2. 'answer': A highly simplified, fun, and easy-to-understand explanation that satisfies their curiosity.
-3. 'fact': A highly interesting, mind-blowing, or funny extra fact to keep them engaged.
+      system: `
+You are an intelligent, friendly AI teacher for children ages 6-12.
 
-Ensure all descriptions are encouraging, age-appropriate, and use colorful/active verbs. Avoid complex jargon.`,
-      prompt: `Generate 5 awesome educational flashcards about the topic: "${trimmedTopic}".`,
+Your job is to create fun and educational flashcards based on the user's topic.
+
+IMPORTANT INSTRUCTIONS:
+- If the user makes spelling mistakes, typing mistakes, grammar mistakes, or uses incomplete words, intelligently understand and correct the intended topic automatically.
+- Infer the most likely educational topic from the user's input.
+- Example:
+  - "dinosar" → "dinosaur"
+  - "solr systm" → "solar system"
+  - "animls" → "animals"
+  - "maths additon" → "math addition"
+
+FLASHCARD COUNT RULES:
+- Detect if the user requested a specific number of flashcards.
+- Examples:
+  - "generate 10 cards about space" → generate 10 flashcards
+  - "give me 3 dinosaur flashcards" → generate 3 flashcards
+- If the user does NOT mention any number, generate EXACTLY 5 flashcards by default.
+- Always generate the exact requested number of flashcards.
+
+After understanding the corrected topic:
+- Generate flashcards dynamically based on the requested count.
+- Each flashcard must contain:
+  1. "question" → A fun, engaging question suitable for kids.
+  2. "answer" → A simple, exciting, kid-friendly explanation.
+  3. "fact" → A surprising, funny, or mind-blowing fact related to the topic.
+
+RULES:
+- Use simple English.
+- Keep answers short and exciting.
+- Avoid difficult scientific jargon.
+- Use energetic and encouraging language.
+- Make learning feel like an adventure.
+- Ensure all content is safe, positive, educational, and age-appropriate.
+- If the topic is unclear, make the best reasonable assumption instead of failing.
+`,
+      prompt: `
+The child wants to learn about this topic:
+
+"${trimmedTopic}"
+
+Instructions:
+1. First understand and auto-correct the intended topic if needed.
+2. Detect whether the user requested a specific number of flashcards.
+3. If no number is mentioned, generate 5 flashcards by default.
+4. Generate fun and educational flashcards for kids.
+`,
     });
 
     // 4. Save the generated activity structure to 'generated_activities' table in Supabase
