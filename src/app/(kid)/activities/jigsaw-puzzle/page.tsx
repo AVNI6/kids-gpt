@@ -1,0 +1,465 @@
+"use client";
+
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import {
+  Gamepad2,
+  Brain,
+  Loader2,
+  ArrowLeft,
+  Play,
+  LayoutGrid,
+  RotateCcw,
+  HelpCircle,
+} from "lucide-react";
+import Link from "next/link";
+import { Difficulty, PuzzlePiece } from "@/types/puzzle";
+import { generateAndShufflePieces } from "@/lib/puzzle/shuffle";
+import { preloadImage } from "@/lib/puzzle/image-utils";
+import PuzzleBoard from "./components/PuzzleBoard";
+import PuzzleTile from "./components/PuzzleTile";
+import DifficultyControls from "./components/DifficultyControls";
+import HintOverlay from "./components/HintOverlay";
+import VictoryModal from "./components/VictoryModal";
+import ThemeSelector from "./components/ThemeSelector";
+import { Skeleton } from "@/components/ui/skeleton";
+import { APP_ROUTES } from "@/constant/AppRoutes";
+import { JIGSAW_THEMES } from "@/constant/JigsawThemes";
+
+const DEFAULT_IMAGE = JIGSAW_THEMES[0].url;
+
+export default function JigsawPuzzlePage() {
+  const [mounted, setMounted] = useState(false);
+  const [gameState, setGameState] = useState<"setup" | "playing">("setup");
+  const [difficulty, setDifficulty] = useState<Difficulty>(3);
+  const [imageUrl, setImageUrl] = useState<string>(DEFAULT_IMAGE);
+  const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const [boardWidth, setBoardWidth] = useState(0);
+
+  // Game Event States
+  const [isSolved, setIsSolved] = useState(false);
+  const [isHintOpen, setIsHintOpen] = useState(false);
+  const [isClaimed, setIsClaimed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Keep track of user-uploaded Object URLs to prevent memory leaks
+  const [objectUrls, setObjectUrls] = useState<string[]>([]);
+
+  // Calculate XP earned dynamically based on grid difficulty (scaled from base 120 XP)
+  const xpEarned = useMemo(() => {
+    const base = 120;
+    if (difficulty === 2) return Math.round(base * 0.6); // 72 XP
+    if (difficulty === 4) return Math.round(base * 1.2); // 144 XP
+    if (difficulty === 5) return Math.round(base * 1.5); // 180 XP
+    return base; // 3x3 = 120 XP
+  }, [difficulty]);
+
+  const objectUrlsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    objectUrlsRef.current = objectUrls;
+  }, [objectUrls]);
+
+  // Clean up object URLs to prevent memory leaks on unmount
+  useEffect(() => {
+    return () => {
+      objectUrlsRef.current.forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          console.warn("Failed to revoke object URL on unmount:", err);
+        }
+      });
+    };
+  }, []);
+
+  // Core Puzzle Initialization
+  const initPuzzle = useCallback((size: Difficulty) => {
+    const shuffled = generateAndShufflePieces(size);
+    setPieces(shuffled);
+    setIsSolved(false);
+    setIsClaimed(false);
+  }, []);
+
+  // Preloads images when swapping
+  const handleImageLoadAndInit = useCallback(
+    async (url: string, size: Difficulty) => {
+      setIsLoading(true);
+
+      const loadSuccess = await preloadImage(url);
+      if (loadSuccess) {
+        setImageUrl(url);
+        initPuzzle(size);
+      } else {
+        const fallbackSuccess = await preloadImage(DEFAULT_IMAGE);
+        if (fallbackSuccess) {
+          setImageUrl(DEFAULT_IMAGE);
+          initPuzzle(size);
+        }
+      }
+      setIsLoading(false);
+    },
+    [initPuzzle]
+  );
+
+  // Initial loader
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMounted(true);
+      handleImageLoadAndInit(DEFAULT_IMAGE, difficulty);
+    }, 0);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleDifficultyChange = (newDifficulty: Difficulty) => {
+    setDifficulty(newDifficulty);
+    initPuzzle(newDifficulty);
+  };
+
+  const handleReset = () => {
+    initPuzzle(difficulty);
+  };
+
+  const handleImageUploaded = async (file: File) => {
+    setIsLoading(true);
+
+    // Revoke previous URLs directly to prevent memory leaks
+    objectUrls.forEach((url) => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.warn("Failed to revoke object URL on image change:", err);
+      }
+    });
+
+    const newUrl = URL.createObjectURL(file);
+    setObjectUrls([newUrl]);
+
+    await handleImageLoadAndInit(newUrl, difficulty);
+  };
+
+  const handlePresetSelect = async (url: string) => {
+    if (url === imageUrl) return;
+    await handleImageLoadAndInit(url, difficulty);
+  };
+
+  // Drag-and-drop snapping locks
+  const handlePieceSnap = useCallback((pieceId: string) => {
+    setPieces((prevPieces) => {
+      const updated = prevPieces.map((p) => (p.id === pieceId ? { ...p, isPlaced: true } : p));
+
+      // Play snappy feedback sound (tactile UI standard)
+      try {
+        const audio = new Audio(
+          "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA=="
+        );
+        audio.volume = 0.35;
+        audio.play().catch(() => {});
+      } catch {}
+
+      // Win state detection: all pieces placed
+      const solved = updated.every((p) => p.isPlaced);
+      if (solved) {
+        setIsSolved(true);
+      }
+
+      return updated;
+    });
+  }, []);
+
+  const handleStartPuzzle = () => {
+    initPuzzle(difficulty);
+    setGameState("playing");
+  };
+
+  const handleBackToSetup = () => {
+    setGameState("setup");
+    setIsSolved(false);
+    setIsClaimed(false);
+  };
+
+  const unplacedPieces = useMemo(() => {
+    return pieces.filter((p) => !p.isPlaced);
+  }, [pieces]);
+
+  const placedCount = useMemo(() => {
+    return pieces.filter((p) => p.isPlaced).length;
+  }, [pieces]);
+
+  const progressPercent = useMemo(() => {
+    if (pieces.length === 0) return 0;
+    return Math.round((placedCount / pieces.length) * 100);
+  }, [pieces, placedCount]);
+
+  const activeThemeName = useMemo(() => {
+    return JIGSAW_THEMES.find((p) => p.url === imageUrl)?.name || "Custom Upload";
+  }, [imageUrl]);
+
+  if (!mounted) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-slate-950 gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-sky-500" />
+        <p className="text-sm font-bold text-slate-500 animate-pulse">Starting engine...</p>
+      </div>
+    );
+  }
+
+  return (
+    <main
+      className="min-h-screen w-full bg-gradient-to-b from-[#0B0F19] via-[#0E1528] to-[#0A0D17] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 text-slate-100 flex flex-col gap-6 items-center justify-start overflow-visible"
+      style={{ overflow: "visible" }}
+    >
+      {/* ─── SCREEN 1: Setup Workspace ─────────────────────────────────────── */}
+      {gameState === "setup" && (
+        <div className="w-full max-w-7xl flex flex-col gap-6 items-center">
+          {/* Header Card */}
+          <div className="w-full bg-slate-900/60 border border-slate-800/80 backdrop-blur-md p-6 rounded-[28px] shadow-2xl flex flex-col items-center gap-3 select-none relative overflow-hidden">
+            <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-32 h-32 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+
+            <div className="flex items-center justify-between w-full relative z-10">
+              <Link
+                href={APP_ROUTES.Activities}
+                className="inline-flex items-center justify-center p-2.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-300 hover:text-white transition-all"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+              <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs font-black uppercase tracking-wider px-3.5 py-1.5 rounded-2xl flex items-center gap-1.5 shadow-md">
+                <Gamepad2 className="size-4 animate-pulse" />
+                Drag & Drop Jigsaw
+              </span>
+              <div className="w-10 h-10" />
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-none mt-2 text-center drop-shadow-md">
+              Jigsaw Puzzle Engine 🧩
+            </h1>
+            <p className="text-sm font-semibold text-slate-400 max-w-xl text-center">
+              Choose your theme and puzzle difficulty. Click &quot;Start Puzzle&quot; to break the
+              picture and drag the classic jigsaw pieces back into place!
+            </p>
+          </div>
+
+          {/* Setup Configuration Workspace */}
+          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Pane: Preset Themes */}
+            <div className="lg:col-span-7 w-full">
+              <ThemeSelector
+                selectedUrl={imageUrl}
+                onThemeSelect={handlePresetSelect}
+                isLoading={isLoading}
+              />
+            </div>
+
+            {/* Right Pane: Settings & Launch Trigger */}
+            <div className="lg:col-span-5 flex flex-col gap-6 w-full">
+              <DifficultyControls
+                difficulty={difficulty}
+                onDifficultyChange={handleDifficultyChange}
+                onReset={handleReset}
+                onImageSelected={handleImageUploaded}
+                onShowHint={() => setIsHintOpen(true)}
+                isHintDisabled={true} // Hint disabled in setup screen
+                isLoading={isLoading}
+              />
+
+              {/* Start Puzzle Primary Button */}
+              <button
+                onClick={handleStartPuzzle}
+                disabled={isLoading}
+                className="w-full py-4.5 rounded-[22px] bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-500 hover:brightness-110 active:scale-[0.98] text-white font-black text-lg tracking-wide shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <Loader2 className="size-6 animate-spin" />
+                ) : (
+                  <>
+                    <Play className="size-6 fill-white" />
+                    Start Puzzle
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── SCREEN 2: Play Drag-and-Drop Workspace ─────────────────────────── */}
+      {gameState === "playing" && (
+        <div
+          className="w-full max-w-7xl flex flex-col gap-6 overflow-visible"
+          style={{ overflow: "visible" }}
+        >
+          {/* Top Panel Actions & HUD */}
+          <div className="w-full bg-slate-900/60 border border-slate-800/80 backdrop-blur-md p-5 rounded-[28px] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 select-none relative overflow-hidden">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBackToSetup}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-300 hover:text-white transition-all font-bold text-sm"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Setup
+              </button>
+
+              <div className="h-8 w-px bg-slate-800 hidden md:block" />
+
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-slate-500 uppercase tracking-widest leading-none">
+                  Theme
+                </span>
+                <span className="text-sm font-black text-white">{activeThemeName}</span>
+              </div>
+            </div>
+
+            {/* Live Progress Bar HUD */}
+            <div className="flex items-center gap-4 w-full md:w-auto max-w-sm flex-1 md:justify-end">
+              <div className="flex flex-col flex-1 max-w-[200px]">
+                <div className="flex justify-between items-end mb-1">
+                  <span className="text-[10px] font-black text-sky-400 uppercase tracking-widest leading-none">
+                    Placed
+                  </span>
+                  <span className="text-xs font-black text-white">
+                    {placedCount} / {pieces.length} ({progressPercent}%)
+                  </span>
+                </div>
+                <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800/50">
+                  <div
+                    className="h-full bg-gradient-to-r from-sky-400 to-emerald-400 rounded-full transition-all duration-300"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Utility Tools */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsHintOpen(true)}
+                  className="p-3 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-sky-400 hover:text-sky-300 transition-all shadow-md"
+                  title="Show image guide hint"
+                >
+                  <HelpCircle className="size-5" />
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="p-3 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-emerald-400 hover:text-emerald-300 transition-all shadow-md"
+                  title="Reshuffle pieces"
+                >
+                  <RotateCcw className="size-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Play Arena */}
+          <div
+            className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start overflow-visible"
+            style={{ overflow: "visible" }}
+          >
+            {/* LOBBY / LEFT COLUMN: The Jigsaw Board (Span 7) */}
+            <div
+              className="lg:col-span-7 flex flex-col items-center justify-center w-full overflow-visible"
+              style={{ overflow: "visible" }}
+            >
+              <div
+                className="relative w-full aspect-square flex items-center justify-center bg-slate-950/20 border border-slate-800/30 rounded-[36px] p-6 overflow-visible"
+                style={{ overflow: "visible" }}
+              >
+                {/* Subtle back glowing accent */}
+                <div className="absolute inset-0 bg-radial-gradient from-sky-500/5 to-transparent pointer-events-none rounded-[36px]" />
+
+                <PuzzleBoard
+                  pieces={pieces}
+                  gridSize={difficulty}
+                  imageUrl={imageUrl}
+                  isSolved={isSolved}
+                  isLoading={isLoading}
+                  boardRef={boardRef}
+                  onSnap={handlePieceSnap}
+                  onResize={setBoardWidth}
+                />
+
+                <HintOverlay
+                  imageUrl={imageUrl}
+                  isOpen={isHintOpen}
+                  onClose={() => setIsHintOpen(false)}
+                />
+              </div>
+            </div>
+
+            {/* PIECE TRAY / RIGHT COLUMN: Spawning Ground for Pieces (Span 5) */}
+            <div
+              className="lg:col-span-5 flex flex-col gap-4 w-full overflow-visible"
+              style={{ overflow: "visible" }}
+            >
+              <div
+                className="relative w-full h-[320px] lg:h-[600px] border border-slate-800/80 bg-slate-900/40 rounded-[32px] p-6 shadow-2xl backdrop-blur-md overflow-visible flex flex-col select-none"
+                style={{ overflow: "visible" }}
+              >
+                {/* Decorative header */}
+                <div className="flex items-center justify-between mb-4 shrink-0 relative z-30">
+                  <span className="text-xs font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <LayoutGrid className="size-4 text-indigo-400" />
+                    Piece Tray
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500">
+                    Drag elements onto matching board positions
+                  </span>
+                </div>
+
+                {/* Grid backdrop */}
+                <div
+                  className="absolute inset-0 rounded-[32px] opacity-[0.03] pointer-events-none"
+                  style={{
+                    backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+                    backgroundSize: "20px 20px",
+                  }}
+                />
+
+                {/* Spawning Ground overlay context - overflow:visible so dragging pieces can leave */}
+                <div
+                  className="relative flex-1 w-full h-full overflow-visible rounded-2xl"
+                  style={{ overflow: "visible" }}
+                >
+                  {isLoading ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                      <Loader2 className="size-8 animate-spin text-indigo-400" />
+                      <Skeleton className="h-4 w-28 bg-slate-800/80" />
+                    </div>
+                  ) : unplacedPieces.length === 0 ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-500 font-bold text-sm">
+                      <Brain className="size-10 text-emerald-500 animate-bounce" />
+                      <span>All pieces placed! 🎉</span>
+                    </div>
+                  ) : (
+                    unplacedPieces.map((piece) => (
+                      <PuzzleTile
+                        key={piece.id}
+                        piece={piece}
+                        gridSize={difficulty}
+                        tileSize={boardWidth > 0 ? boardWidth / difficulty : 120}
+                        imageUrl={imageUrl}
+                        boardRef={boardRef}
+                        onSnap={handlePieceSnap}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Celebratory Victory and Reward Modal */}
+      <VictoryModal
+        isOpen={isSolved}
+        onReplay={handleReset}
+        xpEarned={xpEarned}
+        activityId={JIGSAW_THEMES.find((p) => p.url === imageUrl)?.id || "custom-upload"}
+        gridSize={difficulty}
+        isClaimed={isClaimed}
+        onClaimSuccess={() => setIsClaimed(true)}
+      />
+    </main>
+  );
+}

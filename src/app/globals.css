@@ -4,6 +4,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --color-sky-blue: #00a6f4;
+  --color-hover-sky-blue: #4192b8;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -49,6 +54,10 @@
 }
 
 :root {
+  color-scheme: light;
+  --font-sans:
+    "Plus Jakarta Sans", Lexend, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -67,6 +76,18 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
+  --theme-brand: #0284c7;
+  /* sky-600 */
+  --theme-brand-dark: #0369a1;
+  /* sky-700 */
+  --theme-border-light: #e0f2fe;
+  /* sky-100 */
+  --theme-bg-light: #f0f9ff;
+  /* sky-50 */
+  --theme-accent-green: #22c55e;
+  /* green-500 */
+  --theme-text-secondary: #475569;
+  /* slate-600 */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -84,6 +105,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -119,12 +141,24 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border: outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
   html {
-    @apply font-sans;
+    font-family: var(--font-sans);
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+
+  button {
+    cursor: pointer;
   }
 }
