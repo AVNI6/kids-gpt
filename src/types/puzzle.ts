@@ -42,7 +42,6 @@ export type PieceTabVariants = {
 
 /** A single puzzle tile. */
 export interface PuzzlePiece {
-  /** Stable unique identifier — never changes on reshuffle. */
   id: string;
   /** Logical index of where this piece belongs (0 … gridSize²-1). */
   correctIndex: number;

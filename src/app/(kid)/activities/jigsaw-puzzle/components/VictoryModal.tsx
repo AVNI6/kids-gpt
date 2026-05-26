@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { Trophy, RefreshCw, Sparkles, Loader2 } from "lucide-react";
+import React, { useEffect, useRef } from "react";
+import { Trophy, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { claimJigsawXp } from "@/actions/activities/jigsawpuzzle.actions";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 interface VictoryModalProps {
   isOpen: boolean;
@@ -87,31 +89,40 @@ export default function VictoryModal({
   isClaimed,
   onClaimSuccess,
 }: VictoryModalProps) {
-  const [isClaiming, setIsClaiming] = useState(false);
+  const router = useRouter();
+  const hasClaimed = useRef(false);
 
-  const handleClaimXp = async () => {
-    if (isClaimed || isClaiming) return;
-
-    setIsClaiming(true);
-    try {
-      const result = await claimJigsawXp(activityId, gridSize);
-
-      if (result.success) {
-        toast.success("Awesome Job! 🎉", {
-          description: `You've earned +${xpEarned} Experience Points!`,
-        });
-        onClaimSuccess();
-      } else {
-        toast.error("Claim Failed", {
-          description: result.error || "Could not record your reward. Please try again.",
-        });
-      }
-    } catch {
-      toast.error("Oops! Something went wrong while claiming your rewards.");
-    } finally {
-      setIsClaiming(false);
+  // Reset claim tracking flag when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      hasClaimed.current = false;
     }
-  };
+  }, [isOpen]);
+
+  // Background Auto-Claim XP Trigger
+  useEffect(() => {
+    if (isOpen && !isClaimed && !hasClaimed.current) {
+      hasClaimed.current = true;
+
+      const triggerAutoClaim = async () => {
+        try {
+          const result = await claimJigsawXp(activityId, gridSize);
+          if (result.success) {
+            toast.success("Awesome Job! 🎉", {
+              description: `+${xpEarned} Experience Points automatically awarded to your kid profile!`,
+            });
+            onClaimSuccess();
+          } else {
+            console.error("Jigsaw auto-claim returned failure status:", result.error);
+          }
+        } catch (err) {
+          console.error("Jigsaw auto-claim unhandled exception:", err);
+        }
+      };
+
+      triggerAutoClaim();
+    }
+  }, [isOpen, isClaimed, activityId, gridSize, xpEarned, onClaimSuccess]);
 
   return (
     <Dialog
@@ -174,24 +185,12 @@ export default function VictoryModal({
               {/* Actions Grid */}
               <div className="flex flex-col gap-3 w-full">
                 <Button
-                  onClick={handleClaimXp}
-                  disabled={isClaimed || isClaiming}
-                  className={`w-full py-6 rounded-2xl font-black text-lg transition-all duration-300 shadow-md cursor-pointer ${
-                    isClaimed
-                      ? "bg-emerald-500 hover:bg-emerald-600 text-white cursor-default scale-100"
-                      : "bg-amber-500 hover:bg-amber-600 text-white hover:scale-102"
-                  }`}
+                  onClick={() => {
+                    router.push(APP_ROUTES.Activities);
+                  }}
+                  className="w-full py-6 rounded-2xl font-black text-lg bg-emerald-500 hover:bg-emerald-600 text-white hover:scale-102 transition-all duration-300 shadow-md cursor-pointer"
                 >
-                  {isClaiming ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className="size-5 animate-spin" />
-                      Claiming...
-                    </span>
-                  ) : isClaimed ? (
-                    "XP Claimed! ✅"
-                  ) : (
-                    "Claim My Reward!"
-                  )}
+                  Continue
                 </Button>
 
                 <Button

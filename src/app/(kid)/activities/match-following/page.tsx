@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Award,
   RotateCcw,
-  Loader2,
   Sparkles,
   CheckCircle2,
   XCircle,
@@ -84,8 +83,8 @@ export default function MatchFollowingPage({
   const [showScorecard, setShowScorecard] = useState(false);
   const [showAnswers, setShowAnswers] = useState(false);
   const [incorrectItems, setIncorrectItems] = useState<string[]>([]);
-  const [isSavingProgress, setIsSavingProgress] = useState(false);
   const [xpReward, setXpReward] = useState<number>(90);
+  const hasClaimed = useRef(false);
 
   // Play a cute synthesizer sound effect using the Web Audio API
   const playSound = (type: "pop" | "connect" | "disconnect" | "success" | "error" | "complete") => {
@@ -168,6 +167,42 @@ export default function MatchFollowingPage({
     getActivityXp("match-following").then(setXpReward);
   }, []);
 
+  // Background Auto-Claiming Logic
+  useEffect(() => {
+    if (showScorecard && !hasClaimed.current) {
+      hasClaimed.current = true;
+      const autoClaim = async () => {
+        const correctCount = connections.filter((c) => c.leftId === c.rightId).length;
+        const accuracy = Math.round((correctCount / pairs.length) * 100);
+        const scoreStr = `${accuracy}% Accuracy`;
+        const scaledXp = Math.round((correctCount / pairs.length) * xpReward);
+
+        try {
+          const slug = matchTitle
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+
+          const res = await saveKidActivityProgress(
+            slug || "match-following",
+            scaledXp,
+            matchTitle,
+            scoreStr
+          );
+
+          if (res.success) {
+            toast.success("Progress Saved! 🎉", {
+              description: `+${scaledXp} XP automatically earned!`,
+            });
+          }
+        } catch (err) {
+          console.error("Auto-claim error:", err);
+        }
+      };
+      autoClaim();
+    }
+  }, [showScorecard, connections, pairs.length, xpReward, matchTitle]);
+
   // Compute positions of anchor dots relative to the parent board container
   const recalculateCoords = () => {
     if (!boardRef.current) return;
@@ -207,6 +242,7 @@ export default function MatchFollowingPage({
     setShowScorecard(false);
     setShowAnswers(false);
     setIncorrectItems([]);
+    hasClaimed.current = false;
   };
 
   // Scramble cards on mount
@@ -394,44 +430,8 @@ export default function MatchFollowingPage({
   };
 
   // Save progress and claim XP points
-  const handleFinishMission = async () => {
-    setIsSavingProgress(true);
-    const correctCount = connections.filter((c) => c.leftId === c.rightId).length;
-    const accuracy = Math.round((correctCount / pairs.length) * 100);
-    const scoreStr = `${accuracy}% Accuracy`;
-
-    // Proportional calculation of XP reward strictly based on score
-    const scaledXp = Math.round((correctCount / pairs.length) * xpReward);
-
-    try {
-      const slug = matchTitle
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-
-      const res = await saveKidActivityProgress(
-        slug || "match-following",
-        scaledXp,
-        matchTitle,
-        scoreStr
-      );
-
-      if (res.success) {
-        toast.success("Progress Saved!", {
-          description: `+${scaledXp} XP earned! Streak updated! 🎉`,
-        });
-        router.push(APP_ROUTES.Activities);
-      } else {
-        toast.error("Failed to save progress", {
-          description: res.error || "Please try again later.",
-        });
-      }
-    } catch (err) {
-      console.error("Error saving match following progress:", err);
-      toast.error("Error saving progress");
-    } finally {
-      setIsSavingProgress(false);
-    }
+  const handleFinishMission = () => {
+    router.push(APP_ROUTES.Activities);
   };
 
   const getBezierPath = (startX: number, startY: number, endX: number, endY: number) => {
@@ -571,16 +571,9 @@ export default function MatchFollowingPage({
               <div className="mt-8 flex flex-col sm:flex-row gap-3 w-full max-w-md relative z-10">
                 <Button
                   onClick={handleFinishMission}
-                  disabled={isSavingProgress}
                   className="flex-1 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-bold py-6 shadow-md transform hover:-translate-y-0.5 active:translate-y-px text-sm"
                 >
-                  {isSavingProgress ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-                    </>
-                  ) : (
-                    "Claim Rewards 🎉"
-                  )}
+                  Continue 🎉
                 </Button>
                 <Button
                   onClick={resetGame}

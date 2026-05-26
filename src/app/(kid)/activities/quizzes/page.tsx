@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CheckCircle2, Timer, ArrowLeft, Star, Award } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -64,9 +64,9 @@ export default function QuizzesPage({
   const [selected, setSelected] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(600);
   const [correctCount, setCorrectCount] = useState(0);
-  const [isSavingProgress, setIsSavingProgress] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(120);
+  const hasClaimed = useRef(false);
 
   useEffect(() => {
     getActivityXp("quizzes").then(setXpReward);
@@ -94,6 +94,38 @@ export default function QuizzesPage({
     return () => clearInterval(timer);
   }, [timeLeft, quizCompleted]);
 
+  // Background Auto-Claiming Logic
+  useEffect(() => {
+    if (quizCompleted && !hasClaimed.current) {
+      hasClaimed.current = true;
+      const autoClaim = async () => {
+        const finalScorePercent = Math.round((correctCount / safeQuestions.length) * 100);
+        const scoreStr = `${finalScorePercent}%`;
+        try {
+          const slug = quizTitle
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+
+          const res = await saveKidActivityProgress(
+            slug || "quizzes",
+            xpReward,
+            quizTitle,
+            scoreStr
+          );
+          if (res.success) {
+            toast.success("Progress Saved! 🎉", {
+              description: `+${xpReward} XP automatically earned!`,
+            });
+          }
+        } catch (err) {
+          console.error("Auto-claim error:", err);
+        }
+      };
+      autoClaim();
+    }
+  }, [quizCompleted, correctCount, safeQuestions.length, quizTitle, xpReward]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -119,35 +151,8 @@ export default function QuizzesPage({
     }
   };
 
-  const handleFinishMission = async () => {
-    setIsSavingProgress(true);
-    const finalScorePercent = Math.round((correctCount / safeQuestions.length) * 100);
-    const scoreStr = `${finalScorePercent}%`;
-
-    try {
-      const slug = quizTitle
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-
-      const res = await saveKidActivityProgress(slug || "quizzes", xpReward, quizTitle, scoreStr);
-
-      if (res.success) {
-        toast.success("Progress Saved!", {
-          description: `+${xpReward} XP earned! streak updated! 🎉`,
-        });
-        router.push(APP_ROUTES.Activities);
-      } else {
-        toast.error("Failed to save progress", {
-          description: res.error || "Please try again later.",
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Error saving progress");
-    } finally {
-      setIsSavingProgress(false);
-    }
+  const handleFinishMission = () => {
+    router.push(APP_ROUTES.Activities);
   };
 
   const handleReset = () => {
@@ -156,6 +161,7 @@ export default function QuizzesPage({
     setTimeLeft(600);
     setCorrectCount(0);
     setQuizCompleted(false);
+    hasClaimed.current = false;
   };
 
   if (timeLeft === 0) {
@@ -264,10 +270,9 @@ export default function QuizzesPage({
                 </Button>
                 <Button
                   onClick={handleFinishMission}
-                  disabled={isSavingProgress}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold py-5 shadow-md active:translate-y-px"
                 >
-                  {isSavingProgress ? "Saving..." : "Claim Rewards 🎉"}
+                  Continue 🎉
                 </Button>
               </div>
             </Card>

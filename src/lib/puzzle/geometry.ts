@@ -52,7 +52,7 @@ const maskCache = new Map<string, string>();
  * Returns a string of SVG path commands (no "M" prefix).
  *
  * KEY FIXES vs original:
- *  1. TAB_RATIO 0.32 → 0.20  (drives actual physical size — biggest fix)
+ *  1. TAB_RATIO 0.32 → 0.20  (drives actual physical size)
  *  2. Neck t-range 0.35/0.65 → 0.38/0.62  (tighter neck, longer flat shoulders)
  *  3. Neck pinch H*0.45 → H*0.10  (creates real narrow neck, not a blob)
  *  4. Head peak H*1.02 → H*0.78  (mushroom shape, not overshot circle)

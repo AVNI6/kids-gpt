@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   RefreshCcw,
   CheckCircle2,
@@ -58,12 +58,41 @@ export default function FlashcardsPage({
   const [masteredIds, setMasteredIds] = useState<number[]>([]);
   const [reviewIds, setReviewIds] = useState<number[]>([]);
   const [deckCompleted, setDeckCompleted] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [xpReward, setXpReward] = useState<number>(100);
+  const hasClaimed = useRef(false);
 
   useEffect(() => {
     getActivityXp("flashcards").then(setXpReward);
   }, []);
+
+  useEffect(() => {
+    if (deckCompleted && !hasClaimed.current) {
+      hasClaimed.current = true;
+
+      const autoClaim = async () => {
+        try {
+          const correctCount = masteredIds.length;
+          const scorePercent =
+            flashcards.length > 0 ? Math.round((correctCount / flashcards.length) * 100) : 0;
+          const scoreStr = `${scorePercent}% Mastered (${correctCount}/${flashcards.length})`;
+
+          const res = await saveKidActivityProgress("flashcards", xpReward, deckTitle, scoreStr);
+
+          if (res.success) {
+            toast.success("Deck Completed! 🎉", {
+              description: `+${Math.round((xpReward * scorePercent) / 100)} XP automatically awarded to your kid profile!`,
+            });
+          } else {
+            console.error("Auto-claim failed:", res.error);
+          }
+        } catch (err) {
+          console.error("Auto-claim exception:", err);
+        }
+      };
+
+      autoClaim();
+    }
+  }, [deckCompleted, masteredIds.length, flashcards.length, xpReward, deckTitle]);
 
   const card = flashcards[currentCard] || flashcards[0];
   const progress = ((currentCard + 1) / flashcards.length) * 100;
@@ -99,34 +128,11 @@ export default function FlashcardsPage({
     setMasteredIds([]);
     setReviewIds([]);
     setDeckCompleted(false);
+    hasClaimed.current = false;
   };
 
-  const handleFinish = async () => {
-    setIsSaving(true);
-    try {
-      const correctCount = masteredIds.length;
-      const scorePercent =
-        flashcards.length > 0 ? Math.round((correctCount / flashcards.length) * 100) : 0;
-      const scoreStr = `${scorePercent}% Mastered (${correctCount}/${flashcards.length})`;
-
-      const res = await saveKidActivityProgress("flashcards", xpReward, deckTitle, scoreStr);
-
-      if (res.success) {
-        toast.success("Deck Completed! 🎉", {
-          description: `+${Math.round((xpReward * scorePercent) / 100)} XP awarded to your kid profile!`,
-        });
-        router.push(APP_ROUTES.Activities);
-      } else {
-        toast.error("Failed to save progress", {
-          description: res.error || "Please try again later.",
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Error saving progress");
-    } finally {
-      setIsSaving(false);
-    }
+  const handleFinish = () => {
+    router.push(APP_ROUTES.Activities);
   };
 
   return (
@@ -197,10 +203,9 @@ export default function FlashcardsPage({
                 </Button>
                 <Button
                   onClick={handleFinish}
-                  disabled={isSaving}
                   className="flex-1 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold py-5 shadow-md active:translate-y-px"
                 >
-                  {isSaving ? "Saving..." : "Finish Mission 🎉"}
+                  Continue 🎉
                 </Button>
               </div>
             </Card>
