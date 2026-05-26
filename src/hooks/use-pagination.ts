@@ -22,7 +22,7 @@ type UsePaginationResult<T> = {
 
 export function usePagination<T>(
   items: T[],
-  { pageSize = 8, initialPage = 1 }: UsePaginationOptions = {}
+  { pageSize = 9, initialPage = 1 }: UsePaginationOptions = {}
 ): UsePaginationResult<T> {
   const [page, setPageState] = React.useState(initialPage);
 

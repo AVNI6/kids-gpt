@@ -28,6 +28,7 @@ import type {
   LinkedChildProfile,
   ChildDetailsResult,
   ChildSafetyAndUsageResult,
+  ParentActivityItem,
 } from "@/types/dashboard.types";
 import { usePagination } from "@/hooks/use-pagination";
 
@@ -35,15 +36,6 @@ interface SearchHistoryItem {
   id: string;
   title: string | null;
   created_at: string | null;
-}
-
-interface ParentActivityItem {
-  id: string;
-  rewards_amount: number;
-  description: string | null;
-  created_at: string | null;
-  source_type: string;
-  score: number | null;
 }
 import {
   linkByEmail,
@@ -217,52 +209,67 @@ export default function MyChildrenManagement({
       memorySum = 0;
 
     activities.forEach((act) => {
+      const slug = act.activity_settings?.slug || "";
       const desc = (act.description || "").toLowerCase();
-      const scoreMatch = (act.description || "").match(/Score:\s*(\d+)/i);
-      const scoreVal = scoreMatch ? parseInt(scoreMatch[1], 10) : 100; // default to 100 if completed without score
+      const scoreVal = act.score !== null && act.score !== undefined ? act.score : 100;
 
       if (
-        desc.includes("math") ||
-        desc.includes("arithmetic") ||
-        desc.includes("number") ||
-        desc.includes("fraction")
+        slug === "math-challenges" ||
+        (!slug &&
+          (desc.includes("math") ||
+            desc.includes("arithmetic") ||
+            desc.includes("number") ||
+            desc.includes("fraction")))
       ) {
         mathCount++;
         mathSum += scoreVal;
       } else if (
-        desc.includes("scramble") ||
-        desc.includes("word") ||
-        desc.includes("spell") ||
-        desc.includes("english") ||
-        desc.includes("vocabulary")
+        slug === "word-scrambles" ||
+        (!slug &&
+          (desc.includes("scramble") ||
+            desc.includes("word") ||
+            desc.includes("spell") ||
+            desc.includes("english") ||
+            desc.includes("vocabulary")))
       ) {
         wordCount++;
         wordSum += scoreVal;
       } else if (
-        desc.includes("science") ||
-        desc.includes("lab") ||
-        desc.includes("experiment") ||
-        desc.includes("volcano") ||
-        desc.includes("magnet") ||
-        desc.includes("planet") ||
-        desc.includes("space")
+        slug === "science-lab" ||
+        (!slug &&
+          (desc.includes("science") ||
+            desc.includes("lab") ||
+            desc.includes("experiment") ||
+            desc.includes("volcano") ||
+            desc.includes("magnet") ||
+            desc.includes("planet") ||
+            desc.includes("space")))
       ) {
         scienceCount++;
         scienceSum += scoreVal;
       } else if (
-        desc.includes("puzzle") ||
-        desc.includes("logic") ||
-        desc.includes("maze") ||
-        desc.includes("coding") ||
-        desc.includes("programming")
+        slug === "logic-puzzles" ||
+        (!slug &&
+          (desc.includes("puzzle") ||
+            desc.includes("logic") ||
+            desc.includes("maze") ||
+            desc.includes("coding") ||
+            desc.includes("programming")))
       ) {
         logicCount++;
         logicSum += scoreVal;
       } else if (
-        desc.includes("memory") ||
-        desc.includes("match") ||
-        desc.includes("pair") ||
-        desc.includes("flashcard")
+        slug === "memory-match" ||
+        slug === "match-following" ||
+        slug === "flashcards" ||
+        slug === "quizzes" ||
+        slug === "jigsaw-puzzle" ||
+        slug === "color-mixer" ||
+        (!slug &&
+          (desc.includes("memory") ||
+            desc.includes("match") ||
+            desc.includes("pair") ||
+            desc.includes("flashcard")))
       ) {
         memoryCount++;
         memorySum += scoreVal;
@@ -373,68 +380,58 @@ export default function MyChildrenManagement({
         </div>
 
         {/* Dynamic Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex gap-6 items-start">
                 <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100/30 flex items-center justify-center shrink-0">
                   <Clock className="w-6 h-6 text-sky-550" />
                 </div>
+                <div>
+                  <h3 className="text-slate-500 dark:text-slate-450 font-bold text-xs uppercase tracking-wider mb-1">
+                    Time Spent Today
+                  </h3>
+                  <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
+                    {isLoadingDetails ? "..." : dailyTimeStr}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-slate-500 dark:text-slate-450 font-bold text-xs uppercase tracking-wider mb-1">
-                Time Spent Today
-              </h3>
-              <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
-                {isLoadingDetails ? "..." : dailyTimeStr}
-              </p>
             </CardContent>
           </Card>
 
           <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex gap-6 items-start">
                 <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100/30 flex items-center justify-center shrink-0">
                   <Clock className="w-6 h-6 text-sky-550 animate-pulse" />
                 </div>
+                <div>
+                  <h3 className="text-slate-500 dark:text-slate-455 font-bold text-xs uppercase tracking-wider mb-1">
+                    Weekly Spent Time
+                  </h3>
+                  <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
+                    {isLoadingDetails ? "..." : weeklyTimeStr}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-slate-500 dark:text-slate-455 font-bold text-xs uppercase tracking-wider mb-1">
-                Weekly Spent Time
-              </h3>
-              <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
-                {isLoadingDetails ? "..." : weeklyTimeStr}
-              </p>
             </CardContent>
           </Card>
 
           <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex gap-6 items-start">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100/30 flex items-center justify-center shrink-0">
                   <BookOpen className="w-6 h-6 text-emerald-500" />
                 </div>
-              </div>
-              <h3 className="text-slate-505 dark:text-slate-450 font-bold text-xs uppercase tracking-wider mb-1">
-                Completed Activities
-              </h3>
-              <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
-                {isLoadingDetails ? "..." : totalCompleted}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-100/30 flex items-center justify-center shrink-0">
-                  <Target className="w-6 h-6 text-amber-500" />
+                <div>
+                  <h3 className="text-slate-505 dark:text-slate-450 font-bold text-xs uppercase tracking-wider mb-1">
+                    Completed Activities
+                  </h3>
+                  <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
+                    {isLoadingDetails ? "..." : totalCompleted}
+                  </p>
                 </div>
               </div>
-              <h3 className="text-slate-505 dark:text-slate-450 font-bold text-xs uppercase tracking-wider mb-1">
-                Quiz Accuracy
-              </h3>
-              <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
-                {isLoadingDetails ? "..." : `${accuracy}%`}
-              </p>
             </CardContent>
           </Card>
         </div>
@@ -606,7 +603,13 @@ export default function MyChildrenManagement({
                         const scoreMatch = act.description
                           ? act.description.match(/Score:\s*(\d+)/i)
                           : null;
-                        const isHigh = scoreMatch ? parseInt(scoreMatch[1], 10) >= 80 : true;
+                        const scoreVal =
+                          act.score !== null && act.score !== undefined
+                            ? act.score
+                            : scoreMatch
+                              ? parseInt(scoreMatch[1], 10)
+                              : 100;
+                        const isHigh = scoreVal >= 80;
 
                         return (
                           <Card
@@ -626,10 +629,19 @@ export default function MyChildrenManagement({
                                 </div>
                                 <div className="min-w-0">
                                   <p className="text-sm font-extrabold text-slate-850 dark:text-slate-200 truncate leading-snug">
-                                    {act.description
-                                      ? act.description.split(" (Score:")[0]
-                                      : "Completed Quiz"}
+                                    {act.activity_settings?.title ||
+                                      (act.description
+                                        ? act.description.split(" (Score:")[0]
+                                        : "Completed Activity")}
                                   </p>
+                                  {act.description &&
+                                    act.description !==
+                                      (act.activity_settings?.title ||
+                                        act.description.split(" (Score:")[0]) && (
+                                      <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                                        {act.description}
+                                      </p>
+                                    )}
                                   <span className="text-[10px] font-semibold text-slate-450 dark:text-slate-500 flex items-center gap-1.5 mt-1.5">
                                     <Clock className="w-3.5 h-3.5 shrink-0" />
                                     {act.created_at
@@ -648,7 +660,17 @@ export default function MyChildrenManagement({
                                 <Badge className="bg-sky-50 hover:bg-sky-100 text-sky-700 dark:bg-sky-955/30 dark:text-sky-300 font-extrabold px-2 py-0.5 rounded text-[10px] border border-sky-100/50 dark:border-sky-900/30">
                                   +{act.rewards_amount || 20} XP
                                 </Badge>
-                                {scoreMatch ? (
+                                {act.score !== null && act.score !== undefined ? (
+                                  <span
+                                    className={`text-xs font-black ${
+                                      isHigh
+                                        ? "text-emerald-600 dark:text-emerald-400"
+                                        : "text-amber-500"
+                                    }`}
+                                  >
+                                    Score: {act.score}%
+                                  </span>
+                                ) : scoreMatch ? (
                                   <span
                                     className={`text-xs font-black ${
                                       isHigh

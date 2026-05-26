@@ -88,52 +88,67 @@ export default function LearningProgress({
     memorySum = 0;
 
   timeline.forEach((item) => {
+    const slug = item.activity_settings?.slug || "";
     const desc = (item.description ?? "").toLowerCase();
-    const scoreMatch = (item.description ?? "").match(/Score:\s*(\d+)/i);
-    const scoreVal = scoreMatch ? parseInt(scoreMatch[1], 10) : 100; // default to 100 if completed without score
+    const scoreVal = item.score !== null && item.score !== undefined ? item.score : 100;
 
     if (
-      desc.includes("math") ||
-      desc.includes("arithmetic") ||
-      desc.includes("number") ||
-      desc.includes("fraction")
+      slug === "math-challenges" ||
+      (!slug &&
+        (desc.includes("math") ||
+          desc.includes("arithmetic") ||
+          desc.includes("number") ||
+          desc.includes("fraction")))
     ) {
       mathCount++;
       mathSum += scoreVal;
     } else if (
-      desc.includes("scramble") ||
-      desc.includes("word") ||
-      desc.includes("spell") ||
-      desc.includes("english") ||
-      desc.includes("vocabulary")
+      slug === "word-scrambles" ||
+      (!slug &&
+        (desc.includes("scramble") ||
+          desc.includes("word") ||
+          desc.includes("spell") ||
+          desc.includes("english") ||
+          desc.includes("vocabulary")))
     ) {
       wordCount++;
       wordSum += scoreVal;
     } else if (
-      desc.includes("science") ||
-      desc.includes("lab") ||
-      desc.includes("experiment") ||
-      desc.includes("volcano") ||
-      desc.includes("magnet") ||
-      desc.includes("planet") ||
-      desc.includes("space")
+      slug === "science-lab" ||
+      (!slug &&
+        (desc.includes("science") ||
+          desc.includes("lab") ||
+          desc.includes("experiment") ||
+          desc.includes("volcano") ||
+          desc.includes("magnet") ||
+          desc.includes("planet") ||
+          desc.includes("space")))
     ) {
       scienceCount++;
       scienceSum += scoreVal;
     } else if (
-      desc.includes("puzzle") ||
-      desc.includes("logic") ||
-      desc.includes("maze") ||
-      desc.includes("coding") ||
-      desc.includes("programming")
+      slug === "logic-puzzles" ||
+      (!slug &&
+        (desc.includes("puzzle") ||
+          desc.includes("logic") ||
+          desc.includes("maze") ||
+          desc.includes("coding") ||
+          desc.includes("programming")))
     ) {
       logicCount++;
       logicSum += scoreVal;
     } else if (
-      desc.includes("memory") ||
-      desc.includes("match") ||
-      desc.includes("pair") ||
-      desc.includes("flashcard")
+      slug === "memory-match" ||
+      slug === "match-following" ||
+      slug === "flashcards" ||
+      slug === "quizzes" ||
+      slug === "jigsaw-puzzle" ||
+      slug === "color-mixer" ||
+      (!slug &&
+        (desc.includes("memory") ||
+          desc.includes("match") ||
+          desc.includes("pair") ||
+          desc.includes("flashcard")))
     ) {
       memoryCount++;
       memorySum += scoreVal;
