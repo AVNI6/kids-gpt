@@ -14,8 +14,9 @@ interface SidebarNavigationProps {
   pathname: string;
   isMobile: boolean;
   toggleSidebar: () => void;
-  onNewChat: () => void;
+  onNewChat: (e?: React.MouseEvent) => void;
   onSearchOpen: (open: boolean) => void;
+  newChatHref: string;
 }
 
 export default function SidebarNavigation({
@@ -27,9 +28,10 @@ export default function SidebarNavigation({
   toggleSidebar,
   onNewChat,
   onSearchOpen,
+  newChatHref,
 }: SidebarNavigationProps) {
   const navItems = [
-    { label: "New Chat", icon: PlusCircle, href: "/", onClick: onNewChat },
+    { label: "New Chat", icon: PlusCircle, href: newChatHref, onClick: onNewChat },
     { label: "Search Chats", icon: Search },
     ...(userRole === "kid"
       ? [{ label: "Activities", icon: ClipboardList, href: "/activities" }]

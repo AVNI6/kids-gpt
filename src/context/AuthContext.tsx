@@ -102,12 +102,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      // Optimistically clear all local auth states instantly first
       setUser(null);
       setUserProfile(null);
       setUserRole(null);
       setIsUserLoggedIn(false);
       router.push("/");
+
+      // Sign out Supabase in the background
+      await supabase.auth.signOut();
     } catch (error) {
       console.error("Error logging out:", error);
     }

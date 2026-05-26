@@ -105,8 +105,9 @@ export function useChatPdf({
       if (currentSessionId && isUserLoggedIn && !message.pdfContent?.startsWith("http")) {
         if (user?.id) {
           const storageFileName = getUniqueStoragePath(user.id, currentSessionId, "pdf", "pdf");
-          uploadFileToStorage(blob, storageFileName, user.id)
-            .then(async (storageUrl) => {
+          const uploadWithRetry = async (retries = 3, delay = 1000) => {
+            try {
+              const storageUrl = await uploadFileToStorage(blob, storageFileName, user.id);
               await saveGeneratedMaterial(
                 currentSessionId,
                 "pdf",
@@ -118,10 +119,21 @@ export function useChatPdf({
                 },
                 user.id
               );
-            })
-            .catch((uploadErr) => {
-              console.error("Background PDF upload failed:", uploadErr);
-            });
+            } catch (uploadErr) {
+              if (retries > 0) {
+                console.warn(
+                  `Background PDF upload failed, retrying in ${delay}ms... (${retries} retries left):`,
+                  uploadErr
+                );
+                setTimeout(() => {
+                  void uploadWithRetry(retries - 1, delay * 2);
+                }, delay);
+              } else {
+                console.error("Background PDF upload failed after multiple attempts:", uploadErr);
+              }
+            }
+          };
+          void uploadWithRetry();
         }
       }
 
