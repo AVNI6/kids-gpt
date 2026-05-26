@@ -109,7 +109,7 @@ export async function saveMemoryCampaignProgress(
   xpEarned: number,
   scoreStr: string,
   timezone: string = "Asia/Kolkata"
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; message?: string }> {
   try {
     const supabase = await createClient();
     const {
@@ -134,6 +134,39 @@ export async function saveMemoryCampaignProgress(
     }
 
     const userId = user.id;
+
+    // Fetch Current Progress to enforce High Water Mark check (prevent progression regression & replay XP farming)
+    const { data: existingRewards, error: queryError } = await supabase
+      .from("rewards")
+      .select("description")
+      .eq("user_id", userId)
+      .eq("source_type", "activity")
+      .like("description", `%memory-match-w${worldId}-s%`);
+
+    if (queryError) {
+      console.error("[saveMemoryCampaignProgress] Query progress error:", queryError.message);
+      return { success: false, error: queryError.message };
+    }
+
+    let maxDbStep = 0;
+    if (existingRewards && existingRewards.length > 0) {
+      for (const row of existingRewards) {
+        if (!row.description) continue;
+        const match = row.description.match(/memory-match-w(\d+)-s(\d+)/);
+        if (match) {
+          const wId = parseInt(match[1], 10);
+          const sNum = parseInt(match[2], 10);
+          if (wId === worldId && sNum > maxDbStep) {
+            maxDbStep = sNum;
+          }
+        }
+      }
+    }
+
+    if (maxDbStep >= stepNumber) {
+      // Condition A: Replay. Do not call RPC, do not update XP/streak, return success early.
+      return { success: true, message: "Replay completed. Progress preserved." };
+    }
 
     // Securely query dynamic XP settings from DB, falling back to the client-provided parameter
     let actualXp = xpEarned;

@@ -64,9 +64,11 @@ export default function MemoryMatchPage() {
   const [previewCountdown, setPreviewCountdown] = useState(5);
 
   // Fetch campaign progress and base XP reward on mount
-  const fetchProgress = async () => {
+  const fetchProgress = async (showLoadingScreen: boolean = false) => {
     try {
-      setLoadingProgress(true);
+      if (showLoadingScreen) {
+        setLoadingProgress(true);
+      }
       const [xpData, progressData] = await Promise.all([
         getActivityXp("memory-match"),
         getMemoryMatchProgress(),
@@ -85,7 +87,9 @@ export default function MemoryMatchPage() {
       console.error("Error loading campaign progress:", err);
       toast.error("Failed to load progress maps.");
     } finally {
-      setLoadingProgress(false);
+      if (showLoadingScreen) {
+        setLoadingProgress(false);
+      }
     }
   };
 
@@ -112,7 +116,7 @@ export default function MemoryMatchPage() {
             toast.success("Stage Cleared! 🎉", {
               description: `+${xpReward} XP automatically earned! Next step unlocked!`,
             });
-            await fetchProgress();
+            await fetchProgress(false);
           } else {
             console.error("Memory match auto-claim returned failure status:", res.error);
           }
@@ -127,7 +131,7 @@ export default function MemoryMatchPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchProgress();
+      fetchProgress(true);
     }, 0);
     return () => clearTimeout(timer);
   }, []);
