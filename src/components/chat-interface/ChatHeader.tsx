@@ -30,10 +30,8 @@ export default function ChatHeader({
             <Menu className="w-4 h-4" />
           </button>
         )}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="text-sky-600 truncate max-w-[120px] sm:max-w-none font-black text-xl">
-            ChatGPT <span className="hidden sm:inline">Kids</span>
-          </div>
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <div className="text-sky-600 font-black text-xl whitespace-nowrap">ChatGPT Kids</div>
         </Link>
       </div>
       <div className="flex items-center gap-2">

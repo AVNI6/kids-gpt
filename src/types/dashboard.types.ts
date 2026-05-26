@@ -47,6 +47,12 @@ export type ChildActivityLog = {
   description: string | null;
   created_at: string | null;
   source_type: string | null;
+  score?: number | null;
+  activity_settings?: {
+    id: string;
+    slug: string;
+    title: string;
+  } | null;
 };
 
 export type ChildDetailsResult = {
@@ -63,6 +69,20 @@ export type ChildDetailsResult = {
     coding: number;
   };
   timeline: ChildActivityLog[];
+};
+
+export type ParentActivityItem = {
+  id: string;
+  rewards_amount: number;
+  description: string | null;
+  created_at: string | null;
+  source_type: string;
+  score: number | null;
+  activity_settings: {
+    id: string;
+    slug: string;
+    title: string;
+  } | null;
 };
 
 export type ChildSafetyAndUsageResult = {

@@ -1,36 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Puzzle, FileQuestion, Calendar } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import type { LinkedChildProfile, ChildDetailsResult } from "@/types/dashboard.types";
-
-// Dynamic preset filters matching ActivityTopicModal
-const FILTERS = [
-  "All",
-  "Math Challenges",
-  "Word Scrambles",
-  "Science Lab",
-  "Logic Puzzles",
-  "Memory & Matching",
-];
-
-const MOCK_ACTIVITIES = [
-  {
-    id: "mock-2",
-    title: "Basic Fractions Worksheet",
-    type: "Math Challenges",
-    status: "Completed",
-    difficulty: "Easy",
-    dueDate: "Yesterday",
-    score: "95%",
-    icon: <BookOpen className="w-6 h-6 text-sky-500" />,
-    color: "bg-sky-100 dark:bg-sky-950/40",
-  },
-];
+import { usePagination } from "@/hooks/use-pagination";
 
 export default function ActivitiesGrid({
   linkedChildren,
@@ -43,76 +20,86 @@ export default function ActivitiesGrid({
   const searchParams = useSearchParams();
   const childId = searchParams?.get("childId");
 
+  // Compute unique filters dynamically based on child's actual rewards/timeline logs
+  const dynamicFilters = useMemo(() => {
+    const uniqueFilters = new Map<string, string>();
+
+    (childDetails?.timeline ?? []).forEach((log) => {
+      const slug = log.activity_settings?.slug || log.source_type;
+      let title = log.activity_settings?.title;
+
+      // Clean title from description if not available
+      if (!title && log.description) {
+        title = log.description.replace(/^Completed\s+/i, "").split(" (Score:")[0];
+      }
+      if (!title) {
+        title = "Completed Activity";
+      }
+
+      if (slug) {
+        // Group Memory Match steps nicely for filter display
+        if (slug === "memory-match") {
+          uniqueFilters.set("memory-match", "Memory Match");
+        } else if (slug === "flashcards") {
+          uniqueFilters.set("flashcards", "Flashcards");
+        } else {
+          uniqueFilters.set(slug, title);
+        }
+      }
+    });
+
+    const filtersArray = Array.from(uniqueFilters.entries()).map(([slug, label]) => ({
+      label,
+      slug,
+    }));
+
+    return [{ label: "All Activities", slug: "All" }, ...filtersArray];
+  }, [childDetails?.timeline]);
+
   // Parse actual Supabase database timeline logs into completed activities matching ActivityTopicModal presets
   const dbActivities = (childDetails?.timeline ?? []).map((log) => {
     const desc = log.description || "Completed Activity";
 
     // Extract score if present
     const scoreMatch = desc.match(/Score:\s*(\d+)%/i);
-    const score = scoreMatch ? `${scoreMatch[1]}%` : "100%";
+    const score = scoreMatch ? `${scoreMatch[1]}%` : log.score ? `${log.score}%` : "100%";
 
-    // Determine type and details based on preset keywords
-    let type = "Logic Puzzles";
+    // Get slug and title from activity_settings or source_type with legacy fallback
+    const slug = log.activity_settings?.slug || log.source_type || "";
+
+    // UI elements must render reward.activity_settings.title as the primary label.
+    const title =
+      log.activity_settings?.title ||
+      desc.replace(/^Completed\s+/i, "").replace(/\s*\(Score:\s*\d+%\)/i, "") ||
+      "Completed Activity";
+
+    // Determine type, icon and color based strictly on activity_settings.slug (or source_type)
     let icon = <Puzzle className="w-6 h-6 text-orange-500" />;
-    let color = "bg-orange-100 dark:bg-sky-950/30";
+    let color = "bg-orange-100 dark:bg-sky-955/30";
 
-    const lowerDesc = desc.toLowerCase();
-    if (
-      lowerDesc.includes("math") ||
-      lowerDesc.includes("arithmetic") ||
-      lowerDesc.includes("number") ||
-      lowerDesc.includes("fraction")
-    ) {
-      type = "Math Challenges";
+    if (slug === "math-challenges") {
       icon = <BookOpen className="w-6 h-6 text-sky-500" />;
       color = "bg-sky-100 dark:bg-sky-955/40";
-    } else if (
-      lowerDesc.includes("scramble") ||
-      lowerDesc.includes("word") ||
-      lowerDesc.includes("spell") ||
-      lowerDesc.includes("english") ||
-      lowerDesc.includes("vocabulary")
-    ) {
-      type = "Word Scrambles";
+    } else if (slug === "word-scrambles") {
       icon = <BookOpen className="w-6 h-6 text-sky-500" />;
       color = "bg-sky-100 dark:bg-sky-955/40";
-    } else if (
-      lowerDesc.includes("science") ||
-      lowerDesc.includes("lab") ||
-      lowerDesc.includes("experiment") ||
-      lowerDesc.includes("volcano") ||
-      lowerDesc.includes("magnet") ||
-      lowerDesc.includes("space") ||
-      lowerDesc.includes("planet")
-    ) {
-      type = "Science Lab";
+    } else if (slug === "science-lab") {
       icon = <Puzzle className="w-6 h-6 text-sky-500" />;
       color = "bg-sky-100 dark:bg-sky-955/40";
-    } else if (
-      lowerDesc.includes("puzzle") ||
-      lowerDesc.includes("logic") ||
-      lowerDesc.includes("maze") ||
-      lowerDesc.includes("coding") ||
-      lowerDesc.includes("programming")
-    ) {
-      type = "Logic Puzzles";
+    } else if (slug === "logic-puzzles") {
       icon = <Puzzle className="w-6 h-6 text-orange-500" />;
       color = "bg-orange-100 dark:bg-sky-955/30";
     } else if (
-      lowerDesc.includes("memory") ||
-      lowerDesc.includes("match") ||
-      lowerDesc.includes("pair") ||
-      lowerDesc.includes("flashcard") ||
-      lowerDesc.includes("quiz")
+      slug === "memory-match" ||
+      slug === "match-following" ||
+      slug === "flashcards" ||
+      slug === "quizzes" ||
+      slug === "jigsaw-puzzle" ||
+      slug === "color-mixer"
     ) {
-      type = "Memory & Matching";
       icon = <FileQuestion className="w-6 h-6 text-sky-500" />;
       color = "bg-sky-100 dark:bg-sky-955/40";
     }
-
-    // Clean up title
-    let title = desc.replace(/^Completed\s+/i, "");
-    title = title.replace(/\s*\(Score:\s*\d+%\)/i, "");
 
     // Format date
     const dateStr = log.created_at
@@ -125,7 +112,8 @@ export default function ActivitiesGrid({
     return {
       id: log.id,
       title,
-      type,
+      description: desc, // description only for secondary contextual text
+      slug,
       status: "Completed",
       difficulty: "Medium",
       dueDate: dateStr,
@@ -135,33 +123,35 @@ export default function ActivitiesGrid({
     };
   });
 
-  // If there are no completed activities in database, keep mock-2 for display
-  const completedMockActivities =
-    dbActivities.length === 0 ? MOCK_ACTIVITIES.filter((act) => act.status === "Completed") : [];
-
-  const allActivities = [...dbActivities, ...completedMockActivities];
+  const allActivities = dbActivities;
 
   const filteredActivities = allActivities.filter((activity) => {
     if (activeFilter === "All") return true;
-    if (activity.type === activeFilter) return true;
-    return false;
+    return activity.slug === activeFilter;
   });
+
+  const activitiesPagination = usePagination(filteredActivities);
+  const { setPage: setActivitiesPage } = activitiesPagination;
+
+  useEffect(() => {
+    setActivitiesPage(1);
+  }, [activeFilter, filteredActivities.length, setActivitiesPage]);
 
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap gap-2">
-        {FILTERS.map((filter) => (
+        {dynamicFilters.map((filter) => (
           <Button
-            key={filter}
-            variant={activeFilter === filter ? "default" : "outline"}
+            key={filter.slug}
+            variant={activeFilter === filter.slug ? "default" : "outline"}
             className={`rounded-full font-bold px-5 h-10 text-xs transition-colors cursor-pointer ${
-              activeFilter === filter
+              activeFilter === filter.slug
                 ? "bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 shadow-sm border-transparent"
-                : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
+                : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-55 dark:hover:bg-slate-900"
             }`}
-            onClick={() => setActiveFilter(filter)}
+            onClick={() => setActiveFilter(filter.slug)}
           >
-            {filter}
+            {filter.label}
           </Button>
         ))}
       </div>
@@ -172,12 +162,14 @@ export default function ActivitiesGrid({
             <CardContent className="space-y-3">
               <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
               <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
-                No completed activities match this filter.
+                {allActivities.length === 0
+                  ? "No completed activities yet."
+                  : "No completed activities match this filter."}
               </p>
             </CardContent>
           </Card>
         ) : (
-          filteredActivities.map((activity) => (
+          activitiesPagination.currentItems.map((activity) => (
             <Card
               key={activity.id}
               className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-all group"
@@ -202,6 +194,11 @@ export default function ActivitiesGrid({
                     <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 line-clamp-1">
                       {activity.title}
                     </h3>
+                    {activity.description && activity.description !== activity.title && (
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mb-2 line-clamp-2">
+                        {activity.description}
+                      </p>
+                    )}
                     <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
                       <span className="flex items-center">
                         <Calendar className="w-3.5 h-3.5 mr-1 text-slate-455" /> {activity.dueDate}
@@ -227,6 +224,35 @@ export default function ActivitiesGrid({
           ))
         )}
       </div>
+
+      {filteredActivities.length > 0 && activitiesPagination.totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Showing {activitiesPagination.startIndex + 1}-{activitiesPagination.endIndex} of{" "}
+            {activitiesPagination.totalItems}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!activitiesPagination.hasPrevPage}
+              onClick={activitiesPagination.prevPage}
+              className="rounded-lg px-3 h-9 text-xs font-bold"
+            >
+              Prev
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!activitiesPagination.hasNextPage}
+              onClick={activitiesPagination.nextPage}
+              className="rounded-lg px-3 h-9 text-xs font-bold"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

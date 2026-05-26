@@ -8,6 +8,11 @@ type GameHistoryItem = {
   created_at: string | number | Date | null;
   description?: string | null;
   rewards_amount?: number | string | null;
+  activity_settings?: {
+    id: string;
+    slug: string;
+    title: string;
+  } | null;
 };
 
 export function GameHistorySkeleton() {
@@ -83,9 +88,21 @@ export default function GameHistory({ timeline }: { timeline: GameHistoryItem[] 
                           {date}
                         </time>
                       </div>
-                      <div className="text-sm font-semibold leading-tight text-slate-700 dark:text-slate-300">
-                        {item.description}
+                      <div className="text-sm font-bold leading-tight text-slate-900 dark:text-slate-50">
+                        {item.activity_settings?.title ||
+                          (item.description
+                            ? item.description
+                                .replace(/^Completed\s+/i, "")
+                                .replace(/\s*\(Score:\s*\d+%\)/i, "")
+                            : "Completed Activity")}
                       </div>
+                      {item.activity_settings &&
+                        item.description &&
+                        item.description !== item.activity_settings.title && (
+                          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 leading-snug">
+                            {item.description}
+                          </div>
+                        )}
                     </div>
                   </div>
                 );
