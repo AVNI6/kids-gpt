@@ -50,22 +50,22 @@ export default function ActivitiesPage() {
       <div className="absolute bottom-20 right-10 h-80 w-80 rounded-full bg-green-500/5 blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="mb-10">
+        <div className="mb-5 lg:mb-10">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
-              className="h-12 w-12 rounded-2xl border-2 border-border bg-card hover:bg-accent hover:border-sky-500/30 text-foreground shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
+              className="md:hidden h-12 w-12 rounded-2xl border-2 border-border bg-card hover:bg-accent hover:border-sky-500/30 text-foreground shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
               aria-label="Go back"
             >
               <ArrowLeft className="w-6 h-6" />
             </Button>
-            <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-foreground sm:text-5xl">
               Learning Activities
             </h1>
           </div>
-          <p className="text-muted-foreground mt-3 text-lg sm:ml-16">
+          <p className="text-muted-foreground mt-3 text-md md:text-lg">
             Pick a fun educational challenge to level up your brain!
           </p>
         </div>

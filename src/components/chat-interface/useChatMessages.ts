@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAppDispatch } from "@/store/hooks";
 import { setMessages } from "@/store/slice/chat.slice";
 import { fetchSessionMessages } from "@/actions/chat.actions";
+import { getParentSessionMessages } from "@/actions/dashboard.actions";
 import { Message, ChatMessageRow } from "@/types/chat.types";
 
 // Global client-side message cache for instant chat switching
@@ -15,6 +16,7 @@ interface UseChatMessagesArgs {
   isLoadingAuth: boolean;
   isUserLoggedIn: boolean;
   justCreatedSessionRef: React.MutableRefObject<boolean>;
+  userRole?: string | null;
 }
 
 export function useChatMessages({
@@ -23,6 +25,7 @@ export function useChatMessages({
   isLoadingAuth,
   isUserLoggedIn,
   justCreatedSessionRef,
+  userRole,
 }: UseChatMessagesArgs) {
   const dispatch = useAppDispatch();
   const [isSessionLoading, setIsSessionLoading] = useState(false);
@@ -85,7 +88,12 @@ export function useChatMessages({
 
       // 5. Fetch fresh messages from Supabase DB (either to populate cache or revalidate it)
       try {
-        const dbMessages = await fetchSessionMessages(currentSessionId);
+        let dbMessages;
+        if (userRole === "parent") {
+          dbMessages = await getParentSessionMessages(currentSessionId);
+        } else {
+          dbMessages = await fetchSessionMessages(currentSessionId);
+        }
 
         // If this effect run was cleaned up in the meantime (e.g., user clicked another chat), ignore result
         if (!active) {
@@ -183,7 +191,7 @@ export function useChatMessages({
     return () => {
       active = false;
     };
-  }, [currentSessionId, isLoadingAuth, isUserLoggedIn, dispatch, justCreatedSessionRef]);
+  }, [currentSessionId, isLoadingAuth, isUserLoggedIn, dispatch, justCreatedSessionRef, userRole]);
 
   return { isSessionLoading };
 }

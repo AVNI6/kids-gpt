@@ -46,6 +46,7 @@ export default function ChatInterface() {
     isLoadingAuth,
     isUserLoggedIn,
     justCreatedSessionRef,
+    userRole,
   });
 
   const { pdfStates, handleDownloadPDF } = useChatPdf({
@@ -112,7 +113,7 @@ export default function ChatInterface() {
     if (urlSessionId !== currentSessionId) {
       dispatch(setCurrentSessionId(urlSessionId));
     }
-  }, [urlSessionId, currentSessionId, dispatch]);
+  }, [urlSessionId, currentSessionId, dispatch, router]);
 
   // Keep URL in sync when a new session is created client-side
   useEffect(() => {
