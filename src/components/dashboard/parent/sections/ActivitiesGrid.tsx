@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Puzzle, FileQuestion, Calendar } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import type { LinkedChildProfile, ChildDetailsResult } from "@/types/dashboard.types";
+import { usePagination } from "@/hooks/use-pagination";
 
 export default function ActivitiesGrid({
   linkedChildren,
@@ -129,6 +130,13 @@ export default function ActivitiesGrid({
     return activity.slug === activeFilter;
   });
 
+  const activitiesPagination = usePagination(filteredActivities);
+  const { setPage: setActivitiesPage } = activitiesPagination;
+
+  useEffect(() => {
+    setActivitiesPage(1);
+  }, [activeFilter, filteredActivities.length, setActivitiesPage]);
+
   return (
     <div className="space-y-8">
       <div className="flex overflow-x-auto no-scrollbar lg:flex-wrap gap-2">
@@ -161,7 +169,7 @@ export default function ActivitiesGrid({
             </CardContent>
           </Card>
         ) : (
-          filteredActivities.map((activity) => (
+          activitiesPagination.currentItems.map((activity) => (
             <Card
               key={activity.id}
               className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-all group"
@@ -216,6 +224,35 @@ export default function ActivitiesGrid({
           ))
         )}
       </div>
+
+      {filteredActivities.length > 0 && activitiesPagination.totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Showing {activitiesPagination.startIndex + 1}-{activitiesPagination.endIndex} of{" "}
+            {activitiesPagination.totalItems}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!activitiesPagination.hasPrevPage}
+              onClick={activitiesPagination.prevPage}
+              className="rounded-lg px-3 h-9 text-xs font-bold"
+            >
+              Prev
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!activitiesPagination.hasNextPage}
+              onClick={activitiesPagination.nextPage}
+              className="rounded-lg px-3 h-9 text-xs font-bold"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
