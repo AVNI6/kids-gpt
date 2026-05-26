@@ -89,10 +89,18 @@ export function useChatMessages({
       // 5. Fetch fresh messages from Supabase DB (either to populate cache or revalidate it)
       try {
         let dbMessages;
-        if (userRole === "parent") {
-          dbMessages = await getParentSessionMessages(currentSessionId);
-        } else {
-          dbMessages = await fetchSessionMessages(currentSessionId);
+        // Always try the regular fetch first (works for user's own sessions via RLS).
+        // For parents viewing a child's session from the dashboard, the regular fetch
+        // will return empty due to RLS, so we fall back to getParentSessionMessages.
+        dbMessages = await fetchSessionMessages(currentSessionId);
+
+        if (userRole === "parent" && (!dbMessages || dbMessages.length === 0)) {
+          try {
+            dbMessages = await getParentSessionMessages(currentSessionId);
+          } catch {
+            // getParentSessionMessages may throw if session doesn't belong to a linked child
+            dbMessages = [];
+          }
         }
 
         // If this effect run was cleaned up in the meantime (e.g., user clicked another chat), ignore result

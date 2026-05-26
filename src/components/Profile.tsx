@@ -50,9 +50,9 @@ export default function Profile({ isCollapsed }: ProfileProps) {
 
   if (!isUserLoggedIn || !user) return null;
 
-  const displayName = userProfile?.first_name
+  const displayName = userProfile
     ? `${userProfile.first_name} ${userProfile.last_name ?? ""}`.trim()
-    : user.email?.split("@")[0];
+    : (user.email?.split("@")[0] ?? "User");
 
   const avatarUrl =
     userProfile?.avatar_url ?? (user.user_metadata?.avatar_url as string | undefined);

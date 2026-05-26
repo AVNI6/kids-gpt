@@ -80,7 +80,12 @@ export default async function ParentDashboardPage(props: {
     <main className="min-h-screen bg-background font-sans flex flex-col transition-colors duration-300">
       <Suspense
         fallback={
-          <div className="h-16 w-full bg-white dark:bg-background border-b border-slate-200 dark:border-slate-800" />
+          <div className="h-16 w-full bg-white dark:bg-background border-b border-slate-200 dark:border-slate-800 flex items-center px-6 gap-4">
+            <div className="h-4 w-20 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
+            <div className="h-4 w-24 rounded-full bg-slate-100 dark:bg-slate-900 animate-pulse" />
+            <div className="h-4 w-16 rounded-full bg-slate-100 dark:bg-slate-900 animate-pulse" />
+            <div className="ml-auto h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          </div>
         }
       >
         <ParentTopNav profile={profile} />

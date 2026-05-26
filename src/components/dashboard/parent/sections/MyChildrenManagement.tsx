@@ -29,6 +29,7 @@ import type {
   ChildDetailsResult,
   ChildSafetyAndUsageResult,
 } from "@/types/dashboard.types";
+import { usePagination } from "@/hooks/use-pagination";
 
 interface SearchHistoryItem {
   id: string;
@@ -126,6 +127,11 @@ export default function MyChildrenManagement({
   const [activities, setActivities] = useState<ParentActivityItem[]>([]);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
+  const searchHistoryPagination = usePagination(searchHistory);
+  const { setPage: setSearchHistoryPage } = searchHistoryPagination;
+  const activitiesPagination = usePagination(activities);
+  const { setPage: setActivitiesPage } = activitiesPagination;
+
   const selectedChild = linkedChildren.find((c) => c.user_id === selectedChildId);
 
   const handleLinkSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -188,6 +194,14 @@ export default function MyChildrenManagement({
       isMounted = false;
     };
   }, [selectedChildId]);
+
+  useEffect(() => {
+    setSearchHistoryPage(1);
+  }, [selectedChildId, searchHistory.length, setSearchHistoryPage]);
+
+  useEffect(() => {
+    setActivitiesPage(1);
+  }, [selectedChildId, activities.length, setActivitiesPage]);
 
   // Calculate dynamic Subject Mastery based on completed activities from Supabase
   const getSubjectMastery = () => {
@@ -463,9 +477,6 @@ export default function MyChildrenManagement({
         {isLoadingDetails ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3 bg-white dark:bg-black/30 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60">
             <div className="w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs font-bold text-slate-400 animate-pulse">
-              Syncing dynamic data from Supabase...
-            </p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -495,7 +506,7 @@ export default function MyChildrenManagement({
                     </div>
                   ) : (
                     <div className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white/40 dark:bg-black/25 rounded-[24px] border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm">
-                      {searchHistory.map((session, index) => (
+                      {searchHistoryPagination.currentItems.map((session, index) => (
                         <div
                           key={session.id || index}
                           className="p-5 hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors flex items-center justify-between gap-4"
@@ -526,10 +537,39 @@ export default function MyChildrenManagement({
                             onClick={() => router.push(`/chat/parent?id=${session.id}`)}
                             className="rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-10 px-5 text-xs flex items-center gap-1.5 cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600 transition-all shadow-sm shrink-0"
                           >
-                            Open in Chat 💬
+                            Open in Chat
                           </Button>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {searchHistory.length > 0 && searchHistoryPagination.totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        Showing {searchHistoryPagination.startIndex + 1}-
+                        {searchHistoryPagination.endIndex} of {searchHistoryPagination.totalItems}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!searchHistoryPagination.hasPrevPage}
+                          onClick={searchHistoryPagination.prevPage}
+                          className="rounded-lg px-3 h-9 text-xs font-bold"
+                        >
+                          Prev
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!searchHistoryPagination.hasNextPage}
+                          onClick={searchHistoryPagination.nextPage}
+                          className="rounded-lg px-3 h-9 text-xs font-bold"
+                        >
+                          Next
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -562,7 +602,7 @@ export default function MyChildrenManagement({
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4.5">
-                      {activities.map((act, index) => {
+                      {activitiesPagination.currentItems.map((act, index) => {
                         const scoreMatch = act.description
                           ? act.description.match(/Score:\s*(\d+)/i)
                           : null;
@@ -628,6 +668,36 @@ export default function MyChildrenManagement({
                           </Card>
                         );
                       })}
+                    </div>
+                  )}
+
+                  {activities.length > 0 && activitiesPagination.totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        Showing {activitiesPagination.startIndex + 1}-
+                        {activitiesPagination.endIndex}
+                        of {activitiesPagination.totalItems}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!activitiesPagination.hasPrevPage}
+                          onClick={activitiesPagination.prevPage}
+                          className="rounded-lg px-3 h-9 text-xs font-bold"
+                        >
+                          Prev
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!activitiesPagination.hasNextPage}
+                          onClick={activitiesPagination.nextPage}
+                          className="rounded-lg px-3 h-9 text-xs font-bold"
+                        >
+                          Next
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
