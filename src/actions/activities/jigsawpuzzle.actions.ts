@@ -69,7 +69,7 @@ export async function claimJigsawXp(
     console.log("[claimJigsawXp] Fetching activity setting for slug 'jigsaw-puzzle'");
     const { data: activitySetting, error: settingError } = await supabase
       .from("activity_settings")
-      .select("xp_reward")
+      .select("id, slug, title, xp_reward")
       .eq("slug", "jigsaw-puzzle")
       .maybeSingle();
 
@@ -120,7 +120,6 @@ export async function claimJigsawXp(
       .from("rewards")
       .select("created_at")
       .eq("user_id", userId)
-      .eq("source_type", "activity")
       .eq("description", description)
       .order("created_at", { ascending: false });
 
@@ -151,7 +150,6 @@ export async function claimJigsawXp(
       .from("rewards")
       .select("created_at")
       .eq("user_id", userId)
-      .eq("source_type", "activity")
       .order("created_at", { ascending: false })
       .limit(1);
 
@@ -203,7 +201,8 @@ export async function claimJigsawXp(
     const { error: insertError } = await supabase.from("rewards").insert({
       user_id: userId,
       rewards_amount: actualXp,
-      source_type: "activity",
+      source_id: activitySetting?.id || null,
+      source_type: "jigsaw-puzzle",
       description,
       score: 100,
     });

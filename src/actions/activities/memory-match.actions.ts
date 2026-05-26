@@ -29,8 +29,7 @@ export async function getMemoryMatchProgress() {
     const { data: rewards, error: rewardsError } = await supabase
       .from("rewards")
       .select("description")
-      .eq("user_id", user.id)
-      .eq("source_type", "activity");
+      .eq("user_id", user.id);
 
     if (rewardsError) {
       console.error("Error fetching rewards for memory match progress:", rewardsError);
@@ -140,7 +139,6 @@ export async function saveMemoryCampaignProgress(
       .from("rewards")
       .select("description")
       .eq("user_id", userId)
-      .eq("source_type", "activity")
       .like("description", `%memory-match-w${worldId}-s%`);
 
     if (queryError) {
@@ -185,7 +183,6 @@ export async function saveMemoryCampaignProgress(
       .from("rewards")
       .select("created_at")
       .eq("user_id", userId)
-      .eq("source_type", "activity")
       .order("created_at", { ascending: false })
       .limit(1);
 

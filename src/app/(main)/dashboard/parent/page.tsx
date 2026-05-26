@@ -26,6 +26,7 @@ interface FamilyTimelineItem {
   id: string;
   childName: string;
   childAvatar: string | null;
+  title: string;
   description: string;
   created_at: string | null;
   rewards_amount: number;
@@ -148,6 +149,12 @@ export default async function ParentDashboardPage(props: {
                 details.timeline.forEach((item) => {
                   familyTimeline.push({
                     id: item.id,
+                    title:
+                      item.activity_settings?.title ||
+                      item.description
+                        ?.replace(/^Completed\s+/i, "")
+                        .replace(/\s*\(Score:\s*\d+%\)/i, "") ||
+                      "Completed Activity",
                     description: item.description ?? "Completed activity",
                     created_at: item.created_at,
                     rewards_amount: item.rewards_amount ?? 0,
@@ -297,9 +304,14 @@ export default async function ParentDashboardPage(props: {
                                     : "Recently"}
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                                {item.description}
+                              <p className="text-xs font-bold text-slate-700 dark:text-slate-350">
+                                {item.title}
                               </p>
+                              {item.description && item.description !== item.title && (
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium leading-relaxed mt-0.5 animate-in fade-in">
+                                  {item.description}
+                                </p>
+                              )}
                             </div>
                             <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-lg text-[10px] shrink-0 border border-emerald-100 dark:border-emerald-900/30">
                               +{item.rewards_amount || 20} XP

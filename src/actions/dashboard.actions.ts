@@ -13,12 +13,34 @@ import type {
   ChildActivityLog,
   ChildDetailsResult,
   ChildSafetyAndUsageResult,
+  ParentActivityItem,
 } from "@/types/dashboard.types";
 
 type VerifiedUser = {
   userId: string;
   profile: DashboardUserProfile;
 };
+
+interface RewardQueryResult {
+  id: string;
+  rewards_amount: number | null;
+  description: string | null;
+  created_at: string | null;
+  source_type: string | null;
+  score: number | null;
+  activity_settings:
+    | {
+        id: string;
+        slug: string;
+        title: string;
+      }
+    | {
+        id: string;
+        slug: string;
+        title: string;
+      }[]
+    | null;
+}
 
 type EmailLinkResult = {
   status: "success" | "pending" | "error";
@@ -104,7 +126,7 @@ export async function getKidStats(timezone: string = "Asia/Kolkata"): Promise<Ki
     .from("rewards")
     .select("created_at")
     .eq("user_id", userId)
-    .eq("source_type", "activity")
+    .not("source_id", "is", null)
     .order("created_at", { ascending: false })
     .limit(1);
 
@@ -499,7 +521,7 @@ export async function saveKidActivityProgress(
     let actualXp = xpEarned;
     const { data: activitySetting } = await supabase
       .from("activity_settings")
-      .select("xp_reward")
+      .select("id, slug, title, xp_reward")
       .eq("slug", activitySlug)
       .maybeSingle();
 
@@ -556,7 +578,6 @@ export async function saveKidActivityProgress(
       .from("rewards")
       .select("created_at")
       .eq("user_id", userId)
-      .eq("source_type", "activity")
       .order("created_at", { ascending: false })
       .limit(1);
 
@@ -601,8 +622,9 @@ export async function saveKidActivityProgress(
     const { error: insertError } = await supabase.from("rewards").insert({
       user_id: userId,
       rewards_amount: actualXp,
-      source_type: "activity",
-      description: `Completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
+      source_id: activitySetting?.id || null,
+      source_type: activitySetting?.slug || activitySlug,
+      description: `Completed ${activitySetting?.title || activityTitle}${score ? ` (Score: ${score})` : ""}`,
       score: parsedScore,
     });
 
@@ -684,22 +706,38 @@ export async function getChildDetails(childUserId: string): Promise<ChildDetails
   // 3. Fetch rewards (activities)
   const { data: rewards, error: rewardsError } = await supabase
     .from("rewards")
-    .select("id, rewards_amount, description, created_at, source_type")
+    .select(
+      "id, rewards_amount, description, created_at, source_type, score, activity_settings(id, slug, title)"
+    )
     .eq("user_id", childUserId)
-    .eq("source_type", "activity")
     .order("created_at", { ascending: false });
 
   if (rewardsError) {
     throw new Error(rewardsError.message);
   }
 
-  const timeline: ChildActivityLog[] = (rewards ?? []).map((r) => ({
-    id: r.id,
-    rewards_amount: r.rewards_amount,
-    description: r.description,
-    created_at: r.created_at,
-    source_type: r.source_type,
-  }));
+  const timeline: ChildActivityLog[] = ((rewards as RewardQueryResult[]) ?? []).map((r) => {
+    const actSettings = r.activity_settings
+      ? Array.isArray(r.activity_settings)
+        ? r.activity_settings[0] || null
+        : r.activity_settings
+      : null;
+    return {
+      id: r.id,
+      rewards_amount: r.rewards_amount,
+      description: r.description,
+      created_at: r.created_at,
+      source_type: r.source_type,
+      score: r.score,
+      activity_settings: actSettings
+        ? {
+            id: actSettings.id,
+            slug: actSettings.slug,
+            title: actSettings.title,
+          }
+        : null,
+    };
+  });
 
   const totalCompleted = timeline.length;
   const totalXp = childProfile.total_experience_points ?? 0;
@@ -885,22 +923,38 @@ export async function getKidComprehensiveDetails(
   // 2. Fetch rewards (activities)
   const { data: rewards, error: rewardsError } = await supabase
     .from("rewards")
-    .select("id, rewards_amount, description, created_at, source_type")
+    .select(
+      "id, rewards_amount, description, created_at, source_type, score, activity_settings(id, slug, title)"
+    )
     .eq("user_id", userId)
-    .eq("source_type", "activity")
     .order("created_at", { ascending: false });
 
   if (rewardsError) {
     throw new Error(rewardsError.message);
   }
 
-  const timeline: ChildActivityLog[] = (rewards ?? []).map((r) => ({
-    id: r.id,
-    rewards_amount: r.rewards_amount,
-    description: r.description,
-    created_at: r.created_at,
-    source_type: r.source_type,
-  }));
+  const timeline: ChildActivityLog[] = ((rewards as RewardQueryResult[]) ?? []).map((r) => {
+    const actSettings = r.activity_settings
+      ? Array.isArray(r.activity_settings)
+        ? r.activity_settings[0] || null
+        : r.activity_settings
+      : null;
+    return {
+      id: r.id,
+      rewards_amount: r.rewards_amount,
+      description: r.description,
+      created_at: r.created_at,
+      source_type: r.source_type,
+      score: r.score,
+      activity_settings: actSettings
+        ? {
+            id: actSettings.id,
+            slug: actSettings.slug,
+            title: actSettings.title,
+          }
+        : null,
+    };
+  });
 
   const totalCompleted = timeline.length;
   const totalXp = childProfile.total_experience_points ?? 0;
@@ -1000,7 +1054,7 @@ export async function getKidComprehensiveDetails(
   };
 }
 
-export async function getParentActivities(childUserId: string) {
+export async function getParentActivities(childUserId: string): Promise<ParentActivityItem[]> {
   const { userId: parentId } = await verifyUserRole("parent");
   const supabase = await getSupabaseClient();
 
@@ -1020,12 +1074,27 @@ export async function getParentActivities(childUserId: string) {
 
   const { data, error } = await supabase
     .from("rewards")
-    .select("id, rewards_amount, description, created_at, source_type, score")
+    .select(
+      "id, rewards_amount, description, created_at, source_type, score, activity_settings(id, slug, title)"
+    )
     .eq("user_id", childUserId)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data || [];
+
+  return ((data as RewardQueryResult[] | null) ?? []).map((r) => ({
+    id: r.id,
+    rewards_amount: r.rewards_amount ?? 0,
+    description: r.description,
+    created_at: r.created_at,
+    source_type: r.source_type ?? "",
+    score: r.score,
+    activity_settings: r.activity_settings
+      ? Array.isArray(r.activity_settings)
+        ? r.activity_settings[0] || null
+        : r.activity_settings
+      : null,
+  }));
 }
 
 export async function getParentSearchHistory(childUserId: string) {
