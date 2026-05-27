@@ -1,9 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, BookOpen, ShieldCheck, Sparkles, Users, GraduationCap } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  ShieldCheck,
+  Sparkles,
+  Users,
+  GraduationCap,
+  User,
+} from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EditProfileForm } from "@/components/dashboard/EditProfileForm";
 
 type Role = "parent" | "kid" | "teacher";
 
@@ -147,6 +156,19 @@ export default async function DashboardRoute({ params }: { params: Promise<{ rol
                   {copy.primaryLabel}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-[32px] border-sky-100 bg-white/90 text-slate-900 shadow-md dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50">
+              <CardContent className="space-y-4 p-6">
+                <div className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-sky-500" />
+                  <h2 className="text-xl font-bold tracking-tight">Edit Profile</h2>
+                </div>
+                <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
+                  Update your display name and change your avatar instantly.
+                </p>
+                <EditProfileForm />
               </CardContent>
             </Card>
 

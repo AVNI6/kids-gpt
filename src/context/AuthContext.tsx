@@ -13,6 +13,7 @@ interface AuthContextType {
   isLoading: boolean;
   isUserLoggedIn: boolean;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -127,6 +128,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const refreshProfile = async () => {
+    try {
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+
+      if (currentUser) {
+        const { data: profile } = await supabase
+          .from("profile")
+          .select("*")
+          .eq("user_id", currentUser.id)
+          .maybeSingle();
+
+        if (profile) {
+          setUserProfile(profile);
+          if (profile.role) {
+            setUserRole(profile.role as UserRole);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+    }
+  };
+
   const logout = async () => {
     try {
       isLoggingOutRef.current = true;
@@ -157,6 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     isUserLoggedIn,
     logout,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

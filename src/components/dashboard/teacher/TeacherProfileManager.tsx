@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { Link2, PencilLine, Upload } from "lucide-react";
 
 import { linkByEmail, updateTeacherProfile } from "@/actions/dashboard.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -39,33 +40,6 @@ export default function TeacherProfileManager({ profile }: Props) {
   const [linkMessage, setLinkMessage] = useState<string | null>(null);
   const [linkEmail, setLinkEmail] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(profile.avatar_url);
-  const [avatarObjectUrl, setAvatarObjectUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (avatarObjectUrl) {
-        URL.revokeObjectURL(avatarObjectUrl);
-      }
-    };
-  }, [avatarObjectUrl]);
-
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      setPreviewUrl(profile.avatar_url);
-      setAvatarObjectUrl(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-    if (avatarObjectUrl) {
-      URL.revokeObjectURL(avatarObjectUrl);
-    }
-
-    setAvatarObjectUrl(objectUrl);
-    setPreviewUrl(objectUrl);
-  };
 
   const handleProfileSubmit = async (formData: FormData) => {
     try {
@@ -141,6 +115,14 @@ export default function TeacherProfileManager({ profile }: Props) {
               </DialogHeader>
 
               <form action={handleProfileSubmit} className="space-y-5 px-6 py-5">
+                <div className="flex justify-center p-6 border border-slate-100 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-950/50 backdrop-blur-xs">
+                  <AvatarUpload
+                    key={previewUrl}
+                    initialAvatarUrl={previewUrl}
+                    onUploadSuccess={(url) => setPreviewUrl(url)}
+                  />
+                </div>
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="first_name">First name</Label>
@@ -164,17 +146,6 @@ export default function TeacherProfileManager({ profile }: Props) {
                     name="organizationName"
                     defaultValue={profile.standard ?? ""}
                     placeholder="e.g. Bright Future Academy"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="avatar">Avatar image</Label>
-                  <Input
-                    id="avatar"
-                    name="avatar"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
                   />
                 </div>
 

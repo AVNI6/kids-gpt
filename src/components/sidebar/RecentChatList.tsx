@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { MoreVertical, Edit2, Share2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";

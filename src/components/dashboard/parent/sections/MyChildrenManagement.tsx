@@ -310,8 +310,6 @@ export default function MyChildrenManagement({
     const age = getAge(selectedChild.date_of_birth);
     const gradeStr = getGradeFromAge(age);
     const ageStr = age !== null ? `Age ${age}` : "Age N/A";
-
-    const accuracy = childDetails?.quiz_accuracy ?? 0;
     const totalXP = selectedChild.total_experience_points ?? 0;
     const totalCompleted = childDetails?.total_completed ?? activities.length ?? 0;
 

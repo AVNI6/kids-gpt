@@ -280,3 +280,46 @@ export async function submitTeacherOnboarding(
 
   return { success: true, message: linkMessage, error: null };
 }
+
+export type ProfileUpdateState = {
+  error: string | null;
+  success?: boolean;
+  message?: string | null;
+};
+
+export async function updateUserProfile(
+  _previousState: ProfileUpdateState,
+  formData: FormData
+): Promise<ProfileUpdateState> {
+  const firstName = String(formData.get("firstName") ?? "").trim();
+  const lastName = String(formData.get("lastName") ?? "").trim();
+
+  if (!firstName) {
+    return { error: "First name is required." };
+  }
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { error: "Please sign in again to edit your profile." };
+  }
+
+  const { error: profileUpdateError } = await supabase
+    .from("profile")
+    .update({
+      first_name: firstName,
+      last_name: lastName,
+    })
+    .eq("user_id", user.id);
+
+  if (profileUpdateError) {
+    return { error: "Profile update failed: " + profileUpdateError.message };
+  }
+
+  return { success: true, message: "Profile updated successfully!", error: null };
+}
