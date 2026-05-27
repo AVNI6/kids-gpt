@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { User } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import {
   addMessage,
@@ -18,7 +19,7 @@ import {
   updateChatMessageAttachment,
 } from "@/actions/chat.actions";
 import { Message, UserRole } from "@/types/chat.types";
-import { generatePdfBlob } from "@/utils/pdf-helper";
+import { generatePdfBlob } from "@/hooks/pdf-helper";
 import { getSessionManager } from "@/lib/ai/session-manager";
 import { getUniqueStoragePath } from "./chat-utils";
 
@@ -58,6 +59,7 @@ export function useChatSender({
   justCreatedSessionRef,
 }: UseChatSenderArgs) {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const pendingSendRef = useRef(false);
 
@@ -198,16 +200,11 @@ export function useChatSender({
         justCreatedSessionRef.current = true;
         dispatch(addSession(newSession));
         dispatch(setCurrentSessionId(sessionId));
-        // Replace URL instantly without causing a Next.js server routing round-trip
         const targetUrl =
           typeof window !== "undefined" && window.location.pathname.startsWith("/chat/")
             ? `${window.location.pathname}?id=${sessionId}`
             : `/?id=${sessionId}`;
-        window.history.replaceState(
-          { ...window.history.state, as: targetUrl, url: targetUrl },
-          "",
-          targetUrl
-        );
+        router.replace(targetUrl);
       } catch (error) {
         console.error("Failed to create session/save message:", error);
       }
@@ -274,9 +271,6 @@ export function useChatSender({
         };
         dispatch(addMessage(initialAiMessage));
         setIsLoading(false);
-        setFileContent(null);
-        setFileName(null);
-        setImage(null);
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -462,9 +456,6 @@ export function useChatSender({
 
         dispatch(addMessage(initialAiMessage));
         setIsLoading(false);
-        setFileContent(null);
-        setFileName(null);
-        setImage(null);
 
         // 3. Process database persistence, file uploads, and daily tracking asynchronously in the background
         if (sessionId && canPersist) {
@@ -621,9 +612,6 @@ export function useChatSender({
     } finally {
       sessionManager.completeRequest(requestId);
       setIsLoading(false);
-      setFileContent(null);
-      setFileName(null);
-      setImage(null);
     }
   }, [
     isLoading,
@@ -638,6 +626,7 @@ export function useChatSender({
     isUserLoggedIn,
     messages,
     dispatch,
+    router,
     setInput,
     setImage,
     setFileContent,

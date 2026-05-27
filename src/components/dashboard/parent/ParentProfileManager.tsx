@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { Link2, PencilLine, Upload } from "lucide-react";
 
 import { linkByEmail, updateParentProfile } from "@/actions/dashboard.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,31 +38,7 @@ export default function ParentProfileManager({ profile }: Props) {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [linkMessage, setLinkMessage] = useState<string | null>(null);
   const [linkEmail, setLinkEmail] = useState("");
-  const [avatarObjectUrl, setAvatarObjectUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (avatarObjectUrl) {
-        URL.revokeObjectURL(avatarObjectUrl);
-      }
-    };
-  }, [avatarObjectUrl]);
-
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      setAvatarObjectUrl(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-    if (avatarObjectUrl) {
-      URL.revokeObjectURL(avatarObjectUrl);
-    }
-
-    setAvatarObjectUrl(objectUrl);
-  };
+  const [previewUrl, setPreviewUrl] = useState<string | null>(profile.avatar_url);
 
   const handleProfileSubmit = async (formData: FormData) => {
     try {
@@ -105,7 +82,7 @@ export default function ParentProfileManager({ profile }: Props) {
       {/* Sleek Profile Row */}
       <div className="flex items-center gap-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-1.5 pr-4 rounded-full border border-slate-200/50 dark:border-slate-800/50 shadow-sm">
         <Avatar className="h-10 w-10 border border-slate-200 dark:border-slate-700">
-          <AvatarImage src={profile.avatar_url ?? undefined} />
+          <AvatarImage src={previewUrl ?? undefined} />
           <AvatarFallback className="bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300 font-bold text-sm">
             {getInitials(profile.first_name, profile.last_name)}
           </AvatarFallback>
@@ -136,6 +113,14 @@ export default function ParentProfileManager({ profile }: Props) {
             </DialogHeader>
 
             <form action={handleProfileSubmit} className="space-y-5 px-6 py-5">
+              <div className="flex justify-center p-6 border border-slate-100 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-950/50 backdrop-blur-xs">
+                <AvatarUpload
+                  key={previewUrl}
+                  initialAvatarUrl={previewUrl}
+                  onUploadSuccess={(url) => setPreviewUrl(url)}
+                />
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="first_name" className="dark:text-slate-300">
@@ -160,20 +145,6 @@ export default function ParentProfileManager({ profile }: Props) {
                     className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="avatar" className="dark:text-slate-300">
-                  Avatar image
-                </Label>
-                <Input
-                  id="avatar"
-                  name="avatar"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                />
               </div>
 
               {profileError ? (

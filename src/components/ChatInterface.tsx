@@ -14,13 +14,12 @@ import { setCurrentSessionId } from "@/store/slice/chat.slice";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/components/ui/sidebar";
 import { getSessionManager } from "@/lib/ai/session-manager";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
 
 export default function ChatInterface() {
   const dispatch = useAppDispatch();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const urlSessionId = searchParams ? searchParams.get("id") : null;
   const messages = useAppSelector((state) => state.chat.messages);
@@ -29,8 +28,6 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const justCreatedSessionRef = useRef(false);
   const isFirstScrollRef = useRef(true);
-  const lastUrlSessionIdRef = useRef<string | null>(null);
-  const prevSessionIdRef = useRef<string | null>(null);
 
   const [input, setInput] = useState("");
   const [image, setImage] = useState<string | null>(null);
@@ -47,6 +44,7 @@ export default function ChatInterface() {
     isUserLoggedIn,
     justCreatedSessionRef,
     userRole,
+    userId: user?.id ?? null,
   });
 
   const { pdfStates, handleDownloadPDF } = useChatPdf({
@@ -87,53 +85,24 @@ export default function ChatInterface() {
     return () => clearTimeout(timer);
   }, [currentSessionId]);
 
-  // Sync URL search parameter id to Redux reactively
+  // Keep Redux in sync with URL as the single source of truth.
   useEffect(() => {
-    const prevSessionId = prevSessionIdRef.current;
-    prevSessionIdRef.current = currentSessionId;
+    // 1. If auth is loading, wait before syncing
+    if (isLoadingAuth) return;
 
-    if (prevSessionId && !currentSessionId && urlSessionId) {
-      const basePath =
-        typeof window !== "undefined" && window.location.pathname ? window.location.pathname : "/";
-      router.replace(basePath);
-      lastUrlSessionIdRef.current = null;
+    // 2. If user is logged out, clear currentSessionId in Redux
+    if (!isUserLoggedIn) {
+      if (currentSessionId !== null) {
+        dispatch(setCurrentSessionId(null));
+      }
       return;
     }
 
-    if (lastUrlSessionIdRef.current === urlSessionId) {
-      return;
-    }
-
-    lastUrlSessionIdRef.current = urlSessionId;
-
-    if (!urlSessionId && currentSessionId) {
-      return;
-    }
-
+    // 3. Sync Redux currentSessionId to match URL search parameter id
     if (urlSessionId !== currentSessionId) {
       dispatch(setCurrentSessionId(urlSessionId));
     }
-  }, [urlSessionId, currentSessionId, dispatch, router]);
-
-  // Keep URL in sync when a new session is created client-side.
-  // When urlSessionId already exists, URL is the source of truth — Effect 1 handles the sync.
-  // Every caller that dispatches setCurrentSessionId (sidebar, sender, etc.) already updates
-  // the URL themselves, so this effect only covers edge cases where no URL session ID exists.
-  useEffect(() => {
-    if (!currentSessionId) return;
-    if (urlSessionId === currentSessionId) return;
-
-    // If URL already has a (different) session ID, let Effect 1 (URL→Redux) reconcile.
-    // Overwriting URL here with a stale Redux value causes an infinite sync loop.
-    if (urlSessionId) return;
-
-    const targetUrl =
-      typeof window !== "undefined" && window.location.pathname.startsWith("/chat/")
-        ? `${window.location.pathname}?id=${currentSessionId}`
-        : `/?id=${currentSessionId}`;
-
-    router.replace(targetUrl);
-  }, [currentSessionId, urlSessionId, router]);
+  }, [urlSessionId, currentSessionId, isUserLoggedIn, isLoadingAuth, dispatch]);
 
   // Abort in-flight requests when component unmounts
   useEffect(() => {
@@ -191,6 +160,7 @@ export default function ChatInterface() {
           setInput={setInput}
           onSend={sendMessage}
           isLoading={isLoading}
+          isAuthLoading={isLoadingAuth}
           image={image}
           setImage={setImage}
           setFileContent={setFileContent}

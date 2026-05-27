@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Send, Plus, X, FileText, BrainCircuit, Camera } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ type Props = {
   setInput: (val: string) => void;
   onSend: () => void;
   isLoading: boolean;
+  isAuthLoading?: boolean;
   image: string | null;
   setImage: (val: string | null) => void;
   setFileContent: (val: string | null) => void;
@@ -25,6 +26,7 @@ export default function ChatFooter({
   setInput,
   onSend,
   isLoading,
+  isAuthLoading = false,
   image,
   setImage,
   setFileContent,
@@ -38,16 +40,6 @@ export default function ChatFooter({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const prevent = (e: DragEvent) => e.preventDefault();
-    window.addEventListener("dragover", prevent);
-    window.addEventListener("drop", prevent);
-    return () => {
-      window.removeEventListener("dragover", prevent);
-      window.removeEventListener("drop", prevent);
-    };
-  }, []);
-
   // Sync native file inputs when image/fileName state is cleared by parent or user
   useEffect(() => {
     if (!image && !fileName) {
@@ -56,61 +48,64 @@ export default function ChatFooter({
     }
   }, [image, fileName]);
 
-  const handleFile = async (file: File) => {
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result as string);
-      reader.readAsDataURL(file);
-      setFileContent(null);
-      setFileName(null);
-    } else if (file.type === "application/pdf") {
-      const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
-      if (file.size > MAX_PDF_SIZE) {
-        alert("The PDF file is too large. Please upload a file smaller than 10MB.");
-        return;
+  const handleFile = useCallback(
+    async (file: File) => {
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onloadend = () => setImage(reader.result as string);
+        reader.readAsDataURL(file);
+        setFileContent(null);
+        setFileName(null);
+      } else if (file.type === "application/pdf") {
+        const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
+        if (file.size > MAX_PDF_SIZE) {
+          alert("The PDF file is too large. Please upload a file smaller than 10MB.");
+          return;
+        }
+
+        setIsParsing(true);
+        try {
+          const getPDFText = (await import("react-pdftotext")).default;
+
+          // Wrap parsing with a 20-second timeout to prevent deadlocks
+          const parsePromise = getPDFText(file);
+          const timeoutPromise = new Promise<string>((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Timeout (20s) exceeded while parsing the PDF.")),
+              20000
+            )
+          );
+
+          const text = await Promise.race([parsePromise, timeoutPromise]);
+          setImage(null);
+          setFileName(file.name);
+          setFileContent(text);
+        } catch (e) {
+          console.error("PDF parsing failed:", e);
+          const errorMsg = e instanceof Error ? e.message : "Failed to read PDF text.";
+          alert(`${errorMsg} Please try another file.`);
+        } finally {
+          setIsParsing(false);
+        }
+      } else {
+        const MAX_TEXT_SIZE = 5 * 1024 * 1024; // 5MB
+        if (file.size > MAX_TEXT_SIZE) {
+          alert("The file is too large. Please upload a file smaller than 5MB.");
+          return;
+        }
+
+        // Basic text file support
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImage(null);
+          setFileName(file.name);
+          setFileContent(e.target?.result as string);
+        };
+        reader.readAsText(file);
       }
-
-      setIsParsing(true);
-      try {
-        const getPDFText = (await import("react-pdftotext")).default;
-
-        // Wrap parsing with a 20-second timeout to prevent deadlocks
-        const parsePromise = getPDFText(file);
-        const timeoutPromise = new Promise<string>((_, reject) =>
-          setTimeout(
-            () => reject(new Error("Timeout (20s) exceeded while parsing the PDF.")),
-            20000
-          )
-        );
-
-        const text = await Promise.race([parsePromise, timeoutPromise]);
-        setImage(null);
-        setFileName(file.name);
-        setFileContent(text);
-      } catch (e) {
-        console.error("PDF parsing failed:", e);
-        const errorMsg = e instanceof Error ? e.message : "Failed to read PDF text.";
-        alert(`${errorMsg} Please try another file.`);
-      } finally {
-        setIsParsing(false);
-      }
-    } else {
-      const MAX_TEXT_SIZE = 5 * 1024 * 1024; // 5MB
-      if (file.size > MAX_TEXT_SIZE) {
-        alert("The file is too large. Please upload a file smaller than 5MB.");
-        return;
-      }
-
-      // Basic text file support
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImage(null);
-        setFileName(file.name);
-        setFileContent(e.target?.result as string);
-      };
-      reader.readAsText(file);
-    }
-  };
+    },
+    [setImage, setFileName, setFileContent]
+  );
 
   const removeAttachment = () => {
     setImage(null);
@@ -118,32 +113,70 @@ export default function ChatFooter({
     setFileName(null);
   };
 
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      const f = e.dataTransfer.files?.[0];
+      if (f) {
+        void handleFile(f);
+      }
+    },
+    [handleFile]
+  );
+
+  useEffect(() => {
+    const handleDocumentDragOver = (event: DragEvent) => {
+      event.preventDefault();
+    };
+
+    const handleDocumentDrop = (event: DragEvent) => {
+      event.preventDefault();
+      setIsDragging(false);
+    };
+
+    const handleDocumentDragEnd = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener("dragover", handleDocumentDragOver);
+    document.addEventListener("drop", handleDocumentDrop);
+    document.addEventListener("dragend", handleDocumentDragEnd);
+
+    return () => {
+      document.removeEventListener("dragover", handleDocumentDragOver);
+      document.removeEventListener("drop", handleDocumentDrop);
+      document.removeEventListener("dragend", handleDocumentDragEnd);
+    };
+  }, []);
+
   return (
     <div
       className="relative"
-      onDragEnter={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(true);
-      }}
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
-      onDragLeave={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-          setIsDragging(false);
-        }
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-        const f = e.dataTransfer.files?.[0];
-        if (f) handleFile(f);
-      }}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <footer className="bg-background p-2 sm:p-4 pb-4 sm:pb-6">
         <div className="w-full max-w-3xl mx-auto">
@@ -274,8 +307,9 @@ export default function ChatFooter({
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask anything"
-                onKeyDown={(e) => e.key === "Enter" && onSend()}
+                placeholder={isAuthLoading ? "Loading chat session..." : "Ask anything"}
+                onKeyDown={(e) => e.key === "Enter" && !isAuthLoading && onSend()}
+                disabled={isAuthLoading || isLoading || isParsing}
                 className="border-0 shadow-none focus-visible:ring-0 h-14 text-base"
                 suppressHydrationWarning={true}
               />
@@ -283,7 +317,9 @@ export default function ChatFooter({
               <Button
                 onClick={onSend}
                 size="icon"
-                disabled={(!input.trim() && !image && !fileName) || isLoading || isParsing}
+                disabled={
+                  (!input.trim() && !image && !fileName) || isLoading || isParsing || isAuthLoading
+                }
                 className="mr-2 rounded-full bg-sky-500 hover:bg-sky-600 active:scale-95 shrink-0"
                 suppressHydrationWarning={true}
               >

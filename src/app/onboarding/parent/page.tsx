@@ -1,61 +1,23 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import {
-  Loader2,
-  Sparkles,
-  UserRound,
-  Users,
-  ShieldCheck,
-  Camera,
-  CheckCircle2,
-  Mail,
-} from "lucide-react";
+import { Loader2, Sparkles, UserRound, Users, ShieldCheck, CheckCircle2, Mail } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
 
-import {
-  setProfileAvatar,
-  submitParentOnboarding,
-  type AvatarUploadState,
-  type ParentOnboardingState,
-} from "@/actions/profile.actions";
+import { submitParentOnboarding, type ParentOnboardingState } from "@/actions/profile.actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_ROUTES } from "@/constant/AppRoutes";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 
-const initialAvatarState: AvatarUploadState = { avatarUrl: null, error: null };
 const initialParentState: ParentOnboardingState = { error: null };
-
-function AvatarUploadButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      disabled={pending}
-      variant="secondary"
-      className="h-11 rounded-xl px-4 text-sm font-semibold"
-    >
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Uploading...
-        </>
-      ) : (
-        <>
-          <Camera className="mr-2 h-4 w-4" />
-          Upload Avatar
-        </>
-      )}
-    </Button>
-  );
-}
 
 function ParentSubmitButton() {
   const { pending } = useFormStatus();
@@ -83,51 +45,22 @@ function ParentSubmitButton() {
 
 export default function ParentOnboardingPage() {
   const router = useRouter();
-  const [avatarState, avatarAction] = useActionState(setProfileAvatar, initialAvatarState);
+  const { refreshProfile } = useAuth();
   const [parentState, parentAction] = useActionState(submitParentOnboarding, initialParentState);
-
-  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (parentState.success) {
       toast.success(parentState.message || "Family setup complete!");
-      router.push("/");
+      refreshProfile().then(() => {
+        router.push("/");
+      });
     } else if (parentState.error) {
       toast.error(parentState.error);
     }
-  }, [parentState, router]);
-
-  useEffect(() => {
-    return () => {
-      if (localPreviewUrl) {
-        URL.revokeObjectURL(localPreviewUrl);
-      }
-    };
-  }, [localPreviewUrl]);
-
-  const avatarUrl = useMemo(
-    () => avatarState.avatarUrl ?? localPreviewUrl,
-    [avatarState.avatarUrl, localPreviewUrl]
-  );
-
-  const onAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (localPreviewUrl) {
-      URL.revokeObjectURL(localPreviewUrl);
-    }
-
-    setLocalPreviewUrl(URL.createObjectURL(file));
-  };
+  }, [parentState, router, refreshProfile]);
 
   return (
-    <main
-      className="min-h-screen flex flex-col px-6 font-sans"
-      style={{
-        background: `radial-gradient(circle at top left, #c6e7ff 0%, #f6fafe 45%, rgb(132 251 66 / 0.08) 100%)`,
-      }}
-    >
+    <main className="min-h-screen flex flex-col px-6 font-sans bg-gradient-to-br from-sky-100 via-background to-emerald-50/30 dark:from-slate-950 dark:via-background dark:to-slate-950">
       <div className="my-auto mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2">
         {/* Left Side: Creative Content */}
         <div className="hidden flex-col gap-8 lg:flex">
@@ -140,25 +73,25 @@ export default function ParentOnboardingPage() {
             </div>
           </Link>
 
-          <Card className="relative border-2 border-slate-100 rounded-[32px] bg-white p-2 shadow-xl overflow-visible">
+          <Card className="relative border-2 border-border/50 rounded-[32px] bg-card text-card-foreground p-2 shadow-xl overflow-visible dark:border-slate-800">
             <CardContent className="p-8">
-              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full bg-blue-900 flex items-center justify-center shadow-lg">
+              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full bg-sky-600 flex items-center justify-center shadow-lg dark:bg-sky-500">
                 <Users className="text-white" />
               </div>
 
-              <p className="text-xl text-slate-600 italic leading-relaxed">
+              <p className="text-xl text-muted-foreground italic leading-relaxed">
                 “Welcome to the family! Let’s set up your parent profile so you can manage your
                 child’s learning journey safely and easily.”
               </p>
 
               <div className="mt-8 flex gap-3 flex-wrap">
-                <div className="flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-4 py-2">
+                <div className="flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-4 py-2 dark:border-sky-500/30 dark:bg-sky-500/20">
                   <ShieldCheck className="w-4 h-4 text-sky-500" />
-                  <span className="font-bold text-sm text-slate-700">Safety First</span>
+                  <span className="font-bold text-sm text-foreground/80">Safety First</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-4 py-2">
+                <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 dark:border-emerald-500/30 dark:bg-emerald-500/20">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span className="font-bold text-sm text-slate-700">Easy Setup</span>
+                  <span className="font-bold text-sm text-foreground/80">Easy Setup</span>
                 </div>
               </div>
 
@@ -176,113 +109,73 @@ export default function ParentOnboardingPage() {
         </div>
 
         {/* Right Side: Onboarding Card */}
-        <Card className="rounded-[40px] border-2 border-white bg-white/90 p-8 shadow-[0_40px_80px_-24px_rgba(0,101,141,0.15)] backdrop-blur-xl sm:p-10">
+        <Card className="rounded-[40px] border-2 border-border/50 bg-card/90 text-card-foreground p-8 shadow-[0_40px_80px_-24px_rgba(0,101,141,0.15)] backdrop-blur-xl sm:p-10 dark:border-slate-800">
           <div className="mb-8 text-center lg:text-left">
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight sm:text-5xl">
+            <h2 className="text-4xl font-black text-foreground tracking-tight sm:text-5xl">
               Parent Profile
             </h2>
-            <p className="mt-2 text-lg font-medium text-slate-500">
+            <p className="mt-2 text-lg font-medium text-muted-foreground">
               Start your family adventure! 👨‍👩‍👧‍👦
             </p>
           </div>
 
           <div className="space-y-8">
             {/* Avatar Section */}
-            <div className="flex items-center gap-6">
-              <div className="relative group flex-shrink-0">
-                <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-sky-50 shadow-xl ring-4 ring-sky-100 transition-transform group-hover:scale-105">
-                  {avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={avatarUrl}
-                      alt="Parent avatar preview"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <UserRound className="h-12 w-12 text-sky-500" />
-                  )}
-                </div>
-                <div className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg border-2 border-white">
-                  <Camera className="h-4 w-4" />
-                </div>
-              </div>
-
-              <form action={avatarAction} className="flex-1 space-y-3">
-                <Label htmlFor="avatar" className="text-sm font-bold text-slate-700 ml-1">
-                  Profile Photo
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="avatar"
-                    name="avatar"
-                    type="file"
-                    accept="image/*"
-                    onChange={onAvatarChange}
-                    className="h-10 rounded-xl border-2 border-slate-100 bg-white px-3 focus:border-sky-400 focus:ring-0 text-xs font-medium cursor-pointer"
-                    required
-                  />
-                  <AvatarUploadButton />
-                </div>
-                {avatarState.avatarUrl && (
-                  <p className="text-xs font-bold text-emerald-600 flex items-center gap-1 animate-in fade-in slide-in-from-left-2">
-                    <CheckCircle2 className="h-3 w-3" /> Looking good!
-                  </p>
-                )}
-              </form>
-            </div>
+            <AvatarUpload />
 
             {/* Info Section */}
             <form action={parentAction} className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-sm font-bold text-slate-700 ml-1">
-                    First Name
+                  <Label htmlFor="firstName" className="text-sm font-bold text-foreground ml-1">
+                    First Name<span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
-                    <UserRound className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <UserRound className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
                     <Input
                       id="firstName"
                       name="firstName"
                       placeholder="e.g. John"
                       required
-                      className="h-12 rounded-2xl border-2 border-slate-100 pl-11 focus:border-sky-400 focus:ring-0 text-base font-medium bg-white"
+                      className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-sm font-bold text-slate-700 ml-1">
-                    Last Name (Optional)
+                  <Label htmlFor="lastName" className="text-sm font-bold text-foreground ml-1">
+                    Last Name<span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
-                    <UserRound className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <UserRound className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
                     <Input
+                      required
                       id="lastName"
                       name="lastName"
                       placeholder="e.g. Smith"
-                      className="h-12 rounded-2xl border-2 border-slate-100 pl-11 focus:border-sky-400 focus:ring-0 text-base font-medium bg-white"
+                      className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="childEmail" className="text-sm font-bold text-slate-700 ml-1">
-                  Child&apos;s Email (Optional)
+                <Label htmlFor="childEmail" className="text-sm font-bold text-foreground ml-1">
+                  Child&apos;s Email <span className="text-muted-foreground">(Optional)</span>
                 </Label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
                   <Input
                     id="childEmail"
                     name="childEmail"
                     type="email"
                     placeholder="child@example.com"
-                    className="h-12 rounded-2xl border-2 border-slate-100 pl-11 focus:border-sky-400 focus:ring-0 text-base font-medium bg-white"
+                    className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
                   />
                 </div>
               </div>
 
               {parentState.error && (
-                <div className="animate-in fade-in slide-in-from-top-2 rounded-2xl border-2 border-rose-100 bg-rose-50 p-3 text-sm font-bold text-rose-700 text-center">
+                <div className="animate-in fade-in slide-in-from-top-2 rounded-2xl border-2 border-rose-500/20 bg-rose-500/10 p-3 text-sm font-bold text-rose-500 text-center">
                   {parentState.error}
                 </div>
               )}
@@ -290,9 +183,9 @@ export default function ParentOnboardingPage() {
               <ParentSubmitButton />
             </form>
 
-            <p className="text-center text-xs font-bold text-slate-400">
+            <p className="text-center text-xs font-bold text-muted-foreground">
               Need another account?{" "}
-              <Link href={APP_ROUTES.Signin} className="text-sky-600 hover:underline">
+              <Link href={APP_ROUTES.Signin} className="text-sky-500 hover:underline">
                 Sign in
               </Link>
             </p>

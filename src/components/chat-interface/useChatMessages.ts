@@ -7,8 +7,16 @@ import { fetchSessionMessages } from "@/actions/chat.actions";
 import { getParentSessionMessages } from "@/actions/dashboard.actions";
 import { Message, ChatMessageRow } from "@/types/chat.types";
 
+type CachedMessages = {
+  userId: string;
+  messages: Message[];
+  timestamp: number;
+};
+
 // Global client-side message cache for instant chat switching
-const messagesCache = new Map<string, Message[]>();
+const messagesCache = new Map<string, CachedMessages>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const MAX_CACHE_SIZE = 50;
 
 interface UseChatMessagesArgs {
   currentSessionId: string | null;
@@ -17,6 +25,7 @@ interface UseChatMessagesArgs {
   isUserLoggedIn: boolean;
   justCreatedSessionRef: React.MutableRefObject<boolean>;
   userRole?: string | null;
+  userId?: string | null;
 }
 
 export function useChatMessages({
@@ -26,6 +35,7 @@ export function useChatMessages({
   isUserLoggedIn,
   justCreatedSessionRef,
   userRole,
+  userId,
 }: UseChatMessagesArgs) {
   const dispatch = useAppDispatch();
   const [isSessionLoading, setIsSessionLoading] = useState(false);
@@ -39,8 +49,15 @@ export function useChatMessages({
 
   // Keep cache synced with Redux messages state
   useEffect(() => {
-    if (currentSessionId && messages.length > 0) {
-      messagesCache.set(currentSessionId, messages);
+    if (currentSessionId && messages.length > 0 && userId) {
+      // Bounded cache eviction (FIFO using Map insertion order)
+      if (messagesCache.size >= MAX_CACHE_SIZE && !messagesCache.has(currentSessionId)) {
+        const oldestKey = messagesCache.keys().next().value;
+        if (oldestKey !== undefined) {
+          messagesCache.delete(oldestKey);
+        }
+      }
+      messagesCache.set(currentSessionId, { userId, messages, timestamp: Date.now() });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
@@ -56,7 +73,14 @@ export function useChatMessages({
         return;
       }
 
-      // 2. Handle new/empty chat session
+      // 2. Return early if the user is logged out
+      if (!isUserLoggedIn) {
+        dispatch(setMessages([]));
+        setIsSessionLoading(false);
+        return;
+      }
+
+      // 3. Handle new/empty chat session
       if (!currentSessionId) {
         dispatch(setMessages([]));
         setIsSessionLoading(false);
@@ -72,11 +96,17 @@ export function useChatMessages({
 
       // 4. Try loading from cache instantly (Stale-While-Revalidate pattern)
       let hasCache = false;
-      if (messagesCache.has(currentSessionId)) {
+      if (userId && messagesCache.has(currentSessionId)) {
         const cached = messagesCache.get(currentSessionId);
-        if (cached) {
-          dispatch(setMessages(cached));
-          hasCache = true;
+        if (cached && cached.userId === userId) {
+          const isFresh = Date.now() - cached.timestamp < CACHE_TTL;
+          if (isFresh) {
+            dispatch(setMessages(cached.messages));
+            hasCache = true;
+          } else {
+            // Evict expired cache entry
+            messagesCache.delete(currentSessionId);
+          }
         }
       }
 
@@ -177,29 +207,59 @@ export function useChatMessages({
         // Compare if data changed before dispatching to avoid unnecessary rerenders
         const cachedMessages = messagesCache.get(currentSessionId);
         const hasDataChanged =
-          !cachedMessages || JSON.stringify(cachedMessages) !== JSON.stringify(mappedMessages);
+          !cachedMessages ||
+          cachedMessages.userId !== userId ||
+          JSON.stringify(cachedMessages.messages) !== JSON.stringify(mappedMessages);
 
         if (hasDataChanged) {
           dispatch(setMessages(mappedMessages));
-          messagesCache.set(currentSessionId, mappedMessages);
+          if (userId) {
+            // Bounded cache eviction
+            if (messagesCache.size >= MAX_CACHE_SIZE && !messagesCache.has(currentSessionId)) {
+              const oldestKey = messagesCache.keys().next().value;
+              if (oldestKey !== undefined) {
+                messagesCache.delete(oldestKey);
+              }
+            }
+            messagesCache.set(currentSessionId, {
+              userId,
+              messages: mappedMessages,
+              timestamp: Date.now(),
+            });
+          }
         } else {
         }
       } catch (error) {
         console.error("[ChatInterface] Failed to fetch session messages from DB:", error);
       } finally {
-        if (active) {
-          setIsSessionLoading(false);
-        }
+        setIsSessionLoading(false);
       }
     };
 
     loadMessages();
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void loadMessages();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     // Cleanup function runs when currentSessionId/auth states change or component unmounts
     return () => {
       active = false;
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentSessionId, isLoadingAuth, isUserLoggedIn, dispatch, justCreatedSessionRef, userRole]);
+  }, [
+    currentSessionId,
+    isLoadingAuth,
+    isUserLoggedIn,
+    dispatch,
+    justCreatedSessionRef,
+    userRole,
+    userId,
+  ]);
 
   return { isSessionLoading };
 }

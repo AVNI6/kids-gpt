@@ -189,7 +189,7 @@ export default function LearningProgress({
               </div>
             </div>
             <h3 className="text-slate-550 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
-              Quiz Accuracy
+              Overall Progress
             </h3>
             <p className="text-3xl font-black text-slate-900 dark:text-white">{accuracy}%</p>
           </CardContent>

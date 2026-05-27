@@ -10,15 +10,12 @@ import type { LinkedChildProfile, ChildDetailsResult } from "@/types/dashboard.t
 import { usePagination } from "@/hooks/use-pagination";
 
 export default function ActivitiesGrid({
-  linkedChildren,
   childDetails,
 }: {
   linkedChildren: LinkedChildProfile[];
   childDetails: ChildDetailsResult | null;
 }) {
   const [activeFilter, setActiveFilter] = useState("All");
-  const searchParams = useSearchParams();
-  const childId = searchParams?.get("childId");
 
   // Compute unique filters dynamically based on child's actual rewards/timeline logs
   const dynamicFilters = useMemo(() => {

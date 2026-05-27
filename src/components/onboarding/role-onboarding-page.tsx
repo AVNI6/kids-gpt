@@ -67,12 +67,7 @@ export function RoleOnboardingPage({ role }: Props) {
   const SidebarIcon = currentSidebar.icon;
 
   return (
-    <main
-      className="min-h-screen flex flex-col px-6 font-sans"
-      style={{
-        background: `radial-gradient(circle at top left, #c6e7ff 0%, #f6fafe 45%, rgb(132 251 66 / 0.08) 100%)`,
-      }}
-    >
+    <main className="min-h-screen flex flex-col px-6 font-sans bg-gradient-to-br from-sky-100 via-background to-emerald-50/30 dark:from-slate-950 dark:via-background dark:to-slate-950">
       <div className="my-auto mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2">
         {/* Left Side: Creative Content */}
         <div className="hidden flex-col gap-8 lg:flex">
@@ -85,22 +80,26 @@ export function RoleOnboardingPage({ role }: Props) {
             </div>
           </Link>
 
-          <Card className="relative border-2 border-slate-100 rounded-[32px] bg-white p-2 shadow-xl overflow-visible">
+          <Card className="relative border-2 border-border/50 rounded-[32px] bg-card text-card-foreground p-2 shadow-xl overflow-visible dark:border-slate-800">
             <CardContent className="p-8">
-              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full bg-blue-900 flex items-center justify-center shadow-lg">
+              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full bg-sky-600 flex items-center justify-center shadow-lg dark:bg-sky-500">
                 <SidebarIcon className="text-white" />
               </div>
 
-              <p className="text-xl text-slate-600 italic leading-relaxed">{currentSidebar.text}</p>
+              <p className="text-xl text-muted-foreground italic leading-relaxed">
+                {currentSidebar.text}
+              </p>
 
               <div className="mt-8 flex gap-3 flex-wrap">
-                <div className="flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-4 py-2">
+                <div className="flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-4 py-2 dark:border-sky-500/30 dark:bg-sky-500/20">
                   <ShieldCheck className="w-4 h-4 text-sky-500" />
-                  <span className="font-bold text-sm text-slate-700">Protected</span>
+                  <span className="font-bold text-sm text-foreground/80">Protected</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-4 py-2">
+                <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 dark:border-emerald-500/30 dark:bg-emerald-500/20">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span className="font-bold text-sm text-slate-700">{currentSidebar.badge}</span>
+                  <span className="font-bold text-sm text-foreground/80">
+                    {currentSidebar.badge}
+                  </span>
                 </div>
               </div>
 
@@ -118,12 +117,12 @@ export function RoleOnboardingPage({ role }: Props) {
         </div>
 
         {/* Right Side: Onboarding Card */}
-        <Card className="rounded-[40px] border-2 border-white bg-white/90 p-8 shadow-[0_40px_80px_-24px_rgba(0,101,141,0.15)] backdrop-blur-xl sm:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <Card className="rounded-[40px] border-2 border-border/50 bg-card/90 text-card-foreground p-8 shadow-[0_40px_80px_-24px_rgba(0,101,141,0.15)] backdrop-blur-xl sm:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar dark:border-slate-800">
           <div className="mb-6 text-center lg:text-left">
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">
+            <h2 className="text-4xl font-black text-foreground tracking-tight">
               {role === "parent" ? "Family Setup" : "Classroom Setup"}
             </h2>
-            <p className="mt-1 text-base font-medium text-slate-500">
+            <p className="mt-1 text-base font-medium text-muted-foreground">
               Create a safe space for your explorers! 🚀
             </p>
           </div>
@@ -146,30 +145,30 @@ export function RoleOnboardingPage({ role }: Props) {
                     key={r.id}
                     onClick={() => handleSelectRole(r.id as Role)}
                     disabled={isSubmitting}
-                    className="flex items-center gap-4 rounded-3xl border-2 border-slate-100 bg-white p-6 text-left transition-all hover:border-sky-400 hover:bg-sky-50 active:scale-[0.98] disabled:opacity-50"
+                    className="flex items-center gap-4 rounded-3xl border-2 border-border bg-card p-6 text-left transition-all hover:border-sky-500 hover:bg-sky-500/10 active:scale-[0.98] disabled:opacity-50 dark:border-slate-800 dark:hover:bg-sky-500/20"
                   >
                     <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600">
                       <Icon size={28} />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-xl font-bold text-slate-900">{r.label}</h4>
-                      <p className="text-sm text-slate-500">{r.desc}</p>
+                      <h4 className="text-xl font-bold text-foreground">{r.label}</h4>
+                      <p className="text-sm text-muted-foreground">{r.desc}</p>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-slate-300" />
+                    <ArrowRight className="h-5 w-5 text-muted-foreground/50" />
                   </button>
                 );
               })}
             </div>
 
             {statusMessage && (
-              <p className="text-center text-xs font-bold text-sky-600 animate-pulse">
+              <p className="text-center text-xs font-bold text-sky-500 animate-pulse">
                 {statusMessage}
               </p>
             )}
 
-            <p className="text-center text-xs font-bold text-slate-400">
+            <p className="text-center text-xs font-bold text-muted-foreground">
               Need help?{" "}
-              <Link href={APP_ROUTES.Signin} className="text-sky-600 hover:underline">
+              <Link href={APP_ROUTES.Signin} className="text-sky-500 hover:underline">
                 Sign in
               </Link>
             </p>

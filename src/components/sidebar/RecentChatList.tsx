@@ -15,7 +15,7 @@ interface RecentChatListProps {
   openPopoverId: string | null;
   setOpenPopoverId: (val: string | null) => void;
   pathname: string;
-  onSelectSession: (sessionId: string) => void;
+  onSelectSession: (sessionId: string, e?: React.MouseEvent) => void;
   onSaveRename: (e: React.FormEvent | React.FocusEvent, sessionId: string) => void;
   onStartRename: (e: React.MouseEvent, session: ChatSessionRow) => void;
   onSetSessionToShare: (sessionId: string | null) => void;
@@ -65,7 +65,7 @@ export default function RecentChatList({
                   <div
                     onClick={() => onSelectSession(session.id)}
                     className={cn(
-                      "w-full flex items-center justify-between rounded-xl py-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors cursor-pointer group/chat",
+                      "w-full flex items-center justify-between rounded-xl pl-1 py-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors cursor-pointer group/chat",
                       (pathname === "/" || pathname.startsWith("/chat/")) &&
                         currentSessionId === session.id
                         ? "bg-sidebar-accent text-sky-500"

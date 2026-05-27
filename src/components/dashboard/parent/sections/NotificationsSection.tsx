@@ -10,8 +10,7 @@ import {
   markAllNotificationsAsRead,
 } from "@/actions/dashboard.actions";
 import { createClient } from "@/lib/supabase/client";
-import { getRelativeTime } from "@/utils/timeUtils";
-
+import { getRelativeTime } from "@/hooks/timeUtils";
 interface NotificationItem {
   id: string;
   parent_id: string;

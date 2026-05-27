@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { PencilLine, Upload } from "lucide-react";
 
 import { updateKidProfile } from "@/actions/dashboard.actions";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,11 +23,6 @@ type Props = {
   profile: KidDashboardStats;
 };
 
-function getInitials(firstName: string | null, lastName: string | null) {
-  const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.trim();
-  return initials || "K";
-}
-
 function formatDateInput(dateOfBirth: string | null) {
   if (!dateOfBirth) {
     return "";
@@ -45,33 +40,6 @@ export default function KidProfileEditorDialog({ profile }: Props) {
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(profile.avatar_url);
-  const [avatarObjectUrl, setAvatarObjectUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (avatarObjectUrl) {
-        URL.revokeObjectURL(avatarObjectUrl);
-      }
-    };
-  }, [avatarObjectUrl]);
-
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      setPreviewUrl(profile.avatar_url);
-      setAvatarObjectUrl(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-    if (avatarObjectUrl) {
-      URL.revokeObjectURL(avatarObjectUrl);
-    }
-
-    setAvatarObjectUrl(objectUrl);
-    setPreviewUrl(objectUrl);
-  };
 
   const handleSubmit = async (formData: FormData) => {
     try {
@@ -101,25 +69,13 @@ export default function KidProfileEditorDialog({ profile }: Props) {
         </DialogHeader>
 
         <form action={handleSubmit} className="space-y-5 px-6 py-5">
-          <div className="flex items-center gap-4 rounded-3xl bg-slate-50 p-4 dark:bg-slate-950">
-            <Avatar
-              size="lg"
-              className="h-16 w-16 rounded-3xl border-2 border-sky-100 dark:border-slate-800"
-            >
-              <AvatarImage src={previewUrl ?? undefined} />
-              <AvatarFallback className="rounded-3xl bg-sky-100 text-sky-700 font-black dark:bg-sky-950/60 dark:text-sky-400">
-                {getInitials(profile.first_name, profile.last_name)}
-              </AvatarFallback>
-            </Avatar>
-
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-200">
-                Current avatar
-              </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Upload a new image to replace the current one.
-              </p>
-            </div>
+          <div className="flex justify-center p-6 border border-slate-100 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-950/50 backdrop-blur-xs">
+            <AvatarUpload
+              key={previewUrl}
+              initialAvatarUrl={previewUrl}
+              onUploadSuccess={(url) => setPreviewUrl(url)}
+              label="Pick a Profile Photo"
+            />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -134,27 +90,14 @@ export default function KidProfileEditorDialog({ profile }: Props) {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="date_of_birth">Date of birth</Label>
-              <Input
-                id="date_of_birth"
-                name="date_of_birth"
-                type="date"
-                defaultValue={formatDateInput(profile.date_of_birth)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="avatar">Avatar image</Label>
-              <Input
-                id="avatar"
-                name="avatar"
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="date_of_birth">Date of birth</Label>
+            <Input
+              id="date_of_birth"
+              name="date_of_birth"
+              type="date"
+              defaultValue={formatDateInput(profile.date_of_birth)}
+            />
           </div>
 
           {errorMessage ? (

@@ -7,7 +7,6 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   setSessions,
   setCurrentSessionId,
-  setMessages,
   updateSessionTitleInList,
 } from "@/store/slice/chat.slice";
 import { fetchUserSessions, deleteChatSession, updateSessionTitle } from "@/actions/chat.actions";
@@ -48,6 +47,7 @@ export default function Sidebar() {
   const sessions = useAppSelector((state) => state.chat.sessions);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
   const { user, userProfile, isUserLoggedIn, isLoading: isLoadingAuth } = useAuth();
+  const userRole = userProfile?.role ?? "kid";
 
   // Dialogs & Inline Action States
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
@@ -66,29 +66,48 @@ export default function Sidebar() {
 
   // Load chat sessions for authenticated user
   useEffect(() => {
+    let active = true;
+    let controller = new AbortController();
+
     const loadSessions = async () => {
-      // if (isLoadingAuth) {
-      //   return;
-      // }
-      if (user) {
-        const userSessions = await fetchUserSessions(user.id);
-        dispatch(setSessions(userSessions));
-      } else {
-        dispatch(setSessions([]));
+      if (isLoadingAuth) {
+        return;
+      }
+      try {
+        const userId = user?.id;
+        if (userId) {
+          controller.abort();
+          controller = new AbortController();
+          const userSessions = await fetchUserSessions(userId);
+          if (active) {
+            dispatch(setSessions(userSessions));
+          }
+        } else {
+          if (active) {
+            dispatch(setSessions([]));
+          }
+        }
+      } catch (err) {
+        if (active) {
+          console.error("Failed to load sessions:", err);
+        }
       }
     };
     loadSessions();
-  }, [user, isLoadingAuth, dispatch]);
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [user?.id, isLoadingAuth, dispatch]);
 
   const handleNewChat = () => {
     getSessionManager().abortActiveRequest();
-    dispatch(setCurrentSessionId(null));
-    dispatch(setMessages([]));
     if (isMobile && isOpen) {
       toggleSidebar();
     }
-    const targetUrl = pathname.startsWith("/chat/") ? pathname : "/";
-    router.push(targetUrl);
+    const chatRoute = userRole === "kid" ? "/" : `/chat/${userRole}`;
+    router.push(chatRoute);
   };
 
   const handleSelectSession = (sessionId: string) => {
@@ -98,12 +117,9 @@ export default function Sidebar() {
     if (isMobile && isOpen) {
       toggleSidebar();
     }
-    // Instantly update Redux state for instantaneous response
-    dispatch(setCurrentSessionId(sessionId));
 
-    const targetUrl = pathname.startsWith("/chat/")
-      ? `${pathname}?id=${sessionId}`
-      : `/?id=${sessionId}`;
+    const chatRoute = userRole === "kid" ? "/" : `/chat/${userRole}`;
+    const targetUrl = `${chatRoute}?id=${sessionId}`;
 
     router.push(targetUrl);
   };
@@ -133,12 +149,13 @@ export default function Sidebar() {
     if (!sessionToDelete) return;
     const targetSessionId = sessionToDelete;
 
-    // Close the dialog immediately
-    setSessionToDelete(null);
-    setIsDeleting(false);
-
-    // Perform deletion in background
-    await handleDeleteSession(targetSessionId);
+    setIsDeleting(true);
+    try {
+      await handleDeleteSession(targetSessionId);
+    } finally {
+      setIsDeleting(false);
+      setSessionToDelete(null);
+    }
   };
 
   const handleCopyShareLink = async (sessionId: string) => {
@@ -175,8 +192,6 @@ export default function Sidebar() {
       console.error("Rename failed");
     }
   };
-
-  const userRole = userProfile?.role ?? "kid";
 
   return (
     <>
