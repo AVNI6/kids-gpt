@@ -65,7 +65,7 @@ export default async function KidProfileManager() {
           </Badge>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-3">
           <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
               <Crown className="h-4 w-4 text-amber-500" />

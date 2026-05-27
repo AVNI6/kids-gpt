@@ -29,8 +29,16 @@ export default function ChatGPTKidSignupPage() {
   };
 
   const { register, handleSubmit } = useForm<FormValue>();
+  const [agreed, setAgreed] = useState(false);
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
+    if (!agreed) {
+      toast.error("Terms & Safety Rules Agreement Required", {
+        description: "Please check the box to agree to the Safety Rules and Privacy Terms.",
+      });
+      return;
+    }
+
     setSignupState("loading");
 
     const { data, error } = await supabase.auth.signUp({
@@ -172,8 +180,15 @@ export default function ChatGPTKidSignupPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <Checkbox required />
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <Checkbox
+                  id="agree-terms"
+                  checked={agreed}
+                  onCheckedChange={(checked) => setAgreed(checked === true)}
+                />
+                <label
+                  htmlFor="agree-terms"
+                  className="text-sm text-muted-foreground leading-relaxed cursor-pointer select-none"
+                >
                   I agree to the{" "}
                   <Link href="#" className="text-sky-600 font-semibold hover:underline">
                     Safety Rules
@@ -182,7 +197,7 @@ export default function ChatGPTKidSignupPage() {
                   <Link href="#" className="text-sky-600 font-semibold hover:underline">
                     Privacy Terms
                   </Link>
-                </p>
+                </label>
               </div>
 
               <Button
