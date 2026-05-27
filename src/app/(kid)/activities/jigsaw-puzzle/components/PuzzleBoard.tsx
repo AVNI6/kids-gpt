@@ -56,7 +56,7 @@ export default function PuzzleBoard({
   return (
     <div
       ref={boardRef}
-      className="relative w-full aspect-square mx-auto rounded-[28px] overflow-visible select-none shadow-2xl border border-slate-800/80 bg-slate-950/60"
+      className="relative w-full aspect-square mx-auto rounded-[28px] overflow-visible select-none shadow-2xl border border-border dark:border-slate-800/80 bg-slate-100/30 dark:bg-slate-950/60 backdrop-blur-xs"
       role="grid"
       aria-label="Jigsaw Puzzle Board"
     >
@@ -81,8 +81,8 @@ export default function PuzzleBoard({
         aria-hidden
         className="absolute inset-0 rounded-[28px] pointer-events-none"
         style={{
-          boxShadow: "inset 0 4px 20px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.03)",
+          boxShadow: "inset 0 4px 20px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.05)",
+          border: "1px solid var(--border)",
         }}
       />
 
@@ -93,7 +93,7 @@ export default function PuzzleBoard({
           position: "absolute",
           inset: 0,
           borderRadius: 26,
-          backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, var(--border) 1.5px, transparent 1.5px)",
           backgroundSize: tileSize > 0 ? `${tileSize}px ${tileSize}px` : "60px 60px",
           pointerEvents: "none",
         }}

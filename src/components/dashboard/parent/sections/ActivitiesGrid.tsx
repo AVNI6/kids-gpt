@@ -139,7 +139,7 @@ export default function ActivitiesGrid({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex overflow-x-auto no-scrollbar lg:flex-wrap gap-2">
         {dynamicFilters.map((filter) => (
           <Button
             key={filter.slug}

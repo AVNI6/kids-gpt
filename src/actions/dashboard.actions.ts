@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getLocalDateString } from "@/lib/utils";
 import type { UserRole } from "@/types/auth";
+import type { JsonObject } from "@/types/json";
 import type {
   DashboardUserProfile,
   KidDashboardStats,
@@ -26,6 +27,7 @@ interface RewardQueryResult {
   rewards_amount: number | null;
   description: string | null;
   created_at: string | null;
+  updated_at: string | null;
   source_type: string | null;
   score: number | null;
   activity_settings:
@@ -50,6 +52,21 @@ type EmailLinkResult = {
 type ProfileUpdateResult = {
   error: string | null;
 };
+
+interface ParentNotificationReward {
+  id: string;
+  updated_at: string | null;
+  created_at: string | null;
+  user_id: string;
+  description: string | null;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
 
 async function getSupabaseClient() {
   return createClient();
@@ -494,11 +511,22 @@ export async function saveKidActivityProgress(
           .eq("user_id", userId)
           .maybeSingle();
         const kidName = prof?.first_name || "Your child";
+
+        // Query the latest reward for the kid to get its ID
+        const { data: latestReward } = await supabase
+          .from("rewards")
+          .select("id")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
         await createParentNotification(
           userId,
           "quiz_completed",
           "Activity Completed",
-          `${kidName} completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`
+          `${kidName} completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
+          latestReward ? { reward_id: latestReward.id } : {}
         );
       } catch (e) {
         console.warn("Failed to trigger parent notification in RPC path:", e);
@@ -619,18 +647,24 @@ export async function saveKidActivityProgress(
     }
 
     // Insert reward record with dynamic XP, description, and score column
-    const { error: insertError } = await supabase.from("rewards").insert({
-      user_id: userId,
-      rewards_amount: actualXp,
-      source_id: activitySetting?.id || null,
-      source_type: activitySetting?.slug || activitySlug,
-      description: `Completed ${activitySetting?.title || activityTitle}${score ? ` (Score: ${score})` : ""}`,
-      score: parsedScore,
-    });
+    const { data: insertedRewards, error: insertError } = await supabase
+      .from("rewards")
+      .insert({
+        user_id: userId,
+        rewards_amount: actualXp,
+        source_id: activitySetting?.id || null,
+        source_type: activitySetting?.slug || activitySlug,
+        description: `Completed ${activitySetting?.title || activityTitle}${score ? ` (Score: ${score})` : ""}`,
+        score: parsedScore,
+      })
+      .select("id");
 
     if (insertError) {
       return { success: false, error: insertError.message };
     }
+
+    const insertedReward =
+      insertedRewards && insertedRewards.length > 0 ? insertedRewards[0] : null;
 
     // Update profile with dynamic XP and streaks
     const newXp = (profile.total_experience_points ?? 0) + actualXp;
@@ -658,7 +692,8 @@ export async function saveKidActivityProgress(
         userId,
         "quiz_completed",
         "Activity Completed",
-        `${kidName} completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`
+        `${kidName} completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
+        insertedReward ? { reward_id: insertedReward.id } : {}
       );
     } catch (e) {
       console.warn("Failed to trigger parent notification in fallback path:", e);
@@ -707,10 +742,10 @@ export async function getChildDetails(childUserId: string): Promise<ChildDetails
   const { data: rewards, error: rewardsError } = await supabase
     .from("rewards")
     .select(
-      "id, rewards_amount, description, created_at, source_type, score, activity_settings(id, slug, title)"
+      "id, rewards_amount, description, created_at, updated_at, source_type, score, activity_settings(id, slug, title)"
     )
     .eq("user_id", childUserId)
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false });
 
   if (rewardsError) {
     throw new Error(rewardsError.message);
@@ -726,7 +761,7 @@ export async function getChildDetails(childUserId: string): Promise<ChildDetails
       id: r.id,
       rewards_amount: r.rewards_amount,
       description: r.description,
-      created_at: r.created_at,
+      created_at: r.updated_at || r.created_at,
       source_type: r.source_type,
       score: r.score,
       activity_settings: actSettings
@@ -924,10 +959,10 @@ export async function getKidComprehensiveDetails(
   const { data: rewards, error: rewardsError } = await supabase
     .from("rewards")
     .select(
-      "id, rewards_amount, description, created_at, source_type, score, activity_settings(id, slug, title)"
+      "id, rewards_amount, description, created_at, updated_at, source_type, score, activity_settings(id, slug, title)"
     )
     .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false });
 
   if (rewardsError) {
     throw new Error(rewardsError.message);
@@ -943,7 +978,7 @@ export async function getKidComprehensiveDetails(
       id: r.id,
       rewards_amount: r.rewards_amount,
       description: r.description,
-      created_at: r.created_at,
+      created_at: r.updated_at || r.created_at,
       source_type: r.source_type,
       score: r.score,
       activity_settings: actSettings
@@ -1075,10 +1110,10 @@ export async function getParentActivities(childUserId: string): Promise<ParentAc
   const { data, error } = await supabase
     .from("rewards")
     .select(
-      "id, rewards_amount, description, created_at, source_type, score, activity_settings(id, slug, title)"
+      "id, rewards_amount, description, created_at, updated_at, source_type, score, activity_settings(id, slug, title)"
     )
     .eq("user_id", childUserId)
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false });
 
   if (error) throw error;
 
@@ -1086,7 +1121,7 @@ export async function getParentActivities(childUserId: string): Promise<ParentAc
     id: r.id,
     rewards_amount: r.rewards_amount ?? 0,
     description: r.description,
-    created_at: r.created_at,
+    created_at: r.updated_at || r.created_at,
     source_type: r.source_type ?? "",
     score: r.score,
     activity_settings: r.activity_settings
@@ -1220,89 +1255,69 @@ export async function getParentNotifications() {
   try {
     const { data, error } = await supabase
       .from("parent_notifications")
-      .select("id, parent_id, child_id, type, title, message, is_read, metadata, created_at")
+      .select(
+        "id, parent_id, child_id, type, title, message, is_read, metadata, created_at, updated_at"
+      )
       .eq("parent_id", parentId)
       .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+      .order("updated_at", { ascending: false });
 
     if (!error && data && data.length > 0) {
+      // Fetch associated rewards to map their exact updated_at timestamps
+      const childIds = Array.from(new Set(data.map((n) => n.child_id).filter(Boolean)));
+      if (childIds.length > 0) {
+        const { data: rewards } = await supabase
+          .from("rewards")
+          .select("id, updated_at, created_at, user_id, description")
+          .in("user_id", childIds);
+
+        if (rewards && rewards.length > 0) {
+          const typedRewards = rewards as ParentNotificationReward[];
+          const rewardMap = new Map<string, ParentNotificationReward>();
+          typedRewards.forEach((r) => rewardMap.set(r.id, r));
+
+          return data.map((notif) => {
+            const meta =
+              notif.metadata && typeof notif.metadata === "object" && !Array.isArray(notif.metadata)
+                ? (notif.metadata as JsonObject)
+                : ({} as JsonObject);
+            let matchedReward = null;
+
+            if (meta.reward_id) {
+              matchedReward = rewardMap.get(String(meta.reward_id));
+            }
+
+            if (!matchedReward) {
+              // Fallback: match by description text similarity
+              const msgLower = (notif.message || "").toLowerCase();
+              matchedReward = typedRewards.find((r) => {
+                if (r.user_id !== notif.child_id) return false;
+                const descLower = (r.description || "").toLowerCase();
+                return msgLower.includes(descLower) || descLower.includes(msgLower);
+              });
+            }
+
+            if (matchedReward) {
+              return {
+                ...notif,
+                created_at:
+                  matchedReward.updated_at ||
+                  matchedReward.created_at ||
+                  notif.updated_at ||
+                  notif.created_at,
+              };
+            }
+            return notif;
+          });
+        }
+      }
       return data;
     }
   } catch (err) {
-    console.warn("Table query failed, falling back to aggregated notifications:", err);
+    console.error("Error in getParentNotifications:", err);
   }
 
-  // Fallback aggregation
-  const linkedChildren = await getLinkedChildren();
-  const aggregated: Record<string, unknown>[] = [];
-
-  for (const child of linkedChildren) {
-    try {
-      const { data: alerts } = await supabase
-        .from("safety_alerts")
-        .select("id, trigger_type, input_text, created_at, resolved")
-        .eq("user_id", child.user_id)
-        .is("deleted_at", null);
-
-      if (alerts) {
-        alerts.forEach((alert) => {
-          aggregated.push({
-            id: alert.id,
-            parent_id: parentId,
-            child_id: child.user_id,
-            type: "safety_alert",
-            title: `Safety Alert`,
-            message: `${child.first_name} triggered a safety alert: "${alert.input_text}"`,
-            is_read: alert.resolved,
-            metadata: { alert_id: alert.id },
-            created_at: alert.created_at,
-          });
-        });
-      }
-    } catch (err) {
-      console.warn("Fallback safety alerts query failed:", err);
-    }
-
-    try {
-      const { data: rewards } = await supabase
-        .from("rewards")
-        .select("id, rewards_amount, description, created_at, source_type")
-        .eq("user_id", child.user_id)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (rewards) {
-        rewards.forEach((reward) => {
-          let type = "activity_completed";
-          let title = "Milestone";
-          if ((reward.description ?? "").toLowerCase().includes("quiz")) {
-            type = "quiz_completed";
-            title = "Quiz Completed";
-          }
-          aggregated.push({
-            id: reward.id,
-            parent_id: parentId,
-            child_id: child.user_id,
-            type,
-            title,
-            message: `${child.first_name} earned +${reward.rewards_amount} XP: ${reward.description}`,
-            is_read: false,
-            metadata: { reward_id: reward.id },
-            created_at: reward.created_at,
-          });
-        });
-      }
-    } catch (err) {
-      console.warn("Fallback rewards query failed:", err);
-    }
-  }
-
-  aggregated.sort(
-    (a, b) =>
-      new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime()
-  );
-
-  return aggregated;
+  return [];
 }
 
 export async function createParentNotification(
@@ -1378,32 +1393,62 @@ export async function markAllNotificationsAsRead() {
   const supabase = await getSupabaseClient();
   const { userId: parentId } = await verifyUserRole("parent");
 
+  let parentNotifSuccess = false;
+  let safetyAlertSuccess = false;
+  let errorMsg = "";
+
+  // 1. Mark all parent_notifications as read
   try {
     const { error } = await supabase
       .from("parent_notifications")
       .update({ is_read: true })
-      .eq("parent_id", parentId);
+      .eq("parent_id", parentId)
+      .eq("is_read", false);
 
-    if (!error) {
-      revalidatePath("/dashboard/parent");
-      return { success: true };
+    if (error) {
+      console.warn("Error marking parent_notifications as read:", error.message);
+      errorMsg = error.message;
+    } else {
+      parentNotifSuccess = true;
     }
-  } catch {
-    // Ignore and try fallback
+  } catch (err: unknown) {
+    console.warn("Caught exception in parent_notifications mark all as read:", err);
+    errorMsg = getErrorMessage(err);
   }
 
+  // 2. Mark all safety_alerts as resolved
   try {
     const linkedChildren = await getLinkedChildren();
-    for (const child of linkedChildren) {
-      await supabase.from("safety_alerts").update({ resolved: true }).eq("user_id", child.user_id);
+    if (linkedChildren && linkedChildren.length > 0) {
+      const childIds = linkedChildren.map((c) => c.user_id);
+      const { error } = await supabase
+        .from("safety_alerts")
+        .update({ resolved: true })
+        .in("user_id", childIds)
+        .eq("resolved", false);
+
+      if (error) {
+        console.warn("Error resolving safety_alerts:", error.message);
+        errorMsg = error.message;
+      } else {
+        safetyAlertSuccess = true;
+      }
+    } else {
+      safetyAlertSuccess = true;
     }
-    revalidatePath("/dashboard/parent");
-    return { success: true };
-  } catch {
-    // Ignore
+  } catch (err: unknown) {
+    console.warn("Caught exception in safety_alerts resolve all:", err);
+    errorMsg = getErrorMessage(err);
   }
 
-  return { success: true };
+  revalidatePath("/dashboard/parent");
+
+  // Return success if at least one operation succeeded
+  if (parentNotifSuccess || safetyAlertSuccess) {
+    return { success: true };
+  }
+
+  return { success: false, error: errorMsg || "Failed to mark all notifications as read." };
 }
 
 export async function getChildAiInsights(childUserId: string) {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getLocalDateString } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
+import { createParentNotification } from "@/actions/dashboard.actions";
 
 /**
  * Server Action to retrieve the highest unlocked World and Step for the Memory Match campaign
@@ -258,7 +259,37 @@ export async function saveMemoryCampaignProgress(
       return { success: false, error: profileUpdateError.message };
     }
 
+    // Fetch the newly upserted reward to get its ID for metadata
+    const { data: latestReward } = await supabase
+      .from("rewards")
+      .select("id")
+      .eq("user_id", userId)
+      .like("description", `%memory-match-w${worldId}-s%`)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    try {
+      const { data: prof } = await supabase
+        .from("profile")
+        .select("first_name")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const kidName = prof?.first_name || "Your child";
+
+      await createParentNotification(
+        userId,
+        "quiz_completed",
+        "Activity Completed",
+        `${kidName} completed Memory Match - World ${worldId}, Step ${stepNumber} (Score: ${scoreStr})`,
+        latestReward ? { reward_id: latestReward.id } : {}
+      );
+    } catch (e) {
+      console.warn("Failed to trigger parent notification for Memory Match:", e);
+    }
+
     // Revalidate dashboard caches
+    console.log("[saveMemoryCampaignProgress] Revalidating path caches...");
     revalidatePath("/dashboard/kid");
     revalidatePath("/dashboard/parent");
 

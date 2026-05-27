@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getLocalDateString } from "@/lib/utils";
 import { JIGSAW_THEMES } from "@/constant/JigsawThemes";
+import { createParentNotification } from "@/actions/dashboard.actions";
 
 /**
  * Server Action to securely claim XP for completing a Jigsaw Puzzle.
@@ -198,14 +199,17 @@ export async function claimJigsawXp(
     console.log(
       `[claimJigsawXp] Inserting new row into public.rewards. Payload: user_id=${userId}, rewards_amount=${actualXp}, description="${description}"`
     );
-    const { error: insertError } = await supabase.from("rewards").insert({
-      user_id: userId,
-      rewards_amount: actualXp,
-      source_id: activitySetting?.id || null,
-      source_type: "jigsaw-puzzle",
-      description,
-      score: 100,
-    });
+    const { data: insertedRewards, error: insertError } = await supabase
+      .from("rewards")
+      .insert({
+        user_id: userId,
+        rewards_amount: actualXp,
+        source_id: activitySetting?.id || null,
+        source_type: "jigsaw-puzzle",
+        description,
+        score: 100,
+      })
+      .select("id");
 
     if (insertError) {
       console.error(
@@ -215,6 +219,9 @@ export async function claimJigsawXp(
       return { success: false, error: `Database insertion failed: ${insertError.message}` };
     }
     console.log("[claimJigsawXp] Rewards insertion successful!");
+
+    const insertedReward =
+      insertedRewards && insertedRewards.length > 0 ? insertedRewards[0] : null;
 
     // 6. Update kid profile
     const newXp = (profile.total_experience_points ?? 0) + actualXp;
@@ -236,6 +243,25 @@ export async function claimJigsawXp(
       return { success: false, error: `Profile update failed: ${updateError.message}` };
     }
     console.log("[claimJigsawXp] Profile update successful!");
+
+    try {
+      const { data: prof } = await supabase
+        .from("profile")
+        .select("first_name")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const kidName = prof?.first_name || "Your child";
+
+      await createParentNotification(
+        userId,
+        "quiz_completed",
+        "Activity Completed",
+        `${kidName} completed Jigsaw Puzzle - ${difficultyName} (Theme: ${themeName})`,
+        insertedReward ? { reward_id: insertedReward.id } : {}
+      );
+    } catch (e) {
+      console.warn("Failed to trigger parent notification for Jigsaw Puzzle:", e);
+    }
 
     console.log("[claimJigsawXp] Revalidating path caches...");
     revalidatePath("/dashboard/kid");

@@ -10,6 +10,7 @@ import {
   markAllNotificationsAsRead,
 } from "@/actions/dashboard.actions";
 import { createClient } from "@/lib/supabase/client";
+import { getRelativeTime } from "@/utils/timeUtils";
 
 interface NotificationItem {
   id: string;
@@ -96,20 +97,6 @@ export default function NotificationsSection() {
     } catch (err) {
       console.error("Error marking all read:", err);
     }
-  };
-
-  const timeAgo = (dateString: string | null) => {
-    if (!dateString) return "Just now";
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    if (seconds < 60) return "Just now";
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
   };
 
   return (
@@ -200,8 +187,11 @@ export default function NotificationsSection() {
                         >
                           {notif.title}
                         </h3>
-                        <span className="text-xs font-bold text-slate-400 shrink-0">
-                          {timeAgo(notif.created_at)}
+                        <span
+                          suppressHydrationWarning
+                          className="text-xs font-bold text-slate-400 shrink-0"
+                        >
+                          {getRelativeTime(notif.created_at)}
                         </span>
                       </div>
                       <p
