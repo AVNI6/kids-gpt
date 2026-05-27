@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
-import { downloadPdfBlob, downloadPdfFromUrl, generatePdfBlob } from "@/utils/pdf-helper";
+import { downloadPdfBlob, downloadPdfFromUrl, generatePdfBlob } from "@/hooks/pdf-helper";
 import { uploadFileToStorage, saveGeneratedMaterial } from "@/actions/chat.actions";
 import { Message, UserRole, ChatSession } from "@/types/chat.types";
 import { getUniqueStoragePath } from "./chat-utils";

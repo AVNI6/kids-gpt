@@ -19,7 +19,7 @@ import {
   updateChatMessageAttachment,
 } from "@/actions/chat.actions";
 import { Message, UserRole } from "@/types/chat.types";
-import { generatePdfBlob } from "@/utils/pdf-helper";
+import { generatePdfBlob } from "@/hooks/pdf-helper";
 import { getSessionManager } from "@/lib/ai/session-manager";
 import { getUniqueStoragePath } from "./chat-utils";
 

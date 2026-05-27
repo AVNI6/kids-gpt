@@ -47,6 +47,7 @@ export default function Sidebar() {
   const sessions = useAppSelector((state) => state.chat.sessions);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
   const { user, userProfile, isUserLoggedIn, isLoading: isLoadingAuth } = useAuth();
+  const userRole = userProfile?.role ?? "kid";
 
   // Dialogs & Inline Action States
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
@@ -73,10 +74,11 @@ export default function Sidebar() {
         return;
       }
       try {
-        if (user) {
+        const userId = user?.id;
+        if (userId) {
           controller.abort();
           controller = new AbortController();
-          const userSessions = await fetchUserSessions(user.id);
+          const userSessions = await fetchUserSessions(userId);
           if (active) {
             dispatch(setSessions(userSessions));
           }
@@ -93,30 +95,19 @@ export default function Sidebar() {
     };
     loadSessions();
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        void loadSessions();
-      }
-    };
-
-    window.addEventListener("focus", handleVisibilityChange);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
     return () => {
       active = false;
       controller.abort();
-      window.removeEventListener("focus", handleVisibilityChange);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [user, isLoadingAuth, dispatch]);
+  }, [user?.id, isLoadingAuth, dispatch]);
 
   const handleNewChat = () => {
     getSessionManager().abortActiveRequest();
     if (isMobile && isOpen) {
       toggleSidebar();
     }
-    const targetUrl = pathname.startsWith("/chat/") ? pathname : "/";
-    router.push(targetUrl);
+    const chatRoute = userRole === "kid" ? "/" : `/chat/${userRole}`;
+    router.push(chatRoute);
   };
 
   const handleSelectSession = (sessionId: string) => {
@@ -127,9 +118,8 @@ export default function Sidebar() {
       toggleSidebar();
     }
 
-    const targetUrl = pathname.startsWith("/chat/")
-      ? `${pathname}?id=${sessionId}`
-      : `/?id=${sessionId}`;
+    const chatRoute = userRole === "kid" ? "/" : `/chat/${userRole}`;
+    const targetUrl = `${chatRoute}?id=${sessionId}`;
 
     router.push(targetUrl);
   };
@@ -203,8 +193,6 @@ export default function Sidebar() {
     }
   };
 
-  const userRole = userProfile?.role ?? "kid";
-
   return (
     <>
       <ShadcnSidebar
@@ -269,7 +257,6 @@ export default function Sidebar() {
             toggleSidebar={toggleSidebar}
             onNewChat={handleNewChat}
             onSearchOpen={setSearchOpen}
-            newChatHref={pathname.startsWith("/chat/") ? pathname : "/"}
           />
 
           {isUserLoggedIn && isOpen && (

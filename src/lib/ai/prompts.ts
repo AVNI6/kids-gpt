@@ -1,5 +1,3 @@
-// Dynamic role-based prompt system
-
 import { UserRole } from "./types";
 
 // ===== CHAT PROMPTS =====

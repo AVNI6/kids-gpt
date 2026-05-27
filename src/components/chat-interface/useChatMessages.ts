@@ -232,9 +232,7 @@ export function useChatMessages({
       } catch (error) {
         console.error("[ChatInterface] Failed to fetch session messages from DB:", error);
       } finally {
-        if (active) {
-          setIsSessionLoading(false);
-        }
+        setIsSessionLoading(false);
       }
     };
 
@@ -246,13 +244,11 @@ export function useChatMessages({
       }
     };
 
-    window.addEventListener("focus", handleVisibilityChange);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Cleanup function runs when currentSessionId/auth states change or component unmounts
     return () => {
       active = false;
-      window.removeEventListener("focus", handleVisibilityChange);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [
