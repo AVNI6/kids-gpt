@@ -15,6 +15,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
 } from "@/actions/dashboard.actions";
+import { getRelativeTime } from "@/utils/timeUtils";
 
 export const PARENT_NAV_ITEMS = [
   { id: "home", label: "Home" },
@@ -48,20 +49,6 @@ export default function ParentTopNav({ profile }: Props) {
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-
-  const timeAgo = (dateString: string | null) => {
-    if (!dateString) return "Just now";
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    if (seconds < 60) return "Just now";
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  };
 
   const fetchNotifications = async () => {
     try {
@@ -238,8 +225,11 @@ export default function ParentTopNav({ profile }: Props) {
                               >
                                 {notif.title}
                               </span>
-                              <span className="text-[10px] font-bold text-slate-400 shrink-0 ml-2">
-                                {timeAgo(notif.created_at)}
+                              <span
+                                suppressHydrationWarning
+                                className="text-[10px] font-bold text-slate-400 shrink-0 ml-2"
+                              >
+                                {getRelativeTime(notif.created_at)}
                               </span>
                             </div>
                             <p

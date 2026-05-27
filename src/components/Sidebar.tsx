@@ -202,15 +202,15 @@ export default function Sidebar() {
                   toggleSidebar();
                 }
               }}
-              className="h-7 w-7 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95  cursor-pointer  "
+              className="group/btn h-7 w-7 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95 cursor-pointer"
             >
               {isOpen ? (
                 <Sparkles className="w-4 h-4" />
               ) : (
-                <div className="relative w-4 h-4 group">
-                  <Sparkles className="absolute inset-0 w-4 h-4 transition-all duration-200 group-hover:opacity-0 group-hover:scale-75" />
+                <div className="relative w-4 h-4">
+                  <Sparkles className="absolute inset-0 w-4 h-4 transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75" />
 
-                  <PanelRightClose className="absolute inset-0 w-4 h-4 opacity-0 scale-75 transition-all duration-200 group-hover:opacity-100 group-hover:scale-100" />
+                  <PanelRightClose className="absolute inset-0 w-4 h-4 opacity-0 scale-75 transition-all duration-200 group-hover/btn:opacity-100 group-hover/btn:scale-100" />
                 </div>
               )}
             </button>
