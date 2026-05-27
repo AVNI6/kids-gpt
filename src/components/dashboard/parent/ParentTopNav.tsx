@@ -15,7 +15,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
 } from "@/actions/dashboard.actions";
-import { getRelativeTime } from "@/utils/timeUtils";
+import { getRelativeTime } from "@/hooks/timeUtils";
 
 export const PARENT_NAV_ITEMS = [
   { id: "home", label: "Home" },
