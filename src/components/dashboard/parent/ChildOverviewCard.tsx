@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Trophy } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/dashboard.types";
+import { useChildAge } from "@/hooks/useChildAge";
 
 export function ChildOverviewSkeleton() {
   return (
@@ -28,6 +29,8 @@ type ChildOverviewCardProps = {
 };
 
 export default function ChildOverviewCard({ child }: ChildOverviewCardProps) {
+  const { calculateAge } = useChildAge();
+
   if (!child) {
     return (
       <Card className="rounded-[28px] border-sky-100 bg-white shadow-sm">
@@ -47,18 +50,14 @@ export default function ChildOverviewCard({ child }: ChildOverviewCardProps) {
   let gradeText = "Explorer";
   let ageText = "";
   if (child.date_of_birth) {
-    const dob = new Date(child.date_of_birth);
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-      age--;
+    const age = calculateAge(child.date_of_birth);
+    if (age !== null) {
+      ageText = `Age ${age}`;
     }
-    ageText = `Age ${age}`;
 
     if (child.standard) {
       gradeText = `${child.standard} Explorer`;
-    } else {
+    } else if (age !== null) {
       const grade = age - 5;
       if (grade > 0) {
         gradeText = `Grade ${grade} Explorer`;

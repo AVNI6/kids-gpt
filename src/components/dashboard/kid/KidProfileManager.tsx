@@ -22,11 +22,14 @@ function formatDateOfBirth(dateOfBirth: string | null) {
     return dateOfBirth;
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  const formattedDate = new Intl.DateTimeFormat("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   }).format(parsedDate);
+
+  const age = new Date().getFullYear() - parsedDate.getFullYear();
+  return `${formattedDate} (${age} Yrs)`;
 }
 
 export default async function KidProfileManager() {

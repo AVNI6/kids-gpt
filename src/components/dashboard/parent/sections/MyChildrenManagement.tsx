@@ -55,25 +55,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-
-function getAge(dob: string | null): number | null {
-  if (!dob) return null;
-  const birthDate = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const m = today.getMonth() - birthDate.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-}
-
-function getGradeFromAge(age: number | null): string {
-  if (age === null) return "N/A";
-  if (age < 5) return "Pre-K";
-  if (age > 18) return "Graduated";
-  return `Grade ${age - 5}`;
-}
+import { useChildAge } from "@/hooks/useChildAge";
 
 export default function MyChildrenManagement({
   linkedChildren,
@@ -84,6 +66,7 @@ export default function MyChildrenManagement({
   const searchParams = useSearchParams();
   const [linkEmail, setLinkEmail] = useState("");
   const [linkMessage, setLinkMessage] = useState<string | null>(null);
+  const { calculateAge, displayAge } = useChildAge();
 
   // Read state from URL search params to ensure persistence across page refreshes
   const selectedChildId = searchParams?.get("selectedChildId") || null;
@@ -307,8 +290,8 @@ export default function MyChildrenManagement({
 
   // If a child is selected, show their full-page Detail Panel directly in place of children grid
   if (selectedChildId && selectedChild) {
-    const age = getAge(selectedChild.date_of_birth);
-    const gradeStr = getGradeFromAge(age);
+    const age = calculateAge(selectedChild.date_of_birth);
+    const gradeStr = displayAge(selectedChild.date_of_birth, selectedChild.standard);
     const ageStr = age !== null ? `Age ${age}` : "Age N/A";
     const totalXP = selectedChild.total_experience_points ?? 0;
     const totalCompleted = childDetails?.total_completed ?? activities.length ?? 0;
@@ -888,8 +871,8 @@ export default function MyChildrenManagement({
           </Card>
         ) : (
           linkedChildren.map((child) => {
-            const age = getAge(child.date_of_birth);
-            const gradeStr = getGradeFromAge(age);
+            const age = calculateAge(child.date_of_birth);
+            const gradeStr = displayAge(child.date_of_birth, child.standard);
             const ageStr = age !== null ? `Age ${age}` : "Age N/A";
 
             return (
@@ -943,9 +926,7 @@ export default function MyChildrenManagement({
                             Classroom
                           </p>
                           <p className="text-sm font-bold text-slate-800 dark:text-slate-250 truncate">
-                            {child.standard
-                              ? `Grade ${child.standard} Section A`
-                              : "Science Explorers (Mr. Smith)"}
+                            {child.standard}
                           </p>
                         </div>
                       </div>

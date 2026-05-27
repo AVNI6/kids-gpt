@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronDown, GraduationCap, Check } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/dashboard.types";
+import { useChildAge } from "@/hooks/useChildAge";
 
 type ChildSelectorTabsProps = {
   linkedChildren: LinkedChildProfile[];
@@ -17,6 +18,7 @@ export default function ChildSelectorTabs({ linkedChildren }: ChildSelectorTabsP
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { displayAge } = useChildAge();
 
   const currentChildId = searchParams?.get("childId") ?? linkedChildren[0]?.user_id ?? "";
   const activeChild = linkedChildren.find((c) => c.user_id === currentChildId) || linkedChildren[0];
@@ -46,20 +48,6 @@ export default function ChildSelectorTabs({ linkedChildren }: ChildSelectorTabsP
       return (first + last).toUpperCase();
     }
     return "C";
-  };
-
-  const getGradeFromAge = (dob: string | null, standard?: string | null): string => {
-    if (standard) return standard;
-    if (!dob) return "N/A";
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    if (age < 5) return "Pre-K";
-    return `Grade ${age - 5}`;
   };
 
   const handleSelect = (id: string) => {
@@ -96,7 +84,7 @@ export default function ChildSelectorTabs({ linkedChildren }: ChildSelectorTabsP
         </span>
 
         <span className="inline-flex items-center text-[10px] bg-sky-50 dark:bg-sky-955/20 text-sky-700 dark:text-sky-300 font-black px-2 py-0.5 rounded-full shrink-0 border border-sky-100/50 dark:border-sky-900/10">
-          {getGradeFromAge(activeChild.date_of_birth, activeChild.standard)}
+          {displayAge(activeChild.date_of_birth, activeChild.standard)}
         </span>
 
         <ChevronDown
@@ -139,7 +127,7 @@ export default function ChildSelectorTabs({ linkedChildren }: ChildSelectorTabsP
                         {child.first_name} {child.last_name}
                       </span>
                       <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">
-                        {getGradeFromAge(child.date_of_birth, child.standard)}
+                        {displayAge(child.date_of_birth, child.standard)}
                       </span>
                     </div>
                   </div>
