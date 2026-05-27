@@ -44,6 +44,7 @@ import {
   getChildDetails,
   getChildSafetyAndUsage,
 } from "@/actions/dashboard.actions";
+import { getDailyScreenTime } from "@/actions/screentime.actions";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import ChildSettingsModal from "../modals/ChildSettingsModal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +87,8 @@ export default function MyChildrenManagement({
   const [linkEmail, setLinkEmail] = useState("");
   const [linkMessage, setLinkMessage] = useState<string | null>(null);
 
+  const [activeSettingsChild, setActiveSettingsChild] = useState<LinkedChildProfile | null>(null);
+
   // Read state from URL search params to ensure persistence across page refreshes
   const selectedChildId = searchParams?.get("selectedChildId") || null;
   const activeSubTab =
@@ -117,6 +121,10 @@ export default function MyChildrenManagement({
   const [childSafety, setChildSafety] = useState<ChildSafetyAndUsageResult | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [activities, setActivities] = useState<ParentActivityItem[]>([]);
+  const [dailyScreenTime, setDailyScreenTime] = useState<{
+    screenTimeSeconds: number;
+    dailyLimitMinutes: number;
+  } | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
   const searchHistoryPagination = usePagination(searchHistory);
@@ -158,18 +166,28 @@ export default function MyChildrenManagement({
         setIsLoadingDetails(true);
       }
       try {
-        const [detailsData, safetyData, historyData, activitiesData] = await Promise.all([
-          getChildDetails(childId as string),
-          getChildSafetyAndUsage(childId as string),
-          getParentSearchHistory(childId as string),
-          getParentActivities(childId as string),
-        ]);
+        const [detailsData, safetyData, historyData, activitiesData, screenTimeData] =
+          await Promise.all([
+            getChildDetails(childId as string),
+            getChildSafetyAndUsage(childId as string),
+            getParentSearchHistory(childId as string),
+            getParentActivities(childId as string),
+            getDailyScreenTime(childId as string),
+          ]);
 
         if (isMounted) {
           setChildDetails(detailsData);
           setChildSafety(safetyData);
           setSearchHistory(historyData || []);
           setActivities(activitiesData || []);
+          if (screenTimeData.success) {
+            setDailyScreenTime({
+              screenTimeSeconds: screenTimeData.screenTimeSeconds,
+              dailyLimitMinutes: screenTimeData.dailyLimitMinutes,
+            });
+          } else {
+            setDailyScreenTime(null);
+          }
         }
       } catch (err) {
         console.error("Error fetching child details:", err);
@@ -312,14 +330,16 @@ export default function MyChildrenManagement({
     const ageStr = age !== null ? `Age ${age}` : "Age N/A";
     const totalXP = selectedChild.total_experience_points ?? 0;
     const totalCompleted = childDetails?.total_completed ?? activities.length ?? 0;
+    const usedMinutes = dailyScreenTime
+      ? Math.floor(dailyScreenTime.screenTimeSeconds / 60)
+      : (childSafety?.daily_screen_time_mins ?? 25);
+    const limitMinutes = dailyScreenTime ? dailyScreenTime.dailyLimitMinutes : 60;
+    const usagePercentage = Math.min(100, Math.round((usedMinutes / limitMinutes) * 100));
 
-    const screenTimeMins = childSafety?.daily_screen_time_mins ?? 25;
-    const screenTimeHrs = Math.floor(screenTimeMins / 60);
-    const screenTimeMinsRemaining = screenTimeMins % 60;
+    const usedHrs = Math.floor(usedMinutes / 60);
+    const usedMinsRemaining = usedMinutes % 60;
     const dailyTimeStr =
-      screenTimeHrs > 0
-        ? `${screenTimeHrs}h ${screenTimeMinsRemaining}m`
-        : `${screenTimeMinsRemaining}m`;
+      usedHrs > 0 ? `${usedHrs}h ${usedMinsRemaining}m` : `${usedMinsRemaining}m`;
 
     const weeklyTimeMins = (childSafety?.weekly_ai_interactions ?? 42) * 3;
     const weeklyTimeHrs = Math.floor(weeklyTimeMins / 60);
@@ -381,17 +401,44 @@ export default function MyChildrenManagement({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-6">
-              <div className="flex gap-6 items-start">
-                <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100/30 flex items-center justify-center shrink-0">
-                  <Clock className="w-6 h-6 text-sky-550" />
+              <div className="space-y-4">
+                <div className="flex gap-4 items-start justify-between">
+                  <div className="flex gap-4 items-start">
+                    <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100/30 flex items-center justify-center shrink-0">
+                      <Clock className="w-6 h-6 text-sky-550" />
+                    </div>
+                    <div>
+                      <h3 className="text-slate-500 dark:text-slate-450 font-bold text-xs uppercase tracking-wider mb-1">
+                        Time Spent Today
+                      </h3>
+                      <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
+                        {isLoadingDetails ? "..." : dailyTimeStr}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
+                    {usedMinutes} / {limitMinutes} min
+                  </span>
                 </div>
-                <div>
-                  <h3 className="text-slate-500 dark:text-slate-450 font-bold text-xs uppercase tracking-wider mb-1">
-                    Time Spent Today
-                  </h3>
-                  <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
-                    {isLoadingDetails ? "..." : dailyTimeStr}
-                  </p>
+
+                {/* Visual Progress Bar */}
+                <div className="space-y-1">
+                  <div className="h-2 w-full bg-slate-100 dark:bg-black/40 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${
+                        usagePercentage >= 90
+                          ? "from-rose-400 to-red-500"
+                          : usagePercentage >= 70
+                            ? "from-amber-450 to-orange-500"
+                            : "from-sky-400 to-indigo-500"
+                      }`}
+                      style={{ width: `${isLoadingDetails ? 0 : usagePercentage}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[9px] font-bold text-slate-400">
+                    <span>{usagePercentage}% used</span>
+                    <span>{limitMinutes} min limit</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -912,10 +959,8 @@ export default function MyChildrenManagement({
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => setActiveSettingsChild(child)}
                         className="text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:text-sky-400 dark:hover:bg-slate-900 rounded-full h-10 w-10 cursor-pointer transition-colors"
-                        onClick={() => {
-                          handleSelectChild(child.user_id, "progress");
-                        }}
                       >
                         <Settings2 className="w-5 h-5" />
                       </Button>
@@ -1003,6 +1048,17 @@ export default function MyChildrenManagement({
           })
         )}
       </div>
+
+      {/* Settings Modal */}
+      {activeSettingsChild && (
+        <ChildSettingsModal
+          child={activeSettingsChild}
+          isOpen={activeSettingsChild !== null}
+          onOpenChange={(open) => {
+            if (!open) setActiveSettingsChild(null);
+          }}
+        />
+      )}
     </div>
   );
 }

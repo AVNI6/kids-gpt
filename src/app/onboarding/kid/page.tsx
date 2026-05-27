@@ -168,7 +168,7 @@ export default function KidOnboardingPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="dateOfBirth" className="text-sm font-bold text-foreground ml-1">
-                    Birthday<span className="text-red-500">*</span>
+                    Birthdate<span className="text-red-500">*</span>
                   </Label>
                   <Input
                     required

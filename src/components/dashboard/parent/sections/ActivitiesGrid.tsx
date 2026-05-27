@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Puzzle, FileQuestion, Calendar } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import type { LinkedChildProfile, ChildDetailsResult } from "@/types/dashboard.types";
 import { usePagination } from "@/hooks/use-pagination";
 

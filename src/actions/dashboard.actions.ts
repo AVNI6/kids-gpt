@@ -428,6 +428,7 @@ export async function getLinkedChildren(): Promise<LinkedChildProfile[]> {
     )
     .eq("parent_user_id", userId)
     .eq("is_approved", true)
+    .eq("is_active", true)
     .is("deleted_at", null)
     .order("updated_at", { ascending: false });
 
