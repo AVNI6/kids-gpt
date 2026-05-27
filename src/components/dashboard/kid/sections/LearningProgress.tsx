@@ -60,14 +60,20 @@ export default function LearningProgress({ mastery }: { mastery: SubjectMastery 
 
   return (
     <section className="space-y-4 h-full flex flex-col">
-      <h2 className="text-2xl font-black text-slate-900 tracking-tight">Subject Mastery 📈</h2>
-      <Card className="rounded-[32px] border-slate-200 bg-white shadow-sm flex-1">
+      <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
+        Subject Mastery 📈
+      </h2>
+      <Card className="rounded-[32px] border-slate-200 bg-white shadow-sm flex-1 dark:border-slate-800 dark:bg-slate-900">
         <CardContent className="p-6 flex flex-col justify-center h-full gap-6">
           {subjects.map((subject, index) => (
             <div key={index} className="space-y-2">
               <div className="flex justify-between items-end">
-                <span className="font-black text-slate-700">{subject.name}</span>
-                <span className="text-sm font-bold text-slate-500">{subject.value}%</span>
+                <span className="font-black text-slate-700 dark:text-slate-200">
+                  {subject.name}
+                </span>
+                <span className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                  {subject.value}%
+                </span>
               </div>
               <Progress
                 value={subject.value}
@@ -77,9 +83,9 @@ export default function LearningProgress({ mastery }: { mastery: SubjectMastery 
             </div>
           ))}
 
-          <div className="mt-4 p-4 rounded-2xl bg-sky-50 border border-sky-100 text-sm font-bold text-sky-800 flex items-center justify-between">
+          <div className="mt-4 p-4 rounded-2xl bg-sky-50 border border-sky-100 text-sm font-bold text-sky-800 flex items-center justify-between dark:bg-sky-950/30 dark:border-sky-900/50 dark:text-sky-300">
             <span>Teacher Assessment Score</span>
-            <span className="text-lg text-sky-600 bg-white px-3 py-1 rounded-full shadow-sm">
+            <span className="text-lg text-sky-600 bg-white px-3 py-1 rounded-full shadow-sm dark:bg-slate-800 dark:text-sky-400">
               A+
             </span>
           </div>

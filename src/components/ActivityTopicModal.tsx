@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { X, Sparkles, Rocket } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -93,6 +93,7 @@ export default function ActivityTopicModal({
     setIsGenerating(true);
 
     try {
+      // Fallback: call server generator for other activities
       const generator = ACTIVITY_GENERATORS[activitySlug];
       if (!generator) {
         toast.error("No AI generator registered for this activity type.");

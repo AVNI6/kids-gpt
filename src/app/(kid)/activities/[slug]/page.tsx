@@ -37,6 +37,7 @@ export default function ActivityDetailPage({ params }: PageProps) {
     activity.slug === "math-challenges" ||
     activity.slug === "science-lab" ||
     activity.slug === "logic-puzzles" ||
+    activity.slug === "jigsaw-puzzle" ||
     activity.slug === "match-following";
 
   const handleStartClick = () => {

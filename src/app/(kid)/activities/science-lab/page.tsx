@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Beaker, CheckCircle2, FlaskConical, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/actions/activity.actions";
 import Link from "next/link";
@@ -49,14 +49,47 @@ export default function ScienceLabPage({
   const [selected, setSelected] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
-  const [isSavingProgress, setIsSavingProgress] = useState(false);
   const [xpReward, setXpReward] = useState<number>(160);
+  const hasClaimed = useRef(false);
 
   useEffect(() => {
     getActivityXp("science-lab").then(setXpReward);
   }, []);
 
   const safeExperiments = experiments.length > 0 ? experiments : defaultExperiments;
+
+  // Background Auto-Claiming Logic
+  useEffect(() => {
+    if (challengeCompleted && !hasClaimed.current) {
+      hasClaimed.current = true;
+      const autoClaim = async () => {
+        const scorePct = Math.round((correctCount / safeExperiments.length) * 100);
+        const scoreStr = `${scorePct}%`;
+        try {
+          const slug = labTitle
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+
+          const res = await saveKidActivityProgress(
+            slug || "science-lab",
+            xpReward,
+            labTitle,
+            scoreStr
+          );
+          if (res.success) {
+            toast.success("Lab Mission Completed! 🎉", {
+              description: `+${xpReward} XP automatically earned!`,
+            });
+          }
+        } catch (err) {
+          console.error("Auto-claim error:", err);
+        }
+      };
+      autoClaim();
+    }
+  }, [challengeCompleted, correctCount, safeExperiments.length, labTitle, xpReward]);
+
   const rawExp = safeExperiments[currentExp] || safeExperiments[0];
 
   const exp = {
@@ -78,40 +111,8 @@ export default function ScienceLabPage({
     }
   };
 
-  const handleFinish = async () => {
-    setIsSavingProgress(true);
-    const scorePct = Math.round((correctCount / safeExperiments.length) * 100);
-    const scoreStr = `${scorePct}%`;
-
-    try {
-      const slug = labTitle
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-
-      const res = await saveKidActivityProgress(
-        slug || "science-lab",
-        xpReward,
-        labTitle,
-        scoreStr
-      );
-
-      if (res.success) {
-        toast.success("Lab Mission Completed!", {
-          description: `+${xpReward} XP earned! Streak updated! 🎉`,
-        });
-        router.push(APP_ROUTES.Activities);
-      } else {
-        toast.error("Failed to save progress", {
-          description: res.error || "Please try again later.",
-        });
-      }
-    } catch (err) {
-      console.error("Error saving kid science lab progress:", err);
-      toast.error("Error saving progress");
-    } finally {
-      setIsSavingProgress(false);
-    }
+  const handleFinish = () => {
+    router.push(APP_ROUTES.Activities);
   };
 
   const handleReset = () => {
@@ -119,6 +120,7 @@ export default function ScienceLabPage({
     setSelected(null);
     setCorrectCount(0);
     setChallengeCompleted(false);
+    hasClaimed.current = false;
   };
 
   if (challengeCompleted) {
@@ -180,10 +182,9 @@ export default function ScienceLabPage({
               </Button>
               <Button
                 onClick={handleFinish}
-                disabled={isSavingProgress}
                 className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-base shadow-[0_6px_0px_0px_#047857] active:translate-y-1 active:shadow-none transition-all"
               >
-                {isSavingProgress ? "Saving..." : "Finish Mission 🏆"}
+                Continue 🎉
               </Button>
             </div>
           </CardContent>

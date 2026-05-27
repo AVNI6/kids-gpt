@@ -30,15 +30,19 @@ export default function AITutorCenter() {
 
   return (
     <section className="space-y-4 h-full flex flex-col">
-      <h2 className="text-2xl font-black text-slate-900 tracking-tight">AI Tutor 🤖</h2>
-      <Card className="rounded-[32px] border-sky-200 bg-linear-to-br from-sky-50 to-indigo-50 shadow-sm flex-1">
+      <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
+        AI Tutor 🤖
+      </h2>
+      <Card className="rounded-[32px] border-sky-200 bg-linear-to-br from-sky-50 to-indigo-50 shadow-sm flex-1 dark:border-sky-900/40 dark:from-sky-950/30 dark:to-indigo-950/30">
         <CardContent className="p-6 flex flex-col h-full justify-between gap-6">
-          <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-6 border border-white shadow-sm text-center flex-1 flex flex-col justify-center items-center">
+          <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-6 border border-white shadow-sm text-center flex-1 flex flex-col justify-center items-center dark:bg-slate-900/60 dark:border-slate-700/40">
             <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-4 shadow-lg animate-pulse">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-black text-slate-800 mb-2">Hi! I&apos;m your AI Tutor.</h3>
-            <p className="text-slate-600 font-medium max-w-sm">
+            <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-2">
+              Hi! I&apos;m your AI Tutor.
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 font-medium max-w-sm">
               I can help you with homework, explain hard concepts, or write fun stories together!
             </p>
 
@@ -55,7 +59,7 @@ export default function AITutorCenter() {
             </div>
           </div>
 
-          <div className="flex gap-2 items-center bg-white p-2 rounded-full shadow-sm border border-slate-100 focus-within:ring-2 focus-within:ring-indigo-200 transition-all">
+          <div className="flex gap-2 items-center bg-white p-2 rounded-full shadow-sm border border-slate-100 focus-within:ring-2 focus-within:ring-indigo-200 transition-all dark:bg-slate-900 dark:border-slate-700 dark:focus-within:ring-indigo-800">
             <Button
               size="icon"
               variant="ghost"
@@ -83,7 +87,9 @@ export default function AITutorCenter() {
           </div>
 
           <div className="flex justify-between items-center px-2">
-            <span className="text-xs font-bold text-slate-500">Recent Chats</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+              Recent Chats
+            </span>
             <Link href="/dashboard/kid/ai-tutor">
               <Button variant="link" className="text-indigo-600 font-bold h-auto p-0">
                 View All

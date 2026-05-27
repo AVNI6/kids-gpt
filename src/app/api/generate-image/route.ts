@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
     // Skip cache for edit requests
     if (!isEditRequest && imageCache.has(cacheKey)) {
       const cached = imageCache.get(cacheKey)!;
-      console.log(`[Image API] Cache hit for prompt: "${userPrompt}"`);
       return NextResponse.json({
         type: "image",
         image: cached.image,
@@ -77,9 +76,6 @@ export async function POST(req: NextRequest) {
       for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
         const apiKey = keys[keyIndex];
         try {
-          console.log(
-            `[Image API] ${isEditRequest ? "EDIT" : "GENERATE"} with ${modelName} using Key ${keyIndex + 1}/${keys.length}`
-          );
           const ai = new GoogleGenAI({ apiKey });
 
           // Build contents array — text prompt + optional reference image
@@ -100,7 +96,6 @@ export async function POST(req: NextRequest) {
             let mimeType = "image/png";
 
             if (inputImageBase64.startsWith("http")) {
-              console.log("[Image API] Fetching image from URL...");
               const imageRes = await fetch(inputImageBase64);
               if (!imageRes.ok) {
                 console.error("[Image API] Failed to fetch image URL");
@@ -114,10 +109,6 @@ export async function POST(req: NextRequest) {
               mimeType = parts[0].split(":")[1].split(";")[0];
               cleanBase64 = parts[1];
             }
-
-            console.log(
-              `[Image API] Image ready. Mime: ${mimeType}, Size: ${cleanBase64.length} chars`
-            );
 
             contents.push({
               inlineData: {
@@ -152,7 +143,6 @@ export async function POST(req: NextRequest) {
           }
 
           if (resultImageBase64) {
-            console.log(`[Image API] Success with ${modelName} using Key index ${keyIndex}`);
             const base64Url = `data:${resultMimeType};base64,${resultImageBase64}`;
 
             if (!isEditRequest) {
@@ -194,17 +184,12 @@ export async function POST(req: NextRequest) {
             errorMsg.includes("quota") ||
             errorMsg.includes("RESOURCE_EXHAUSTED")
           ) {
-            console.log(
-              `[Image API] Rate limited on ${modelName} with Key index ${keyIndex}, trying next...`
-            );
             continue;
           }
           break;
         }
       }
     }
-
-    console.log("[Image API] All Gemini models failed. Falling back to Pollinations.");
 
     const encodedPrompt = encodeURIComponent(userPrompt);
     const fallbackUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`;

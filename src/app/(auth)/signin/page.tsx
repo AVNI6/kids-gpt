@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { Suspense } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createClient } from "@/lib/supabase/client";
-import { FcGoogle } from "react-icons/fc";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { Mail, Lock, CheckCircle, BookOpen, Brain, Sparkles } from "lucide-react";
 import Link from "next/link";
 
@@ -29,18 +29,6 @@ function LoginPageContent() {
   };
 
   const { register, handleSubmit } = useForm<FormValue>();
-
-  const onSubmitOAuth = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/`,
-      },
-    });
-    if (error) {
-      toast.error("Google sign in failed", { description: error.message });
-    }
-  };
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     setIsSubmitting(true);
@@ -232,13 +220,7 @@ function LoginPageContent() {
           </div>
 
           <div className="grid gap-4">
-            <button
-              type="button"
-              onClick={() => onSubmitOAuth()}
-              className="rounded-full flex items-center justify-center gap-2 border-2 border-border py-4 font-bold hover:bg-muted text-foreground transition-all duration-200"
-            >
-              <FcGoogle className="text-xl" /> Sign In with Google
-            </button>
+            <GoogleSignInButton next="/onboarding" />
           </div>
 
           <p className="mt-8 text-center text-muted-foreground">

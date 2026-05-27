@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getLocalDateString } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
+import { createParentNotification } from "@/actions/dashboard.actions";
 
 /**
  * Server Action to retrieve the highest unlocked World and Step for the Memory Match campaign
@@ -29,8 +30,7 @@ export async function getMemoryMatchProgress() {
     const { data: rewards, error: rewardsError } = await supabase
       .from("rewards")
       .select("description")
-      .eq("user_id", user.id)
-      .eq("source_type", "activity");
+      .eq("user_id", user.id);
 
     if (rewardsError) {
       console.error("Error fetching rewards for memory match progress:", rewardsError);
@@ -109,7 +109,7 @@ export async function saveMemoryCampaignProgress(
   xpEarned: number,
   scoreStr: string,
   timezone: string = "Asia/Kolkata"
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; message?: string }> {
   try {
     const supabase = await createClient();
     const {
@@ -135,6 +135,38 @@ export async function saveMemoryCampaignProgress(
 
     const userId = user.id;
 
+    // Fetch Current Progress to enforce High Water Mark check (prevent progression regression & replay XP farming)
+    const { data: existingRewards, error: queryError } = await supabase
+      .from("rewards")
+      .select("description")
+      .eq("user_id", userId)
+      .like("description", `%memory-match-w${worldId}-s%`);
+
+    if (queryError) {
+      console.error("[saveMemoryCampaignProgress] Query progress error:", queryError.message);
+      return { success: false, error: queryError.message };
+    }
+
+    let maxDbStep = 0;
+    if (existingRewards && existingRewards.length > 0) {
+      for (const row of existingRewards) {
+        if (!row.description) continue;
+        const match = row.description.match(/memory-match-w(\d+)-s(\d+)/);
+        if (match) {
+          const wId = parseInt(match[1], 10);
+          const sNum = parseInt(match[2], 10);
+          if (wId === worldId && sNum > maxDbStep) {
+            maxDbStep = sNum;
+          }
+        }
+      }
+    }
+
+    if (maxDbStep >= stepNumber) {
+      // Condition A: Replay. Do not call RPC, do not update XP/streak, return success early.
+      return { success: true, message: "Replay completed. Progress preserved." };
+    }
+
     // Securely query dynamic XP settings from DB, falling back to the client-provided parameter
     let actualXp = xpEarned;
     const { data: activitySetting } = await supabase
@@ -152,7 +184,6 @@ export async function saveMemoryCampaignProgress(
       .from("rewards")
       .select("created_at")
       .eq("user_id", userId)
-      .eq("source_type", "activity")
       .order("created_at", { ascending: false })
       .limit(1);
 
@@ -196,10 +227,6 @@ export async function saveMemoryCampaignProgress(
 
     // 2. Upsert reward via SECURITY DEFINER RPC — bypasses RLS UPDATE restriction.
     //    INSERT on first stage for this world, UPDATE (accumulate XP) on subsequent stages.
-    console.log(
-      `[saveMemoryCampaignProgress] Calling RPC — World: ${worldId}, Step: ${stepNumber}, XP: ${actualXp}, Score: ${scoreStr}`
-    );
-
     const { error: rpcError } = await supabase.rpc("upsert_memory_reward", {
       p_user_id: userId,
       p_world_id: worldId,
@@ -212,10 +239,6 @@ export async function saveMemoryCampaignProgress(
       console.error("[saveMemoryCampaignProgress] RPC ERROR:", rpcError);
       return { success: false, error: rpcError.message };
     }
-
-    console.log(
-      `[saveMemoryCampaignProgress] RPC SUCCESS — World ${worldId} Step ${stepNumber} upserted. +${actualXp} XP.`
-    );
 
     // 3. Update profile with new XP and updated streak values
     const newXp = (profile.total_experience_points ?? 0) + actualXp;
@@ -236,11 +259,37 @@ export async function saveMemoryCampaignProgress(
       return { success: false, error: profileUpdateError.message };
     }
 
-    console.log(
-      `[saveMemoryCampaignProgress] Profile updated — Total XP: ${newXp}, Streak: ${currentStreak}, Longest: ${longestStreak}`
-    );
+    // Fetch the newly upserted reward to get its ID for metadata
+    const { data: latestReward } = await supabase
+      .from("rewards")
+      .select("id")
+      .eq("user_id", userId)
+      .like("description", `%memory-match-w${worldId}-s%`)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    try {
+      const { data: prof } = await supabase
+        .from("profile")
+        .select("first_name")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const kidName = prof?.first_name || "Your child";
+
+      await createParentNotification(
+        userId,
+        "quiz_completed",
+        "Activity Completed",
+        `${kidName} completed Memory Match - World ${worldId}, Step ${stepNumber} (Score: ${scoreStr})`,
+        latestReward ? { reward_id: latestReward.id } : {}
+      );
+    } catch (e) {
+      console.warn("Failed to trigger parent notification for Memory Match:", e);
+    }
 
     // Revalidate dashboard caches
+    console.log("[saveMemoryCampaignProgress] Revalidating path caches...");
     revalidatePath("/dashboard/kid");
     revalidatePath("/dashboard/parent");
 

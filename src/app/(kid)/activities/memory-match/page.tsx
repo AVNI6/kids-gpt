@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   Award,
@@ -53,7 +53,7 @@ export default function MemoryMatchPage() {
   const [matches, setMatches] = useState(0);
   const [flipsCount, setFlipsCount] = useState(0);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const hasClaimed = useRef(false);
 
   // Countdown Timer State
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -64,9 +64,11 @@ export default function MemoryMatchPage() {
   const [previewCountdown, setPreviewCountdown] = useState(5);
 
   // Fetch campaign progress and base XP reward on mount
-  const fetchProgress = async () => {
+  const fetchProgress = async (showLoadingScreen: boolean = false) => {
     try {
-      setLoadingProgress(true);
+      if (showLoadingScreen) {
+        setLoadingProgress(true);
+      }
       const [xpData, progressData] = await Promise.all([
         getActivityXp("memory-match"),
         getMemoryMatchProgress(),
@@ -85,13 +87,51 @@ export default function MemoryMatchPage() {
       console.error("Error loading campaign progress:", err);
       toast.error("Failed to load progress maps.");
     } finally {
-      setLoadingProgress(false);
+      if (showLoadingScreen) {
+        setLoadingProgress(false);
+      }
     }
   };
 
   useEffect(() => {
+    if (gameCompleted && activeStep && !hasClaimed.current) {
+      hasClaimed.current = true;
+
+      const autoClaim = async () => {
+        const accuracy = Math.max(
+          20,
+          Math.min(100, Math.round((activeStep.step.pairCount / flipsCount) * 100))
+        );
+        const scoreStr = `${accuracy}% Accuracy`;
+
+        try {
+          const res = await saveMemoryCampaignProgress(
+            activeStep.level.id,
+            activeStep.step.stepNumber,
+            xpReward,
+            scoreStr
+          );
+
+          if (res.success) {
+            toast.success("Stage Cleared! 🎉", {
+              description: `+${xpReward} XP automatically earned! Next step unlocked!`,
+            });
+            await fetchProgress(false);
+          } else {
+            console.error("Memory match auto-claim returned failure status:", res.error);
+          }
+        } catch (err) {
+          console.error("Memory match auto-claim exception:", err);
+        }
+      };
+
+      autoClaim();
+    }
+  }, [gameCompleted, activeStep, flipsCount, xpReward]);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
-      fetchProgress();
+      fetchProgress(true);
     }, 0);
     return () => clearTimeout(timer);
   }, []);
@@ -187,6 +227,7 @@ export default function MemoryMatchPage() {
     setGameCompleted(false);
     setTimeLeft(step.timeLimit);
     setGameFailed(false);
+    hasClaimed.current = false;
 
     // Trigger the initial 5s memory preview sneak peek
     setIsRevealedPreview(true);
@@ -237,45 +278,9 @@ export default function MemoryMatchPage() {
     }
   };
 
-  const handleFinishMission = async () => {
-    if (!activeStep) return;
-    setIsSavingProgress(true);
-
-    const accuracy = Math.max(
-      20,
-      Math.min(100, Math.round((activeStep.step.pairCount / flipsCount) * 100))
-    );
-    const scoreStr = `${accuracy}% Accuracy`;
-
-    try {
-      // Save campaign progress (keeps exactly 1 row per World in database)
-      const res = await saveMemoryCampaignProgress(
-        activeStep.level.id,
-        activeStep.step.stepNumber,
-        xpReward,
-        scoreStr
-      );
-
-      if (res.success) {
-        toast.success("Stage Cleared! 🎉", {
-          description: `+${xpReward} XP earned! Next step unlocked!`,
-        });
-
-        // Refresh campaign state & reload stats
-        await fetchProgress();
-        setActiveStep(null);
-        setGameCompleted(false);
-      } else {
-        toast.error("Failed to save progress", {
-          description: res.error || "Please try again later.",
-        });
-      }
-    } catch (err) {
-      console.error("Error saving campaign step progress:", err);
-      toast.error("Error saving progress");
-    } finally {
-      setIsSavingProgress(false);
-    }
+  const handleFinishMission = () => {
+    setActiveStep(null);
+    setGameCompleted(false);
   };
 
   const totalCompletedCount = completedSlugs.length;
@@ -495,16 +500,9 @@ export default function MemoryMatchPage() {
                 <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full max-w-md relative z-10">
                   <Button
                     onClick={handleFinishMission}
-                    disabled={isSavingProgress}
                     className="flex-1 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold py-6 shadow-md transform hover:-translate-y-0.5 active:translate-y-px text-sm"
                   >
-                    {isSavingProgress ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-                      </>
-                    ) : (
-                      "Claim Rewards 🎉"
-                    )}
+                    Continue 🎉
                   </Button>
                   <Button
                     onClick={() => initializeGame(level, step)}

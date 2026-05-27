@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Type, Sparkles, CheckCircle2, ArrowLeft, Award, RotateCcw, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Type, Sparkles, CheckCircle2, ArrowLeft, Award, RotateCcw } from "lucide-react";
 import { getActivityXp } from "@/actions/activity.actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,14 +34,47 @@ export default function WordScramblesPage({
   const [showResult, setShowResult] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [scrambleCompleted, setScrambleCompleted] = useState(false);
-  const [isSavingProgress, setIsSavingProgress] = useState(false);
   const [xpReward, setXpReward] = useState<number>(140);
+  const hasClaimed = useRef(false);
 
   useEffect(() => {
     getActivityXp("word-scrambles").then(setXpReward);
   }, []);
 
   const safeWords = words.length > 0 ? words : defaultWords;
+
+  // Background Auto-Claiming Logic
+  useEffect(() => {
+    if (scrambleCompleted && !hasClaimed.current) {
+      hasClaimed.current = true;
+      const autoClaim = async () => {
+        const scorePercent = Math.round((correctCount / safeWords.length) * 100);
+        const scoreStr = `${scorePercent}%`;
+        try {
+          const slugKey = scrambleTitle
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+
+          const res = await saveKidActivityProgress(
+            slugKey || "word-scrambles",
+            xpReward,
+            scrambleTitle,
+            scoreStr
+          );
+          if (res.success) {
+            toast.success("Progress Saved! 🎉", {
+              description: `+${xpReward} XP automatically earned!`,
+            });
+          }
+        } catch (err) {
+          console.error("Auto-claim error:", err);
+        }
+      };
+      autoClaim();
+    }
+  }, [scrambleCompleted, correctCount, safeWords.length, scrambleTitle, xpReward]);
+
   const word = safeWords[currentWord] || safeWords[0];
   const progress = ((currentWord + 1) / safeWords.length) * 100;
 
@@ -66,40 +99,8 @@ export default function WordScramblesPage({
     }
   };
 
-  const handleFinishMission = async () => {
-    setIsSavingProgress(true);
-    const finalScorePercent = Math.round((correctCount / safeWords.length) * 100);
-    const scoreStr = `${finalScorePercent}%`;
-
-    try {
-      const slugKey = scrambleTitle
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-
-      const res = await saveKidActivityProgress(
-        slugKey || "word-scrambles",
-        xpReward,
-        scrambleTitle,
-        scoreStr
-      );
-
-      if (res.success) {
-        toast.success("Progress Saved!", {
-          description: `+${xpReward} XP earned! Streak updated! 🎉`,
-        });
-        router.push(APP_ROUTES.Activities);
-      } else {
-        toast.error("Failed to save progress", {
-          description: res.error || "Please try again later.",
-        });
-      }
-    } catch (err) {
-      console.error("Error saving kid scramble progress:", err);
-      toast.error("Error saving progress");
-    } finally {
-      setIsSavingProgress(false);
-    }
+  const handleFinishMission = () => {
+    router.push(APP_ROUTES.Activities);
   };
 
   const handleRestart = () => {
@@ -108,6 +109,7 @@ export default function WordScramblesPage({
     setShowResult(false);
     setCorrectCount(0);
     setScrambleCompleted(false);
+    hasClaimed.current = false;
   };
 
   if (scrambleCompleted) {
@@ -180,16 +182,9 @@ export default function WordScramblesPage({
               <div className="mt-8 flex flex-col sm:flex-row gap-3 w-full max-w-md relative z-10">
                 <Button
                   onClick={handleFinishMission}
-                  disabled={isSavingProgress}
                   className="flex-1 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold py-6 shadow-md transform hover:-translate-y-0.5 active:translate-y-px text-sm"
                 >
-                  {isSavingProgress ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-                    </>
-                  ) : (
-                    "Claim Rewards 🎉"
-                  )}
+                  Continue 🎉
                 </Button>
                 <Button
                   onClick={handleRestart}

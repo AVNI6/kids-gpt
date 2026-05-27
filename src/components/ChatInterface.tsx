@@ -46,6 +46,7 @@ export default function ChatInterface() {
     isLoadingAuth,
     isUserLoggedIn,
     justCreatedSessionRef,
+    userRole,
   });
 
   const { pdfStates, handleDownloadPDF } = useChatPdf({
@@ -110,18 +111,21 @@ export default function ChatInterface() {
     }
 
     if (urlSessionId !== currentSessionId) {
-      console.log(
-        "[ChatInterface] Syncing Redux currentSessionId to match URL search param:",
-        urlSessionId
-      );
       dispatch(setCurrentSessionId(urlSessionId));
     }
-  }, [urlSessionId, currentSessionId, dispatch]);
+  }, [urlSessionId, currentSessionId, dispatch, router]);
 
-  // Keep URL in sync when a new session is created client-side
+  // Keep URL in sync when a new session is created client-side.
+  // When urlSessionId already exists, URL is the source of truth — Effect 1 handles the sync.
+  // Every caller that dispatches setCurrentSessionId (sidebar, sender, etc.) already updates
+  // the URL themselves, so this effect only covers edge cases where no URL session ID exists.
   useEffect(() => {
     if (!currentSessionId) return;
     if (urlSessionId === currentSessionId) return;
+
+    // If URL already has a (different) session ID, let Effect 1 (URL→Redux) reconcile.
+    // Overwriting URL here with a stale Redux value causes an infinite sync loop.
+    if (urlSessionId) return;
 
     const targetUrl =
       typeof window !== "undefined" && window.location.pathname.startsWith("/chat/")

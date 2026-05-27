@@ -118,7 +118,6 @@ export function useChatPdf({
                 },
                 user.id
               );
-              console.log("Background PDF uploaded to storage:", storageUrl);
             })
             .catch((uploadErr) => {
               console.error("Background PDF upload failed:", uploadErr);

@@ -48,7 +48,9 @@ export default function AchievementsRewards({ xp }: { xp: number }) {
 
   return (
     <section className="space-y-4 h-full flex flex-col">
-      <h2 className="text-2xl font-black text-slate-900 tracking-tight">Achievements 🏆</h2>
+      <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
+        Achievements 🏆
+      </h2>
       <Card className="rounded-[32px] border-amber-200 bg-linear-to-br from-amber-50 to-orange-50 shadow-sm flex-1">
         <CardContent className="p-6 h-full flex flex-col justify-between">
           <div className="flex items-center justify-between mb-6">
@@ -57,7 +59,9 @@ export default function AchievementsRewards({ xp }: { xp: number }) {
                 <Star className="w-6 h-6 fill-white" />
               </div>
               <div>
-                <h3 className="font-black text-xl text-slate-900">Level {level}</h3>
+                <h3 className="font-black text-xl text-slate-900 dark:text-slate-50">
+                  Level {level}
+                </h3>
                 <p className="text-sm font-bold text-amber-600">
                   {xp} / {level * 1000} XP
                 </p>
@@ -80,14 +84,14 @@ export default function AchievementsRewards({ xp }: { xp: number }) {
               return (
                 <div
                   key={i}
-                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border ${badge.unlocked ? "bg-white border-amber-100 shadow-sm" : "bg-slate-50 border-slate-100 opacity-70"} text-center group`}
+                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border ${badge.unlocked ? "bg-white border-amber-100 shadow-sm dark:bg-slate-800 dark:border-slate-700" : "bg-slate-50 border-slate-100 opacity-70 dark:bg-slate-900 dark:border-slate-800"} text-center group`}
                 >
                   <div
                     className={`p-3 rounded-full ${badge.bg} ${badge.color} mb-2 group-hover:scale-110 transition-transform`}
                   >
                     <Icon className="w-6 h-6" />
                   </div>
-                  <span className="text-xs font-bold text-slate-700 leading-tight">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-tight">
                     {badge.name}
                   </span>
                 </div>

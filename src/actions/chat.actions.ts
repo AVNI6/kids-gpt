@@ -28,7 +28,6 @@ export async function fetchUserSessions(userId?: string): Promise<ChatSessionRow
     return [];
   }
 
-  console.log("fetchUserSessions: found", data?.length, "sessions");
   return (data as ChatSessionRow[]) || [];
 }
 

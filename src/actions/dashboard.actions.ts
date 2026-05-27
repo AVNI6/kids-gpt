@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getLocalDateString } from "@/lib/utils";
 import type { UserRole } from "@/types/auth";
+import type { JsonObject } from "@/types/json";
 import type {
   DashboardUserProfile,
   KidDashboardStats,
@@ -13,12 +14,35 @@ import type {
   ChildActivityLog,
   ChildDetailsResult,
   ChildSafetyAndUsageResult,
+  ParentActivityItem,
 } from "@/types/dashboard.types";
 
 type VerifiedUser = {
   userId: string;
   profile: DashboardUserProfile;
 };
+
+interface RewardQueryResult {
+  id: string;
+  rewards_amount: number | null;
+  description: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  source_type: string | null;
+  score: number | null;
+  activity_settings:
+    | {
+        id: string;
+        slug: string;
+        title: string;
+      }
+    | {
+        id: string;
+        slug: string;
+        title: string;
+      }[]
+    | null;
+}
 
 type EmailLinkResult = {
   status: "success" | "pending" | "error";
@@ -28,6 +52,21 @@ type EmailLinkResult = {
 type ProfileUpdateResult = {
   error: string | null;
 };
+
+interface ParentNotificationReward {
+  id: string;
+  updated_at: string | null;
+  created_at: string | null;
+  user_id: string;
+  description: string | null;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
 
 async function getSupabaseClient() {
   return createClient();
@@ -104,7 +143,7 @@ export async function getKidStats(timezone: string = "Asia/Kolkata"): Promise<Ki
     .from("rewards")
     .select("created_at")
     .eq("user_id", userId)
-    .eq("source_type", "activity")
+    .not("source_id", "is", null)
     .order("created_at", { ascending: false })
     .limit(1);
 
@@ -465,6 +504,34 @@ export async function saveKidActivityProgress(
       "success" in rpcData &&
       (rpcData as import("@/types/json").JsonObject).success === true
     ) {
+      try {
+        const { data: prof } = await supabase
+          .from("profile")
+          .select("first_name")
+          .eq("user_id", userId)
+          .maybeSingle();
+        const kidName = prof?.first_name || "Your child";
+
+        // Query the latest reward for the kid to get its ID
+        const { data: latestReward } = await supabase
+          .from("rewards")
+          .select("id")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        await createParentNotification(
+          userId,
+          "quiz_completed",
+          "Activity Completed",
+          `${kidName} completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
+          latestReward ? { reward_id: latestReward.id } : {}
+        );
+      } catch (e) {
+        console.warn("Failed to trigger parent notification in RPC path:", e);
+      }
+
       revalidatePath("/dashboard/kid");
       revalidatePath("/dashboard/parent");
       return { success: true };
@@ -482,7 +549,7 @@ export async function saveKidActivityProgress(
     let actualXp = xpEarned;
     const { data: activitySetting } = await supabase
       .from("activity_settings")
-      .select("xp_reward")
+      .select("id, slug, title, xp_reward")
       .eq("slug", activitySlug)
       .maybeSingle();
 
@@ -539,7 +606,6 @@ export async function saveKidActivityProgress(
       .from("rewards")
       .select("created_at")
       .eq("user_id", userId)
-      .eq("source_type", "activity")
       .order("created_at", { ascending: false })
       .limit(1);
 
@@ -581,17 +647,24 @@ export async function saveKidActivityProgress(
     }
 
     // Insert reward record with dynamic XP, description, and score column
-    const { error: insertError } = await supabase.from("rewards").insert({
-      user_id: userId,
-      rewards_amount: actualXp,
-      source_type: "activity",
-      description: `Completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
-      score: parsedScore,
-    });
+    const { data: insertedRewards, error: insertError } = await supabase
+      .from("rewards")
+      .insert({
+        user_id: userId,
+        rewards_amount: actualXp,
+        source_id: activitySetting?.id || null,
+        source_type: activitySetting?.slug || activitySlug,
+        description: `Completed ${activitySetting?.title || activityTitle}${score ? ` (Score: ${score})` : ""}`,
+        score: parsedScore,
+      })
+      .select("id");
 
     if (insertError) {
       return { success: false, error: insertError.message };
     }
+
+    const insertedReward =
+      insertedRewards && insertedRewards.length > 0 ? insertedRewards[0] : null;
 
     // Update profile with dynamic XP and streaks
     const newXp = (profile.total_experience_points ?? 0) + actualXp;
@@ -606,6 +679,24 @@ export async function saveKidActivityProgress(
 
     if (updateError) {
       return { success: false, error: updateError.message };
+    }
+
+    try {
+      const { data: prof } = await supabase
+        .from("profile")
+        .select("first_name")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const kidName = prof?.first_name || "Your child";
+      await createParentNotification(
+        userId,
+        "quiz_completed",
+        "Activity Completed",
+        `${kidName} completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
+        insertedReward ? { reward_id: insertedReward.id } : {}
+      );
+    } catch (e) {
+      console.warn("Failed to trigger parent notification in fallback path:", e);
     }
 
     revalidatePath("/dashboard/kid");
@@ -650,22 +741,38 @@ export async function getChildDetails(childUserId: string): Promise<ChildDetails
   // 3. Fetch rewards (activities)
   const { data: rewards, error: rewardsError } = await supabase
     .from("rewards")
-    .select("id, rewards_amount, description, created_at, source_type")
+    .select(
+      "id, rewards_amount, description, created_at, updated_at, source_type, score, activity_settings(id, slug, title)"
+    )
     .eq("user_id", childUserId)
-    .eq("source_type", "activity")
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false });
 
   if (rewardsError) {
     throw new Error(rewardsError.message);
   }
 
-  const timeline: ChildActivityLog[] = (rewards ?? []).map((r) => ({
-    id: r.id,
-    rewards_amount: r.rewards_amount,
-    description: r.description,
-    created_at: r.created_at,
-    source_type: r.source_type,
-  }));
+  const timeline: ChildActivityLog[] = ((rewards as RewardQueryResult[]) ?? []).map((r) => {
+    const actSettings = r.activity_settings
+      ? Array.isArray(r.activity_settings)
+        ? r.activity_settings[0] || null
+        : r.activity_settings
+      : null;
+    return {
+      id: r.id,
+      rewards_amount: r.rewards_amount,
+      description: r.description,
+      created_at: r.updated_at || r.created_at,
+      source_type: r.source_type,
+      score: r.score,
+      activity_settings: actSettings
+        ? {
+            id: actSettings.id,
+            slug: actSettings.slug,
+            title: actSettings.title,
+          }
+        : null,
+    };
+  });
 
   const totalCompleted = timeline.length;
   const totalXp = childProfile.total_experience_points ?? 0;
@@ -851,22 +958,38 @@ export async function getKidComprehensiveDetails(
   // 2. Fetch rewards (activities)
   const { data: rewards, error: rewardsError } = await supabase
     .from("rewards")
-    .select("id, rewards_amount, description, created_at, source_type")
+    .select(
+      "id, rewards_amount, description, created_at, updated_at, source_type, score, activity_settings(id, slug, title)"
+    )
     .eq("user_id", userId)
-    .eq("source_type", "activity")
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false });
 
   if (rewardsError) {
     throw new Error(rewardsError.message);
   }
 
-  const timeline: ChildActivityLog[] = (rewards ?? []).map((r) => ({
-    id: r.id,
-    rewards_amount: r.rewards_amount,
-    description: r.description,
-    created_at: r.created_at,
-    source_type: r.source_type,
-  }));
+  const timeline: ChildActivityLog[] = ((rewards as RewardQueryResult[]) ?? []).map((r) => {
+    const actSettings = r.activity_settings
+      ? Array.isArray(r.activity_settings)
+        ? r.activity_settings[0] || null
+        : r.activity_settings
+      : null;
+    return {
+      id: r.id,
+      rewards_amount: r.rewards_amount,
+      description: r.description,
+      created_at: r.updated_at || r.created_at,
+      source_type: r.source_type,
+      score: r.score,
+      activity_settings: actSettings
+        ? {
+            id: actSettings.id,
+            slug: actSettings.slug,
+            title: actSettings.title,
+          }
+        : null,
+    };
+  });
 
   const totalCompleted = timeline.length;
   const totalXp = childProfile.total_experience_points ?? 0;
@@ -963,5 +1086,429 @@ export async function getKidComprehensiveDetails(
     quiz_accuracy: quizAccuracy,
     subject_mastery: subjectMastery,
     timeline,
+  };
+}
+
+export async function getParentActivities(childUserId: string): Promise<ParentActivityItem[]> {
+  const { userId: parentId } = await verifyUserRole("parent");
+  const supabase = await getSupabaseClient();
+
+  // Verify parent access
+  const { data: link, error: linkError } = await supabase
+    .from("parent_child_link")
+    .select("id")
+    .eq("parent_user_id", parentId)
+    .eq("child_user_id", childUserId)
+    .eq("is_approved", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (linkError || !link) {
+    throw new Error("Unauthorized access to child profile");
+  }
+
+  const { data, error } = await supabase
+    .from("rewards")
+    .select(
+      "id, rewards_amount, description, created_at, updated_at, source_type, score, activity_settings(id, slug, title)"
+    )
+    .eq("user_id", childUserId)
+    .order("updated_at", { ascending: false });
+
+  if (error) throw error;
+
+  return ((data as RewardQueryResult[] | null) ?? []).map((r) => ({
+    id: r.id,
+    rewards_amount: r.rewards_amount ?? 0,
+    description: r.description,
+    created_at: r.updated_at || r.created_at,
+    source_type: r.source_type ?? "",
+    score: r.score,
+    activity_settings: r.activity_settings
+      ? Array.isArray(r.activity_settings)
+        ? r.activity_settings[0] || null
+        : r.activity_settings
+      : null,
+  }));
+}
+
+export async function getParentSearchHistory(childUserId: string) {
+  const { userId: parentId } = await verifyUserRole("parent");
+  const supabase = await getSupabaseClient();
+
+  // Verify parent access
+  const { data: link, error: linkError } = await supabase
+    .from("parent_child_link")
+    .select("id")
+    .eq("parent_user_id", parentId)
+    .eq("child_user_id", childUserId)
+    .eq("is_approved", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (linkError || !link) {
+    throw new Error("Unauthorized access to child profile");
+  }
+
+  // Call SECURITY DEFINER RPC to bypass child RLS
+  const { data, error } = await supabase.rpc("get_child_chat_sessions", {
+    p_parent_id: parentId,
+    p_child_id: childUserId,
+  });
+
+  if (error) {
+    console.error("RPC get_child_chat_sessions failed, trying native fallback:", error.message);
+
+    // Native RLS direct select fallback (if RLS policies are applied)
+    try {
+      const { data: fallbackSessions, error: fallbackError } = await supabase
+        .from("chat_sessions")
+        .select("id, title, created_at")
+        .eq("user_id", childUserId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+
+      if (fallbackError) {
+        console.error("Fallback sessions fetch database error:", fallbackError.message);
+        return [];
+      }
+      return fallbackSessions || [];
+    } catch (fallbackErr) {
+      console.error("Fallback sessions fetch caught exception:", fallbackErr);
+      return [];
+    }
+  }
+
+  return data || [];
+}
+
+export async function getParentSessionMessages(sessionId: string) {
+  const { userId: parentId } = await verifyUserRole("parent");
+  const supabase = await getSupabaseClient();
+
+  // Call SECURITY DEFINER RPC to bypass child RLS on sessions and messages
+  const { data, error } = await supabase.rpc("get_parent_session_messages", {
+    p_parent_id: parentId,
+    p_session_id: sessionId,
+  });
+
+  if (error) {
+    console.error("RPC get_parent_session_messages failed, trying native fallback:", error.message);
+
+    // Native RLS direct select fallback (if RLS policies are applied)
+    try {
+      const { data: session, error: sessionError } = await supabase
+        .from("chat_sessions")
+        .select("user_id")
+        .eq("id", sessionId)
+        .maybeSingle();
+
+      if (sessionError || !session) {
+        console.error(
+          "Fallback session check failed:",
+          sessionError?.message || "Session not found"
+        );
+        return [];
+      }
+
+      const childUserId = session.user_id;
+
+      // Verify parent access to this child
+      const { data: link, error: linkError } = await supabase
+        .from("parent_child_link")
+        .select("id")
+        .eq("parent_user_id", parentId)
+        .eq("child_user_id", childUserId)
+        .eq("is_approved", true)
+        .is("deleted_at", null)
+        .maybeSingle();
+
+      if (linkError || !link) {
+        console.error("Fallback linkage check unauthorized:", linkError?.message);
+        return [];
+      }
+
+      const { data: fallbackMessages, error: messagesError } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("session_id", sessionId)
+        .order("created_at", { ascending: true });
+
+      if (messagesError) {
+        console.error("Fallback messages query error:", messagesError.message);
+        return [];
+      }
+      return fallbackMessages || [];
+    } catch (fallbackErr) {
+      console.error("Fallback messages query caught exception:", fallbackErr);
+      return [];
+    }
+  }
+
+  return data || [];
+}
+
+export async function getParentNotifications() {
+  const { userId: parentId } = await verifyUserRole("parent");
+  const supabase = await getSupabaseClient();
+
+  try {
+    const { data, error } = await supabase
+      .from("parent_notifications")
+      .select(
+        "id, parent_id, child_id, type, title, message, is_read, metadata, created_at, updated_at"
+      )
+      .eq("parent_id", parentId)
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      // Fetch associated rewards to map their exact updated_at timestamps
+      const childIds = Array.from(new Set(data.map((n) => n.child_id).filter(Boolean)));
+      if (childIds.length > 0) {
+        const { data: rewards } = await supabase
+          .from("rewards")
+          .select("id, updated_at, created_at, user_id, description")
+          .in("user_id", childIds);
+
+        if (rewards && rewards.length > 0) {
+          const typedRewards = rewards as ParentNotificationReward[];
+          const rewardMap = new Map<string, ParentNotificationReward>();
+          typedRewards.forEach((r) => rewardMap.set(r.id, r));
+
+          return data.map((notif) => {
+            const meta =
+              notif.metadata && typeof notif.metadata === "object" && !Array.isArray(notif.metadata)
+                ? (notif.metadata as JsonObject)
+                : ({} as JsonObject);
+            let matchedReward = null;
+
+            if (meta.reward_id) {
+              matchedReward = rewardMap.get(String(meta.reward_id));
+            }
+
+            if (!matchedReward) {
+              // Fallback: match by description text similarity
+              const msgLower = (notif.message || "").toLowerCase();
+              matchedReward = typedRewards.find((r) => {
+                if (r.user_id !== notif.child_id) return false;
+                const descLower = (r.description || "").toLowerCase();
+                return msgLower.includes(descLower) || descLower.includes(msgLower);
+              });
+            }
+
+            if (matchedReward) {
+              return {
+                ...notif,
+                created_at:
+                  matchedReward.updated_at ||
+                  matchedReward.created_at ||
+                  notif.updated_at ||
+                  notif.created_at,
+              };
+            }
+            return notif;
+          });
+        }
+      }
+      return data;
+    }
+  } catch (err) {
+    console.error("Error in getParentNotifications:", err);
+  }
+
+  return [];
+}
+
+export async function createParentNotification(
+  childUserId: string,
+  type: string,
+  title: string,
+  message: string,
+  metadata: Record<string, unknown> = {}
+) {
+  const supabase = await getSupabaseClient();
+  const { data: links, error: linkError } = await supabase
+    .from("parent_child_link")
+    .select("parent_user_id")
+    .eq("child_user_id", childUserId)
+    .eq("is_approved", true)
+    .is("deleted_at", null);
+
+  if (linkError || !links || links.length === 0) {
+    return { success: false, error: "No linked parent found" };
+  }
+
+  for (const link of links) {
+    try {
+      await supabase.from("parent_notifications").insert({
+        parent_id: link.parent_user_id,
+        child_id: childUserId,
+        type,
+        title,
+        message,
+        metadata,
+      });
+    } catch (err) {
+      console.warn("Failed to insert notification inside action:", err);
+    }
+  }
+  return { success: true };
+}
+
+export async function markNotificationAsRead(id: string) {
+  const supabase = await getSupabaseClient();
+  const { userId: parentId } = await verifyUserRole("parent");
+
+  try {
+    const { error } = await supabase
+      .from("parent_notifications")
+      .update({ is_read: true })
+      .eq("id", id)
+      .eq("parent_id", parentId);
+
+    if (!error) {
+      revalidatePath("/dashboard/parent");
+      return { success: true };
+    }
+  } catch {
+    // Ignore and try fallback
+  }
+
+  try {
+    const { error } = await supabase.from("safety_alerts").update({ resolved: true }).eq("id", id);
+
+    if (!error) {
+      revalidatePath("/dashboard/parent");
+      return { success: true };
+    }
+  } catch {
+    // Ignore
+  }
+
+  return { success: false };
+}
+
+export async function markAllNotificationsAsRead() {
+  const supabase = await getSupabaseClient();
+  const { userId: parentId } = await verifyUserRole("parent");
+
+  let parentNotifSuccess = false;
+  let safetyAlertSuccess = false;
+  let errorMsg = "";
+
+  // 1. Mark all parent_notifications as read
+  try {
+    const { error } = await supabase
+      .from("parent_notifications")
+      .update({ is_read: true })
+      .eq("parent_id", parentId)
+      .eq("is_read", false);
+
+    if (error) {
+      console.warn("Error marking parent_notifications as read:", error.message);
+      errorMsg = error.message;
+    } else {
+      parentNotifSuccess = true;
+    }
+  } catch (err: unknown) {
+    console.warn("Caught exception in parent_notifications mark all as read:", err);
+    errorMsg = getErrorMessage(err);
+  }
+
+  // 2. Mark all safety_alerts as resolved
+  try {
+    const linkedChildren = await getLinkedChildren();
+    if (linkedChildren && linkedChildren.length > 0) {
+      const childIds = linkedChildren.map((c) => c.user_id);
+      const { error } = await supabase
+        .from("safety_alerts")
+        .update({ resolved: true })
+        .in("user_id", childIds)
+        .eq("resolved", false);
+
+      if (error) {
+        console.warn("Error resolving safety_alerts:", error.message);
+        errorMsg = error.message;
+      } else {
+        safetyAlertSuccess = true;
+      }
+    } else {
+      safetyAlertSuccess = true;
+    }
+  } catch (err: unknown) {
+    console.warn("Caught exception in safety_alerts resolve all:", err);
+    errorMsg = getErrorMessage(err);
+  }
+
+  revalidatePath("/dashboard/parent");
+
+  // Return success if at least one operation succeeded
+  if (parentNotifSuccess || safetyAlertSuccess) {
+    return { success: true };
+  }
+
+  return { success: false, error: errorMsg || "Failed to mark all notifications as read." };
+}
+
+export async function getChildAiInsights(childUserId: string) {
+  const details = await getChildDetails(childUserId);
+  const children = await getLinkedChildren();
+  const childProfile = children.find((c) => c.user_id === childUserId);
+  const childName = childProfile?.first_name || "your child";
+
+  const recommendations = [];
+  const accuracy = details.quiz_accuracy;
+  const mathM = details.subject_mastery.math;
+  const scienceM = details.subject_mastery.science;
+  const codingM = details.subject_mastery.coding;
+  const englishM = details.subject_mastery.english;
+
+  if (accuracy < 75 && details.total_completed > 0) {
+    recommendations.push({
+      subject: "Review Focus",
+      text: `Quizzes completed are averaging ${accuracy}%. Encourage ${childName} to read standard visual hints carefully and retry quizzes for double XP.`,
+      priority: "high",
+    });
+  }
+
+  const scores = [
+    { name: "Math", val: mathM },
+    { name: "Science", val: scienceM },
+    { name: "Coding", val: codingM },
+    { name: "English", val: englishM },
+  ];
+  scores.sort((a, b) => a.val - b.val);
+
+  const lowest = scores[0];
+  if (lowest.val <= 40) {
+    recommendations.push({
+      subject: lowest.name,
+      text: `${childName} is beginning standard topics in ${lowest.name}. Guided prompts are available to boost confidence!`,
+      priority: "medium",
+    });
+  }
+
+  const highest = scores[3];
+  if (highest.val >= 60) {
+    recommendations.push({
+      subject: highest.name,
+      text: `${childName} is showing rapid mastery in ${highest.name}! Challenge them with visual coding puzzles or advanced worksheets.`,
+      priority: "low",
+    });
+  }
+
+  if (recommendations.length < 2) {
+    recommendations.push({
+      subject: "Daily Routine",
+      text: `Streaks are at ${details.current_streak} days. Consistent 15-minute daily chats build a solid learning habit.`,
+      priority: "low",
+    });
+  }
+
+  return {
+    child_name: childName,
+    summary: `${childName} is doing great on their learning journey! Strongest subject is ${highest.name} and showing curiosity with ${details.total_completed} completed activities.`,
+    recommendations,
   };
 }

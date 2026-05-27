@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getActivityXp } from "@/actions/activity.actions";
 import { Puzzle, Star, Brain, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -64,8 +64,8 @@ export default function LogicPuzzlesPage({
   const [currentPuzzle, setCurrentPuzzle] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
   const [xpReward, setXpReward] = useState<number>(150);
+  const hasClaimed = useRef(false);
 
   useEffect(() => {
     getActivityXp("logic-puzzles").then(setXpReward);
@@ -86,6 +86,38 @@ export default function LogicPuzzlesPage({
 
   const progress = ((currentPuzzle + 1) / safePuzzles.length) * 100;
 
+  // Background Auto-Claiming Logic
+  useEffect(() => {
+    const isCompleted = selected !== null && currentPuzzle === safePuzzles.length - 1;
+    if (isCompleted && !hasClaimed.current) {
+      hasClaimed.current = true;
+      const autoClaim = async () => {
+        const scoreStr = `${Math.round((correctCount / safePuzzles.length) * 100)}%`;
+        try {
+          const slug = puzzleTitle
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+
+          const res = await saveKidActivityProgress(
+            slug || "logic-puzzles",
+            xpReward,
+            puzzleTitle,
+            scoreStr
+          );
+          if (res.success) {
+            toast.success("Mission Completed! 🎉", {
+              description: `+${xpReward} XP automatically awarded!`,
+            });
+          }
+        } catch (err) {
+          console.error("Auto-claim error:", err);
+        }
+      };
+      autoClaim();
+    }
+  }, [selected, currentPuzzle, safePuzzles.length, correctCount, puzzleTitle, xpReward]);
+
   const handleNext = () => {
     if (currentPuzzle < safePuzzles.length - 1) {
       setCurrentPuzzle((prev) => prev + 1);
@@ -93,38 +125,8 @@ export default function LogicPuzzlesPage({
     }
   };
 
-  const handleFinish = async () => {
-    setIsSaving(true);
-    const scoreStr = `${Math.round((correctCount / safePuzzles.length) * 100)}%`;
-    try {
-      // Slugify the puzzle title
-      const slug = puzzleTitle
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-
-      const res = await saveKidActivityProgress(
-        slug || "logic-puzzles",
-        xpReward,
-        puzzleTitle,
-        scoreStr
-      );
-      if (res.success) {
-        toast.success("Mission Completed!", {
-          description: `+${xpReward} XP earned! Streak updated! 🎉`,
-        });
-      } else {
-        toast.error("Failed to save progress", {
-          description: res.error || "Please try again later.",
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Error saving progress");
-    } finally {
-      setIsSaving(false);
-      window.location.href = APP_ROUTES.Activities;
-    }
+  const handleFinish = () => {
+    window.location.href = APP_ROUTES.Activities;
   };
 
   return (
@@ -217,10 +219,9 @@ export default function LogicPuzzlesPage({
               {currentPuzzle === safePuzzles.length - 1 ? (
                 <Button
                   onClick={handleFinish}
-                  disabled={isSaving}
                   className="h-16 px-12 rounded-full bg-green-600 hover:bg-green-700 text-xl font-bold shadow-[0_8px_0px_0px_#15803d] active:translate-y-2 active:shadow-none transition-all cursor-pointer"
                 >
-                  {isSaving ? "Saving..." : "Finish Mission"} <Star className="ml-2 h-6 w-6" />
+                  Continue 🎉
                 </Button>
               ) : (
                 <Button

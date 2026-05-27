@@ -7,6 +7,7 @@ export type ActivitySlug =
   | "word-scrambles"
   | "math-challenges"
   | "science-lab"
+  | "jigsaw-puzzle"
   | "memory-match"
   | "match-following";
 

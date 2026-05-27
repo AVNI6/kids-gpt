@@ -34,12 +34,12 @@ function formatLog(entry: LogEntry): string {
 export const aiLogger = {
   debug(module: string, message: string, data?: import("@/types/json").JsonObject) {
     if (process.env.NODE_ENV === "development") {
-      console.log(formatLog(createLogEntry("debug", module, message, data)));
+      console.debug(formatLog(createLogEntry("debug", module, message, data)));
     }
   },
 
   info(module: string, message: string, data?: import("@/types/json").JsonObject) {
-    console.log(formatLog(createLogEntry("info", module, message, data)));
+    console.info(formatLog(createLogEntry("info", module, message, data)));
   },
 
   warn(module: string, message: string, data?: import("@/types/json").JsonObject) {

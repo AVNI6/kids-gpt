@@ -42,12 +42,12 @@ export default function LearningRecommendations() {
 
   return (
     <section className="space-y-4 h-full flex flex-col">
-      <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+      <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight flex items-center gap-2">
         Picked For You <Lightbulb className="w-6 h-6 text-yellow-500 fill-yellow-500" />
       </h2>
-      <Card className="rounded-[32px] border-sky-100 bg-white shadow-sm flex-1">
+      <Card className="rounded-[32px] border-sky-100 bg-white shadow-sm flex-1 dark:border-slate-800 dark:bg-slate-900">
         <CardContent className="p-6 h-full flex flex-col gap-4">
-          <p className="text-sm font-bold text-slate-500">
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
             Based on your recent activities, AI Tutor suggests:
           </p>
 

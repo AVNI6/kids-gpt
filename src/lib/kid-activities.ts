@@ -115,6 +115,25 @@ export const kidActivities: KidActivity[] = [
   },
   {
     id: 7,
+    slug: "jigsaw-puzzle",
+    href: "/activities/jigsaw-puzzle",
+    title: "Jigsaw Puzzle Atelier",
+    description:
+      "Turn a beautiful scene into a hands-on puzzle studio with smart themes and playful image choices.",
+    icon: Puzzle,
+    color: "orange",
+    duration: "8 Mins",
+    badge: "New Game",
+    xp: "+150 XP",
+    steps: [
+      "Choose a topic or scene",
+      "Generate a custom puzzle layout",
+      "Review the image and piece settings",
+      "Play the puzzle with kid-friendly controls!",
+    ],
+  },
+  {
+    id: 8,
     slug: "memory-match",
     href: "/activities/memory-match",
     title: "Memory Match",

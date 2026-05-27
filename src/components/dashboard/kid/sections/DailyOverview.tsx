@@ -74,7 +74,9 @@ export default function DailyOverview({
 
   return (
     <section className="space-y-4">
-      <h2 className="text-2xl font-black text-slate-900 tracking-tight">Your Stats 📊</h2>
+      <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
+        Your Stats 📊
+      </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((stat, i) => {
           const Icon = stat.icon;

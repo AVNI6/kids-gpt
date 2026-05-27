@@ -34,11 +34,11 @@ export default function ContinueLearning() {
       lastPlayed: "Today",
       xpReward: 50,
       icon: FlaskConical,
-      color: "from-sky-50 to-indigo-50",
-      borderColor: "border-sky-100",
-      iconColor: "text-sky-600 bg-sky-100",
+      color: "from-sky-50 to-indigo-50 dark:from-sky-950/40 dark:to-indigo-950/40",
+      borderColor: "border-sky-100 dark:border-sky-900/50",
+      iconColor: "text-sky-600 bg-sky-100 dark:text-sky-400 dark:bg-sky-950/60",
       progressColor: "bg-sky-500",
-      progressBg: "bg-sky-100",
+      progressBg: "bg-sky-100 dark:bg-sky-900/40",
     },
     {
       id: "2",
@@ -49,11 +49,11 @@ export default function ContinueLearning() {
       lastPlayed: "Yesterday",
       xpReward: 30,
       icon: BookOpen,
-      color: "from-emerald-50 to-teal-50",
-      borderColor: "border-emerald-100",
-      iconColor: "text-emerald-600 bg-emerald-100",
+      color: "from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40",
+      borderColor: "border-emerald-100 dark:border-emerald-900/50",
+      iconColor: "text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-950/60",
       progressColor: "bg-emerald-500",
-      progressBg: "bg-emerald-100",
+      progressBg: "bg-emerald-100 dark:bg-emerald-900/40",
     },
     {
       id: "3",
@@ -64,24 +64,26 @@ export default function ContinueLearning() {
       lastPlayed: "2 days ago",
       xpReward: 100,
       icon: Blocks,
-      color: "from-amber-50 to-orange-50",
-      borderColor: "border-amber-100",
-      iconColor: "text-amber-600 bg-amber-100",
+      color: "from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40",
+      borderColor: "border-amber-100 dark:border-amber-900/50",
+      iconColor: "text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-950/60",
       progressColor: "bg-amber-500",
-      progressBg: "bg-amber-100",
+      progressBg: "bg-amber-100 dark:bg-amber-900/40",
     },
   ];
 
   return (
-    <Card className="rounded-[32px] border-sky-100 bg-white shadow-sm">
+    <Card className="rounded-[32px] border-sky-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <CardContent className="p-6 sm:p-7 space-y-6">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
             <PlayCircle className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-xl font-black text-slate-900 tracking-tight">Continue Learning</h2>
-            <p className="text-sm leading-6 text-slate-500 font-medium">
+            <h2 className="text-xl font-black text-slate-900 tracking-tight dark:text-slate-50">
+              Continue Learning
+            </h2>
+            <p className="text-sm leading-6 text-slate-500 font-medium dark:text-slate-400">
               Pick up right where you left off.
             </p>
           </div>
@@ -106,21 +108,21 @@ export default function ContinueLearning() {
                         <div className={`p-3 rounded-2xl ${activity.iconColor}`}>
                           <Icon className="w-5 h-5" />
                         </div>
-                        <span className="bg-white/60 px-3 py-1 rounded-full text-xs font-bold text-slate-700">
+                        <span className="bg-white/60 dark:bg-white/10 px-3 py-1 rounded-full text-xs font-bold text-slate-700 dark:text-slate-300">
                           +{activity.xpReward} XP
                         </span>
                       </div>
-                      <h3 className="font-bold text-lg leading-tight text-slate-900 mb-1">
+                      <h3 className="font-bold text-lg leading-tight text-slate-900 dark:text-slate-50 mb-1">
                         {activity.title}
                       </h3>
-                      <p className="text-xs font-semibold text-slate-500 mb-4">
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-4">
                         {activity.timeRemaining} left • Played {activity.lastPlayed}
                       </p>
                     </div>
 
                     <div className="space-y-4">
                       <div className="space-y-1">
-                        <div className="flex justify-between text-xs font-bold text-slate-700">
+                        <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                           <span>Progress</span>
                           <span>{activity.progress}%</span>
                         </div>
@@ -139,7 +141,7 @@ export default function ContinueLearning() {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="rounded-xl border-slate-200 bg-white/50 text-slate-600 hover:bg-white h-10 w-10"
+                          className="rounded-xl border-slate-200 bg-white/50 text-slate-600 hover:bg-white h-10 w-10 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:bg-slate-800"
                         >
                           <RotateCcw className="w-4 h-4" />
                         </Button>

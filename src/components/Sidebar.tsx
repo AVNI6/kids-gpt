@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, PanelLeftClose, Copy, Check } from "lucide-react";
+import { Sparkles, PanelLeftClose, Copy, Check, PanelRightClose } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -67,6 +67,9 @@ export default function Sidebar() {
   // Load chat sessions for authenticated user
   useEffect(() => {
     const loadSessions = async () => {
+      // if (isLoadingAuth) {
+      //   return;
+      // }
       if (user) {
         const userSessions = await fetchUserSessions(user.id);
         dispatch(setSessions(userSessions));
@@ -75,7 +78,7 @@ export default function Sidebar() {
       }
     };
     loadSessions();
-  }, [user, dispatch]);
+  }, [user, isLoadingAuth, dispatch]);
 
   const handleNewChat = () => {
     getSessionManager().abortActiveRequest();
@@ -181,7 +184,6 @@ export default function Sidebar() {
         collapsible="icon"
         className="border-r border-sidebar-border bg-sidebar h-screen shrink-0"
       >
-        {/* Sidebar Header */}
         <SidebarHeader className="p-4 flex flex-col shrink-0 gap-3">
           <div
             className={cn(
@@ -189,21 +191,39 @@ export default function Sidebar() {
               isOpen ? "justify-between" : "justify-center"
             )}
           >
+            {/* Main Action Button */}
             <button
-              onClick={toggleSidebar}
-              title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-              suppressHydrationWarning={true}
-              className="h-7 w-7 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95 cursor-pointer"
+              suppressHydrationWarning
+              title={isOpen ? "Go Home" : "Open Sidebar"}
+              onClick={() => {
+                if (isOpen) {
+                  handleNewChat();
+                } else {
+                  toggleSidebar();
+                }
+              }}
+              className="group/btn h-7 w-7 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95 cursor-pointer"
             >
-              <Sparkles className="w-4 h-4" />
+              {isOpen ? (
+                <Sparkles className="w-4 h-4" />
+              ) : (
+                <div className="relative w-4 h-4">
+                  <Sparkles className="absolute inset-0 w-4 h-4 transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75" />
+
+                  <PanelRightClose className="absolute inset-0 w-4 h-4 opacity-0 scale-75 transition-all duration-200 group-hover/btn:opacity-100 group-hover/btn:scale-100" />
+                </div>
+              )}
             </button>
+
+            {/* Collapse Button */}
             {isOpen && (
               <Button
+                title={"Close Sidebar"}
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                suppressHydrationWarning={true}
-                className="text-slate-500 hover:text-slate-700 h-10 w-10 flex items-center justify-center cursor-pointer"
+                suppressHydrationWarning
+                className=" text-slate-500 hover:text-slate-700  h-10 w-10 flex items-center justify-center cursor-pointer  "
               >
                 <PanelLeftClose className="w-5 h-5" />
               </Button>
