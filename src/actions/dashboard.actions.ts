@@ -876,10 +876,10 @@ export async function getChildSafetyAndUsage(
   const { userId: parentId } = await verifyUserRole("parent");
   const supabase = await getSupabaseClient();
 
-  // 1. Verify parent access
+  // 1. Verify parent access & fetch screen time limit settings
   const { data: link, error: linkError } = await supabase
     .from("parent_child_link")
-    .select("id")
+    .select("id, daily_limit_minutes, is_screen_time_limit_enabled")
     .eq("parent_user_id", parentId)
     .eq("child_user_id", childUserId)
     .eq("is_approved", true)
@@ -900,7 +900,18 @@ export async function getChildSafetyAndUsage(
   const unresolvedAlertsCount = (alerts ?? []).filter((a) => !a.resolved).length;
   const safetyScore = Math.max(0, 100 - unresolvedAlertsCount * 20);
 
-  // 3. Query daily_usage_tracking
+  // 3. Fetch actual screen time usage today from daily_screen_time_usage table
+  const todayStrLocal = getLocalDateString(new Date(), "Asia/Kolkata");
+  const { data: usageLog } = await supabase
+    .from("daily_screen_time_usage")
+    .select("total_seconds")
+    .eq("child_id", childUserId)
+    .eq("usage_date", todayStrLocal)
+    .maybeSingle();
+
+  const actualScreenTimeMins = usageLog ? Math.round(usageLog.total_seconds / 60) : 0;
+
+  // 4. Query daily_usage_tracking
   const todayStr = new Date().toISOString().split("T")[0];
   const { data: usageLogs } = await supabase
     .from("daily_usage_tracking")
@@ -928,14 +939,19 @@ export async function getChildSafetyAndUsage(
   if (dailyScreenTimeMins === 0) dailyScreenTimeMins = 25;
   if (weeklyAiInteractions === 0) weeklyAiInteractions = 42;
 
+  // Use actual tracked minutes if log is present, otherwise fallback to heuristic
+  const finalScreenTimeMins = usageLog ? actualScreenTimeMins : dailyScreenTimeMins;
+
   return {
     safety_score: safetyScore,
     content_filter_status:
       unresolvedAlertsCount > 0 ? "Flagged / Restricted" : "Safe Mode (Standard)",
     focus_mode_active: true,
-    daily_screen_time_mins: dailyScreenTimeMins,
+    daily_screen_time_mins: finalScreenTimeMins,
     weekly_ai_interactions: weeklyAiInteractions,
     unresolved_alerts_count: unresolvedAlertsCount,
+    daily_limit_minutes: link.daily_limit_minutes ?? 60,
+    is_screen_time_limit_enabled: link.is_screen_time_limit_enabled ?? false,
   };
 }
 

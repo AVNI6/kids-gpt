@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Menu, AlertTriangle, Trophy, BookOpen, CheckCircle2 } from "lucide-react";
+import { Bell, Menu, AlertTriangle, Trophy, BookOpen, CheckCircle2, Clock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -192,6 +192,9 @@ export default function ParentTopNav({ profile }: Props) {
                         icon = (
                           <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                         );
+                        bg = "bg-rose-50 dark:bg-rose-950/20";
+                      } else if (notif.type === "SCREEN_TIME_LIMIT") {
+                        icon = <Clock className="w-4 h-4 text-rose-600 dark:text-rose-400" />;
                         bg = "bg-rose-50 dark:bg-rose-950/20";
                       } else if (notif.type === "quiz_completed") {
                         icon = <BookOpen className="w-4 h-4 text-sky-600 dark:text-sky-400" />;
