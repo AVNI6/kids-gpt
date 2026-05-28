@@ -102,7 +102,8 @@ export async function logScreenTimeSession(
       return { success: false, error: rpcError.message };
     }
 
-    revalidatePath("/dashboard/parent");
+    // FIXED: Removed revalidatePath to prevent heavy Next.js
+    // Server Component re-renders every 15 seconds.
     return { success: true };
   } catch (err) {
     return {
@@ -121,6 +122,9 @@ export async function getDailyScreenTime(
   timezone: string = "Asia/Kolkata"
 ): Promise<ScreenTimeData> {
   try {
+    // 1. Recover any stale/ghost sessions to flush their duration before querying totals
+    await recoverStaleSessions();
+
     const { userId, role } = await getAuthenticatedUser();
     const supabase = await createClient();
 
@@ -486,5 +490,336 @@ export async function notifyParentLimitReached(
       success: false,
       error: err instanceof Error ? err.message : "An unexpected error occurred.",
     };
+  }
+}
+
+/**
+ * Recovers stale/ghost screen time sessions older than 2 minutes by completing them at last_seen_at.
+ */
+export async function recoverStaleSessions(): Promise<{
+  success: boolean;
+  recoveredCount?: number;
+  error?: string | null;
+}> {
+  try {
+    const supabase = await createClient();
+
+    // Find ACTIVE sessions where last_seen_at is older than 2 minutes
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const { data: staleSessions, error: queryError } = await supabase
+      .from("screen_time_sessions")
+      .select("id, last_seen_at")
+      .eq("status", "ACTIVE")
+      .lt("last_seen_at", twoMinutesAgo);
+
+    if (queryError) {
+      console.error("[recoverStaleSessions] Query error:", queryError);
+      return { success: false, error: queryError.message };
+    }
+
+    if (!staleSessions || staleSessions.length === 0) {
+      return { success: true, recoveredCount: 0 };
+    }
+
+    let count = 0;
+    for (const session of staleSessions) {
+      // Complete stale session gracefully at last_seen_at
+      const { error: updateError } = await supabase
+        .from("screen_time_sessions")
+        .update({
+          ended_at: session.last_seen_at,
+          status: "COMPLETED",
+        })
+        .eq("id", session.id);
+
+      if (updateError) {
+        console.error(`[recoverStaleSessions] Failed to close session ${session.id}:`, updateError);
+      } else {
+        count++;
+      }
+    }
+
+    return { success: true, recoveredCount: count };
+  } catch (err) {
+    console.error("[recoverStaleSessions] Exception:", err);
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
+ * Creates an ACTIVE screen session for the child, after recovering any existing stale sessions.
+ */
+export async function startScreenSession(
+  childId: string,
+  parentId: string
+): Promise<{ success: boolean; sessionId?: string; error?: string | null }> {
+  try {
+    const supabase = await createClient();
+
+    // 1. Close any stale ACTIVE sessions older than 2 minutes
+    await recoverStaleSessions();
+
+    // 2. Prevent duplicate ACTIVE sessions for this child.
+    // Return existing sessionId if active to prevent duplicates.
+    const { data: existingSession, error: checkError } = await supabase
+      .from("screen_time_sessions")
+      .select("id")
+      .eq("child_id", childId)
+      .eq("status", "ACTIVE")
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("[startScreenSession] Duplicate check error:", checkError);
+    }
+
+    if (existingSession) {
+      return { success: true, sessionId: existingSession.id };
+    }
+
+    // Determine parent_id from link if not provided
+    let targetParentId = parentId;
+    if (!targetParentId) {
+      const { data: link } = await supabase
+        .from("parent_child_link")
+        .select("parent_user_id")
+        .eq("child_user_id", childId)
+        .eq("is_active", true)
+        .eq("is_approved", true)
+        .is("deleted_at", null)
+        .maybeSingle();
+      targetParentId = link?.parent_user_id || "";
+    }
+
+    if (!targetParentId) {
+      return { success: false, error: "No active parent-child link found for child." };
+    }
+
+    // 3. Create a new ACTIVE session
+    const { data: newSession, error: insertError } = await supabase
+      .from("screen_time_sessions")
+      .insert({
+        child_id: childId,
+        parent_id: targetParentId,
+        status: "ACTIVE",
+      })
+      .select("id")
+      .single();
+
+    if (insertError) {
+      console.error("[startScreenSession] Insert session error:", insertError);
+      return { success: false, error: insertError.message };
+    }
+
+    return { success: true, sessionId: newSession.id };
+  } catch (err) {
+    console.error("[startScreenSession] Exception:", err);
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
+ * Heartbeat Ping: Updates presence timing, increments daily usage table, and verifies limit thresholds.
+ */
+export async function updatePresence(
+  sessionId: string,
+  timezone: string = "Asia/Kolkata"
+): Promise<{ success: boolean; isLocked?: boolean; error?: string | null }> {
+  try {
+    const supabase = await createClient();
+
+    // 1. Fetch current session details
+    const { data: session, error: fetchError } = await supabase
+      .from("screen_time_sessions")
+      .select("last_seen_at, child_id, parent_id")
+      .eq("id", sessionId)
+      .eq("status", "ACTIVE")
+      .single();
+
+    if (fetchError || !session) {
+      console.error("[updatePresence] Active session not found or inactive:", fetchError);
+      return { success: false, error: "Active session not found." };
+    }
+
+    const now = new Date();
+    const elapsedSeconds = Math.max(
+      0,
+      Math.floor((now.getTime() - new Date(session.last_seen_at).getTime()) / 1000)
+    );
+
+    // 2. Update last_seen_at on the session table
+    const { error: updateError } = await supabase
+      .from("screen_time_sessions")
+      .update({
+        last_seen_at: now.toISOString(),
+      })
+      .eq("id", sessionId);
+
+    if (updateError) {
+      console.error("[updatePresence] Failed to update last_seen_at:", updateError);
+      return { success: false, error: updateError.message };
+    }
+
+    // 3. Increment the daily_screen_time_usage table if elapsedSeconds > 0
+    if (elapsedSeconds > 0) {
+      const cappedSeconds = Math.min(elapsedSeconds, 3600);
+      const todayStr = getLocalDateString(now, timezone);
+
+      const { error: rpcError } = await supabase.rpc("increment_screen_time", {
+        p_child_id: session.child_id,
+        p_date: todayStr,
+        p_seconds: cappedSeconds,
+      });
+
+      if (rpcError) {
+        console.error("[updatePresence] RPC increment_screen_time failed:", rpcError);
+        return { success: false, error: rpcError.message };
+      }
+    }
+
+    // 4. Query daily limit settings and check lockout status
+    const { data: link, error: linkError } = await supabase
+      .from("parent_child_link")
+      .select("daily_limit_minutes, is_screen_time_limit_enabled")
+      .eq("child_user_id", session.child_id)
+      .eq("is_active", true)
+      .eq("is_approved", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (linkError) {
+      console.error("[updatePresence] Link query error:", linkError);
+    }
+
+    const dailyLimit = link?.daily_limit_minutes ?? 60;
+    const isLimitEnabled = link?.is_screen_time_limit_enabled ?? false;
+
+    // Fetch the updated total seconds from daily_screen_time_usage
+    const todayStr = getLocalDateString(now, timezone);
+    const { data: usageLog, error: usageError } = await supabase
+      .from("daily_screen_time_usage")
+      .select("total_seconds")
+      .eq("child_id", session.child_id)
+      .eq("usage_date", todayStr)
+      .maybeSingle();
+
+    if (usageError) {
+      console.error("[updatePresence] Usage log query error:", usageError);
+    }
+
+    const totalSeconds = usageLog?.total_seconds ?? 0;
+    const totalMinutes = totalSeconds / 60;
+    const isLocked = isLimitEnabled && totalMinutes >= dailyLimit;
+
+    // 5. Handle single daily limit notification without strict DB constraint
+    if (isLocked) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      // Check if a LIMIT_REACHED notification already exists today in Server Action logic
+      const { data: existingNotif, error: notifCheckError } = await supabase
+        .from("parent_notifications")
+        .select("id")
+        .eq("child_id", session.child_id)
+        .eq("type", "LIMIT_REACHED")
+        .gte("created_at", startOfDay.toISOString())
+        .limit(1);
+
+      if (notifCheckError) {
+        console.error("[updatePresence] Notification query error:", notifCheckError);
+      }
+
+      if (!existingNotif || existingNotif.length === 0) {
+        // Fetch child first name
+        const { data: childProfile } = await supabase
+          .from("profile")
+          .select("first_name")
+          .eq("user_id", session.child_id)
+          .maybeSingle();
+
+        const childName = childProfile?.first_name || "Your child";
+
+        await supabase.from("parent_notifications").insert({
+          parent_id: session.parent_id,
+          child_id: session.child_id,
+          type: "LIMIT_REACHED",
+          title: "Daily Limit Reached",
+          message: `${childName} reached today's screen time limit.`,
+          metadata: {
+            limit_minutes: dailyLimit,
+          },
+        });
+      }
+    }
+
+    return { success: true, isLocked };
+  } catch (err) {
+    console.error("[updatePresence] Exception:", err);
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
+ * End Screen Session gracefully: Flushes any final elapsed seconds and completes session status.
+ */
+export async function endScreenSession(
+  sessionId: string,
+  timezone: string = "Asia/Kolkata"
+): Promise<{ success: boolean; error?: string | null }> {
+  try {
+    const supabase = await createClient();
+
+    // 1. Fetch current session details
+    const { data: session, error: fetchError } = await supabase
+      .from("screen_time_sessions")
+      .select("last_seen_at, child_id, parent_id")
+      .eq("id", sessionId)
+      .eq("status", "ACTIVE")
+      .single();
+
+    if (fetchError || !session) {
+      console.warn("[endScreenSession] Active session not found or already closed.");
+      return { success: true };
+    }
+
+    const now = new Date();
+    const elapsedSeconds = Math.max(
+      0,
+      Math.floor((now.getTime() - new Date(session.last_seen_at).getTime()) / 1000)
+    );
+
+    // 2. Increment daily usage if there are final unsynced seconds
+    if (elapsedSeconds > 0) {
+      const cappedSeconds = Math.min(elapsedSeconds, 3600);
+      const todayStr = getLocalDateString(now, timezone);
+
+      const { error: rpcError } = await supabase.rpc("increment_screen_time", {
+        p_child_id: session.child_id,
+        p_date: todayStr,
+        p_seconds: cappedSeconds,
+      });
+
+      if (rpcError) {
+        console.error("[endScreenSession] RPC increment failed:", rpcError);
+      }
+    }
+
+    // 3. Mark session as completed
+    const { error: updateError } = await supabase
+      .from("screen_time_sessions")
+      .update({
+        ended_at: now.toISOString(),
+        status: "COMPLETED",
+      })
+      .eq("id", sessionId);
+
+    if (updateError) {
+      console.error("[endScreenSession] Update session error:", updateError);
+      return { success: false, error: updateError.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("[endScreenSession] Exception:", err);
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
