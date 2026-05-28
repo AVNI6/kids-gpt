@@ -46,9 +46,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
   const [isLoading, setIsLoading] = useState(true);
   const [isLeader, setIsLeader] = useState(false);
 
-  // Guard against duplicate notification API calls in the same session/render cycle
-  const hasNotified = useRef(false);
-
   // Stable per-instance identifier for cross-tab coordination
   const tabId = useId();
 
@@ -103,13 +100,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
   // Helper to save tracked seconds to DB with offline queuing
   const saveScreenTime = useCallback(
     async (seconds: number, tz: string) => {
-      // Task 3 Halt Condition: If locked, absolutely do not save screen time heartbeats
-      const currentTotalMins = (dbScreenTimeSeconds + elapsedAccumulatedRef.current) / 60;
-      const currentLocked = isLimitEnabled && currentTotalMins >= dailyLimitMinutes;
-      if (currentLocked) {
-        return;
-      }
-
       if (seconds <= 0) return;
 
       // Read any pending unsynced queue from localStorage
@@ -234,11 +224,21 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       const currentTotalMins = (dbScreenTimeSeconds + elapsedAccumulatedRef.current) / 60;
       const currentLocked = isLimitEnabled && currentTotalMins >= dailyLimitMinutes;
       if (currentLocked) {
-        if (!hasNotified.current && childId) {
-          hasNotified.current = true;
-          void notifyParentLimitReached(childId).catch((err) => {
-            console.error("Failed to notify parent about screen limit:", err);
-          });
+        if (childId && typeof window !== "undefined") {
+          const todayString = new Date().toDateString();
+          const storageKey = `notified_limit_${childId}`;
+          const lastNotifiedValue = localStorage.getItem(storageKey);
+          const currentNotifiedValue = `${todayString}_${dailyLimitMinutes}`;
+
+          if (lastNotifiedValue !== currentNotifiedValue) {
+            notifyParentLimitReached(childId, dailyLimitMinutes)
+              .then(() => {
+                localStorage.setItem(storageKey, currentNotifiedValue);
+              })
+              .catch((err) => {
+                console.error("Failed to notify parent about screen limit:", err);
+              });
+          }
         }
         return;
       }
@@ -308,13 +308,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
 
     // Tab visibility change logic
     const handleVisibilityChange = () => {
-      // Task 3: If locked, absolutely halt final visibility saving to prevent over-counting
-      const currentTotalMins = (dbScreenTimeSeconds + elapsedAccumulatedRef.current) / 60;
-      const currentLocked = isLimitEnabled && currentTotalMins >= dailyLimitMinutes;
-      if (currentLocked) {
-        return;
-      }
-
       if (document.visibilityState === "hidden") {
         if (isLeader) {
           const sessionElapsed = syncTimerRef.current;
@@ -331,13 +324,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
 
     // Beforeunload fallback (tab close/refresh)
     const handleBeforeUnload = () => {
-      // Task 3: If locked, absolutely halt final beforeunload saving to prevent over-counting
-      const currentTotalMins = (dbScreenTimeSeconds + elapsedAccumulatedRef.current) / 60;
-      const currentLocked = isLimitEnabled && currentTotalMins >= dailyLimitMinutes;
-      if (currentLocked) {
-        return;
-      }
-
       if (isLeader) {
         const finalSessionElapsed = syncTimerRef.current;
         syncTimerRef.current = 0;
@@ -362,20 +348,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       window.removeEventListener("mousedown", handleActivity);
       window.removeEventListener("touchstart", handleActivity);
       window.removeEventListener("scroll", handleActivity);
-
-      // Task 3: If locked, absolutely halt unmount saving to prevent over-counting
-      const currentTotalMins = (dbScreenTimeSeconds + elapsedAccumulatedRef.current) / 60;
-      const currentLocked = isLimitEnabled && currentTotalMins >= dailyLimitMinutes;
-      if (currentLocked) {
-        // Close BroadcastChannel & ignore database saving
-        try {
-          syncChannelRef.current?.close();
-        } catch (err) {
-          console.warn("[ScreenTimeTracker] Error closing sync channel:", err);
-        }
-        syncChannelRef.current = null;
-        return;
-      }
 
       // Sync remaining seconds on unmount if leader
       if (isLeader && syncTimerRef.current > 0) {
@@ -419,17 +391,27 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
   const isLocked =
     isLimitEnabled && (dbScreenTimeSeconds + localElapsedSeconds) / 60 >= dailyLimitMinutes;
 
-  // Trigger parent notification once when lock state is reached.
+  // Trigger parent notification once when lock state is reached with persistent localStorage lock.
   useEffect(() => {
-    if (!isLocked || !childId || hasNotified.current) {
-      return;
-    }
+    if (isLocked && childId) {
+      if (typeof window !== "undefined") {
+        const today = new Date().toDateString();
+        const storageKey = `notified_limit_${childId}`;
+        const lastNotifiedValue = localStorage.getItem(storageKey);
+        const currentNotifiedValue = `${today}_${dailyLimitMinutes}`;
 
-    hasNotified.current = true;
-    void notifyParentLimitReached(childId).catch((err) => {
-      console.error("Failed to notify parent about screen limit:", err);
-    });
-  }, [isLocked, childId]);
+        if (lastNotifiedValue !== currentNotifiedValue) {
+          notifyParentLimitReached(childId, dailyLimitMinutes)
+            .then(() => {
+              localStorage.setItem(storageKey, currentNotifiedValue);
+            })
+            .catch((err) => {
+              console.error("Failed to notify parent about screen limit:", err);
+            });
+        }
+      }
+    }
+  }, [isLocked, childId, dailyLimitMinutes]);
 
   // Loading state placeholder
   if (isLoading) {

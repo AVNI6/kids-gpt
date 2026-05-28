@@ -393,31 +393,50 @@ export async function getScreenTimeAnalytics(
  * strictly preventing spamming via daily database existence checks.
  */
 export async function notifyParentLimitReached(
-  childId: string
-): Promise<{ success: boolean; error?: string | null }> {
+  childId: string,
+  limitMinutes?: number
+): Promise<{ success: boolean; message?: string; error?: string | null }> {
   try {
     const supabase = await createClient();
 
-    // 1. Daily Spam Check: Check if already notified today
-    const startOfToday = new Date();
-    startOfToday.setUTCHours(0, 0, 0, 0);
-    const startOfTodayIso = startOfToday.toISOString();
+    // Step 1 — Calculate Start of Current Day in local server time
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
 
-    const { data: existing, error: checkError } = await supabase
+    // Step 2 — Query Existing Notifications today
+    const { data: existingNotifications, error: checkError } = await supabase
       .from("parent_notifications")
-      .select("id")
+      .select("id, metadata")
       .eq("child_id", childId)
       .eq("type", "SCREEN_TIME_LIMIT")
-      .gte("created_at", startOfTodayIso)
-      .maybeSingle();
+      .gte("created_at", startOfDay.toISOString());
 
     if (checkError) {
       console.error("[notifyParentLimitReached] Error checking existing notification:", checkError);
     }
 
-    if (existing) {
-      // Return early as per requirement to prevent spamming
-      return { success: true };
+    // Required Behavior: If ANY matching row exists for the same limit today, return early.
+    // If the limit has been extended today, allow sending a new notification.
+    if (existingNotifications && existingNotifications.length > 0) {
+      if (limitMinutes !== undefined) {
+        const alreadyNotifiedForThisLimit = existingNotifications.some((notif) => {
+          const meta = notif.metadata as Record<string, unknown> | null;
+          return meta && meta.limit_minutes === limitMinutes;
+        });
+
+        if (alreadyNotifiedForThisLimit) {
+          return {
+            success: true,
+            message: `Already notified today for limit of ${limitMinutes} minutes`,
+          };
+        }
+      } else {
+        // Fallback: If no limitMinutes is provided, block any duplicate notifications today
+        return {
+          success: true,
+          message: "Already notified today",
+        };
+      }
     }
 
     // 2. Fetch linked parents
@@ -450,7 +469,9 @@ export async function notifyParentLimitReached(
         type: "SCREEN_TIME_LIMIT",
         title: "Daily Limit Reached",
         message: `${childName} has reached their daily screen time limit and is currently locked out.`,
-        metadata: {},
+        metadata: {
+          limit_minutes: limitMinutes,
+        },
       });
 
       if (insertError) {

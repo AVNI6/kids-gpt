@@ -10,6 +10,7 @@ import {
 import type { DashboardUserProfile } from "@/types/dashboard.types";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import {
   getParentNotifications,
   markNotificationAsRead,
@@ -89,8 +90,19 @@ export default function ParentTopNav({ profile }: Props) {
           table: "parent_notifications",
           filter: `parent_id=eq.${profile.user_id}`,
         },
-        () => {
+        (payload: {
+          eventType: string;
+          new: { type?: string; title?: string; message?: string } | null;
+        }) => {
           fetchNotifications();
+          if (payload.eventType === "INSERT") {
+            const newNotif = payload.new;
+            if (newNotif && newNotif.type !== "SCREEN_TIME_LIMIT") {
+              toast.info(newNotif.title || "New Notification", {
+                description: newNotif.message || "",
+              });
+            }
+          }
         }
       )
       .subscribe();
