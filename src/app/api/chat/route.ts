@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ChatRequestBody } from "@/types/chat.types";
 import { generateAIResponse, generateAIResponseStream } from "@/lib/ai/model-orchestrator";
-import { buildChatPrompt, buildPdfPrompt, buildQuizPrompt } from "@/lib/ai/prompts";
+import { buildSystemPrompt, ChatMode } from "@/lib/ai/prompts";
 import { buildGeminiContents } from "@/lib/ai/context-window";
 import { aiLogger } from "@/lib/ai/logger";
 
@@ -50,19 +50,17 @@ export async function POST(req: NextRequest) {
   try {
     const { message, image, history, role = "kid" }: ChatRequestBody = await req.json();
 
-    // Check if user specifically wants to CREATE a new PDF document
+    // Centralized Mode Derivation
+    const quizMode = isQuizMode(message || "", history || []);
     const isPdfRequest =
       /pdf/i.test(message || "") && /generate|create|make|build|download/i.test(message || "");
 
-    aiLogger.info("ChatAPI", `Received request. Role: ${role}, Is PDF: ${isPdfRequest}`);
+    const mode: ChatMode = isPdfRequest ? "pdf" : quizMode ? "quiz" : "chat";
 
-    // Build the system prompt based on user's role and request type
-    const quizMode = isQuizMode(message || "", history || []);
-    const activePrompt = isPdfRequest
-      ? buildPdfPrompt(role)
-      : quizMode
-        ? buildQuizPrompt(role)
-        : buildChatPrompt(role);
+    aiLogger.info("ChatAPI", `Received request. Role: ${role}, Mode: ${mode}`);
+
+    // Layer-compose the modular system prompt dynamically
+    const activePrompt = buildSystemPrompt({ role, mode });
 
     if (!isPdfRequest && quizMode && isStopCommand(message || "")) {
       const stopMessage =
