@@ -21,40 +21,49 @@ export interface MemoryLevel {
 }
 
 const getStepConfig = (levelId: number, stepNumber: number, baseEmojis: string[]): MemoryStep => {
-  let pairCount = 2;
+  let pairCount = 4;
   let timeLimit: number | null = null;
 
-  if (levelId >= 1 && levelId <= 4) {
-    // Worlds 1-4: Step 1 starts at 2 pairs. Linear increase up to 32 pairs by Step 10. timeLimit is null.
-    pairCount = Math.round(2 + (30 * (stepNumber - 1)) / 9);
-  } else if (levelId >= 5 && levelId <= 9) {
-    // Worlds 5-9: Step 1 starts at 18 pairs. Linear increase to 50 pairs by Step 10.
-    // Add timeLimit decreasing from 120s down to 60s based on step complexity.
-    pairCount = Math.round(18 + (32 * (stepNumber - 1)) / 9);
-    timeLimit = Math.round(120 - (60 * (stepNumber - 1)) / 9);
-  } else if (levelId >= 10 && levelId <= 14) {
-    // Worlds 10-14: Step 1 starts at 18 pairs. Linear scale to 72 pairs by Step 10.
-    // Add timeLimit decreasing from 90s down to 45s based on step complexity.
-    pairCount = Math.round(18 + (54 * (stepNumber - 1)) / 9);
-    timeLimit = Math.round(90 - (45 * (stepNumber - 1)) / 9);
+  if (levelId <= 10) {
+    // Worlds 1-10: Exploration Phase (No Timer)
+    // World 1 starts at 4 pairs. Each subsequent world adds 2 to the starting base.
+    // Inside each world, every step adds 2 pairs (s1=4, s2=6, s3=8, s4=10...)
+    const startingPairsForWorld = 4 + (levelId - 1) * 2;
+    pairCount = startingPairsForWorld + (stepNumber - 1) * 2;
+    timeLimit = null;
   } else {
-    // Worlds 15-20: Step 1 starts at 32 pairs. Linear scale to a massive 200 pairs by Step 10.
-    // Add strict timeLimit decreasing from 360s down to 120s based on step complexity.
-    pairCount = Math.round(32 + (168 * (stepNumber - 1)) / 9);
-    timeLimit = Math.round(360 - (240 * (stepNumber - 1)) / 9);
+    // Worlds 11-20: Speed Phase (Timer is ON)
+    // The pair counts RESET back to the beginning.
+    // World 11 acts like World 1 (starts at 4 pairs), World 12 acts like World 2, etc.
+    const resetWorld = levelId - 10;
+    const startingPairsForWorld = 4 + (resetWorld - 1) * 2;
+    pairCount = startingPairsForWorld + (stepNumber - 1) * 2;
+
+    // Timer Logic: Starts generous, gets tighter.
+    // World 11 starts with 120 seconds, minus 5 seconds for each step they complete.
+    const baseTime = 120 - (resetWorld - 1) * 5;
+    timeLimit = Math.max(30, baseTime - (stepNumber - 1) * 5); // Never goes below 30 seconds
   }
 
-  // Calculate grid columns dynamically based on pair count
+  // Calculate grid columns dynamically to keep the cards looking nice
   const cards = pairCount * 2;
-  let gridCols = 20;
-  if (cards <= 4) gridCols = 2;
-  else if (cards <= 16) gridCols = 4;
-  else if (cards <= 36) gridCols = 6;
-  else if (cards <= 64) gridCols = 8;
-  else if (cards <= 100) gridCols = 10;
-  else if (cards <= 144) gridCols = 12;
+  let gridCols = 4;
 
-  // Since baseEmojis now guarantees 200 unique items, we simply slice what we need
+  if (cards <= 8)
+    gridCols = 4; // 4 pairs -> 4 columns
+  else if (cards <= 12)
+    gridCols = 4; // 6 pairs -> 4 columns
+  else if (cards <= 20)
+    gridCols = 5; // 10 pairs -> 5 columns
+  else if (cards <= 36)
+    gridCols = 6; // 18 pairs -> 6 columns
+  else if (cards <= 56)
+    gridCols = 8; // 28 pairs -> 8 columns
+  else if (cards <= 90)
+    gridCols = 10; // 45 pairs -> 10 columns
+  else gridCols = 12;
+
+  // Slice the required emojis safely from the available array
   const stepEmojis = baseEmojis.slice(0, pairCount);
 
   return {
