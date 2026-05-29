@@ -1,6 +1,7 @@
 import { CalendarDays, Crown, UserRound, WandSparkles } from "lucide-react";
 
 import { getKidStats } from "@/actions/dashboard.actions";
+import { getSafeXP } from "@/hooks/useChildXP";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -68,14 +69,14 @@ export default async function KidProfileManager() {
           </Badge>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-3">
           <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
               <Crown className="h-4 w-4 text-amber-500" />
               Points
             </div>
             <div className="mt-2 text-2xl font-black text-slate-950 dark:text-slate-50">
-              {profile.total_experience_points}
+              {getSafeXP(profile.total_experience_points)}
             </div>
           </div>
 

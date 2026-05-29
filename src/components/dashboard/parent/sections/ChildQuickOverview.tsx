@@ -1,13 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen, GraduationCap, ChevronRight, LayoutDashboard } from "lucide-react";
 import type { LinkedChildProfile, ChildDetailsResult } from "@/types/dashboard.types";
-import { useRouter } from "next/navigation";
-import { useChildAge } from "@/hooks/useChildAge";
+import { useParentDashboard } from "@/hooks/parent-dashboard/useParentDashboard";
+import { displayAge } from "@/utils/childAge";
+import { displayGrade } from "@/utils/childGrade";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 export default function ChildQuickOverview({
   linkedChildren,
@@ -16,8 +19,7 @@ export default function ChildQuickOverview({
   linkedChildren: LinkedChildProfile[];
   childDetailsMap?: Record<string, ChildDetailsResult>;
 }) {
-  const router = useRouter();
-  const { calculateAge, displayAge } = useChildAge();
+  const { setActiveChildId } = useParentDashboard();
 
   if (!linkedChildren || linkedChildren.length === 0) {
     return null;
@@ -32,9 +34,10 @@ export default function ChildQuickOverview({
         <Button
           variant="ghost"
           className="text-purple-600 dark:text-purple-400 font-bold hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-full"
-          onClick={() => router.push("?tab=children")}
         >
-          Manage All <ChevronRight className="w-4 h-4 ml-1" />
+          <Link href={APP_ROUTES.ParentChildren}>
+            Manage All <ChevronRight className="w-4 h-4 ml-1" />
+          </Link>
         </Button>
       </div>
 
@@ -87,11 +90,11 @@ export default function ChildQuickOverview({
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                         <GraduationCap className="w-3 h-3" />
-                        {displayAge(child.date_of_birth, child.standard)}
+                        {displayGrade(child.standard)}
                       </span>
                       {child.date_of_birth && (
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30 px-2 py-0.5 rounded-md">
-                          Age {calculateAge(child.date_of_birth)}
+                          {displayAge(child.date_of_birth)}
                         </span>
                       )}
                     </div>
@@ -131,15 +134,18 @@ export default function ChildQuickOverview({
                     <Button
                       variant="outline"
                       className="flex-1 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold"
-                      onClick={() => router.push("?tab=children")}
                     >
-                      Profile
+                      <Link href={APP_ROUTES.ParentChildren}>Profile</Link>
                     </Button>
-                    <Button
-                      className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-bold"
-                      onClick={() => router.push(`?tab=progress&childId=${child.user_id}`)}
-                    >
-                      <LayoutDashboard className="w-4 h-4 mr-2" /> Progress
+                    <Button className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-bold">
+                      <Link
+                        href={`${APP_ROUTES.ParentProgress}?childId=${child.user_id}`}
+                        onClick={() => {
+                          setActiveChildId(child.user_id);
+                        }}
+                      >
+                        <LayoutDashboard className="w-4 h-4 mr-2" /> Progress
+                      </Link>
                     </Button>
                   </div>
                 </div>

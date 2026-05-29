@@ -1,15 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Users, Award } from "lucide-react";
+import { getSafeXP } from "@/hooks/useChildXP";
 import type {
   DashboardUserProfile,
   LinkedChildProfile,
   ChildDetailsResult,
 } from "@/types/dashboard.types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { useParentDashboard } from "@/hooks/parent-dashboard/useParentDashboard";
 
 export default function WelcomeBanner({
   profile,
@@ -20,7 +22,7 @@ export default function WelcomeBanner({
   linkedChildren: LinkedChildProfile[];
   childDetailsMap: Record<string, ChildDetailsResult>;
 }) {
-  const router = useRouter();
+  const { activeChildId } = useParentDashboard();
 
   // Aggregate stats across all kids
   let totalXP = 0;
@@ -28,7 +30,7 @@ export default function WelcomeBanner({
   let completedToday = 0;
 
   linkedChildren.forEach((child) => {
-    totalXP += child.total_experience_points ?? 0;
+    totalXP += getSafeXP(child.total_experience_points);
     const details = childDetailsMap[child.user_id];
     if (details) {
       totalCompleted += details.total_completed;
@@ -70,24 +72,34 @@ export default function WelcomeBanner({
               Welcome back, {profile.first_name || "Parent"}{" "}
               <span className="inline-block animate-wave">👋</span>
             </h1>
-            <p className="text-slate-605 dark:text-slate-300 text-sm md:text-base font-semibold max-w-2xl leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base font-semibold max-w-2xl leading-relaxed">
               {summaryMessage}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
             <Button
-              onClick={() => router.push("?tab=children")}
+              asChild
               className="rounded-full bg-sky-600 hover:bg-sky-700 text-white shadow-md hover:shadow-lg transition-all h-11 px-6 font-bold cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600"
             >
-              Manage Children <Users className="ml-2 w-4 h-4" />
+              <Link href="/dashboard/parent/children">
+                Manage Children <Users className="ml-2 w-4 h-4" />
+              </Link>
             </Button>
             <Button
+              asChild
               variant="outline"
-              onClick={() => router.push("?tab=progress")}
               className="rounded-full border-sky-200 dark:border-slate-800 bg-white/50 dark:bg-black/30 hover:bg-sky-50 dark:hover:bg-black text-sky-700 dark:text-sky-300 h-11 px-6 font-bold backdrop-blur-sm cursor-pointer"
             >
-              <Sparkles className="mr-2 w-4 h-4 text-sky-500" /> View Family Progress
+              <Link
+                href={
+                  activeChildId
+                    ? `/dashboard/parent/progress?childId=${activeChildId}`
+                    : "/dashboard/parent/progress"
+                }
+              >
+                <Sparkles className="mr-2 w-4 h-4 text-sky-500" /> View Family Progress
+              </Link>
             </Button>
           </div>
         </div>
@@ -107,7 +119,7 @@ export default function WelcomeBanner({
                 </Avatar>
               ))}
               {linkedChildren.length > 4 && (
-                <div className="flex items-center justify-center w-14 h-14 rounded-full border-4 border-white dark:border-black bg-slate-200 dark:bg-slate-800 text-slate-655 dark:text-slate-350 text-sm font-black ring-2 ring-slate-100 dark:ring-slate-800">
+                <div className="flex items-center justify-center w-14 h-14 rounded-full border-4 border-white dark:border-black bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-350 text-sm font-black ring-2 ring-slate-100 dark:ring-slate-800">
                   +{linkedChildren.length - 4}
                 </div>
               )}

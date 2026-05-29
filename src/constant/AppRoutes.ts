@@ -9,4 +9,11 @@ export const APP_ROUTES = {
   ForgotPassword: "/forgotpassword",
   ResetPassword: "/resetpassword",
   Activities: "/activities",
+
+  // Parent Dashboard Central Routes
+  ParentDashboard: "/dashboard/parent",
+  ParentChildren: "/dashboard/parent/children",
+  ParentProgress: "/dashboard/parent/progress",
+  ParentActivities: "/dashboard/parent/activities",
+  ParentNotifications: "/dashboard/parent/notifications",
 };

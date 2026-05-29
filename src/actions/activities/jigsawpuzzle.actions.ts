@@ -205,7 +205,7 @@ export async function claimJigsawXp(
         user_id: userId,
         rewards_amount: actualXp,
         source_id: activitySetting?.id || null,
-        source_type: "jigsaw-puzzle",
+        source_type: activitySetting?.slug || "jigsaw-puzzle",
         description,
         score: 100,
       })

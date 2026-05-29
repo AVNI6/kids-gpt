@@ -3,34 +3,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Trophy } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/dashboard.types";
-import { useChildAge } from "@/hooks/useChildAge";
+import { displayAge } from "@/utils/childAge";
+import { displayGrade } from "@/utils/childGrade";
+import { getSafeXP } from "@/hooks/useChildXP";
 
-export function ChildOverviewSkeleton() {
-  return (
-    <Card className="rounded-[28px] border-sky-100 bg-white shadow-sm overflow-hidden animate-pulse">
-      <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
-        <div className="h-24 w-24 rounded-full bg-slate-100 shrink-0" />
-        <div className="space-y-3 flex-1 text-center md:text-left">
-          <div className="h-8 w-48 bg-slate-100 rounded-lg mx-auto md:mx-0" />
-          <div className="h-4 w-32 bg-slate-100 rounded mx-auto md:mx-0" />
-          <div className="h-6 w-24 bg-slate-100 rounded-full mx-auto md:mx-0 mt-2" />
-        </div>
-        <div className="flex gap-4 w-full md:w-auto mt-4 md:mt-0">
-          <div className="h-20 flex-1 md:w-32 bg-slate-100 rounded-2xl" />
-          <div className="h-20 flex-1 md:w-32 bg-slate-100 rounded-2xl" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+// --- Helpers ---
+const getInitials = (child: LinkedChildProfile) =>
+  ((child.first_name?.[0] || "") + (child.last_name?.[0] || "")).trim() || "C";
+
+const getFullName = (child: LinkedChildProfile) =>
+  [child.first_name, child.last_name].filter(Boolean).join(" ") || "Student";
+
+const getUsername = (child: LinkedChildProfile) =>
+  child.username ? `@${child.username}` : `@${child.first_name?.toLowerCase() || "student"}`;
 
 type ChildOverviewCardProps = {
   child: LinkedChildProfile | null;
 };
 
 export default function ChildOverviewCard({ child }: ChildOverviewCardProps) {
-  const { calculateAge } = useChildAge();
-
   if (!child) {
     return (
       <Card className="rounded-[28px] border-sky-100 bg-white shadow-sm">
@@ -41,35 +32,13 @@ export default function ChildOverviewCard({ child }: ChildOverviewCardProps) {
     );
   }
 
-  const initials = (child.first_name?.[0] || "") + (child.last_name?.[0] || "");
-  const fullName = [child.first_name, child.last_name].filter(Boolean).join(" ") || "Student";
-  const username = child.username
-    ? `@${child.username}`
-    : `@${child.first_name?.toLowerCase() || "student"}`;
+  const initials = getInitials(child);
+  const fullName = getFullName(child);
+  const username = getUsername(child);
 
-  let gradeText = "Explorer";
-  let ageText = "";
-  if (child.date_of_birth) {
-    const age = calculateAge(child.date_of_birth);
-    if (age !== null) {
-      ageText = `Age ${age}`;
-    }
+  const gradeText = displayGrade(child.standard);
+  const ageText = displayAge(child.date_of_birth);
 
-    if (child.standard) {
-      gradeText = `${child.standard} Explorer`;
-    } else if (age !== null) {
-      const grade = age - 5;
-      if (grade > 0) {
-        gradeText = `Grade ${grade} Explorer`;
-      } else if (grade === 0) {
-        gradeText = "Kindergarten Explorer";
-      } else {
-        gradeText = "Preschool Explorer";
-      }
-    }
-  } else if (child.standard) {
-    gradeText = `${child.standard} Explorer`;
-  }
   return (
     <Card className="rounded-[32px] border-slate-200/50 dark:border-slate-800/50 bg-white dark:bg-slate-900/40 shadow-sm relative overflow-hidden backdrop-blur-xl">
       {/* Decorative background element */}
@@ -138,7 +107,7 @@ export default function ChildOverviewCard({ child }: ChildOverviewCardProps) {
             </div>
             <div className="flex items-baseline gap-1.5 relative z-10">
               <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
-                {child.total_experience_points || 0}
+                {getSafeXP(child.total_experience_points)}
               </span>
               <span className="text-sm font-bold text-slate-400 dark:text-slate-500">xp</span>
             </div>

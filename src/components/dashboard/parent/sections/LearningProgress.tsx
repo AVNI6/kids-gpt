@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { BrainCircuit, Target, Clock, Trophy, CheckCircle2, Sparkles } from "lucide-react";
-import type { LinkedChildProfile, ChildDetailsResult } from "@/types/dashboard.types";
-import { getChildAiInsights } from "@/actions/dashboard.actions";
+import { useParentDashboard } from "@/hooks/parent-dashboard/useParentDashboard";
+import { useParentAnalytics } from "@/hooks/parent-dashboard/useParentAnalytics";
 
 interface Recommendation {
   subject: string;
@@ -14,168 +12,22 @@ interface Recommendation {
   priority: string;
 }
 
-interface AiInsightsResult {
-  child_name: string;
-  summary: string;
-  recommendations: Recommendation[];
-}
+export default function LearningProgress() {
+  const { activeChild, details, aiInsights, isLoadingChildData } = useParentDashboard();
 
-export default function LearningProgress({
-  linkedChildren,
-  childDetails,
-}: {
-  linkedChildren: LinkedChildProfile[];
-  childDetails: ChildDetailsResult | null;
-}) {
-  const searchParams = useSearchParams();
-  const childId = searchParams?.get("childId");
-  const activeChild = linkedChildren.find((c) => c.user_id === childId) || linkedChildren[0];
-
-  const [aiInsights, setAiInsights] = useState<AiInsightsResult | null>(null);
-  const [loadingAi, setLoadingAi] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    if (!activeChild) return;
-
-    const timer = setTimeout(async () => {
-      if (!active) return;
-      setLoadingAi(true);
-      try {
-        const data = await getChildAiInsights(activeChild.user_id);
-        if (active) {
-          setAiInsights(data);
-        }
-      } catch (err) {
-        console.error("Error loading AI insights:", err);
-      } finally {
-        if (active) {
-          setLoadingAi(false);
-        }
-      }
-    }, 0);
-
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [activeChild]);
+  // Retrieve standardized subject analytics using parent analytics hook
+  const { subjectPerformance, quizAccuracy } = useParentAnalytics(details?.timeline ?? []);
 
   if (!activeChild) return null;
 
-  // Derive dynamic stats from childDetails or use realistic defaults
-  const accuracy = childDetails?.quiz_accuracy ?? 0;
-  const totalCompleted = childDetails?.total_completed ?? 0;
-  const currentStreak = childDetails?.current_streak ?? activeChild.current_streak ?? 0;
+  // Derive dynamic stats from details
+  const totalCompleted = details?.total_completed ?? 0;
+  const currentStreak = details?.current_streak ?? activeChild.current_streak ?? 0;
 
-  const totalMins = childDetails?.learning_time_mins ?? 0;
+  const totalMins = details?.learning_time_mins ?? 0;
   const hrs = Math.floor(totalMins / 60);
   const mins = totalMins % 60;
   const learningTimeStr = totalMins > 0 ? `${hrs}h ${mins}m` : "0h";
-
-  // Compute actual dynamic subject progress based on the child's timeline of completed activities
-  const timeline = childDetails?.timeline || [];
-
-  let mathCount = 0,
-    mathSum = 0;
-  let wordCount = 0,
-    wordSum = 0;
-  let scienceCount = 0,
-    scienceSum = 0;
-  let logicCount = 0,
-    logicSum = 0;
-  let memoryCount = 0,
-    memorySum = 0;
-
-  timeline.forEach((item) => {
-    const slug = item.activity_settings?.slug || "";
-    const desc = (item.description ?? "").toLowerCase();
-    const scoreVal = item.score !== null && item.score !== undefined ? item.score : 100;
-
-    if (
-      slug === "math-challenges" ||
-      (!slug &&
-        (desc.includes("math") ||
-          desc.includes("arithmetic") ||
-          desc.includes("number") ||
-          desc.includes("fraction")))
-    ) {
-      mathCount++;
-      mathSum += scoreVal;
-    } else if (
-      slug === "word-scrambles" ||
-      (!slug &&
-        (desc.includes("scramble") ||
-          desc.includes("word") ||
-          desc.includes("spell") ||
-          desc.includes("english") ||
-          desc.includes("vocabulary")))
-    ) {
-      wordCount++;
-      wordSum += scoreVal;
-    } else if (
-      slug === "science-lab" ||
-      (!slug &&
-        (desc.includes("science") ||
-          desc.includes("lab") ||
-          desc.includes("experiment") ||
-          desc.includes("volcano") ||
-          desc.includes("magnet") ||
-          desc.includes("planet") ||
-          desc.includes("space")))
-    ) {
-      scienceCount++;
-      scienceSum += scoreVal;
-    } else if (
-      slug === "logic-puzzles" ||
-      (!slug &&
-        (desc.includes("puzzle") ||
-          desc.includes("logic") ||
-          desc.includes("maze") ||
-          desc.includes("coding") ||
-          desc.includes("programming")))
-    ) {
-      logicCount++;
-      logicSum += scoreVal;
-    } else if (
-      slug === "memory-match" ||
-      slug === "match-following" ||
-      slug === "flashcards" ||
-      slug === "quizzes" ||
-      slug === "jigsaw-puzzle" ||
-      slug === "color-mixer" ||
-      (!slug &&
-        (desc.includes("memory") ||
-          desc.includes("match") ||
-          desc.includes("pair") ||
-          desc.includes("flashcard")))
-    ) {
-      memoryCount++;
-      memorySum += scoreVal;
-    } else {
-      logicCount++;
-      logicSum += scoreVal;
-    }
-  });
-
-  const mathProgress = mathCount > 0 ? Math.round(mathSum / mathCount) : 0;
-  const wordProgress = wordCount > 0 ? Math.round(wordSum / wordCount) : 0;
-  const scienceProgress = scienceCount > 0 ? Math.round(scienceSum / scienceCount) : 0;
-  const logicProgress = logicCount > 0 ? Math.round(logicSum / logicCount) : 0;
-  const memoryProgress = memoryCount > 0 ? Math.round(memorySum / memoryCount) : 0;
-
-  const subjects = [
-    { name: "Math Challenges 🧮", progress: mathProgress, color: "bg-sky-500", count: mathCount },
-    { name: "Word Scrambles 🔠", progress: wordProgress, color: "bg-sky-500", count: wordCount },
-    { name: "Science Lab 🧪", progress: scienceProgress, color: "bg-sky-500", count: scienceCount },
-    { name: "Logic Puzzles 🧩", progress: logicProgress, color: "bg-sky-500", count: logicCount },
-    {
-      name: "Memory & Matching 🎴",
-      progress: memoryProgress,
-      color: "bg-sky-500",
-      count: memoryCount,
-    },
-  ];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -188,10 +40,12 @@ export default function LearningProgress({
                 <Target className="w-6 h-6 text-emerald-500" />
               </div>
             </div>
-            <h3 className="text-slate-550 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
+            <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
               Overall Progress
             </h3>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">{accuracy}%</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">
+              {isLoadingChildData ? "..." : `${quizAccuracy}%`}
+            </p>
           </CardContent>
         </Card>
 
@@ -199,13 +53,15 @@ export default function LearningProgress({
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100/30 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-sky-550" />
+                <Clock className="w-6 h-6 text-sky-500" />
               </div>
             </div>
-            <h3 className="text-slate-550 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
+            <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
               Learning Time
             </h3>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">{learningTimeStr}</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">
+              {isLoadingChildData ? "..." : learningTimeStr}
+            </p>
           </CardContent>
         </Card>
 
@@ -213,13 +69,15 @@ export default function LearningProgress({
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100/30 flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-sky-550" />
+                <CheckCircle2 className="w-6 h-6 text-sky-500" />
               </div>
             </div>
-            <h3 className="text-slate-550 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
+            <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
               Completed Activities
             </h3>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">{totalCompleted}</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">
+              {isLoadingChildData ? "..." : totalCompleted}
+            </p>
           </CardContent>
         </Card>
 
@@ -230,7 +88,7 @@ export default function LearningProgress({
                 <Trophy className="w-6 h-6 text-amber-500" />
               </div>
             </div>
-            <h3 className="text-slate-550 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
+            <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
               Current Streak
             </h3>
             <p className="text-3xl font-black text-slate-900 dark:text-white">
@@ -249,7 +107,7 @@ export default function LearningProgress({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8 pt-0 space-y-6">
-            {subjects.map((subject) => (
+            {subjectPerformance.map((subject) => (
               <div key={subject.name} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
@@ -278,14 +136,14 @@ export default function LearningProgress({
           <div>
             <div className="flex items-center gap-2 mb-6">
               <div className="w-10 h-10 bg-sky-50 dark:bg-sky-950/40 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-sky-550" />
+                <Sparkles className="w-5 h-5 text-sky-500" />
               </div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white">
                 AI Learning Insights
               </h3>
             </div>
 
-            {loadingAi ? (
+            {isLoadingChildData && !aiInsights ? (
               <div className="space-y-4 animate-pulse">
                 <div className="h-6 bg-slate-100 dark:bg-slate-800 rounded-lg w-3/4" />
                 <div className="h-20 bg-slate-100 dark:bg-slate-800 rounded-xl" />

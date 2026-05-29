@@ -1,153 +1,71 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Bell, Menu, AlertTriangle, Trophy, BookOpen, CheckCircle2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { DashboardUserProfile } from "@/types/dashboard.types";
-import { useSearchParams, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import {
-  getParentNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-} from "@/actions/dashboard.actions";
+import type { NotificationItem } from "@/types/parent-dashboard/dashboard.types";
+import { useNotifications } from "@/hooks/parent-dashboard/useNotifications";
+import { useParentDashboard } from "@/hooks/parent-dashboard/useParentDashboard";
 import { getRelativeTime } from "@/hooks/timeUtils";
+import { APP_ROUTES } from "@/constant/AppRoutes";
 
 export const PARENT_NAV_ITEMS = [
-  { id: "home", label: "Home" },
-  { id: "children", label: "My Children" },
-  { id: "progress", label: "Learning Progress" },
-  { id: "activities", label: "Activities" },
-  { id: "monitoring", label: "Monitoring" },
+  { label: "Home", href: APP_ROUTES.ParentDashboard, exact: true },
+  { label: "My Children", href: APP_ROUTES.ParentChildren },
+  { label: "Learning Progress", href: APP_ROUTES.ParentProgress },
+  { label: "Activities", href: APP_ROUTES.ParentActivities },
 ];
 
-type Props = {
-  profile: DashboardUserProfile;
-};
-
-interface NotificationItem {
-  id: string;
-  parent_id: string;
-  child_id: string;
-  type: string;
-  title: string;
-  message: string;
-  is_read: boolean;
-  metadata: Record<string, unknown> | null;
-  created_at: string | null;
-}
-
-export default function ParentTopNav({ profile }: Props) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const activeTab = searchParams?.get("tab") || "home";
+export default function ParentTopNav() {
+  const pathname = usePathname();
+  const { activeChildId } = useParentDashboard();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  // Retrieve unified notifications from the shared notifications hook
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
-  const fetchNotifications = async () => {
-    try {
-      const data = await getParentNotifications();
-      // Map returned array to standard NotificationItem elements
-      const items: NotificationItem[] = (data || []).map((n: Record<string, unknown>) => ({
-        id: String(n.id ?? ""),
-        parent_id: String(n.parent_id ?? ""),
-        child_id: String(n.child_id ?? ""),
-        type: String(n.type ?? ""),
-        title: String(n.title ?? ""),
-        message: String(n.message ?? ""),
-        is_read: Boolean(n.is_read ?? false),
-        metadata: (n.metadata ?? {}) as Record<string, unknown> | null,
-        created_at: n.created_at ? String(n.created_at) : null,
-      }));
-      setNotifications(items);
-      setUnreadCount(items.filter((n) => !n.is_read).length);
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
+  const isLinkActive = (item: (typeof PARENT_NAV_ITEMS)[0]) => {
+    if (item.exact) {
+      return pathname === item.href;
     }
+    return pathname.startsWith(item.href);
   };
 
-  useEffect(() => {
-    // Schedule asynchronous execution to avoid synchronous setState inside render-effect warning
-    const timer = setTimeout(() => {
-      fetchNotifications();
-    }, 0);
-
-    const supabase = createClient();
-    const channel = supabase
-      .channel("parent-notifications-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "parent_notifications",
-          filter: `parent_id=eq.${profile.user_id}`,
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      clearTimeout(timer);
-      supabase.removeChannel(channel);
-    };
-  }, [profile.user_id]);
-
-  const handleMarkAsRead = async (id: string) => {
-    try {
-      const res = await markNotificationAsRead(id);
-      if (res.success) {
-        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
-    } catch (err) {
-      console.error("Error marking notification as read:", err);
+  const getNavItemHref = (item: (typeof PARENT_NAV_ITEMS)[0]) => {
+    if (item.href === APP_ROUTES.ParentChildren) {
+      return item.href;
     }
-  };
-
-  const handleMarkAllAsRead = async () => {
-    try {
-      const res = await markAllNotificationsAsRead();
-      if (res.success) {
-        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-        setUnreadCount(0);
-      }
-    } catch (err) {
-      console.error("Error marking all as read:", err);
-    }
-  };
-
-  const setActiveTab = (id: string) => {
-    router.push(`?tab=${id}`);
+    return activeChildId ? `${item.href}?childId=${activeChildId}` : item.href;
   };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-background/80 backdrop-blur-xl">
       <div className="max-w-400 mx-auto px-4 md:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-16 items-center justify-end lg:justify-between gap-4">
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">
-            {PARENT_NAV_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
-                  activeTab === item.id
-                    ? "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+            {PARENT_NAV_ITEMS.map((item) => {
+              const active = isLinkActive(item);
+              return (
+                <Link
+                  key={item.href}
+                  href={getNavItemHref(item)}
+                  className={`px-4 py-2 rounded-full text-sm font-bold transition-all cursor-pointer ${
+                    active
+                      ? "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Right Section: Notifications & Profile */}
@@ -169,7 +87,7 @@ export default function ParentTopNav({ profile }: Props) {
                   <span className="font-black text-slate-900 dark:text-white">Notifications</span>
                   {unreadCount > 0 && (
                     <button
-                      onClick={handleMarkAllAsRead}
+                      onClick={markAllAsRead}
                       className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline cursor-pointer"
                     >
                       Mark all as read
@@ -182,7 +100,7 @@ export default function ParentTopNav({ profile }: Props) {
                       No new updates
                     </div>
                   ) : (
-                    notifications.slice(0, 5).map((notif) => {
+                    notifications.slice(0, 5).map((notif: NotificationItem) => {
                       let icon = (
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       );
@@ -204,7 +122,7 @@ export default function ParentTopNav({ profile }: Props) {
                       return (
                         <div
                           key={notif.id}
-                          onClick={() => handleMarkAsRead(notif.id)}
+                          onClick={() => markAsRead(notif.id)}
                           className={`flex items-start gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors cursor-pointer ${
                             !notif.is_read ? "bg-sky-50/20 dark:bg-sky-900/5" : ""
                           }`}
@@ -250,12 +168,12 @@ export default function ParentTopNav({ profile }: Props) {
                     })
                   )}
                 </div>
-                <div
-                  onClick={() => setActiveTab("notifications")}
+                <Link
+                  href={APP_ROUTES.ParentNotifications}
                   className="block p-3 text-center text-xs font-black text-sky-600 dark:text-sky-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800/60 cursor-pointer"
                 >
                   View all notifications
-                </div>
+                </Link>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -274,22 +192,23 @@ export default function ParentTopNav({ profile }: Props) {
       {isMobileMenuOpen && (
         <div className="lg:hidden absolute top-16 left-0 w-full bg-white dark:bg-card border-b border-slate-200 dark:border-slate-800 shadow-lg animate-in slide-in-from-top-2">
           <div className="px-4 py-4 space-y-2">
-            {PARENT_NAV_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full text-left px-4 py-3 rounded-xl font-bold transition-colors ${
-                  activeTab === item.id
-                    ? "bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+            {PARENT_NAV_ITEMS.map((item) => {
+              const active = isLinkActive(item);
+              return (
+                <Link
+                  key={item.href}
+                  href={getNavItemHref(item)}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`w-full block text-left px-4 py-3 rounded-xl font-bold transition-colors cursor-pointer ${
+                    active
+                      ? "bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}

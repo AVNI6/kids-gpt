@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Zap, Users } from "lucide-react";
+import { getSafeXP } from "@/hooks/useChildXP";
 
 export default async function ActiveStudentsList() {
   const students = await getLinkedStudents();
@@ -74,10 +75,12 @@ export default async function ActiveStudentsList() {
                       <p className="font-semibold text-slate-900 text-sm">
                         {student.first_name} {student.last_name}
                       </p>
-                      <p className="text-xs text-slate-500">
-                        {student.total_experience_points || 0} XP • Streak:{" "}
-                        {student.current_streak || 0}
-                      </p>
+                      <span className="text-xs font-semibold text-slate-500 mt-1 block">
+                        {getSafeXP(student.total_experience_points)} XP • Streak:{" "}
+                        <span className="text-orange-500 font-bold">
+                          {student.current_streak} days
+                        </span>
+                      </span>
                     </div>
                   </div>
 
