@@ -36,70 +36,78 @@ export default async function ParentDashboardLayout({ children }: { children: Re
   const linkedChildren = await getLinkedChildren();
   const initialCache: Record<string, CacheData> = {};
 
-  // Prefetch details for exactly the first linked child (the default active child)
-  // to seed the query cache on initial mount and prevent browser POST requests on load.
+  // Prefetch details for ALL linked children to seed the query cache on initial mount
+  // so that the home page (Recent Family Activity, Family total stats) displays all kids' details instantly.
   if (linkedChildren.length > 0) {
-    const defaultChild = linkedChildren[0];
-    const childId = defaultChild.user_id;
-
     try {
-      const [detailsData, safetyData, historyData, activitiesData, screenTimeData] =
-        await Promise.all([
-          getChildDetails(childId),
-          getChildSafetyAndUsage(childId),
-          getParentSearchHistory(childId),
-          getParentActivities(childId),
-          getDailyScreenTime(childId).catch(() => ({
-            success: false,
-            screenTimeSeconds: 0,
-            dailyLimitMinutes: 60,
-            isLimitEnabled: false,
-          })),
-        ]);
+      await Promise.all(
+        linkedChildren.map(async (child) => {
+          const childId = child.user_id;
+          try {
+            const [detailsData, safetyData, historyData, activitiesData, screenTimeData] =
+              await Promise.all([
+                getChildDetails(childId),
+                getChildSafetyAndUsage(childId),
+                getParentSearchHistory(childId),
+                getParentActivities(childId),
+                getDailyScreenTime(childId).catch(() => ({
+                  success: false,
+                  screenTimeSeconds: 0,
+                  dailyLimitMinutes: 60,
+                  isLimitEnabled: false,
+                })),
+              ]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formattedHistory: SearchHistoryItem[] = (historyData || []).map((h: any) => ({
-        id: String(h.id ?? ""),
-        title: h.title ? String(h.title) : null,
-        created_at: h.created_at ? String(h.created_at) : null,
-      }));
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const formattedHistory: SearchHistoryItem[] = (historyData || []).map((h: any) => ({
+              id: String(h.id ?? ""),
+              title: h.title ? String(h.title) : null,
+              created_at: h.created_at ? String(h.created_at) : null,
+            }));
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formattedActivities: ParentActivityItem[] = (activitiesData || []).map((act: any) => ({
-        id: act.id,
-        rewards_amount: act.rewards_amount ?? 0,
-        description: act.description,
-        created_at: act.created_at,
-        source_type: act.source_type ?? "",
-        score: act.score,
-        activity_settings: act.activity_settings,
-      }));
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const formattedActivities: ParentActivityItem[] = (activitiesData || []).map(
+              (act: any) => ({
+                id: act.id,
+                rewards_amount: act.rewards_amount ?? 0,
+                description: act.description,
+                created_at: act.created_at,
+                source_type: act.source_type ?? "",
+                score: act.score,
+                activity_settings: act.activity_settings,
+              })
+            );
 
-      const cachedScreenTime = screenTimeData.success
-        ? {
-            screenTimeSeconds: screenTimeData.screenTimeSeconds,
-            dailyLimitMinutes: screenTimeData.dailyLimitMinutes,
-            isLimitEnabled: screenTimeData.isLimitEnabled,
+            const cachedScreenTime = screenTimeData.success
+              ? {
+                  screenTimeSeconds: screenTimeData.screenTimeSeconds,
+                  dailyLimitMinutes: screenTimeData.dailyLimitMinutes,
+                  isLimitEnabled: screenTimeData.isLimitEnabled,
+                }
+              : null;
+
+            let aiInsightsData = null;
+            try {
+              aiInsightsData = await getChildAiInsights(childId, detailsData);
+            } catch {
+              aiInsightsData = null;
+            }
+
+            initialCache[childId] = {
+              details: detailsData,
+              safety: safetyData,
+              history: formattedHistory,
+              activities: formattedActivities,
+              screenTime: cachedScreenTime,
+              aiInsights: aiInsightsData,
+            };
+          } catch (childErr) {
+            console.warn(`Failed to prefetch details for child ${childId}:`, childErr);
           }
-        : null;
-
-      let aiInsightsData = null;
-      try {
-        aiInsightsData = await getChildAiInsights(childId, detailsData);
-      } catch {
-        aiInsightsData = null;
-      }
-
-      initialCache[childId] = {
-        details: detailsData,
-        safety: safetyData,
-        history: formattedHistory,
-        activities: formattedActivities,
-        screenTime: cachedScreenTime,
-        aiInsights: aiInsightsData,
-      };
+        })
+      );
     } catch (err) {
-      console.warn("Failed to prefetch default child details inside layout:", err);
+      console.warn("Failed to prefetch children details inside layout:", err);
     }
   }
 

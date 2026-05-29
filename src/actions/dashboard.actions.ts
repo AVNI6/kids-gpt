@@ -115,25 +115,8 @@ async function verifyUserRole(allowedRole?: UserRole): Promise<VerifiedUser> {
   };
 }
 
-export async function getKidStats(timezone: string = "Asia/Kolkata"): Promise<KidDashboardStats> {
-  const { userId, profile } = await verifyUserRole("kid");
-  const supabase = await getSupabaseClient();
-
-  // Query the latest activity reward for this kid to calculate streak
-  const { data: lastRewards } = await supabase
-    .from("rewards")
-    .select("created_at")
-    .eq("user_id", userId)
-    .not("source_id", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(1);
-
-  const lastRewardTime = lastRewards && lastRewards.length > 0 ? lastRewards[0].created_at : null;
-  const currentStreak = calculateDisplayStreak(
-    profile.current_streak ?? 0,
-    lastRewardTime,
-    timezone
-  );
+export async function getKidStats(): Promise<KidDashboardStats> {
+  const { profile } = await verifyUserRole("kid");
 
   return {
     first_name: profile.first_name,
@@ -141,7 +124,7 @@ export async function getKidStats(timezone: string = "Asia/Kolkata"): Promise<Ki
     avatar_url: profile.avatar_url,
     date_of_birth: profile.date_of_birth,
     total_experience_points: profile.total_experience_points ?? 0,
-    current_streak: currentStreak,
+    current_streak: profile.current_streak ?? 0,
     longest_streak: profile.longest_streak ?? 0,
   };
 }
@@ -700,12 +683,7 @@ export async function getKidComprehensiveDetails(
   const totalCompleted = timeline.length;
   const totalXp = childProfile.total_experience_points ?? 0;
 
-  const lastRewardTime = rewards && rewards.length > 0 ? rewards[0].created_at : null;
-  const currentStreak = calculateDisplayStreak(
-    childProfile.current_streak ?? 0,
-    lastRewardTime,
-    timezone
-  );
+  const currentStreak = childProfile.current_streak ?? 0;
   const longestStreak = childProfile.longest_streak ?? 0;
 
   // 3. Calculate Subject Mastery based on activity title keywords

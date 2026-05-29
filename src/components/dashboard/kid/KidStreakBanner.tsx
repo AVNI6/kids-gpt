@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSafeXP } from "@/hooks/useChildXP";
+import { getSafeStreak } from "@/hooks/useChildStreak";
 
 function getInitials(firstName: string | null, lastName: string | null) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.trim();
@@ -46,7 +47,7 @@ export default async function KidStreakBanner() {
             </div>
             <div className="mt-3 flex items-end gap-2">
               <span className="text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
-                {stats.current_streak}
+                {getSafeStreak(stats.current_streak)}
               </span>
               <span className="pb-1 text-sm font-semibold text-slate-500 dark:text-slate-400">
                 days straight!
@@ -71,7 +72,7 @@ export default async function KidStreakBanner() {
                 variant="secondary"
                 className="rounded-full px-2.5 py-1 dark:bg-slate-850 dark:text-slate-300"
               >
-                Longest: {stats.longest_streak} days
+                Longest: {getSafeStreak(stats.longest_streak)} days
               </Badge>
             </div>
           </div>

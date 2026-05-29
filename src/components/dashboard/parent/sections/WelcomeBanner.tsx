@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Users, Award } from "lucide-react";
+import { Sparkles, Users, Award, Flame } from "lucide-react";
 import { getSafeXP } from "@/hooks/useChildXP";
+import { getMaxStreak } from "@/hooks/useChildStreak";
 import type {
   DashboardUserProfile,
   LinkedChildProfile,
@@ -28,9 +29,11 @@ export default function WelcomeBanner({
   let totalXP = 0;
   let totalCompleted = 0;
   let completedToday = 0;
+  const maxStreak = getMaxStreak(linkedChildren);
 
   linkedChildren.forEach((child) => {
     totalXP += getSafeXP(child.total_experience_points);
+
     const details = childDetailsMap[child.user_id];
     if (details) {
       totalCompleted += details.total_completed;
@@ -79,10 +82,15 @@ export default function WelcomeBanner({
 
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
             <Button className="rounded-full bg-sky-600 hover:bg-sky-700 text-white shadow-md hover:shadow-lg transition-all h-11 px-6 font-bold cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600">
-              <Link href="/dashboard/parent/children">
-                Manage Children <Users className="ml-2 w-4 h-4" />
+              <Link
+                href="/dashboard/parent/children"
+                className="flex items-center justify-center gap-2"
+              >
+                <Users className="w-4 h-4 shrink-0" />
+                <span>Manage Children</span>
               </Link>
             </Button>
+
             <Button
               variant="outline"
               className="rounded-full border-sky-200 dark:border-slate-800 bg-white/50 dark:bg-black/30 hover:bg-sky-50 dark:hover:bg-black text-sky-700 dark:text-sky-300 h-11 px-6 font-bold backdrop-blur-sm cursor-pointer"
@@ -93,8 +101,10 @@ export default function WelcomeBanner({
                     ? `/dashboard/parent/progress?childId=${activeChildId}`
                     : "/dashboard/parent/progress"
                 }
+                className="flex items-center justify-center gap-2"
               >
-                <Sparkles className="mr-2 w-4 h-4 text-sky-500" /> View Family Progress
+                <Sparkles className="w-4 h-4 text-sky-500 shrink-0" />
+                <span>View Family Progress</span>
               </Link>
             </Button>
           </div>
@@ -121,11 +131,17 @@ export default function WelcomeBanner({
               )}
             </div>
 
-            <div className="text-center lg:text-right space-y-1">
+            <div className="text-center lg:text-right space-y-1.5 flex flex-col items-center lg:items-end">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300">
                 <Award className="w-3.5 h-3.5" /> {totalXP} Family XP
               </span>
-              <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+              {maxStreak > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-700 border border-amber-200/50 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-900/30">
+                  <Flame className="w-3.5 h-3.5 fill-current animate-pulse text-amber-500" />{" "}
+                  {maxStreak} Day Streak
+                </span>
+              )}
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider pt-1">
                 {linkedChildren.length === 1
                   ? "1 Linked Explorer"
                   : `${linkedChildren.length} Linked Explorers`}
