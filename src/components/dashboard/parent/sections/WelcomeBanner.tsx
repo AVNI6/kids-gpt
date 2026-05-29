@@ -78,16 +78,12 @@ export default function WelcomeBanner({
           </div>
 
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
-            <Button
-              asChild
-              className="rounded-full bg-sky-600 hover:bg-sky-700 text-white shadow-md hover:shadow-lg transition-all h-11 px-6 font-bold cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600"
-            >
+            <Button className="rounded-full bg-sky-600 hover:bg-sky-700 text-white shadow-md hover:shadow-lg transition-all h-11 px-6 font-bold cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600">
               <Link href="/dashboard/parent/children">
                 Manage Children <Users className="ml-2 w-4 h-4" />
               </Link>
             </Button>
             <Button
-              asChild
               variant="outline"
               className="rounded-full border-sky-200 dark:border-slate-800 bg-white/50 dark:bg-black/30 hover:bg-sky-50 dark:hover:bg-black text-sky-700 dark:text-sky-300 h-11 px-6 font-bold backdrop-blur-sm cursor-pointer"
             >

@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, MonitorSmartphone, Brain, Search, AlertTriangle } from "lucide-react";
 import { useParentDashboard } from "@/hooks/parent-dashboard/useParentDashboard";
-import WeeklyProgressChart from "../WeeklyProgressChart";
 
 export default function ChildMonitoring() {
   const { activeChild, safety, searchHistory, isLoadingChildData } = useParentDashboard();
@@ -138,8 +137,6 @@ export default function ChildMonitoring() {
           </CardContent>
         </Card>
       </div>
-
-      <WeeklyProgressChart />
     </div>
   );
 }
