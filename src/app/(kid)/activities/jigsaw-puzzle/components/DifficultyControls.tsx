@@ -53,13 +53,13 @@ export default function DifficultyControls({
   ];
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-2xl bg-card/75 dark:bg-slate-900/60 p-6 rounded-3xl border border-border/80 dark:border-slate-800/80 shadow-xl backdrop-blur-md transition-all duration-300">
+    <div className="flex flex-col gap-6 w-full  bg-card/75 dark:bg-slate-900/60 p-6 rounded-3xl border border-border/80 dark:border-slate-800/80 shadow-xl backdrop-blur-md transition-all duration-300">
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-black uppercase tracking-wider text-muted-foreground flex items-center gap-2">
           <LayoutGrid className="size-4 text-sky-500" />
           Choose Difficulty
         </h3>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
           {options.map((opt) => {
             const isActive = difficulty === opt.value;
             return (

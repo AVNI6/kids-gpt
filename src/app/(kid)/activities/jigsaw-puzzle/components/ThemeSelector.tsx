@@ -29,7 +29,7 @@ export default function ThemeSelector({
           scrollbarColor: "var(--border) transparent",
         }}
       >
-        <div className="grid grid-cols-2 gap-3 pt-4 pl-2">
+        <div className="grid sm:grid-cols-2 grid-cols-1  gap-3 pt-4 pl-2">
           {JIGSAW_THEMES.map((theme) => {
             const isActive = selectedUrl === theme.url;
             return (
