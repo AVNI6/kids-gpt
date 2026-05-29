@@ -34,13 +34,21 @@ const chatSlice = createSlice({
     },
     updateMessage: (
       state,
-      action: PayloadAction<{ id: string; content: string; attachmentUrl?: string }>
+      action: PayloadAction<{
+        id: string;
+        content: string;
+        attachmentUrl?: string;
+        isImage?: boolean;
+      }>
     ) => {
       const msg = state.messages.find((m) => m.id === action.payload.id);
       if (msg) {
         msg.content = action.payload.content;
         if (action.payload.attachmentUrl !== undefined) {
           msg.attachmentUrl = action.payload.attachmentUrl;
+        }
+        if (action.payload.isImage !== undefined) {
+          msg.isImage = action.payload.isImage;
         }
       }
     },

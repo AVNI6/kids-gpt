@@ -4,6 +4,7 @@ import { getKidStats } from "@/actions/dashboard.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { getSafeXP } from "@/hooks/useChildXP";
 
 function getInitials(firstName: string | null, lastName: string | null) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.trim();
@@ -63,7 +64,7 @@ export default async function KidStreakBanner() {
               Experience points
             </div>
             <div className="mt-3 text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
-              {stats.total_experience_points}
+              {getSafeXP(stats.total_experience_points)}
             </div>
             <div className="mt-3 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <Badge

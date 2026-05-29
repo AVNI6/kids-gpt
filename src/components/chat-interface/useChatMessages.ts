@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAppDispatch } from "@/store/hooks";
 import { setMessages } from "@/store/slice/chat.slice";
 import { fetchSessionMessages } from "@/actions/chat.actions";
-import { getParentSessionMessages } from "@/actions/dashboard.actions";
+import { getParentSessionMessages } from "@/actions/parent-dashboard.actions";
 import { Message, ChatMessageRow } from "@/types/chat.types";
 
 type CachedMessages = {

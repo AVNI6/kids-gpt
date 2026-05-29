@@ -122,6 +122,32 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
     }
   }, []);
 
+  // NEW: Store latest state to prevent stale closures and dependency loops
+  const stateRefs = useRef({
+    dbScreenTimeSeconds,
+    dailyLimitMinutes,
+    isLimitEnabled,
+    isLeader,
+  });
+
+  useEffect(() => {
+    stateRefs.current = {
+      dbScreenTimeSeconds,
+      dailyLimitMinutes,
+      isLimitEnabled,
+      isLeader,
+    };
+  }, [dbScreenTimeSeconds, dailyLimitMinutes, isLimitEnabled, isLeader]);
+
+  // Dedicated Mount-Only initial fetch guarded by hasFetchedRef
+  const hasFetchedRef = useRef(false);
+  useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata";
+    void fetchScreenTime(tz);
+  }, [fetchScreenTime]);
+
   // Effect 1: Core Lifecycle Tracking, Multi-Tab Election, Inactivity & Drift Safety
   // Core lifecycle effect: runs once on mount. Uses refs for mutable values.
 
@@ -155,11 +181,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       }
     }
 
-    // Set initial loading state (defer stateful async call beyond sync effect body)
-    const initialFetchTimeoutId = window.setTimeout(() => {
-      void fetchScreenTime(tz);
-    }, 0);
-
     lastTickRef.current = Date.now();
     lastActivityRef.current = Date.now();
     elapsedAccumulatedRef.current = 0;
@@ -186,7 +207,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       const elapsedSecs = Math.floor(elapsedMs / 1000);
       lastTickRef.current = now;
 
-      // Task 4: Midnight Day Rollover (The "Tab Left Open" Edge Case)
+      // Midnight Day Rollover (The "Tab Left Open" Edge Case)
       const todayString = new Date().toDateString();
       if (todayString !== currentDayRef.current) {
         // Reset local unsynced seconds
@@ -214,25 +235,25 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
         return;
       }
 
-      // 2. Task 3 Halt Condition: If screen is already locked, return early to halt the heartbeat timer.
-      // This prevents multi-tab leaks or interval drift database writes.
-      const currentTotalMins = (dbScreenTimeSeconds + elapsedAccumulatedRef.current) / 60;
-      const currentLocked = isLimitEnabled && currentTotalMins >= dailyLimitMinutes;
+      // 2. Lock & Notification Check: If screen is already locked, return early to halt the heartbeat timer.
+      // Use refs to prevent dependency loop and stale closures
+      const currentTotalMins =
+        (stateRefs.current.dbScreenTimeSeconds + elapsedAccumulatedRef.current) / 60;
+      const currentLimit = stateRefs.current.dailyLimitMinutes;
+      const currentLocked = stateRefs.current.isLimitEnabled && currentTotalMins >= currentLimit;
+
       if (currentLocked) {
         if (childId && typeof window !== "undefined") {
           const todayString = new Date().toDateString();
           const storageKey = `notified_limit_${childId}`;
           const lastNotifiedValue = localStorage.getItem(storageKey);
-          const currentNotifiedValue = `${todayString}_${dailyLimitMinutes}`;
+
+          const currentNotifiedValue = `${todayString}_${currentLimit}`;
 
           if (lastNotifiedValue !== currentNotifiedValue) {
-            notifyParentLimitReached(childId, dailyLimitMinutes)
-              .then(() => {
-                localStorage.setItem(storageKey, currentNotifiedValue);
-              })
-              .catch((err) => {
-                console.error("Failed to notify parent about screen limit:", err);
-              });
+            notifyParentLimitReached(childId, currentLimit)
+              .then(() => localStorage.setItem(storageKey, currentNotifiedValue))
+              .catch(console.error);
           }
         }
         return;
@@ -316,18 +337,25 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
     let visibilityTimeout: NodeJS.Timeout;
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        clearTimeout(visibilityTimeout);
-
-        visibilityTimeout = setTimeout(() => {
-          void fetchScreenTime(tz);
-        }, 1000);
+      if (document.visibilityState === "hidden") {
+        if (stateRefs.current.isLeader) {
+          // Use ref, not closure state
+          const sessionElapsed = syncTimerRef.current;
+          syncTimerRef.current = 0;
+          if (sessionElapsed > 0) {
+            void saveScreenTime(sessionElapsed, tz);
+          }
+        }
+      } else {
+        lastTickRef.current = Date.now();
+        void fetchScreenTime(tz);
       }
     };
 
     // Beforeunload fallback (tab close/refresh)
     const handleBeforeUnload = () => {
-      if (isLeaderRef.current) {
+      if (stateRefs.current.isLeader) {
+        // Use ref, not closure state
         const finalSessionElapsed = syncTimerRef.current;
         syncTimerRef.current = 0;
         if (finalSessionElapsed > 0) {
@@ -342,7 +370,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
     // Cleanups
     return () => {
       clearInterval(intervalId);
-      window.clearTimeout(initialFetchTimeoutId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", handleBeforeUnload);
 
@@ -353,7 +380,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       window.removeEventListener("scroll", handleActivity);
 
       // Sync remaining seconds on unmount if leader
-      if (isLeaderRef.current && syncTimerRef.current > 0) {
+      if (stateRefs.current.isLeader && syncTimerRef.current > 0) {
         const finalSession = syncTimerRef.current;
         syncTimerRef.current = 0;
         void saveScreenTime(finalSession, tz);
@@ -380,7 +407,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
         // Ignore errors on cleanup
       }
     };
-  }, []);
+  }, [fetchScreenTime, saveScreenTime, childId]); // Strict exhaustive stable dependencies
 
   const isLocked =
     isLimitEnabled && (dbScreenTimeSeconds + localElapsedSeconds) / 60 >= dailyLimitMinutes;

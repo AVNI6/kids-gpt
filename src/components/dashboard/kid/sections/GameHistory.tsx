@@ -65,7 +65,9 @@ export default function GameHistory({ timeline }: { timeline: GameHistoryItem[] 
           ) : (
             <div className="space-y-6 pb-15 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-100 dark:before:bg-slate-800">
               {gameTimeline.map((item) => {
-                const date = item.created_at ? new Date(item.created_at).toLocaleDateString() : "";
+                const date = item.created_at
+                  ? new Date(item.created_at).toLocaleDateString("en-US")
+                  : "";
                 const isTopScore = (item.description || "").toLowerCase().includes("100%");
 
                 return (

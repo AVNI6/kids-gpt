@@ -1,105 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, AlertTriangle, Trophy, BookOpen, CheckCircle2, Check, Clock } from "lucide-react";
-import {
-  getParentNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-} from "@/actions/dashboard.actions";
-import { createClient } from "@/lib/supabase/client";
+import { useNotifications } from "@/hooks/parent-dashboard/useNotifications";
 import { getRelativeTime } from "@/hooks/timeUtils";
-interface NotificationItem {
-  id: string;
-  parent_id: string;
-  child_id: string;
-  type: string;
-  title: string;
-  message: string;
-  is_read: boolean;
-  metadata: Record<string, unknown> | null;
-  created_at: string | null;
-}
+import type { NotificationItem } from "@/types/parent-dashboard/dashboard.types";
 
 export default function NotificationsSection() {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchNotifications = async () => {
-    try {
-      const data = await getParentNotifications();
-      const items: NotificationItem[] = (data || []).map((n: Record<string, unknown>) => ({
-        id: String(n.id ?? ""),
-        parent_id: String(n.parent_id ?? ""),
-        child_id: String(n.child_id ?? ""),
-        type: String(n.type ?? ""),
-        title: String(n.title ?? ""),
-        message: String(n.message ?? ""),
-        is_read: Boolean(n.is_read ?? false),
-        metadata: (n.metadata ?? {}) as Record<string, unknown> | null,
-        created_at: n.created_at ? String(n.created_at) : null,
-      }));
-      setNotifications(items);
-    } catch (err) {
-      console.error("Error fetching notifications in tab:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchNotifications();
-    }, 0);
-
-    const supabase = createClient();
-    const channel = supabase
-      .channel("parent-notifications-section-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "parent_notifications",
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      clearTimeout(timer);
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const handleMarkAsRead = async (id: string) => {
-    try {
-      const res = await markNotificationAsRead(id);
-      if (res.success) {
-        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
-      }
-    } catch (err) {
-      console.error("Error marking read:", err);
-    }
-  };
-
-  const handleMarkAllAsRead = async () => {
-    try {
-      const res = await markAllNotificationsAsRead();
-      if (res.success) {
-        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      }
-    } catch (err) {
-      console.error("Error marking all read:", err);
-    }
-  };
+  const { notifications, isLoadingNotifications, markAsRead, markAllAsRead } = useNotifications();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-300">
       <div className="flex justify-between items-end flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
@@ -112,7 +24,7 @@ export default function NotificationsSection() {
         {notifications.some((n) => !n.is_read) && (
           <Button
             variant="ghost"
-            onClick={handleMarkAllAsRead}
+            onClick={markAllAsRead}
             className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold cursor-pointer"
           >
             <Check className="w-4 h-4 mr-2" /> Mark all as read
@@ -120,7 +32,7 @@ export default function NotificationsSection() {
         )}
       </div>
 
-      {loading ? (
+      {isLoadingNotifications ? (
         <div className="space-y-4 max-w-4xl">
           {[1, 2, 3].map((n) => (
             <Card
@@ -148,7 +60,7 @@ export default function NotificationsSection() {
               </CardContent>
             </Card>
           ) : (
-            notifications.map((notif) => {
+            notifications.map((notif: NotificationItem) => {
               let icon = <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
               let bg = "bg-emerald-100 dark:bg-emerald-900/50";
 
@@ -206,7 +118,7 @@ export default function NotificationsSection() {
                         <div className="mt-4 flex gap-3">
                           <Button
                             size="sm"
-                            onClick={() => handleMarkAsRead(notif.id)}
+                            onClick={() => markAsRead(notif.id)}
                             className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold h-9 px-4 cursor-pointer"
                           >
                             Mark as read

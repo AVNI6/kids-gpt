@@ -5,22 +5,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Puzzle, FileQuestion, Calendar } from "lucide-react";
-import type { LinkedChildProfile, ChildDetailsResult } from "@/types/dashboard.types";
 import { usePagination } from "@/hooks/use-pagination";
+import { useParentDashboard } from "@/hooks/parent-dashboard/useParentDashboard";
 
-export default function ActivitiesGrid({
-  childDetails,
-}: {
-  linkedChildren: LinkedChildProfile[];
-  childDetails: ChildDetailsResult | null;
-}) {
+export default function ActivitiesGrid() {
+  const { details } = useParentDashboard();
   const [activeFilter, setActiveFilter] = useState("All");
 
   // Compute unique filters dynamically based on child's actual rewards/timeline logs
   const dynamicFilters = useMemo(() => {
     const uniqueFilters = new Map<string, string>();
 
-    (childDetails?.timeline ?? []).forEach((log) => {
+    (details?.timeline ?? []).forEach((log) => {
       const slug = log.activity_settings?.slug || log.source_type;
       let title = log.activity_settings?.title;
 
@@ -33,7 +29,6 @@ export default function ActivitiesGrid({
       }
 
       if (slug) {
-        // Group Memory Match steps nicely for filter display
         if (slug === "memory-match") {
           uniqueFilters.set("memory-match", "Memory Match");
         } else if (slug === "flashcards") {
@@ -50,81 +45,81 @@ export default function ActivitiesGrid({
     }));
 
     return [{ label: "All Activities", slug: "All" }, ...filtersArray];
-  }, [childDetails?.timeline]);
+  }, [details?.timeline]);
 
-  // Parse actual Supabase database timeline logs into completed activities matching ActivityTopicModal presets
-  const dbActivities = (childDetails?.timeline ?? []).map((log) => {
-    const desc = log.description || "Completed Activity";
+  // Parse actual Supabase database timeline logs into completed activities matching presets
+  const dbActivities = useMemo(() => {
+    return (details?.timeline ?? []).map((log) => {
+      const desc = log.description || "Completed Activity";
 
-    // Extract score if present
-    const scoreMatch = desc.match(/Score:\s*(\d+)%/i);
-    const score = scoreMatch ? `${scoreMatch[1]}%` : log.score ? `${log.score}%` : "100%";
+      // Extract score if present
+      const scoreMatch = desc.match(/Score:\s*(\d+)%/i);
+      const score = scoreMatch ? `${scoreMatch[1]}%` : log.score ? `${log.score}%` : "100%";
 
-    // Get slug and title from activity_settings or source_type with legacy fallback
-    const slug = log.activity_settings?.slug || log.source_type || "";
+      // Get slug and title from activity_settings or source_type with legacy fallback
+      const slug = log.activity_settings?.slug || log.source_type || "";
 
-    // UI elements must render reward.activity_settings.title as the primary label.
-    const title =
-      log.activity_settings?.title ||
-      desc.replace(/^Completed\s+/i, "").replace(/\s*\(Score:\s*\d+%\)/i, "") ||
-      "Completed Activity";
+      // UI elements must render reward.activity_settings.title as the primary label.
+      const title =
+        log.activity_settings?.title ||
+        desc.replace(/^Completed\s+/i, "").replace(/\s*\(Score:\s*\d+%\)/i, "") ||
+        "Completed Activity";
 
-    // Determine type, icon and color based strictly on activity_settings.slug (or source_type)
-    let icon = <Puzzle className="w-6 h-6 text-orange-500" />;
-    let color = "bg-orange-100 dark:bg-sky-955/30";
+      // Determine type, icon and color based strictly on activity_settings.slug (or source_type)
+      let icon = <Puzzle className="w-6 h-6 text-orange-500" />;
+      let color = "bg-orange-100 dark:bg-orange-950/30";
 
-    if (slug === "math-challenges") {
-      icon = <BookOpen className="w-6 h-6 text-sky-500" />;
-      color = "bg-sky-100 dark:bg-sky-955/40";
-    } else if (slug === "word-scrambles") {
-      icon = <BookOpen className="w-6 h-6 text-sky-500" />;
-      color = "bg-sky-100 dark:bg-sky-955/40";
-    } else if (slug === "science-lab") {
-      icon = <Puzzle className="w-6 h-6 text-sky-500" />;
-      color = "bg-sky-100 dark:bg-sky-955/40";
-    } else if (slug === "logic-puzzles") {
-      icon = <Puzzle className="w-6 h-6 text-orange-500" />;
-      color = "bg-orange-100 dark:bg-sky-955/30";
-    } else if (
-      slug === "memory-match" ||
-      slug === "match-following" ||
-      slug === "flashcards" ||
-      slug === "quizzes" ||
-      slug === "jigsaw-puzzle" ||
-      slug === "color-mixer"
-    ) {
-      icon = <FileQuestion className="w-6 h-6 text-sky-500" />;
-      color = "bg-sky-100 dark:bg-sky-955/40";
-    }
+      if (slug === "math-challenges") {
+        icon = <BookOpen className="w-6 h-6 text-sky-500" />;
+        color = "bg-sky-100 dark:bg-sky-950/40";
+      } else if (slug === "word-scrambles") {
+        icon = <BookOpen className="w-6 h-6 text-sky-500" />;
+        color = "bg-sky-100 dark:bg-sky-950/40";
+      } else if (slug === "science-lab") {
+        icon = <Puzzle className="w-6 h-6 text-sky-500" />;
+        color = "bg-sky-100 dark:bg-sky-950/40";
+      } else if (slug === "logic-puzzles") {
+        icon = <Puzzle className="w-6 h-6 text-orange-500" />;
+        color = "bg-orange-100 dark:bg-orange-950/30";
+      } else if (
+        slug === "memory-match" ||
+        slug === "match-following" ||
+        slug === "flashcards" ||
+        slug === "quizzes" ||
+        slug === "jigsaw-puzzle" ||
+        slug === "color-mixer"
+      ) {
+        icon = <FileQuestion className="w-6 h-6 text-sky-500" />;
+        color = "bg-sky-100 dark:bg-sky-950/40";
+      }
 
-    // Format date
-    const dateStr = log.created_at
-      ? new Date(log.created_at).toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-        })
-      : "Recently";
+      // Format date
+      const dateStr = log.created_at
+        ? new Date(log.created_at).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })
+        : "Recently";
 
-    return {
-      id: log.id,
-      title,
-      description: desc, // description only for secondary contextual text
-      slug,
-      status: "Completed",
-      difficulty: "Medium",
-      dueDate: dateStr,
-      score,
-      icon,
-      color,
-    };
-  });
+      return {
+        id: log.id,
+        title,
+        description: desc, // description only for secondary contextual text
+        slug,
+        status: "Completed",
+        difficulty: "Medium",
+        dueDate: dateStr,
+        score,
+        icon,
+        color,
+      };
+    });
+  }, [details?.timeline]);
 
-  const allActivities = dbActivities;
-
-  const filteredActivities = allActivities.filter((activity) => {
-    if (activeFilter === "All") return true;
-    return activity.slug === activeFilter;
-  });
+  const filteredActivities = useMemo(() => {
+    if (activeFilter === "All") return dbActivities;
+    return dbActivities.filter((activity) => activity.slug === activeFilter);
+  }, [dbActivities, activeFilter]);
 
   const activitiesPagination = usePagination(filteredActivities);
   const { setPage: setActivitiesPage } = activitiesPagination;
@@ -134,7 +129,7 @@ export default function ActivitiesGrid({
   }, [activeFilter, filteredActivities.length, setActivitiesPage]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-300">
       <div className="flex overflow-x-auto no-scrollbar lg:flex-wrap gap-2">
         {dynamicFilters.map((filter) => (
           <Button
@@ -143,7 +138,7 @@ export default function ActivitiesGrid({
             className={`rounded-full font-bold px-5 h-10 text-xs transition-colors cursor-pointer ${
               activeFilter === filter.slug
                 ? "bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 shadow-sm border-transparent"
-                : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-55 dark:hover:bg-slate-900"
+                : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
             }`}
             onClick={() => setActiveFilter(filter.slug)}
           >
@@ -152,13 +147,13 @@ export default function ActivitiesGrid({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredActivities.length === 0 ? (
           <Card className="col-span-full rounded-[28px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center">
             <CardContent className="space-y-3">
               <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
               <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
-                {allActivities.length === 0
+                {dbActivities.length === 0
                   ? "No completed activities yet."
                   : "No completed activities match this filter."}
               </p>
@@ -197,7 +192,7 @@ export default function ActivitiesGrid({
                     )}
                     <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
                       <span className="flex items-center">
-                        <Calendar className="w-3.5 h-3.5 mr-1 text-slate-455" /> {activity.dueDate}
+                        <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" /> {activity.dueDate}
                       </span>
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
                       <span>{activity.difficulty}</span>
@@ -207,7 +202,7 @@ export default function ActivitiesGrid({
 
                 {activity.status === "Completed" && activity.score && (
                   <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-slate-800">
-                    <span className="text-sm font-bold text-slate-505 dark:text-slate-450">
+                    <span className="text-sm font-bold text-slate-500 dark:text-slate-400">
                       Score Achieved
                     </span>
                     <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">

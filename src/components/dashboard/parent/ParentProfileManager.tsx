@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { Link2, PencilLine, Upload } from "lucide-react";
-
-import { linkByEmail, updateParentProfile } from "@/actions/dashboard.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
@@ -18,32 +16,24 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { DashboardUserProfile } from "@/types/dashboard.types";
+import type { DashboardUserProfile } from "@/types/parent-dashboard/dashboard.types";
+import { getInitials, formatDisplayName } from "@/utils/parent-dashboard/dashboard.utils";
+import { DashboardService } from "./services/dashboard.service";
+import LinkChildDialog from "./modals/LinkChildDialog";
 
 type Props = {
   profile: DashboardUserProfile;
 };
 
-function getInitials(firstName: string | null, lastName: string | null) {
-  const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.trim();
-  return initials || "P";
-}
-
-function formatDisplayName(profile: DashboardUserProfile) {
-  return [profile.first_name, profile.last_name].filter(Boolean).join(" ").trim();
-}
-
 export default function ParentProfileManager({ profile }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [linkMessage, setLinkMessage] = useState<string | null>(null);
-  const [linkEmail, setLinkEmail] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(profile.avatar_url);
 
   const handleProfileSubmit = async (formData: FormData) => {
     try {
       setProfileError(null);
-      const result = await updateParentProfile(formData);
+      const result = await DashboardService.updateProfile(formData);
 
       if (result.error) {
         setProfileError(result.error);
@@ -53,27 +43,6 @@ export default function ParentProfileManager({ profile }: Props) {
       setEditOpen(false);
     } catch (error) {
       setProfileError(error instanceof Error ? error.message : "Failed to update profile.");
-    }
-  };
-
-  const handleLinkSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    try {
-      setLinkMessage(null);
-      const target = linkEmail.trim();
-
-      if (!target) {
-        setLinkMessage("Please enter an email address.");
-        return;
-      }
-
-      const result = await linkByEmail(target);
-      setLinkMessage(result.message);
-      if (result.status === "success" || result.status === "pending") {
-        setLinkEmail("");
-      }
-    } catch (error) {
-      setLinkMessage(error instanceof Error ? error.message : "Failed to create link request.");
     }
   };
 
@@ -90,7 +59,7 @@ export default function ParentProfileManager({ profile }: Props) {
 
         <div className="flex flex-col">
           <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">
-            {formatDisplayName(profile) || "Parent"}
+            {formatDisplayName(profile)}
           </h2>
           <p className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">
             Parent
@@ -104,7 +73,7 @@ export default function ParentProfileManager({ profile }: Props) {
 
           <DialogContent className="max-w-md rounded-[24px] p-0 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
             <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
-              <DialogTitle className="text-lg font-black tracking-tight text-slate-950 dark:text-white">
+              <DialogTitle className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
                 Edit Profile
               </DialogTitle>
               <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
@@ -123,32 +92,32 @@ export default function ParentProfileManager({ profile }: Props) {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="first_name" className="dark:text-slate-300">
+                  <Label htmlFor="first_name" className="dark:text-slate-350">
                     First name
                   </Label>
                   <Input
                     id="first_name"
                     name="first_name"
                     defaultValue={profile.first_name ?? ""}
-                    className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                    className="dark:bg-slate-850 dark:border-slate-700 dark:text-white"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="last_name" className="dark:text-slate-300">
+                  <Label htmlFor="last_name" className="dark:text-slate-350">
                     Last name
                   </Label>
                   <Input
                     id="last_name"
                     name="last_name"
                     defaultValue={profile.last_name ?? ""}
-                    className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                    className="dark:bg-slate-850 dark:border-slate-700 dark:text-white"
                   />
                 </div>
               </div>
 
               {profileError ? (
-                <p className="rounded-lg bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400">
+                <p className="rounded-lg bg-red-55 dark:bg-red-900/30 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400">
                   {profileError}
                 </p>
               ) : null}
@@ -167,61 +136,18 @@ export default function ParentProfileManager({ profile }: Props) {
         </Dialog>
       </div>
 
-      {/* Link Child Button/Dialog */}
-      <Dialog>
-        <DialogTrigger
-          render={
-            <Button
-              variant="outline"
-              className="rounded-full bg-white/70 dark:bg-slate-900/70 border-slate-200/50 dark:border-slate-800/50 shadow-sm backdrop-blur-md hover:bg-sky-50 dark:hover:bg-slate-800 dark:text-slate-200"
-            >
-              <Link2 className="mr-2 h-4 w-4 text-sky-600 dark:text-sky-400" />
-              <span className="font-semibold text-slate-700 dark:text-slate-300">Link Child</span>
-            </Button>
-          }
-        />
-        <DialogContent className="max-w-md rounded-[24px] dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black tracking-tight text-slate-950 dark:text-white flex items-center gap-2">
-              <Link2 className="h-5 w-5 text-sky-600" /> Link a Child
-            </DialogTitle>
-            <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
-              Invite a child by email. If they haven&apos;t signed up yet, we&apos;ll send a pending
-              invite.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleLinkSubmit} className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="childEmail" className="dark:text-slate-300">
-                Child&apos;s Email
-              </Label>
-              <Input
-                id="childEmail"
-                name="childEmail"
-                type="email"
-                value={linkEmail}
-                onChange={(event) => setLinkEmail(event.target.value)}
-                placeholder="child@example.com"
-                className="h-10 rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full rounded-lg bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600"
-            >
-              Send Link Invite
-            </Button>
-
-            {linkMessage ? (
-              <p className="rounded-lg bg-sky-50 dark:bg-sky-900/30 px-4 py-3 text-sm font-medium text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-800/50">
-                {linkMessage}
-              </p>
-            ) : null}
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Link Child Button/Dialog Trigger */}
+      <LinkChildDialog
+        trigger={
+          <Button
+            variant="outline"
+            className="rounded-full bg-white/70 dark:bg-slate-900/70 border-slate-200/50 dark:border-slate-800/50 shadow-sm backdrop-blur-md hover:bg-sky-50 dark:hover:bg-slate-800 dark:text-slate-200"
+          >
+            <Link2 className="mr-2 h-4 w-4 text-sky-600 dark:text-sky-400" />
+            <span className="font-semibold text-slate-700 dark:text-slate-300">Link Child</span>
+          </Button>
+        }
+      />
     </div>
   );
 }

@@ -48,7 +48,7 @@ export function getRelativeTime(dateString: string | null | undefined): string {
     }
 
     // For very old dates, return the short locale date string
-    return date.toLocaleDateString(undefined, {
+    return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",

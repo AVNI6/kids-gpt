@@ -1,6 +1,7 @@
 import { CalendarDays, Crown, UserRound, WandSparkles } from "lucide-react";
 
 import { getKidStats } from "@/actions/dashboard.actions";
+import { getSafeXP } from "@/hooks/useChildXP";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -22,11 +23,14 @@ function formatDateOfBirth(dateOfBirth: string | null) {
     return dateOfBirth;
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  const formattedDate = new Intl.DateTimeFormat("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   }).format(parsedDate);
+
+  const age = new Date().getFullYear() - parsedDate.getFullYear();
+  return `${formattedDate} (${age} Yrs)`;
 }
 
 export default async function KidProfileManager() {
@@ -72,7 +76,7 @@ export default async function KidProfileManager() {
               Points
             </div>
             <div className="mt-2 text-2xl font-black text-slate-950 dark:text-slate-50">
-              {profile.total_experience_points}
+              {getSafeXP(profile.total_experience_points)}
             </div>
           </div>
 
