@@ -1,13 +1,14 @@
 import { AIResponse, GeminiContent } from "./types";
 import type { JsonObject } from "@/types/json";
+import { callGemini } from "./providers/gemini";
+import { callGroq } from "./providers/groq";
+import { aiLogger } from "./logger";
+
 interface GeminiStreamRequestBody {
   contents: GeminiContent[];
   generationConfig?: JsonObject;
   systemInstruction?: { parts: Array<{ text: string }> };
 }
-import { callGemini } from "./providers/gemini";
-import { callGroq } from "./providers/groq";
-import { aiLogger } from "./logger";
 
 // Gemini models in priority order (free-tier compatible)
 const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];

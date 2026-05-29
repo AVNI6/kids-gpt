@@ -78,6 +78,8 @@ export interface GeneratedMaterialRow {
 export interface ChatMessage {
   role: string;
   content: string;
+  image?: string;
+  generatedImage?: string;
 }
 
 export interface ChatRequestBody {
@@ -85,6 +87,8 @@ export interface ChatRequestBody {
   image?: string;
   history?: ChatMessage[];
   role?: UserRole;
+  customTask?: "worksheet" | "storytelling" | "coding" | "socratic";
+  responseStyle?: "concise" | "detailed" | "interactive" | "step_by_step";
 }
 
 export interface GeminiPart {

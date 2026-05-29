@@ -172,10 +172,13 @@ export function useChatSender({
 
     dispatch(addMessage(userMessage));
 
-    // Prepare history for API
+    // Prepare history for API including image context persistence
     const chatHistory = messages.slice(-10).map((m) => ({
       role: m.role === "user" ? "user" : "model",
       content: m.content,
+      image: m.role === "user" ? m.uploadedImage : undefined,
+      // Persist the AI-generated image URL so the backend can inject it back into context
+      generatedImage: m.role === "model" && m.isImage ? m.content : undefined,
     }));
 
     // 2. Create session and save user message if it doesn't exist
@@ -234,12 +237,29 @@ export function useChatSender({
     const signal = sessionManager.registerRequest(requestId);
 
     try {
+      // Detect explicit image creation requests. We require:
+      // 1. No uploaded image already present (currentImage)
+      // 2. User is requesting creation/generation (not analysis/explanation)
+      // Broad pattern to catch: "draw X", "create an image of X", "generate a picture",
+      // "make a drawing", "show me an illustration", "can you draw X", etc.
+      const hasCreationVerb =
+        /(draw|create|generate|make|show me|paint|sketch|produce|design|illustrate|visualize|render)/i.test(
+          currentInput
+        );
+      const hasVisualNoun =
+        /(image|picture|drawing|painting|photo|illustration|artwork|graphic|visual|portrait|scene|diagram)/i.test(
+          currentInput
+        );
+      const hasAnalysisIntent =
+        /(explain|describe|what is|tell me about|analyze|analyse|discuss|identify|who is|who's|character|detail|details\s+of|generated|created|made|drawn|painted|sketched|illustrated|visualized|rendered|in\s+(the\s+)?(image|photo|picture|drawing|illustration)|of\s+(the\s+)?(image|photo|picture|drawing|illustration)|from\s+(the\s+)?(image|photo|picture|drawing|illustration)|about\s+(the\s+)?(image|photo|picture|drawing|illustration)|above\s+(image|photo|picture|drawing|illustration)|previous\s+(image|photo|picture|drawing|illustration)|that\s+(image|photo|picture|drawing|illustration)|this\s+(image|photo|picture|drawing|illustration))/i.test(
+          currentInput
+        );
+
       const isImageRequest =
         !currentImage &&
-        (/(generate|create|draw|make|show).*(image|picture|photo|illustration|drawing|painting)/i.test(
-          currentInput
-        ) ||
-          (/image|picture|drawing|illustration/i.test(currentInput) && currentInput.length < 50));
+        hasCreationVerb &&
+        (hasVisualNoun || currentInput.toLowerCase().includes("draw ")) &&
+        !hasAnalysisIntent;
 
       const apiUrl = isImageRequest ? "/api/generate-image" : "/api/chat";
       const bodyPayload = isImageRequest
@@ -297,7 +317,17 @@ export function useChatSender({
                 try {
                   const parsed = JSON.parse(dataStr);
                   const text = parsed.text || "";
-                  if (text) {
+                  const imageUrl = parsed.imageUrl || "";
+                  if (imageUrl) {
+                    aiResponseContent = imageUrl;
+                    dispatch(
+                      updateMessage({
+                        id: aiMessageId,
+                        content: imageUrl,
+                        isImage: true,
+                      })
+                    );
+                  } else if (text) {
                     aiResponseContent += text;
                     dispatch(
                       updateMessage({
@@ -331,13 +361,20 @@ export function useChatSender({
           // Flush remaining buffer
           if (buffer.trim()) {
             const trimmed = buffer.trim();
+            let isStreamImage = false;
             if (trimmed.startsWith("data: ")) {
               const dataStr = trimmed.substring(6);
               if (dataStr !== "[DONE]") {
                 try {
                   const parsed = JSON.parse(dataStr);
                   const text = parsed.text || "";
-                  if (text) aiResponseContent += text;
+                  const imageUrl = parsed.imageUrl || "";
+                  if (imageUrl) {
+                    aiResponseContent = imageUrl;
+                    isStreamImage = true;
+                  } else if (text) {
+                    aiResponseContent += text;
+                  }
                 } catch {
                   aiResponseContent += dataStr;
                 }
@@ -349,6 +386,7 @@ export function useChatSender({
               updateMessage({
                 id: aiMessageId,
                 content: aiResponseContent,
+                isImage: isStreamImage ? true : undefined,
               })
             );
           }
@@ -365,19 +403,69 @@ export function useChatSender({
         if (sessionId && canPersist) {
           (async () => {
             try {
-              await saveChatMessage(
-                sessionId,
-                "model",
-                aiResponseContent,
-                {
-                  tokens,
-                  model: "gemini-2.5-flash",
-                  responseTime: responseTime,
-                },
-                user?.id
-              );
+              const isImage =
+                aiResponseContent.startsWith("https://image.pollinations.ai/") ||
+                aiResponseContent.startsWith("https://pollinations.ai/");
 
-              await trackDailyUsage(tokens, { durationMs: responseTime }, user?.id);
+              if (isImage) {
+                try {
+                  const imgRes = await fetch(aiResponseContent);
+                  const imgBlob = await imgRes.blob();
+                  if (!user?.id) throw new Error("Missing user id for image upload");
+                  const storageFileName = getUniqueStoragePath(user.id, sessionId, "jpg", "image");
+                  const imgAttachmentUrl = await uploadFileToStorage(
+                    imgBlob,
+                    storageFileName,
+                    user.id
+                  );
+
+                  // Update Redux state and cache with the permanent URL so the local client has it
+                  dispatch(
+                    updateMessage({
+                      id: aiMessageId,
+                      content: imgAttachmentUrl,
+                      attachmentUrl: imgAttachmentUrl,
+                      isImage: true,
+                    })
+                  );
+
+                  // Update DB with the permanent image URL
+                  await updateChatMessageAttachment(aiMessageId, imgAttachmentUrl);
+
+                  // Save to generated materials table
+                  await saveGeneratedMaterial(
+                    sessionId,
+                    "image",
+                    "image/jpeg",
+                    imgAttachmentUrl,
+                    { prompt: currentInput },
+                    user?.id
+                  );
+
+                  // Track daily usage for image
+                  await trackDailyUsage(
+                    Math.round(100),
+                    { isImage: true, durationMs: responseTime },
+                    user?.id
+                  );
+                } catch (imgUploadErr) {
+                  console.error("[ChatInterface] Background image upload failed:", imgUploadErr);
+                }
+              } else {
+                await saveChatMessage(
+                  sessionId,
+                  "model",
+                  aiResponseContent,
+                  {
+                    tokens,
+                    model: "gemini-2.5-flash",
+                    responseTime: responseTime,
+                  },
+                  user?.id
+                );
+
+                await trackDailyUsage(tokens, { durationMs: responseTime }, user?.id);
+              }
             } catch (backgroundErr) {
               console.error(
                 "[ChatInterface] Background DB persistence/tracking failed:",

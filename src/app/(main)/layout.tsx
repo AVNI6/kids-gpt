@@ -4,6 +4,8 @@ import { ReactNode, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import { SidebarProvider, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import { Menu } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import ScreenTimeTracker from "@/components/screentime/ScreenTimeTracker";
 
 function GlobalMobileTrigger() {
   const { toggleSidebar, openMobile } = useSidebar();
@@ -23,6 +25,9 @@ function GlobalMobileTrigger() {
 }
 
 export default function MainLayout({ children }: { children: ReactNode }) {
+  const { userProfile, isUserLoggedIn } = useAuth();
+  const isKid = isUserLoggedIn && userProfile?.role === "kid";
+
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof document === "undefined") {
       return true;
@@ -31,7 +36,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     return match ? match[1] === "true" : true;
   });
 
-  return (
+  const layoutContent = (
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
       <div className="w-full h-screen flex bg-background text-foreground overflow-hidden">
         <Sidebar />
@@ -42,4 +47,10 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       </div>
     </SidebarProvider>
   );
+
+  if (isKid) {
+    return <ScreenTimeTracker>{layoutContent}</ScreenTimeTracker>;
+  }
+
+  return layoutContent;
 }

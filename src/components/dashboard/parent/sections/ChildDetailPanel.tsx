@@ -75,7 +75,12 @@ export default function ChildDetailPanel({
     ? Math.floor(screenTime.screenTimeSeconds / 60)
     : (safety?.daily_screen_time_mins ?? 25);
   const limitMinutes = screenTime ? screenTime.dailyLimitMinutes : 60;
-  const usagePercentage = Math.min(100, Math.round((usedMinutes / limitMinutes) * 100));
+  const isLimitEnabled = screenTime
+    ? screenTime.isLimitEnabled
+    : (safety?.is_screen_time_limit_enabled ?? false);
+  const usagePercentage = isLimitEnabled
+    ? Math.min(100, Math.round((usedMinutes / limitMinutes) * 100))
+    : 0;
 
   const usedHrs = Math.floor(usedMinutes / 60);
   const usedMinsRemaining = usedMinutes % 60;
@@ -157,27 +162,35 @@ export default function ChildDetailPanel({
                   </div>
                 </div>
                 <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
-                  {usedMinutes} / {limitMinutes} min
+                  {isLimitEnabled ? `${usedMinutes} / ${limitMinutes} min` : `${usedMinutes} min`}
                 </span>
               </div>
 
               {/* Visual Progress Bar */}
               <div className="space-y-1">
-                <div className="h-2 w-full bg-slate-105 dark:bg-black/40 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-slate-100 dark:bg-black/40 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full bg-gradient-to-r ${
-                      usagePercentage >= 90
-                        ? "from-rose-500 to-red-500"
-                        : usagePercentage >= 70
-                          ? "from-amber-500 to-orange-500"
-                          : "from-sky-400 to-indigo-500"
+                      isLimitEnabled
+                        ? usagePercentage >= 90
+                          ? "from-rose-500 to-red-500"
+                          : usagePercentage >= 70
+                            ? "from-amber-500 to-orange-500"
+                            : "from-sky-400 to-indigo-500"
+                        : "from-emerald-400 to-teal-500"
                     }`}
-                    style={{ width: `${isLoadingChildData ? 0 : usagePercentage}%` }}
+                    style={{
+                      width: `${
+                        isLoadingChildData ? 0 : isLimitEnabled ? usagePercentage : 100 // Full bar when unlimited
+                      }%`,
+                    }}
                   />
                 </div>
                 <div className="flex justify-between text-[9px] font-bold text-slate-400">
-                  <span>{usagePercentage}% used</span>
-                  <span>{limitMinutes} min limit</span>
+                  <span>
+                    {isLimitEnabled ? `${usagePercentage}% used` : "Screen Time: Unlimited"}
+                  </span>
+                  <span>{isLimitEnabled ? `${limitMinutes} min limit` : "No limit active"}</span>
                 </div>
               </div>
             </div>

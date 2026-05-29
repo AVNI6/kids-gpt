@@ -11,6 +11,12 @@ import type {
   ChildSafetyAndUsageResult,
   ParentActivityItem,
 } from "@/types/dashboard.types";
+import { getDailyScreenTime } from "./screentime.actions";
+import type {
+  SearchHistoryItem,
+  AiInsightsResult,
+  CacheData,
+} from "@/types/parent-dashboard/dashboard.types";
 
 type VerifiedUser = {
   userId: string;
@@ -927,5 +933,63 @@ export async function getChildAiInsights(
     child_name: childName,
     summary: `${childName} is doing great on their learning journey! Strongest subject is ${highest.name} and showing curiosity with ${details.total_completed} completed activities.`,
     recommendations,
+  };
+}
+
+export async function getChildComprehensiveData(childUserId: string): Promise<CacheData> {
+  const [details, safety, history, activities, screenTimeData] = await Promise.all([
+    getChildDetails(childUserId),
+    getChildSafetyAndUsage(childUserId),
+    getParentSearchHistory(childUserId),
+    getParentActivities(childUserId),
+    getDailyScreenTime(childUserId).catch(() => ({
+      success: false,
+      screenTimeSeconds: 0,
+      dailyLimitMinutes: 60,
+      isLimitEnabled: false,
+      serverDate: "",
+    })),
+  ]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const formattedHistory: SearchHistoryItem[] = (history || []).map((h: any) => ({
+    id: String(h.id ?? ""),
+    title: h.title ? String(h.title) : null,
+    created_at: h.created_at ? String(h.created_at) : null,
+  }));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const formattedActivities: ParentActivityItem[] = (activities || []).map((act: any) => ({
+    id: act.id,
+    rewards_amount: act.rewards_amount ?? 0,
+    description: act.description,
+    created_at: act.created_at,
+    source_type: act.source_type ?? "",
+    score: act.score,
+    activity_settings: act.activity_settings,
+  }));
+
+  const cachedScreenTime = screenTimeData.success
+    ? {
+        screenTimeSeconds: screenTimeData.screenTimeSeconds,
+        dailyLimitMinutes: screenTimeData.dailyLimitMinutes,
+        isLimitEnabled: screenTimeData.isLimitEnabled,
+      }
+    : null;
+
+  let aiInsights = null;
+  try {
+    aiInsights = await getChildAiInsights(childUserId, details);
+  } catch {
+    aiInsights = null;
+  }
+
+  return {
+    details,
+    safety,
+    history: formattedHistory,
+    activities: formattedActivities,
+    screenTime: cachedScreenTime,
+    aiInsights,
   };
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Menu, AlertTriangle, Trophy, BookOpen, CheckCircle2 } from "lucide-react";
+import { Bell, Menu, AlertTriangle, Trophy, BookOpen, CheckCircle2, Clock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -111,6 +111,9 @@ export default function ParentTopNav() {
                           <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                         );
                         bg = "bg-rose-50 dark:bg-rose-950/20";
+                      } else if (notif.type === "SCREEN_TIME_LIMIT") {
+                        icon = <Clock className="w-4 h-4 text-rose-600 dark:text-rose-400" />;
+                        bg = "bg-rose-50 dark:bg-rose-950/20";
                       } else if (notif.type === "quiz_completed") {
                         icon = <BookOpen className="w-4 h-4 text-sky-600 dark:text-sky-400" />;
                         bg = "bg-sky-50 dark:bg-sky-950/20";
@@ -188,27 +191,57 @@ export default function ParentTopNav() {
         </div>
       </div>
 
-      {/* Mobile Navigation Dropdown */}
+      {/* Mobile Navigation Sidedrawer */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden absolute top-16 left-0 w-full bg-white dark:bg-card border-b border-slate-200 dark:border-slate-800 shadow-lg animate-in slide-in-from-top-2">
-          <div className="px-4 py-4 space-y-2">
-            {PARENT_NAV_ITEMS.map((item) => {
-              const active = isLinkActive(item);
-              return (
-                <Link
-                  key={item.href}
-                  href={getNavItemHref(item)}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`w-full block text-left px-4 py-3 rounded-xl font-bold transition-colors cursor-pointer ${
-                    active
-                      ? "bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300"
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          {/* Backdrop Blur Overlay */}
+          <div
+            className="fixed inset-0 bg-slate-900/60 dark:bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          {/* Drawer Body Panel */}
+          <div className="relative w-80 max-w-xs bg-white dark:bg-slate-950 p-6 flex flex-col shadow-2xl animate-in slide-in-from-left duration-300 border-r border-slate-200/50 dark:border-slate-800/80">
+            {/* Header / Brand */}
+            <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800/60 mb-6">
+              <span className="font-black text-lg bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
+                Parent Hub
+              </span>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-900 transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Nav items list */}
+            <div className="flex-1 space-y-2">
+              {PARENT_NAV_ITEMS.map((item) => {
+                const active = isLinkActive(item);
+                return (
+                  <Link
+                    key={item.href}
+                    href={getNavItemHref(item)}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`w-full block text-left px-4.5 py-3 rounded-2xl font-black transition-all cursor-pointer ${
+                      active
+                        ? "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300 border border-sky-100/20 dark:border-sky-500/20"
+                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center">
+              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+                Parent Mode Enforced
+              </p>
+            </div>
           </div>
         </div>
       )}

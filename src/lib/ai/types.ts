@@ -42,7 +42,7 @@ export interface ChatContext {
   learningStage?: LearningStage;
   message: string;
   image?: string;
-  history: Array<{ role: string; content: string }>;
+  history: Array<{ role: string; content: string; image?: string; generatedImage?: string }>;
   isPdfRequest: boolean;
 }
 

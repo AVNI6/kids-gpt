@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ export default function MyChildrenManagement({
   linkedChildren: LinkedChildProfile[];
 }) {
   const { activeChildId, setActiveChildId } = useParentDashboard();
+  const router = useRouter();
   const [activeSettingsChild, setActiveSettingsChild] = useState<LinkedChildProfile | null>(null);
 
   // Selector handlers pushing URL parameters shallowly via Context
@@ -154,16 +156,7 @@ export default function MyChildrenManagement({
                       <Button
                         variant="outline"
                         onClick={() => {
-                          const params = new URLSearchParams(window.location.search);
-                          params.set("childId", child.user_id);
-                          params.set("subTab", "activities");
-                          const newUrl = `${window.location.pathname}?${params.toString()}`;
-                          window.history.replaceState(
-                            { ...window.history.state, as: newUrl, url: newUrl },
-                            "",
-                            newUrl
-                          );
-                          setActiveChildId(child.user_id);
+                          setActiveChildId(child.user_id, "activities");
                         }}
                         className="w-full rounded-2xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-black/50 font-bold h-11 text-sm cursor-pointer hover:text-sky-600 dark:hover:text-sky-400 text-slate-700 dark:text-slate-200 transition-colors"
                       >
@@ -172,16 +165,7 @@ export default function MyChildrenManagement({
                       <Button
                         variant="outline"
                         onClick={() => {
-                          const params = new URLSearchParams(window.location.search);
-                          params.set("childId", child.user_id);
-                          params.set("subTab", "progress");
-                          const newUrl = `${window.location.pathname}?${params.toString()}`;
-                          window.history.replaceState(
-                            { ...window.history.state, as: newUrl, url: newUrl },
-                            "",
-                            newUrl
-                          );
-                          setActiveChildId(child.user_id);
+                          setActiveChildId(child.user_id, "progress");
                         }}
                         className="w-full rounded-2xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-black/50 font-bold h-11 text-sm cursor-pointer hover:text-sky-600 dark:hover:text-sky-400 text-slate-700 dark:text-slate-200 transition-colors"
                       >
@@ -189,16 +173,7 @@ export default function MyChildrenManagement({
                       </Button>
                       <Button
                         onClick={() => {
-                          const params = new URLSearchParams(window.location.search);
-                          params.set("tab", "progress");
-                          params.set("childId", child.user_id);
-                          const newUrl = `${window.location.pathname}?${params.toString()}`;
-                          window.history.replaceState(
-                            { ...window.history.state, as: newUrl, url: newUrl },
-                            "",
-                            newUrl
-                          );
-                          setActiveChildId(child.user_id);
+                          router.push(`/dashboard/parent/progress?childId=${child.user_id}`);
                         }}
                         className="w-full col-span-2 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-11 text-sm cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600 shadow-md hover:shadow-lg transition-all"
                       >

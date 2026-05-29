@@ -53,6 +53,7 @@ export default async function ParentDashboardLayout({ children }: { children: Re
             success: false,
             screenTimeSeconds: 0,
             dailyLimitMinutes: 60,
+            isLimitEnabled: false,
           })),
         ]);
 
@@ -78,6 +79,7 @@ export default async function ParentDashboardLayout({ children }: { children: Re
         ? {
             screenTimeSeconds: screenTimeData.screenTimeSeconds,
             dailyLimitMinutes: screenTimeData.dailyLimitMinutes,
+            isLimitEnabled: screenTimeData.isLimitEnabled,
           }
         : null;
 

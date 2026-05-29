@@ -22,20 +22,14 @@ import type {
   SearchHistoryItem,
   AiInsightsResult,
 } from "@/types/parent-dashboard/dashboard.types";
-import {
-  getChildDetails,
-  getChildAiInsights,
-  getParentActivities,
-  getChildSafetyAndUsage,
-  getParentSearchHistory,
-} from "@/actions/parent-dashboard.actions";
+import { getChildComprehensiveData } from "@/actions/parent-dashboard.actions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface DashboardContextType {
   profile: DashboardUserProfile;
   linkedChildren: LinkedChildProfile[];
   activeChildId: string;
-  setActiveChildId: (childId: string) => void;
+  setActiveChildId: (childId: string, subTab?: string) => void;
   activeChild: LinkedChildProfile | undefined;
   cache: Record<string, CacheData>;
   isLoadingChildData: boolean;
@@ -51,36 +45,6 @@ interface DashboardContextType {
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
-
-const fetchProgress = async (childId: string) => {
-  const [details, aiInsights] = await Promise.all([
-    getChildDetails(childId),
-    getChildAiInsights(childId),
-  ]);
-  return { details, aiInsights: aiInsights as AiInsightsResult | null };
-};
-
-const fetchActivities = async (childId: string) => {
-  const [details, activities] = await Promise.all([
-    getChildDetails(childId),
-    getParentActivities(childId),
-  ]);
-  return { details, activities };
-};
-
-const fetchMonitoring = async (childId: string) => {
-  const [safety, searchHistory] = await Promise.all([
-    getChildSafetyAndUsage(childId),
-    getParentSearchHistory(childId),
-  ]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const formattedHistory: SearchHistoryItem[] = (searchHistory || []).map((h: any) => ({
-    id: String(h.id ?? ""),
-    title: h.title ? String(h.title) : null,
-    created_at: h.created_at ? String(h.created_at) : null,
-  }));
-  return { safety, searchHistory: formattedHistory };
-};
 
 const fetchNotifications = async () => {
   const supabase = createClient();
@@ -135,65 +99,15 @@ export function DashboardProvider({
     isInitialRenderRef.current = false;
   }, []);
 
-  // 2. React Query definitions with synchronous initialData mapping and staleTime: Infinity
-  const { data: progressData } = useQuery<{
-    details: ChildDetailsResult | null;
-    aiInsights: AiInsightsResult | null;
-  } | null>({
-    queryKey: ["parent-dashboard", activeChildId, "progress"],
-    queryFn: () => (activeChildId ? fetchProgress(activeChildId) : null),
-    enabled:
-      !!activeChildId &&
-      (pathname.includes("/parent/progress") ||
-        pathname === "/dashboard/parent" ||
-        pathname.includes("/parent/children")),
+  // 2. Optimized single React Query for all active child data (exactly 1 HTTP network request!)
+  const { data: activeChildData } = useQuery<CacheData | null>({
+    queryKey: ["parent-dashboard", activeChildId, "comprehensive"],
+    queryFn: () => (activeChildId ? getChildComprehensiveData(activeChildId) : null),
+    enabled: !!activeChildId,
     staleTime: Infinity,
     initialData:
       initialCache && activeChildId && initialCache[activeChildId]
-        ? {
-            details: initialCache[activeChildId].details,
-            aiInsights: initialCache[activeChildId].aiInsights,
-          }
-        : undefined,
-  });
-
-  const { data: activitiesData } = useQuery<{
-    details: ChildDetailsResult | null;
-    activities: ParentActivityItem[];
-  } | null>({
-    queryKey: ["parent-dashboard", activeChildId, "activities"],
-    queryFn: () => (activeChildId ? fetchActivities(activeChildId) : null),
-    enabled:
-      !!activeChildId &&
-      (pathname.includes("/parent/activities") ||
-        pathname === "/dashboard/parent" ||
-        pathname.includes("/parent/children")),
-    staleTime: Infinity,
-    initialData:
-      initialCache && activeChildId && initialCache[activeChildId]
-        ? {
-            details: initialCache[activeChildId].details,
-            activities: initialCache[activeChildId].activities,
-          }
-        : undefined,
-  });
-
-  const { data: monitoringData } = useQuery<{
-    safety: ChildSafetyAndUsageResult | null;
-    searchHistory: SearchHistoryItem[];
-  } | null>({
-    queryKey: ["parent-dashboard", activeChildId, "monitoring"],
-    queryFn: () => (activeChildId ? fetchMonitoring(activeChildId) : null),
-    enabled:
-      !!activeChildId &&
-      (pathname.includes("/parent/monitoring") || pathname.includes("/parent/children")),
-    staleTime: Infinity,
-    initialData:
-      initialCache && activeChildId && initialCache[activeChildId]
-        ? {
-            safety: initialCache[activeChildId].safety,
-            searchHistory: initialCache[activeChildId].history,
-          }
+        ? initialCache[activeChildId]
         : undefined,
   });
 
@@ -205,110 +119,42 @@ export function DashboardProvider({
   });
 
   // Derived loading states
-  const isProgressLoading =
-    (pathname.includes("/parent/progress") || pathname.includes("/parent/children")) &&
-    !progressData;
-  const isActivitiesLoading =
-    (pathname.includes("/parent/activities") || pathname.includes("/parent/children")) &&
-    !activitiesData;
-  const isMonitoringLoading =
-    (pathname.includes("/parent/monitoring") || pathname.includes("/parent/children")) &&
-    !monitoringData;
-  const isChildrenDetailLoading =
-    pathname.includes("/parent/children") &&
-    !!activeChildId &&
-    (!progressData || !activitiesData || !monitoringData);
-  const isLoadingChildData =
-    isProgressLoading || isActivitiesLoading || isMonitoringLoading || isChildrenDetailLoading;
-
+  const isLoadingChildData = !!activeChildId && !activeChildData;
   const isLoadingNotifications = isLoadingNotificationsQuery;
 
-  // 3. Dynamic cache compilation matching legcy shape perfectly
+  // 3. Dynamic cache compilation matching legacy shape perfectly
   const cache = useMemo(() => {
     const mergedCache: Record<string, CacheData> = { ...(initialCache ?? {}) };
 
     if (activeChildId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const activeChildProgress = queryClient.getQueryData<any>([
+      const activeChildComp = queryClient.getQueryData<CacheData>([
         "parent-dashboard",
         activeChildId,
-        "progress",
-      ]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const activeChildActivities = queryClient.getQueryData<any>([
-        "parent-dashboard",
-        activeChildId,
-        "activities",
-      ]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const activeChildMonitoring = queryClient.getQueryData<any>([
-        "parent-dashboard",
-        activeChildId,
-        "monitoring",
+        "comprehensive",
       ]);
 
-      const currentEntry = mergedCache[activeChildId] || {
-        details: null,
-        safety: null,
-        history: [],
-        activities: [],
-        screenTime: null,
-        aiInsights: null,
-      };
-
-      mergedCache[activeChildId] = {
-        details: activeChildProgress?.details ?? currentEntry.details,
-        aiInsights: activeChildProgress?.aiInsights ?? currentEntry.aiInsights,
-        activities: activeChildActivities?.activities ?? currentEntry.activities,
-        safety: activeChildMonitoring?.safety ?? currentEntry.safety,
-        history: activeChildMonitoring?.searchHistory ?? currentEntry.history,
-        screenTime: activeChildProgress?.details?.screenTime ?? currentEntry.screenTime,
-      };
+      if (activeChildComp) {
+        mergedCache[activeChildId] = activeChildComp;
+      }
     }
 
     initialLinkedChildren.forEach((child) => {
       const childId = child.user_id;
       if (childId === activeChildId) return;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const progress = queryClient.getQueryData<any>(["parent-dashboard", childId, "progress"]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const activities = queryClient.getQueryData<any>(["parent-dashboard", childId, "activities"]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const monitoring = queryClient.getQueryData<any>(["parent-dashboard", childId, "monitoring"]);
+      const comp = queryClient.getQueryData<CacheData>([
+        "parent-dashboard",
+        childId,
+        "comprehensive",
+      ]);
 
-      if (progress || activities || monitoring) {
-        const currentEntry = mergedCache[childId] || {
-          details: null,
-          safety: null,
-          history: [],
-          activities: [],
-          screenTime: null,
-          aiInsights: null,
-        };
-
-        mergedCache[childId] = {
-          details: progress?.details ?? currentEntry.details,
-          aiInsights: progress?.aiInsights ?? currentEntry.aiInsights,
-          activities: activities?.activities ?? currentEntry.activities,
-          safety: monitoring?.safety ?? currentEntry.safety,
-          history: monitoring?.searchHistory ?? currentEntry.history,
-          screenTime: progress?.details?.screenTime ?? currentEntry.screenTime,
-        };
+      if (comp) {
+        mergedCache[childId] = comp;
       }
     });
 
     return mergedCache;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    activeChildId,
-    progressData,
-    activitiesData,
-    monitoringData,
-    initialCache,
-    queryClient,
-    initialLinkedChildren,
-  ]);
+  }, [activeChildId, activeChildData, initialCache, queryClient, initialLinkedChildren]);
 
   // Notifications State & Realtime
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -333,10 +179,15 @@ export function DashboardProvider({
     initialLinkedChildren.find((c) => c.user_id === activeChildId) || initialLinkedChildren[0];
 
   const setActiveChildId = useCallback(
-    (childId: string) => {
+    (childId: string, subTab?: string) => {
       const params = new URLSearchParams(window.location.search);
       if (childId) {
         params.set("childId", childId);
+        if (subTab) {
+          params.set("subTab", subTab);
+        } else {
+          params.delete("subTab");
+        }
       } else {
         params.delete("childId");
         params.delete("subTab");
@@ -362,13 +213,8 @@ export function DashboardProvider({
     (childId: string) => {
       if (!childId) return;
       queryClient.prefetchQuery({
-        queryKey: ["parent-dashboard", childId, "progress"],
-        queryFn: () => fetchProgress(childId),
-        staleTime: Infinity,
-      });
-      queryClient.prefetchQuery({
-        queryKey: ["parent-dashboard", childId, "activities"],
-        queryFn: () => fetchActivities(childId),
+        queryKey: ["parent-dashboard", childId, "comprehensive"],
+        queryFn: () => getChildComprehensiveData(childId),
         staleTime: Infinity,
       });
     },

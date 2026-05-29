@@ -42,7 +42,19 @@ export default function ChildMonitoring() {
                     Daily Screen Time
                   </p>
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Limit: 2 hours
+                    {(safety?.is_screen_time_limit_enabled ?? false)
+                      ? `Limit: ${
+                          (safety?.daily_limit_minutes ?? 120) >= 60
+                            ? `${Math.floor((safety?.daily_limit_minutes ?? 120) / 60)} hour${
+                                Math.floor((safety?.daily_limit_minutes ?? 120) / 60) > 1 ? "s" : ""
+                              }${
+                                (safety?.daily_limit_minutes ?? 120) % 60 > 0
+                                  ? ` ${(safety?.daily_limit_minutes ?? 120) % 60}m`
+                                  : ""
+                              }`
+                            : `${safety?.daily_limit_minutes ?? 120}m`
+                        }`
+                      : "Limit: Disabled"}
                   </p>
                 </div>
               </div>

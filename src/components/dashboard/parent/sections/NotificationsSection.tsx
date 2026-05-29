@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, AlertTriangle, Trophy, BookOpen, CheckCircle2, Check } from "lucide-react";
+import { Bell, AlertTriangle, Trophy, BookOpen, CheckCircle2, Check, Clock } from "lucide-react";
 import { useNotifications } from "@/hooks/parent-dashboard/useNotifications";
 import { getRelativeTime } from "@/hooks/timeUtils";
 import type { NotificationItem } from "@/types/parent-dashboard/dashboard.types";
@@ -66,6 +66,9 @@ export default function NotificationsSection() {
 
               if (notif.type === "safety_alert") {
                 icon = <AlertTriangle className="w-5 h-5 text-rose-500" />;
+                bg = "bg-rose-100 dark:bg-rose-900/50";
+              } else if (notif.type === "SCREEN_TIME_LIMIT") {
+                icon = <Clock className="w-5 h-5 text-rose-500" />;
                 bg = "bg-rose-100 dark:bg-rose-900/50";
               } else if (notif.type === "quiz_completed") {
                 icon = <BookOpen className="w-5 h-5 text-purple-500" />;

@@ -81,6 +81,8 @@ export type ChildSafetyAndUsageResult = {
   daily_screen_time_mins: number;
   weekly_ai_interactions: number;
   unresolved_alerts_count: number;
+  daily_limit_minutes?: number;
+  is_screen_time_limit_enabled?: boolean;
 };
 
 export interface SearchHistoryItem {
@@ -118,6 +120,10 @@ export type CacheData = {
   safety: ChildSafetyAndUsageResult | null;
   history: SearchHistoryItem[];
   activities: ParentActivityItem[];
-  screenTime: { screenTimeSeconds: number; dailyLimitMinutes: number } | null;
+  screenTime: {
+    screenTimeSeconds: number;
+    dailyLimitMinutes: number;
+    isLimitEnabled: boolean;
+  } | null;
   aiInsights: AiInsightsResult | null;
 };
