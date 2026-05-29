@@ -1,14 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useId,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import {
   getDailyScreenTime,
   logScreenTimeSession,
@@ -45,9 +37,15 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
   const [localElapsedSeconds, setLocalElapsedSeconds] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isLeader, setIsLeader] = useState(false);
+  const isLeaderRef = useRef(false);
+
+  // keep ref in sync with state (update ref outside of render)
+  useEffect(() => {
+    isLeaderRef.current = isLeader;
+  }, [isLeader]);
 
   // Stable per-instance identifier for cross-tab coordination
-  const tabId = useId();
+  const tabIdRef = useRef(crypto.randomUUID());
 
   // Refs for tracking timestamps, drift, activity, and midnight rollover
   const lastTickRef = useRef<number>(0);
@@ -61,77 +59,74 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
   const syncChannelRef = useRef<BroadcastChannel | null>(null);
 
   // Helper to fetch the latest screen time details from the DB
-  const fetchScreenTime = useCallback(
-    async (tz: string) => {
-      try {
-        const data = await getDailyScreenTime("", tz);
-        if (data.success) {
-          setDbScreenTimeSeconds(data.screenTimeSeconds);
-          setDailyLimitMinutes(data.dailyLimitMinutes);
-          setIsLimitEnabled(data.isLimitEnabled);
+  const fetchScreenTime = useCallback(async (tz: string) => {
+    try {
+      const data = await getDailyScreenTime("", tz);
+      if (data.success) {
+        setDbScreenTimeSeconds(data.screenTimeSeconds);
+        setDailyLimitMinutes(data.dailyLimitMinutes);
+        setIsLimitEnabled(data.isLimitEnabled);
 
-          // Broadcast to observer tabs
-          if (syncChannelRef.current) {
-            try {
-              syncChannelRef.current.postMessage({
-                type: "db_sync",
-                dbScreenTimeSeconds: data.screenTimeSeconds,
-                dailyLimitMinutes: data.dailyLimitMinutes,
-                isLimitEnabled: data.isLimitEnabled,
-                sourceTab: tabId,
-              });
-            } catch (err) {
-              console.warn(
-                "[ScreenTimeTracker] Broadcast sync failed (channel might be closed):",
-                err
-              );
-            }
+        // Broadcast to observer tabs
+        if (syncChannelRef.current) {
+          try {
+            syncChannelRef.current.postMessage({
+              type: "db_sync",
+              dbScreenTimeSeconds: data.screenTimeSeconds,
+              dailyLimitMinutes: data.dailyLimitMinutes,
+              isLimitEnabled: data.isLimitEnabled,
+              sourceTab: tabIdRef.current,
+            });
+          } catch (err) {
+            console.warn(
+              "[ScreenTimeTracker] Broadcast sync failed (channel might be closed):",
+              err
+            );
           }
         }
-      } catch (err) {
-        console.error("Failed to fetch daily screen time limit:", err);
-      } finally {
-        setIsLoading(false);
       }
-    },
-    [tabId]
-  );
+    } catch (err) {
+      console.error("Failed to fetch daily screen time limit:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Helper to save tracked seconds to DB with offline queuing
-  const saveScreenTime = useCallback(
-    async (seconds: number, tz: string) => {
-      if (seconds <= 0) return;
+  const saveScreenTime = useCallback(async (seconds: number, tz: string) => {
+    if (seconds <= 0) return;
 
-      // Read any pending unsynced queue from localStorage
-      let unsynced = 0;
-      try {
-        unsynced = parseInt(localStorage.getItem("screen_time_unsynced") || "0", 10);
-        if (isNaN(unsynced)) unsynced = 0;
-      } catch {
-        unsynced = 0;
-      }
+    // Read any pending unsynced queue from localStorage
+    let unsynced = 0;
+    try {
+      unsynced = parseInt(localStorage.getItem("screen_time_unsynced") || "0", 10);
+      if (isNaN(unsynced)) unsynced = 0;
+    } catch {
+      unsynced = 0;
+    }
 
-      const totalToSync = seconds + unsynced;
+    const totalToSync = seconds + unsynced;
 
-      try {
-        const result = await logScreenTimeSession("", totalToSync, tz);
-        if (result.success) {
-          // Success -> Clear unsynced queue
-          localStorage.removeItem("screen_time_unsynced");
-        } else {
-          // Failure -> Queue it locally
-          localStorage.setItem("screen_time_unsynced", String(totalToSync));
-        }
-      } catch (err) {
-        console.warn("[ScreenTimeTracker] Network error, queuing screen time offline:", err);
+    try {
+      const result = await logScreenTimeSession("", totalToSync, tz);
+      if (result.success) {
+        // Success -> Clear unsynced queue
+        localStorage.removeItem("screen_time_unsynced");
+      } else {
+        // Failure -> Queue it locally
         localStorage.setItem("screen_time_unsynced", String(totalToSync));
       }
-    },
-    [dbScreenTimeSeconds, isLimitEnabled, dailyLimitMinutes]
-  );
+    } catch (err) {
+      console.warn("[ScreenTimeTracker] Network error, queuing screen time offline:", err);
+      localStorage.setItem("screen_time_unsynced", String(totalToSync));
+    }
+  }, []);
 
   // Effect 1: Core Lifecycle Tracking, Multi-Tab Election, Inactivity & Drift Safety
+  // Core lifecycle effect: runs once on mount. Uses refs for mutable values.
+
   useEffect(() => {
+    const myTabId = tabIdRef.current;
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata";
     activeDateRef.current = getLocalDateString(new Date(), tz);
     currentDayRef.current = new Date().toDateString(); // Midnight rollover initialization
@@ -150,7 +145,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
             lastTickRef.current = Date.now();
           } else if (event.data.type === "leader_heartbeat") {
             // If another tab holds a fresh leader lease, this tab stays or becomes observer
-            if (event.data.leaderTab !== tabId) {
+            if (event.data.leaderTab !== myTabId) {
               setIsLeader(false);
             }
           }
@@ -255,18 +250,27 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
         const leaderDataRaw = localStorage.getItem("screen_time_leader");
         if (leaderDataRaw) {
           const leader = JSON.parse(leaderDataRaw);
-          if (leader.tabId === tabId) {
+          if (leader.tabId === myTabId) {
             // Keep lease active
-            localStorage.setItem("screen_time_leader", JSON.stringify({ tabId, timestamp: now }));
+            localStorage.setItem(
+              "screen_time_leader",
+              JSON.stringify({ tabId: myTabId, timestamp: now })
+            );
             electedLeader = true;
           } else if (now - leader.timestamp > 3000) {
             // Lease expired -> Claim leadership
-            localStorage.setItem("screen_time_leader", JSON.stringify({ tabId, timestamp: now }));
+            localStorage.setItem(
+              "screen_time_leader",
+              JSON.stringify({ tabId: myTabId, timestamp: now })
+            );
             electedLeader = true;
           }
         } else {
           // No leader exists -> Claim leadership
-          localStorage.setItem("screen_time_leader", JSON.stringify({ tabId, timestamp: now }));
+          localStorage.setItem(
+            "screen_time_leader",
+            JSON.stringify({ tabId: myTabId, timestamp: now })
+          );
           electedLeader = true;
         }
       } catch {
@@ -282,7 +286,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
           try {
             syncChannelRef.current.postMessage({
               type: "leader_heartbeat",
-              leaderTab: tabId,
+              leaderTab: myTabId,
             });
           } catch (err) {
             console.warn(
@@ -294,7 +298,9 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
 
         // Accumulate active seconds
         elapsedAccumulatedRef.current += elapsedSecs;
-        setLocalElapsedSeconds(elapsedAccumulatedRef.current);
+        if (elapsedAccumulatedRef.current % 5 === 0) {
+          setLocalElapsedSeconds(elapsedAccumulatedRef.current);
+        }
 
         // Periodically sync heartbeat log to database every 15 seconds to prevent loss
         syncTimerRef.current += elapsedSecs;
@@ -307,24 +313,21 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
     }, 1000);
 
     // Tab visibility change logic
+    let visibilityTimeout: NodeJS.Timeout;
+
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        if (isLeader) {
-          const sessionElapsed = syncTimerRef.current;
-          syncTimerRef.current = 0;
-          if (sessionElapsed > 0) {
-            void saveScreenTime(sessionElapsed, tz);
-          }
-        }
-      } else {
-        lastTickRef.current = Date.now();
-        void fetchScreenTime(tz);
+      if (document.visibilityState === "visible") {
+        clearTimeout(visibilityTimeout);
+
+        visibilityTimeout = setTimeout(() => {
+          void fetchScreenTime(tz);
+        }, 1000);
       }
     };
 
     // Beforeunload fallback (tab close/refresh)
     const handleBeforeUnload = () => {
-      if (isLeader) {
+      if (isLeaderRef.current) {
         const finalSessionElapsed = syncTimerRef.current;
         syncTimerRef.current = 0;
         if (finalSessionElapsed > 0) {
@@ -350,7 +353,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       window.removeEventListener("scroll", handleActivity);
 
       // Sync remaining seconds on unmount if leader
-      if (isLeader && syncTimerRef.current > 0) {
+      if (isLeaderRef.current && syncTimerRef.current > 0) {
         const finalSession = syncTimerRef.current;
         syncTimerRef.current = 0;
         void saveScreenTime(finalSession, tz);
@@ -369,7 +372,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
         const leaderRaw = localStorage.getItem("screen_time_leader");
         if (leaderRaw) {
           const leader = JSON.parse(leaderRaw);
-          if (leader.tabId === tabId) {
+          if (leader.tabId === myTabId) {
             localStorage.removeItem("screen_time_leader");
           }
         }
@@ -377,16 +380,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
         // Ignore errors on cleanup
       }
     };
-  }, [
-    isLeader,
-    isLimitEnabled,
-    dbScreenTimeSeconds,
-    dailyLimitMinutes,
-    childId,
-    fetchScreenTime,
-    saveScreenTime,
-    tabId,
-  ]);
+  }, []);
 
   const isLocked =
     isLimitEnabled && (dbScreenTimeSeconds + localElapsedSeconds) / 60 >= dailyLimitMinutes;
