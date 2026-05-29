@@ -179,7 +179,7 @@ export default function MyChildrenManagement({
                       >
                         Manage Learning
                       </Button>
-                    </div>{" "}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

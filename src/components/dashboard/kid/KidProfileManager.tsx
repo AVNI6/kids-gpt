@@ -2,6 +2,7 @@ import { CalendarDays, Crown, UserRound, WandSparkles } from "lucide-react";
 
 import { getKidStats } from "@/actions/dashboard.actions";
 import { getSafeXP } from "@/hooks/useChildXP";
+import { getSafeStreak } from "@/hooks/useChildStreak";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";

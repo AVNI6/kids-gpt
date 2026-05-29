@@ -38,7 +38,7 @@ export default function ParentTopNav() {
   };
 
   const getNavItemHref = (item: (typeof PARENT_NAV_ITEMS)[0]) => {
-    if (item.href === APP_ROUTES.ParentChildren) {
+    if (item.href === APP_ROUTES.ParentDashboard || item.href === APP_ROUTES.ParentChildren) {
       return item.href;
     }
     return activeChildId ? `${item.href}?childId=${activeChildId}` : item.href;

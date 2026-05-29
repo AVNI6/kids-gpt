@@ -162,37 +162,33 @@ export default function ChildDetailPanel({
                   </div>
                 </div>
                 <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
-                  {isLimitEnabled ? `${usedMinutes} / ${limitMinutes} min` : `${usedMinutes} min`}
+                  {isLimitEnabled ? `${usedMinutes} / ${limitMinutes} min` : "Unlimited"}
                 </span>
               </div>
 
-              {/* Visual Progress Bar */}
-              <div className="space-y-1">
-                <div className="h-2 w-full bg-slate-100 dark:bg-black/40 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full bg-gradient-to-r ${
-                      isLimitEnabled
-                        ? usagePercentage >= 90
+              {/* Visual Progress Bar (Only visible if limit is enabled) */}
+              {isLimitEnabled && (
+                <div className="space-y-1 pt-2 animate-in fade-in duration-200">
+                  <div className="h-2 w-full bg-slate-100 dark:bg-black/40 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${
+                        usagePercentage >= 90
                           ? "from-rose-500 to-red-500"
                           : usagePercentage >= 70
                             ? "from-amber-500 to-orange-500"
                             : "from-sky-400 to-indigo-500"
-                        : "from-emerald-400 to-teal-500"
-                    }`}
-                    style={{
-                      width: `${
-                        isLoadingChildData ? 0 : isLimitEnabled ? usagePercentage : 100 // Full bar when unlimited
-                      }%`,
-                    }}
-                  />
+                      }`}
+                      style={{
+                        width: `${isLoadingChildData ? 0 : usagePercentage}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[9px] font-bold text-slate-400">
+                    <span>{usagePercentage}% used</span>
+                    <span>{limitMinutes} min limit</span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-[9px] font-bold text-slate-400">
-                  <span>
-                    {isLimitEnabled ? `${usagePercentage}% used` : "Screen Time: Unlimited"}
-                  </span>
-                  <span>{isLimitEnabled ? `${limitMinutes} min limit` : "No limit active"}</span>
-                </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>

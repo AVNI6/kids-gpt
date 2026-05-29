@@ -76,10 +76,12 @@ export default function HomeSection() {
       }
     });
 
-    // Sort chronologically descending
-    return timeline.sort(
-      (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-    );
+    // Sort chronologically descending with safe NaN/null handling
+    return timeline.sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return timeB - timeA;
+    });
   }, [linkedChildren, cache]);
 
   // Create childDetailsMap fallback for WelcomeBanner compatibility
@@ -219,13 +221,17 @@ export default function HomeSection() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-0.5">
                       <span className="text-sm font-extrabold">{item.childName}</span>
-                      <span className="text-[10px] font-bold text-slate-400 shrink-0 ml-2">
+                      <span
+                        className="text-[10px] font-bold text-slate-400 shrink-0 ml-2"
+                        suppressHydrationWarning
+                      >
                         {item.created_at
-                          ? new Date(item.created_at).toLocaleDateString("en-US", {
+                          ? new Date(item.created_at).toLocaleString("en-US", {
                               month: "short",
                               day: "numeric",
                               hour: "2-digit",
                               minute: "2-digit",
+                              hour12: true,
                             })
                           : "Recently"}
                       </span>
