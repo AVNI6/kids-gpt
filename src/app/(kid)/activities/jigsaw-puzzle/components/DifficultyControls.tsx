@@ -59,7 +59,7 @@ export default function DifficultyControls({
           <LayoutGrid className="size-4 text-sky-500" />
           Choose Difficulty
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           {options.map((opt) => {
             const isActive = difficulty === opt.value;
             return (
@@ -68,7 +68,7 @@ export default function DifficultyControls({
                 onClick={() => onDifficultyChange(opt.value)}
                 disabled={isLoading}
                 variant="outline"
-                className={`rounded-2xl font-bold transition-all duration-300 py-5 cursor-pointer ${
+                className={`rounded-2xl font-bold transition-all duration-300 py-5 px-2 text-xs sm:text-sm cursor-pointer w-full ${
                   isActive
                     ? "bg-sky-500 hover:bg-sky-600 text-white border-sky-500 shadow-md scale-105"
                     : `border-border dark:border-slate-850 text-foreground dark:text-slate-300 ${opt.colorClass}`
@@ -81,15 +81,15 @@ export default function DifficultyControls({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border dark:border-slate-800/80 pt-5">
-        <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+      <div className="flex flex-col gap-3 border-t border-border dark:border-slate-800/80 pt-5">
+        <div className="grid grid-cols-2 gap-2.5">
           <Button
             onClick={onShowHint}
             disabled={isHintDisabled || isLoading}
             variant="outline"
-            className="rounded-2xl border-2 border-amber-200 bg-amber-50/50 hover:bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/60 text-amber-75 dark:text-amber-400 font-bold px-4 py-6 shadow-sm hover:border-amber-300 transition-all duration-300 cursor-pointer flex-1"
+            className="rounded-2xl border-2 border-amber-200 bg-amber-50/50 hover:bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/60 dark:text-amber-400 font-bold px-3 py-5 text-xs sm:text-sm shadow-sm hover:border-amber-300 transition-all duration-300 cursor-pointer w-full"
           >
-            <Eye className="mr-2 size-5" />
+            <Eye className="mr-1.5 size-4" />
             Show Hint
           </Button>
 
@@ -97,9 +97,9 @@ export default function DifficultyControls({
             onClick={onReset}
             disabled={isLoading}
             variant="outline"
-            className="rounded-2xl border-2 border-border bg-slate-50/50 hover:bg-slate-100 dark:bg-slate-800/20 dark:border-slate-700 text-foreground dark:text-slate-300 font-bold px-4 py-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300 cursor-pointer flex-1"
+            className="rounded-2xl border-2 border-border bg-slate-50/50 hover:bg-slate-100 dark:bg-slate-800/20 dark:border-slate-700 text-foreground dark:text-slate-300 font-bold px-3 py-5 text-xs sm:text-sm shadow-sm hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300 cursor-pointer w-full"
           >
-            <RefreshCw className="mr-2 size-5" />
+            <RefreshCw className="mr-1.5 size-4" />
             Shuffle
           </Button>
         </div>
