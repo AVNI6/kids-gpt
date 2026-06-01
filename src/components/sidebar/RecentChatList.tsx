@@ -84,10 +84,10 @@ export default function RecentChatList({
                         onClick={(e) => e.stopPropagation()}
                         suppressHydrationWarning={true}
                         className={cn(
-                          "p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-opacity cursor-pointer shrink-0",
+                          "p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-all cursor-pointer shrink-0",
                           openPopoverId === session.id
                             ? "opacity-100"
-                            : "opacity-0 group-hover/chat:opacity-100"
+                            : "opacity-100 xl:opacity-0 xl:group-hover/chat:opacity-100"
                         )}
                       >
                         <MoreVertical className="w-4 h-4 text-slate-400" />

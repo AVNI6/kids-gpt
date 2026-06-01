@@ -141,13 +141,17 @@ export default function ChatInterface() {
     }
   }, [messages, isLoading]);
 
+  const showHeader = userRole !== "kid";
+
   return (
     <div className="flex-1 flex flex-col h-full w-full bg-background overflow-hidden">
-      <ChatHeader
-        openMobile={openMobile}
-        toggleSidebar={toggleSidebar}
-        currentSessionId={currentSessionId}
-      />
+      {showHeader && (
+        <ChatHeader
+          openMobile={openMobile}
+          toggleSidebar={toggleSidebar}
+          currentSessionId={currentSessionId}
+        />
+      )}
 
       <main className="flex-1 flex flex-col overflow-hidden min-h-0 bg-background">
         {isSessionLoading && messages.length === 0 ? (
