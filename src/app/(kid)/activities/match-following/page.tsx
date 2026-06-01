@@ -192,7 +192,7 @@ export default function MatchFollowingPage({
 
           if (res.success) {
             toast.success("Progress Saved! 🎉", {
-              description: `+${scaledXp} XP automatically earned!`,
+              description: `+${scaledXp} XP earned!`,
             });
           }
         } catch (err) {

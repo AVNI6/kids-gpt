@@ -63,7 +63,7 @@ export default function MathChallengesPage({
           );
           if (res.success) {
             toast.success("Progress Saved! 🎉", {
-              description: `+${xpReward} XP automatically earned!`,
+              description: `+${xpReward} XP earned!`,
             });
           }
         } catch (err) {

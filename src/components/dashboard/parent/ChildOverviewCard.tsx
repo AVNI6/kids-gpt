@@ -1,11 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/dashboard.types";
 import { displayAge } from "@/utils/childAge";
 import { displayGrade } from "@/utils/childGrade";
 import { getSafeXP } from "@/hooks/useChildXP";
+import StreakDisplay from "@/components/dashboard/StreakDisplay";
 
 // --- Helpers ---
 const getInitials = (child: LinkedChildProfile) =>
@@ -85,19 +86,7 @@ export default function ChildOverviewCard({ child }: ChildOverviewCardProps) {
 
         {/* Right Align: Micro-stats container */}
         <div className="flex w-full md:w-auto gap-4 shrink-0">
-          <div className="flex-1 md:flex-none flex flex-col items-center justify-center bg-white/60 dark:bg-slate-900/60 border border-orange-200/50 dark:border-orange-500/20 rounded-3xl p-5 md:px-8 shadow-sm backdrop-blur-md relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex items-center gap-2 mb-2 text-orange-600 dark:text-orange-400 font-black text-[11px] uppercase tracking-widest relative z-10">
-              <Flame className="w-5 h-5 fill-orange-500 text-orange-500" />
-              <span>Streak</span>
-            </div>
-            <div className="flex items-baseline gap-1.5 relative z-10">
-              <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
-                {child.current_streak || 0}
-              </span>
-              <span className="text-sm font-bold text-slate-400 dark:text-slate-500">days</span>
-            </div>
-          </div>
+          <StreakDisplay streak={child.current_streak} variant="overview-block" />
 
           <div className="flex-1 md:flex-none flex flex-col items-center justify-center bg-white/60 dark:bg-slate-900/60 border border-amber-200/50 dark:border-amber-500/20 rounded-3xl p-5 md:px-8 shadow-sm backdrop-blur-md relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />

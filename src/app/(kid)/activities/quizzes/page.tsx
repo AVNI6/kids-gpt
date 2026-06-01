@@ -115,7 +115,7 @@ export default function QuizzesPage({
           );
           if (res.success) {
             toast.success("Progress Saved! 🎉", {
-              description: `+${xpReward} XP automatically earned!`,
+              description: `+${xpReward} XP earned!`,
             });
           }
         } catch (err) {

@@ -2,9 +2,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Flame, Star, Sparkles, PlayCircle, Target } from "lucide-react";
+import { Star, Sparkles, PlayCircle, Target } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
+import StreakDisplay from "@/components/dashboard/StreakDisplay";
 
 type WelcomeHubProfile = {
   first_name?: string | null;
@@ -81,13 +82,7 @@ export default function WelcomeHub({
 
           {/* Top Badges */}
           <div className="flex gap-3 flex-wrap">
-            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/30 shadow-inner">
-              <Flame className="w-6 h-6 text-orange-400 fill-orange-400" />
-              <div className="flex flex-col">
-                <span className="text-xs font-bold uppercase text-sky-100">Streak</span>
-                <span className="font-black leading-none">{details.current_streak} days</span>
-              </div>
-            </div>
+            <StreakDisplay streak={details.current_streak} variant="glass-badge" />
             <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/30 shadow-inner">
               <Star className="w-6 h-6 text-yellow-400 fill-yellow-400" />
               <div className="flex flex-col">

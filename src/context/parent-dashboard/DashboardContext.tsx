@@ -16,11 +16,6 @@ import type {
   LinkedChildProfile,
   CacheData,
   NotificationItem,
-  ChildDetailsResult,
-  ParentActivityItem,
-  ChildSafetyAndUsageResult,
-  SearchHistoryItem,
-  AiInsightsResult,
 } from "@/types/parent-dashboard/dashboard.types";
 import { getChildComprehensiveData } from "@/actions/parent-dashboard.actions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -154,7 +149,7 @@ export function DashboardProvider({
     });
 
     return mergedCache;
-  }, [activeChildId, activeChildData, initialCache, queryClient, initialLinkedChildren]);
+  }, [activeChildId, initialCache, queryClient, initialLinkedChildren]);
 
   // Notifications State & Realtime
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);

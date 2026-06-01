@@ -4,16 +4,7 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import {
-  Loader2,
-  PartyPopper,
-  Sparkles,
-  UserRound,
-  Rocket,
-  ShieldCheck,
-  Brain,
-  Mail,
-} from "lucide-react";
+import { Loader2, PartyPopper, UserRound, Rocket, ShieldCheck, Brain, Mail } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
@@ -24,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import Logo from "@/components/common/logo/Logo";
 
 const initialKidState: KidOnboardingState = { error: null };
 
@@ -73,12 +65,7 @@ export default function KidOnboardingPage() {
         {/* Left Side: Creative Content */}
         <div className="hidden flex-col gap-8 lg:flex">
           <Link href="/" className="flex items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-sky-500 flex items-center justify-center shadow-lg">
-                <Sparkles className="text-white w-8 h-8" />
-              </div>
-              <h1 className="text-5xl font-black text-sky-600">ChatGPT Kid</h1>
-            </div>
+            <Logo />
           </Link>
 
           <Card className="relative border-2 border-border/50 rounded-[32px] bg-card text-card-foreground p-2 shadow-xl overflow-visible dark:border-slate-800">

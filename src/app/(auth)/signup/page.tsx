@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Lightbulb, ShieldCheck, School, User, Mail, Lock, Rocket } from "lucide-react";
+import { Lightbulb, ShieldCheck, School, User, Mail, Lock, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import Logo from "@/components/common/logo/Logo";
 
 const supabase = createClient();
 
@@ -85,12 +86,7 @@ export default function ChatGPTKidSignupPage() {
       <div className="my-auto mx-auto max-w-6xl w-full grid lg:grid-cols-2 gap-10 items-center relative z-10">
         <div className="hidden lg:flex flex-col gap-8 relative">
           <Link href="/" className="flex items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-sky-500 flex items-center justify-center shadow-lg">
-                <Sparkles className="text-white w-8 h-8" />
-              </div>
-              <h1 className="text-5xl font-black text-sky-600">ChatGPT Kid</h1>
-            </div>
+            <Logo />
           </Link>
 
           <Card className="relative border-2 border-border/50 rounded-[32px] bg-card p-2 shadow-xl overflow-visible">

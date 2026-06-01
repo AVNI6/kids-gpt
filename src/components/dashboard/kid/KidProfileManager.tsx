@@ -1,8 +1,8 @@
-import { CalendarDays, Crown, UserRound, WandSparkles } from "lucide-react";
+import { CalendarDays, Crown, UserRound } from "lucide-react";
 
 import { getKidStats } from "@/actions/dashboard.actions";
 import { getSafeXP } from "@/hooks/useChildXP";
-import { getSafeStreak } from "@/hooks/useChildStreak";
+import StreakDisplay from "@/components/dashboard/StreakDisplay";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -92,20 +92,7 @@ export default async function KidProfileManager() {
           </div>
         </div>
 
-        <div className="rounded-3xl bg-linear-to-br from-sky-50 to-emerald-50 p-4 ring-1 ring-sky-100 dark:from-sky-950/20 dark:to-emerald-950/20 dark:ring-slate-800">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-400">
-            <WandSparkles className="h-4 w-4" />
-            Learning streak
-          </div>
-          <div className="mt-2 flex items-end gap-2">
-            <span className="text-3xl font-black leading-none text-slate-950 dark:text-slate-50">
-              {profile.current_streak}
-            </span>
-            <span className="pb-1 text-sm font-semibold text-slate-500 dark:text-slate-400">
-              days straight
-            </span>
-          </div>
-        </div>
+        <StreakDisplay streak={profile.current_streak} variant="profile-section" />
       </CardContent>
 
       <CardFooter className="bg-transparent px-5 pb-5 pt-0">

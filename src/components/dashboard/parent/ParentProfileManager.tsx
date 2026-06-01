@@ -47,9 +47,9 @@ export default function ParentProfileManager({ profile }: Props) {
   };
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
       {/* Sleek Profile Row */}
-      <div className="flex items-center gap-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-1.5 pr-4 rounded-full border border-slate-200/50 dark:border-slate-800/50 shadow-sm">
+      <div className="flex items-center gap-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-1.5 pr-4 rounded-full border border-slate-200/50 dark:border-slate-800/50 shadow-sm w-full sm:w-auto justify-between sm:justify-start">
         <Avatar className="h-10 w-10 border border-slate-200 dark:border-slate-700">
           <AvatarImage src={previewUrl ?? undefined} />
           <AvatarFallback className="bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300 font-bold text-sm">
@@ -141,9 +141,9 @@ export default function ParentProfileManager({ profile }: Props) {
         trigger={
           <Button
             variant="outline"
-            className="rounded-full bg-white/70 dark:bg-slate-900/70 border-slate-200/50 dark:border-slate-800/50 shadow-sm backdrop-blur-md hover:bg-sky-50 dark:hover:bg-slate-800 dark:text-slate-200"
+            className="w-full sm:w-auto justify-center rounded-full bg-white/70 dark:bg-slate-900/70 border-slate-200/50 dark:border-slate-800/50 shadow-sm backdrop-blur-md hover:bg-sky-50 dark:hover:bg-slate-800 dark:text-slate-200"
           >
-            <Link2 className="mr-2 h-4 w-4 text-sky-600 dark:text-sky-400" />
+            <Link2 className="mr-2 h-4 w-4 text-sky-600 dark:text-sky-400 shrink-0" />
             <span className="font-semibold text-slate-700 dark:text-slate-300">Link Child</span>
           </Button>
         }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Menu, AlertTriangle, Trophy, BookOpen, CheckCircle2, Clock } from "lucide-react";
+import { Bell, Menu, X, AlertTriangle, Trophy, BookOpen, CheckCircle2, Clock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,10 +26,19 @@ export const PARENT_NAV_ITEMS = [
 export default function ParentTopNav() {
   const pathname = usePathname();
   const { activeChildId } = useParentDashboard();
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Retrieve unified notifications from the shared notifications hook
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+
+  // Auto-dismiss mobile menu drawer on scroll
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handleDismiss = () => setIsMobileMenuOpen(false);
+    window.addEventListener("scroll", handleDismiss, { passive: true });
+    return () => window.removeEventListener("scroll", handleDismiss);
+  }, [isMobileMenuOpen]);
 
   const isLinkActive = (item: (typeof PARENT_NAV_ITEMS)[0]) => {
     if (item.exact) {
@@ -47,7 +57,14 @@ export default function ParentTopNav() {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-background/80 backdrop-blur-xl">
       <div className="max-w-400 mx-auto px-4 md:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-end lg:justify-between gap-4">
+        <div className="flex h-16 items-center justify-between gap-4">
+          {/* Mobile Branding / Offset Title */}
+          <div className="flex lg:hidden items-center pl-12">
+            <span className="font-extrabold text-lg bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
+              Parent Hub
+            </span>
+          </div>
+
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">
             {PARENT_NAV_ITEMS.map((item) => {
@@ -70,7 +87,7 @@ export default function ParentTopNav() {
 
           {/* Right Section: Notifications & Profile */}
           <div className="flex items-center gap-2 sm:gap-4">
-            <DropdownMenu>
+            <DropdownMenu open={isNotifOpen} onOpenChange={setIsNotifOpen}>
               <DropdownMenuTrigger className="relative p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer">
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
@@ -81,7 +98,7 @@ export default function ParentTopNav() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-[330px] md:w-[360px] rounded-2xl p-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-card shadow-xl overflow-hidden"
+                className="w-[calc(100vw-32px)] sm:w-[360px] max-w-[360px] rounded-2xl p-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-card shadow-xl overflow-hidden"
               >
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/20">
                   <span className="font-black text-slate-900 dark:text-white">Notifications</span>
@@ -173,6 +190,7 @@ export default function ParentTopNav() {
                 </div>
                 <Link
                   href={APP_ROUTES.ParentNotifications}
+                  onClick={() => setIsNotifOpen(false)}
                   className="block p-3 text-center text-xs font-black text-sky-600 dark:text-sky-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800/60 cursor-pointer"
                 >
                   View all notifications
@@ -180,9 +198,9 @@ export default function ParentTopNav() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Menu Toggle (on the right side next to notifications) */}
             <button
-              className="lg:hidden items-end p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+              className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <Menu className="w-5 h-5" />
@@ -191,60 +209,63 @@ export default function ParentTopNav() {
         </div>
       </div>
 
-      {/* Mobile Navigation Sidedrawer */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
-          {/* Backdrop Blur Overlay */}
-          <div
-            className="fixed inset-0 bg-slate-900/60 dark:bg-black/60 backdrop-blur-sm transition-opacity duration-300"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-
-          {/* Drawer Body Panel */}
-          <div className="relative w-80 max-w-xs bg-white dark:bg-slate-950 p-6 flex flex-col shadow-2xl animate-in slide-in-from-left duration-300 border-r border-slate-200/50 dark:border-slate-800/80">
-            {/* Header / Brand */}
-            <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800/60 mb-6">
-              <span className="font-black text-lg bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
-                Parent Hub
-              </span>
-              <button
+      {/* Mobile Navigation Sidedrawer rendered via React Portal at body level */}
+      {isMobileMenuOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div className="lg:hidden fixed inset-0 z-[9999] flex">
+              {/* Backdrop Blur Overlay */}
+              <div
+                className="fixed inset-0 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md transition-opacity duration-350"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-900 transition-colors"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            </div>
+              />
 
-            {/* Nav items list */}
-            <div className="flex-1 space-y-2">
-              {PARENT_NAV_ITEMS.map((item) => {
-                const active = isLinkActive(item);
-                return (
-                  <Link
-                    key={item.href}
-                    href={getNavItemHref(item)}
+              {/* Drawer Body Panel (Slides in from the right, full screen height) */}
+              <div className="relative ml-auto w-80 max-w-xs h-screen bg-white dark:bg-slate-900 p-6 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 border-l border-slate-200 dark:border-slate-800 z-50">
+                {/* Header / Brand */}
+                <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800/60 mb-6">
+                  <span className="font-black text-lg bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
+                    Parent Hub
+                  </span>
+                  <button
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`w-full block text-left px-4.5 py-3 rounded-2xl font-black transition-all cursor-pointer ${
-                      active
-                        ? "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300 border border-sky-100/20 dark:border-sky-500/20"
-                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-white"
-                    }`}
+                    className="p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-900 transition-colors"
                   >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
-            {/* Footer */}
-            <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center">
-              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                Parent Mode Enforced
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+                {/* Nav items list */}
+                <div className="flex-1 space-y-2">
+                  {PARENT_NAV_ITEMS.map((item) => {
+                    const active = isLinkActive(item);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={getNavItemHref(item)}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`w-full block text-left px-4.5 py-3 rounded-2xl font-black transition-all cursor-pointer ${
+                          active
+                            ? "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300 border border-sky-100/20 dark:border-sky-500/20"
+                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-white"
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Footer */}
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+                    Parent Mode Enforced
+                  </p>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </nav>
   );
 }

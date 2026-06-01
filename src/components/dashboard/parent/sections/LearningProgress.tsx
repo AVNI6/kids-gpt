@@ -2,9 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { BrainCircuit, Target, Clock, Trophy, CheckCircle2, Sparkles } from "lucide-react";
+import { BrainCircuit, Target, Clock, CheckCircle2, Sparkles } from "lucide-react";
 import { useParentDashboard } from "@/hooks/parent-dashboard/useParentDashboard";
 import { useParentAnalytics } from "@/hooks/parent-dashboard/useParentAnalytics";
+import StreakDisplay from "@/components/dashboard/StreakDisplay";
 
 interface Recommendation {
   subject: string;
@@ -22,7 +23,7 @@ export default function LearningProgress() {
 
   // Derive dynamic stats from details
   const totalCompleted = details?.total_completed ?? 0;
-  const currentStreak = details?.current_streak ?? activeChild.current_streak ?? 0;
+  const currentStreak = details?.current_streak ?? activeChild.current_streak;
 
   const totalMins = details?.learning_time_mins ?? 0;
   const hrs = Math.floor(totalMins / 60);
@@ -81,21 +82,7 @@ export default function LearningProgress() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-100/30 flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-amber-500" />
-              </div>
-            </div>
-            <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
-              Current Streak
-            </h3>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">
-              {currentStreak} <span className="text-base font-bold text-slate-400">days</span>
-            </p>
-          </CardContent>
-        </Card>
+        <StreakDisplay streak={currentStreak} variant="parent-card" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

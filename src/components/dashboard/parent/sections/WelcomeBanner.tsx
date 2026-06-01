@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Users, Award, Flame } from "lucide-react";
+import { Sparkles, Users, Award } from "lucide-react";
 import { getSafeXP } from "@/hooks/useChildXP";
 import { getMaxStreak } from "@/hooks/useChildStreak";
+import StreakDisplay from "@/components/dashboard/StreakDisplay";
 import type {
   DashboardUserProfile,
   LinkedChildProfile,
@@ -135,12 +136,7 @@ export default function WelcomeBanner({
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300">
                 <Award className="w-3.5 h-3.5" /> {totalXP} Family XP
               </span>
-              {maxStreak > 0 && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-700 border border-amber-200/50 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-900/30">
-                  <Flame className="w-3.5 h-3.5 fill-current animate-pulse text-amber-500" />{" "}
-                  {maxStreak} Day Streak
-                </span>
-              )}
+              <StreakDisplay streak={maxStreak} variant="badge" />
               <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider pt-1">
                 {linkedChildren.length === 1
                   ? "1 Linked Explorer"

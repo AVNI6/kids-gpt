@@ -4,12 +4,13 @@ import React, { useState } from "react";
 import { Bot, Check, Copy, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Spinner } from "@/components/ui/spinner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
 import { Message } from "@/types/chat.types";
+import { useAuth } from "@/context/AuthContext";
 
 interface ChatMessageListProps {
   messages: Message[];
@@ -29,6 +30,7 @@ export default function ChatMessageList({
   handleDownloadPDF,
   messagesEndRef,
 }: ChatMessageListProps) {
+  const { userProfile, isUserLoggedIn } = useAuth();
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   const handleCopy = async (messageId: string, content: string) => {
@@ -57,7 +59,20 @@ export default function ChatMessageList({
                 >
                   <Avatar size={"sm"} className="shrink-0 mb-1">
                     {isUser ? (
-                      <AvatarFallback className="bg-sky-500/10 text-sky-600">U</AvatarFallback>
+                      <>
+                        {isUserLoggedIn && userProfile?.avatar_url ? (
+                          <AvatarImage
+                            src={userProfile.avatar_url}
+                            alt={userProfile.first_name || "User"}
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : null}
+                        <AvatarFallback className="bg-sky-500/10 text-sky-600 font-bold uppercase">
+                          {isUserLoggedIn && userProfile?.first_name
+                            ? userProfile.first_name.charAt(0)
+                            : "U"}
+                        </AvatarFallback>
+                      </>
                     ) : (
                       <AvatarFallback className="bg-sky-500 text-white">
                         <Bot className="w-4 h-4" />

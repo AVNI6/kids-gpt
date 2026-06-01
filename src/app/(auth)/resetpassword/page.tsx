@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { ArrowRight, Lightbulb, HelpCircle, Shield, Bot, Lock } from "lucide-react";
+import { ArrowRight, Lightbulb, HelpCircle, Shield, Lock } from "lucide-react";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 import { createClient } from "@/lib/supabase/client";
 import { APP_ROUTES } from "@/constant/AppRoutes";
+import Logo from "@/components/common/logo/Logo";
 
 const supabase = createClient();
 
@@ -116,14 +117,8 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-[#f6fafe] flex flex-col items-center px-6 py-3 relative overflow-hidden">
       <div className="my-auto w-full flex flex-col items-center">
-        <header className="mb-3  text-center">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-[#4cc2ff] rounded-2xl flex items-center justify-center border-b-4 border-[#004c6b] shadow-sm">
-              <Bot className="w-7 h-7 text-white" />
-            </div>
-
-            <h1 className="text-4xl font-extrabold text-[#00658d] tracking-tight">ChatGPT Kid</h1>
-          </div>
+        <header className="mb-3 text-center">
+          <Logo size="md" iconType="bot" className="justify-center" />
 
           <p className="text-[#3e484f] text-lg">Your AI Learning Buddy</p>
         </header>

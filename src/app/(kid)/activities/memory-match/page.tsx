@@ -114,7 +114,7 @@ export default function MemoryMatchPage() {
 
           if (res.success) {
             toast.success("Stage Cleared! 🎉", {
-              description: `+${xpReward} XP automatically earned! Next step unlocked!`,
+              description: `+${xpReward} XP earned! Next step unlocked!`,
             });
             await fetchProgress(false);
           } else {

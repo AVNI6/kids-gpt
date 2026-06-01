@@ -1,11 +1,10 @@
-import { Flame } from "lucide-react";
-
 import { getKidStats } from "@/actions/dashboard.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSafeXP } from "@/hooks/useChildXP";
 import { getSafeStreak } from "@/hooks/useChildStreak";
+import StreakDisplay from "@/components/dashboard/StreakDisplay";
 
 function getInitials(firstName: string | null, lastName: string | null) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.trim();
@@ -40,25 +39,7 @@ export default async function KidStreakBanner() {
         </div>
 
         <div className="grid gap-3 grid-cols-2 lg:w-[340px] shrink-0">
-          <div className="rounded-[28px] border border-amber-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-amber-600 dark:text-amber-400">
-              <Flame className="h-4 w-4" />
-              Learning streak
-            </div>
-            <div className="mt-3 flex items-end gap-2">
-              <span className="text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
-                {getSafeStreak(stats.current_streak)}
-              </span>
-              <span className="pb-1 text-sm font-semibold text-slate-500 dark:text-slate-400">
-                days straight!
-              </span>
-            </div>
-            <div className="mt-3 flex items-center gap-2">
-              <Badge className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-400 dark:hover:bg-amber-950/60">
-                Today&apos;s streak
-              </Badge>
-            </div>
-          </div>
+          <StreakDisplay streak={stats.current_streak} variant="kid-card" />
 
           <div className="rounded-[28px] border border-amber-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
             <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">

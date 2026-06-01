@@ -58,23 +58,35 @@ export default async function ParentDashboardLayout({ children }: { children: Re
                 })),
               ]);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const formattedHistory: SearchHistoryItem[] = (historyData || []).map((h: any) => ({
-              id: String(h.id ?? ""),
-              title: h.title ? String(h.title) : null,
-              created_at: h.created_at ? String(h.created_at) : null,
-            }));
+            const formattedHistory: SearchHistoryItem[] = (historyData || []).map(
+              (h: {
+                id?: string | number | null;
+                title?: string | null;
+                created_at?: string | null;
+              }) => ({
+                id: String(h.id ?? ""),
+                title: h.title ? String(h.title) : null,
+                created_at: h.created_at ? String(h.created_at) : null,
+              })
+            );
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const formattedActivities: ParentActivityItem[] = (activitiesData || []).map(
-              (act: any) => ({
-                id: act.id,
+              (act: {
+                id?: string | number | null;
+                rewards_amount?: number | null;
+                description?: string | null;
+                created_at?: string | null;
+                source_type?: string | null;
+                score?: number | null;
+                activity_settings?: ParentActivityItem["activity_settings"];
+              }) => ({
+                id: String(act.id ?? ""),
                 rewards_amount: act.rewards_amount ?? 0,
-                description: act.description,
-                created_at: act.created_at,
+                description: act.description ?? null,
+                created_at: act.created_at ?? null,
                 source_type: act.source_type ?? "",
-                score: act.score,
-                activity_settings: act.activity_settings,
+                score: act.score ?? null,
+                activity_settings: act.activity_settings ?? null,
               })
             );
 

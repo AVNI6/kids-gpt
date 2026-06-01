@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Clock,
   ShieldAlert,
-  Sparkles,
   AlertCircle,
   Save,
   TrendingUp,
@@ -25,6 +24,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
   const [monthlySeconds, setMonthlySeconds] = useState(0);
   const [dailyLimitMinutes, setDailyLimitMinutes] = useState(60);
   const [isLimitEnabled, setIsLimitEnabled] = useState(false);
+  const [initialIsLimitEnabled, setInitialIsLimitEnabled] = useState(false);
   const [inputLimitMinutes, setInputLimitMinutes] = useState("60");
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
@@ -41,6 +41,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
         setMonthlySeconds(data.monthlySeconds);
         setDailyLimitMinutes(data.dailyLimitMinutes);
         setIsLimitEnabled(data.isLimitEnabled);
+        setInitialIsLimitEnabled(data.isLimitEnabled);
         setInputLimitMinutes(String(data.dailyLimitMinutes));
       } else {
         toast.error("Failed to load screen time analytics", {
@@ -83,6 +84,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
       const result = await updateDailyLimit(child.user_id, limit, isLimitEnabled);
       if (result.success) {
         setDailyLimitMinutes(limit);
+        setInitialIsLimitEnabled(isLimitEnabled);
         toast.success("Settings updated successfully!", {
           description: isLimitEnabled
             ? `Daily limit is set to ${limit} minutes for ${child.first_name}.`
@@ -122,24 +124,9 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
   };
 
   const dailyMinutes = Math.floor(dailySeconds / 60);
-  const dailyUsagePercentage = isLimitEnabled
+  const dailyUsagePercentage = initialIsLimitEnabled
     ? Math.min(100, Math.round((dailyMinutes / dailyLimitMinutes) * 100))
     : 0;
-
-  // Guidelines for health thresholds
-  const weeklyLimitMinutes = dailyLimitMinutes * 7;
-  const weeklyMinutes = Math.floor(weeklySeconds / 60);
-  const weeklyUsagePercentage = Math.min(
-    100,
-    Math.round((weeklyMinutes / weeklyLimitMinutes) * 100)
-  );
-
-  const monthlyLimitMinutes = dailyLimitMinutes * 30;
-  const monthlyMinutes = Math.floor(monthlySeconds / 60);
-  const monthlyUsagePercentage = Math.min(
-    100,
-    Math.round((monthlyMinutes / monthlyLimitMinutes) * 100)
-  );
 
   // Determine progress bar theme based on daily usage
   const getProgressColor = (percentage: number) => {
@@ -181,7 +168,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
                   </span>
                   <h4 className="text-xl font-black text-slate-900 dark:text-white">
                     {formatDuration(dailySeconds)}{" "}
-                    {isLimitEnabled && (
+                    {initialIsLimitEnabled && (
                       <span className="text-xs font-bold text-slate-400">
                         / {dailyLimitMinutes} min limit
                       </span>
@@ -190,7 +177,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
                 </div>
               </div>
 
-              {isLimitEnabled ? (
+              {initialIsLimitEnabled ? (
                 <span
                   className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider ${
                     dailyUsagePercentage >= 100
@@ -208,7 +195,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
             </div>
 
             {/* Progress Bar (Only visible if limit is enabled) */}
-            {isLimitEnabled && (
+            {initialIsLimitEnabled && (
               <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-200">
                 <div className="h-3 w-full bg-slate-100 dark:bg-black/40 rounded-full overflow-hidden border border-slate-200/10 shadow-inner">
                   <div
@@ -224,7 +211,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
               </div>
             )}
 
-            {isLimitEnabled && dailyUsagePercentage >= 100 && (
+            {initialIsLimitEnabled && dailyUsagePercentage >= 100 && (
               <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100/30 dark:border-rose-900/30 text-rose-700 dark:text-rose-400 text-xs font-semibold leading-relaxed animate-pulse">
                 <ShieldAlert className="w-4.5 h-4.5 shrink-0" />
                 <span>
@@ -254,9 +241,6 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
                   <p className="text-lg font-black text-slate-900 dark:text-white truncate">
                     {formatDuration(dailySeconds)}
                   </p>
-                  <p className="text-[9px] text-slate-400 font-semibold mt-1">
-                    Based on local calendar logs
-                  </p>
                 </div>
               </div>
 
@@ -264,25 +248,13 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
               <div className="bg-slate-50/30 dark:bg-black/20 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-4.5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                    Weekly (7d)
+                    Weekly
                   </span>
                   <TrendingUp className="w-4 h-4 text-emerald-500" />
                 </div>
                 <div>
                   <p className="text-lg font-black text-slate-900 dark:text-white truncate">
                     {formatDuration(weeklySeconds)}
-                  </p>
-                  <div className="h-1 w-full bg-slate-100 dark:bg-black/35 rounded-full overflow-hidden mt-2">
-                    <div
-                      className="h-full bg-emerald-500 rounded-full"
-                      style={{ width: `${weeklyUsagePercentage}%` }}
-                    />
-                  </div>
-                  <p className="text-[8px] text-slate-400 font-semibold mt-1 flex justify-between">
-                    <span>Guideline limit:</span>
-                    <span>
-                      {weeklyMinutes} / {weeklyLimitMinutes} m
-                    </span>
                   </p>
                 </div>
               </div>
@@ -291,25 +263,13 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
               <div className="bg-slate-50/30 dark:bg-black/20 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-4.5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                    Monthly (30d)
+                    Monthly
                   </span>
                   <Calendar className="w-4 h-4 text-indigo-500" />
                 </div>
                 <div>
                   <p className="text-lg font-black text-slate-900 dark:text-white truncate">
                     {formatDuration(monthlySeconds)}
-                  </p>
-                  <div className="h-1 w-full bg-slate-100 dark:bg-black/35 rounded-full overflow-hidden mt-2">
-                    <div
-                      className="h-full bg-indigo-550 rounded-full"
-                      style={{ width: `${monthlyUsagePercentage}%` }}
-                    />
-                  </div>
-                  <p className="text-[8px] text-slate-400 font-semibold mt-1 flex justify-between">
-                    <span>Guideline limit:</span>
-                    <span>
-                      {monthlyMinutes} / {monthlyLimitMinutes} m
-                    </span>
                   </p>
                 </div>
               </div>
@@ -372,18 +332,8 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
                 </div>
               </div>
             ) : (
-              <div className="p-5 rounded-3xl bg-emerald-50/40 dark:bg-emerald-950/10 border border-dashed border-emerald-250 dark:border-emerald-900/40 text-left space-y-3 animate-in fade-in duration-200">
-                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-400">
-                  <Sparkles className="w-4 h-4 animate-pulse" />
-                  <span className="font-black text-xs uppercase tracking-wider">
-                    Screen Time is Unlimited
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                  {child.first_name} has unrestricted daily access to ChatGPT AI chat tutor, math
-                  games, and logic puzzles.
-                </p>
-                <div className="flex justify-end pt-1">
+              isLimitEnabled !== initialIsLimitEnabled && (
+                <div className="flex justify-end pt-1 animate-in fade-in duration-200">
                   <Button
                     type="submit"
                     disabled={isPending}
@@ -393,7 +343,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
                     <span>{isPending ? "Saving..." : "Save Settings"}</span>
                   </Button>
                 </div>
-              </div>
+              )
             )}
 
             {/* Warning Details */}

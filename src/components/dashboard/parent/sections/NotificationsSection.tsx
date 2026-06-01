@@ -6,9 +6,12 @@ import { Bell, AlertTriangle, Trophy, BookOpen, CheckCircle2, Check, Clock } fro
 import { useNotifications } from "@/hooks/parent-dashboard/useNotifications";
 import { getRelativeTime } from "@/hooks/timeUtils";
 import type { NotificationItem } from "@/types/parent-dashboard/dashboard.types";
+import { usePagination } from "@/hooks/use-pagination";
 
 export default function NotificationsSection() {
   const { notifications, isLoadingNotifications, markAsRead, markAllAsRead } = useNotifications();
+  const { currentItems, page, totalPages, nextPage, prevPage, hasNextPage, hasPrevPage } =
+    usePagination(notifications);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -60,7 +63,7 @@ export default function NotificationsSection() {
               </CardContent>
             </Card>
           ) : (
-            notifications.map((notif: NotificationItem) => {
+            currentItems.map((notif: NotificationItem) => {
               let icon = <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
               let bg = "bg-emerald-100 dark:bg-emerald-900/50";
 
@@ -134,6 +137,35 @@ export default function NotificationsSection() {
                 </Card>
               );
             })
+          )}
+
+          {/* Premium Pagination Controls */}
+          {!isLoadingNotifications && totalPages > 1 && (
+            <div className="flex items-center justify-between mt-8 border-t border-slate-100 dark:border-slate-800/60 pt-6 animate-in fade-in duration-300">
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
+                Page {page} of {totalPages}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!hasPrevPage}
+                  onClick={prevPage}
+                  className="rounded-xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 font-bold h-9 px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-850"
+                >
+                  Previous
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!hasNextPage}
+                  onClick={nextPage}
+                  className="rounded-xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 font-bold h-9 px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-850"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       )}

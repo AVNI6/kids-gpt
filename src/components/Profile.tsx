@@ -1,13 +1,13 @@
 "use client";
 import {
   UserRound,
-  PanelLeftClose,
   Sparkles,
   Settings,
   HelpCircle,
   Sun,
   Moon,
   Monitor,
+  LogOut,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -45,8 +46,10 @@ function getInitials(name?: string, email?: string): string {
 export default function Profile({ isCollapsed }: ProfileProps) {
   const { user, userProfile, isUserLoggedIn, logout } = useAuth();
   const { setTheme, theme } = useTheme();
+  const pathname = usePathname();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const isPopoverOpen = openPath === pathname;
 
   if (!isUserLoggedIn || !user) return null;
 
@@ -60,7 +63,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
 
   return (
     <div className="w-full">
-      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+      <Popover open={isPopoverOpen} onOpenChange={(open) => setOpenPath(open ? pathname : null)}>
         <PopoverTrigger
           className={cn(
             "w-full flex items-center gap-3 p-2 rounded-2xl hover:bg-sidebar-accent transition-all duration-300 group",
@@ -92,6 +95,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
           <div className="space-y-1">
             <Link
               href={APP_ROUTES.Subscription}
+              onClick={() => setOpenPath(null)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sky-500 hover:bg-sky-50 transition-colors text-sm font-bold"
             >
               <Sparkles className="h-4 w-4" />
@@ -100,6 +104,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
 
             <Link
               href={`/dashboard/${dashboardRole}`}
+              onClick={() => setOpenPath(null)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
             >
               <UserRound className="h-4 w-4" />
@@ -108,6 +113,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
 
             <Link
               href={APP_ROUTES.Help}
+              onClick={() => setOpenPath(null)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
             >
               <HelpCircle className="h-4 w-4" />
@@ -121,19 +127,28 @@ export default function Profile({ isCollapsed }: ProfileProps) {
               </div>
               <div className="flex bg-accent/50 p-1 rounded-lg gap-1">
                 <button
-                  onClick={() => setTheme("light")}
+                  onClick={() => {
+                    setTheme("light");
+                    setOpenPath(null);
+                  }}
                   className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${theme === "light" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Sun className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={() => setTheme("dark")}
+                  onClick={() => {
+                    setTheme("dark");
+                    setOpenPath(null);
+                  }}
                   className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${theme === "dark" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Moon className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={() => setTheme("system")}
+                  onClick={() => {
+                    setTheme("system");
+                    setOpenPath(null);
+                  }}
                   className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${theme === "system" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Monitor className="h-4 w-4" />
@@ -146,12 +161,12 @@ export default function Profile({ isCollapsed }: ProfileProps) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setIsPopoverOpen(false);
+                setOpenPath(null);
                 setShowLogoutConfirm(true);
               }}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-semibold cursor-pointer"
             >
-              <PanelLeftClose className="h-4 w-4 rotate-180" />
+              <LogOut className="h-4 w-4" />
               <span>Log Out</span>
             </button>
           </div>

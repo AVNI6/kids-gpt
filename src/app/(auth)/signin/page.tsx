@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import { Mail, Lock, CheckCircle, BookOpen, Brain, Sparkles } from "lucide-react";
+import { Mail, Lock, CheckCircle, BookOpen, Brain } from "lucide-react";
 import Link from "next/link";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -14,6 +14,8 @@ import Image from "next/image";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { useState } from "react";
+import Logo from "@/components/common/logo/Logo";
+
 const supabase = createClient();
 
 function LoginPageContent() {
@@ -87,12 +89,7 @@ function LoginPageContent() {
       <div className="my-auto mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2 relative z-10">
         <div className="hidden flex-col gap-8 lg:flex">
           <Link href="/" className="flex items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-sky-500 flex items-center justify-center shadow-lg">
-                <Sparkles className="text-white w-8 h-8" />
-              </div>
-              <h1 className="text-5xl font-black text-sky-600">ChatGPT Kid</h1>
-            </div>
+            <Logo />
           </Link>
 
           <div className="relative rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl">

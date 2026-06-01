@@ -59,7 +59,7 @@ export default function MyChildrenManagement({
       </div>
 
       {/* Children Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {linkedChildren.length === 0 ? (
           <Card className="col-span-full rounded-[32px] border-dashed border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center">
             <CardContent className="space-y-4">
@@ -152,7 +152,7 @@ export default function MyChildrenManagement({
                       </div>
                     </div>
                     {/* Actions Grid */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 min-[340px]:grid-cols-2 gap-3">
                       <Button
                         variant="outline"
                         onClick={() => {
@@ -175,7 +175,7 @@ export default function MyChildrenManagement({
                         onClick={() => {
                           router.push(`/dashboard/parent/progress?childId=${child.user_id}`);
                         }}
-                        className="w-full col-span-2 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-11 text-sm cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600 shadow-md hover:shadow-lg transition-all"
+                        className="w-full min-h-11 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600 shadow-md hover:shadow-lg transition-all min-[340px]:col-span-2"
                       >
                         Manage Learning
                       </Button>

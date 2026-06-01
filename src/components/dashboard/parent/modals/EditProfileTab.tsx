@@ -222,7 +222,7 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
             htmlFor="standard"
             className="text-xs font-bold text-slate-600 dark:text-slate-400"
           >
-            Standard / Grade / School Level
+            Standard / Grade
           </Label>
           <Input
             id="standard"

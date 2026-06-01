@@ -79,7 +79,7 @@ export default function ScienceLabPage({
           );
           if (res.success) {
             toast.success("Lab Mission Completed! 🎉", {
-              description: `+${xpReward} XP automatically earned!`,
+              description: `+${xpReward} XP earned!`,
             });
           }
         } catch (err) {

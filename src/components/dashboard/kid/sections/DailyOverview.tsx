@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Clock, Target, ActivitySquare } from "lucide-react";
+import { getSafeStreak } from "@/hooks/useChildStreak";
 
 type DailyOverviewDetails = {
   total_completed: number;
@@ -63,11 +64,11 @@ export default function DailyOverview({
     },
     {
       label: "Current Streak",
-      value: profile.current_streak,
+      value: getSafeStreak(profile.current_streak),
       icon: Trophy,
       color: "from-amber-100 to-yellow-50",
       iconColor: "text-amber-500 bg-amber-100",
-      trend: `Best: ${profile.longest_streak}`,
+      trend: `Best: ${getSafeStreak(profile.longest_streak)}`,
       trendColor: "text-amber-600",
     },
   ];

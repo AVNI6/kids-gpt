@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Zap, Users } from "lucide-react";
 import { getSafeXP } from "@/hooks/useChildXP";
+import StreakDisplay from "@/components/dashboard/StreakDisplay";
 
 export default async function ActiveStudentsList() {
   const students = await getLinkedStudents();
@@ -77,9 +78,7 @@ export default async function ActiveStudentsList() {
                       </p>
                       <span className="text-xs font-semibold text-slate-500 mt-1 block">
                         {getSafeXP(student.total_experience_points)} XP • Streak:{" "}
-                        <span className="text-orange-500 font-bold">
-                          {student.current_streak} days
-                        </span>
+                        <StreakDisplay streak={student.current_streak} variant="simple-text" />
                       </span>
                     </div>
                   </div>

@@ -98,37 +98,34 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
   );
 
   // Helper to save tracked seconds to DB with offline queuing
-  const saveScreenTime = useCallback(
-    async (seconds: number, tz: string) => {
-      if (seconds <= 0) return;
+  const saveScreenTime = useCallback(async (seconds: number, tz: string) => {
+    if (seconds <= 0) return;
 
-      // Read any pending unsynced queue from localStorage
-      let unsynced = 0;
-      try {
-        unsynced = parseInt(localStorage.getItem("screen_time_unsynced") || "0", 10);
-        if (isNaN(unsynced)) unsynced = 0;
-      } catch {
-        unsynced = 0;
-      }
+    // Read any pending unsynced queue from localStorage
+    let unsynced = 0;
+    try {
+      unsynced = parseInt(localStorage.getItem("screen_time_unsynced") || "0", 10);
+      if (isNaN(unsynced)) unsynced = 0;
+    } catch {
+      unsynced = 0;
+    }
 
-      const totalToSync = seconds + unsynced;
+    const totalToSync = seconds + unsynced;
 
-      try {
-        const result = await logScreenTimeSession("", totalToSync, tz);
-        if (result.success) {
-          // Success -> Clear unsynced queue
-          localStorage.removeItem("screen_time_unsynced");
-        } else {
-          // Failure -> Queue it locally
-          localStorage.setItem("screen_time_unsynced", String(totalToSync));
-        }
-      } catch (err) {
-        console.warn("[ScreenTimeTracker] Network error, queuing screen time offline:", err);
+    try {
+      const result = await logScreenTimeSession("", totalToSync, tz);
+      if (result.success) {
+        // Success -> Clear unsynced queue
+        localStorage.removeItem("screen_time_unsynced");
+      } else {
+        // Failure -> Queue it locally
         localStorage.setItem("screen_time_unsynced", String(totalToSync));
       }
-    },
-    [childId] // FIXED: Removed state, kept stable childId
-  );
+    } catch (err) {
+      console.warn("[ScreenTimeTracker] Network error, queuing screen time offline:", err);
+      localStorage.setItem("screen_time_unsynced", String(totalToSync));
+    }
+  }, []);
 
   // NEW: Store latest state to prevent stale closures and dependency loops
   const stateRefs = useRef({

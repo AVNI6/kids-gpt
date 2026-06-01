@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { UserRole } from "@/types/auth";
 import type {
   DashboardUserProfile,
   LinkedChildProfile,
@@ -12,16 +11,21 @@ import type {
   ParentActivityItem,
 } from "@/types/dashboard.types";
 import { getDailyScreenTime } from "./screentime.actions";
-import type {
-  SearchHistoryItem,
-  AiInsightsResult,
-  CacheData,
-} from "@/types/parent-dashboard/dashboard.types";
+import type { SearchHistoryItem, CacheData } from "@/types/parent-dashboard/dashboard.types";
+import {
+  verifyUserRole,
+  updateProfileFields,
+  getCurrentDashboardProfile as getProfileShared,
+  linkByEmail as linkShared,
+} from "@/actions/dashboard.actions";
 
-type VerifiedUser = {
-  userId: string;
-  profile: DashboardUserProfile;
-};
+export async function getCurrentDashboardProfile(): Promise<DashboardUserProfile> {
+  return getProfileShared();
+}
+
+export async function linkByEmail(targetEmail: string): Promise<EmailLinkResult> {
+  return linkShared(targetEmail);
+}
 
 interface RewardQueryResult {
   id: string;
@@ -93,148 +97,6 @@ function getErrorMessage(error: unknown): string {
     return error.message;
   }
   return String(error);
-}
-
-async function verifyUserRole(allowedRole?: UserRole): Promise<VerifiedUser> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error("Unauthorized");
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profile")
-    .select(
-      "user_id, email, first_name, last_name, username, avatar_url, role, standard, date_of_birth, total_experience_points, current_streak, longest_streak"
-    )
-    .eq("user_id", user.id)
-    .is("deleted_at", null)
-    .maybeSingle<DashboardUserProfile>();
-
-  if (profileError || !profile || !profile.role) {
-    throw new Error("Unauthorized");
-  }
-
-  if (allowedRole && profile.role !== allowedRole) {
-    throw new Error("Unauthorized");
-  }
-
-  return {
-    userId: user.id,
-    profile,
-  };
-}
-
-function sanitizeFileName(fileName: string) {
-  return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-}
-
-async function uploadAvatarForUser(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any,
-  userId: string,
-  avatarField: FormDataEntryValue | null
-) {
-  if (!(avatarField instanceof File) || avatarField.size === 0) {
-    return undefined;
-  }
-
-  if (!avatarField.type.startsWith("image/")) {
-    throw new Error("Avatar must be an image file.");
-  }
-
-  const fileNameParts = avatarField.name.split(".");
-  const fileExtension = fileNameParts.length > 1 ? fileNameParts.pop() : "png";
-  const baseName = sanitizeFileName(fileNameParts.join(".") || "avatar");
-  const filePath = `avatars/${userId}/${Date.now()}-${baseName}.${fileExtension || "png"}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(filePath, avatarField, {
-      contentType: avatarField.type,
-      upsert: true,
-    });
-
-  if (uploadError) {
-    throw new Error(uploadError.message);
-  }
-
-  const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-  return publicUrlData.publicUrl;
-}
-
-async function updateProfileFields(options: {
-  allowedRole: UserRole;
-  formData: FormData;
-  organizationFieldName?: string;
-  revalidateTarget: string;
-}): Promise<ProfileUpdateResult> {
-  const { userId } = await verifyUserRole(options.allowedRole);
-  const supabase = await createClient();
-
-  const firstName = String(
-    options.formData.get("first_name") ?? options.formData.get("firstName") ?? ""
-  ).trim();
-  const lastName = String(
-    options.formData.get("last_name") ?? options.formData.get("lastName") ?? ""
-  ).trim();
-  const organization = String(
-    options.formData.get(options.organizationFieldName ?? "organization") ??
-      options.formData.get("organizationName") ??
-      options.formData.get("organization") ??
-      ""
-  ).trim();
-  const avatarField = options.formData.get("avatar");
-
-  if (!firstName) {
-    return { error: "First name is required." };
-  }
-
-  let avatarUrl: string | undefined;
-
-  if (avatarField instanceof File && avatarField.size > 0) {
-    avatarUrl = await uploadAvatarForUser(supabase, userId, avatarField);
-  }
-
-  const updatePayload: {
-    first_name: string;
-    last_name: string | null;
-    avatar_url?: string | null;
-    standard?: string | null;
-  } = {
-    first_name: firstName,
-    last_name: lastName || null,
-  };
-
-  if (typeof avatarUrl !== "undefined") {
-    updatePayload.avatar_url = avatarUrl;
-  }
-
-  if (organization) {
-    updatePayload.standard = organization;
-  }
-
-  const { error: updateError } = await supabase
-    .from("profile")
-    .update(updatePayload)
-    .eq("user_id", userId);
-
-  if (updateError) {
-    return { error: updateError.message };
-  }
-
-  revalidatePath(options.revalidateTarget);
-
-  return { error: null };
-}
-
-export async function getCurrentDashboardProfile(): Promise<DashboardUserProfile> {
-  const { profile } = await verifyUserRole();
-  return profile;
 }
 
 export async function getLinkedChildren(): Promise<LinkedChildProfile[]> {
@@ -828,38 +690,6 @@ export async function markAllNotificationsAsRead() {
   }
 
   return { success: false, error: errorMsg || "Failed to mark all notifications as read." };
-}
-
-export async function linkByEmail(targetEmail: string): Promise<EmailLinkResult> {
-  const email = targetEmail.trim().toLowerCase();
-
-  if (!email) {
-    return { status: "error", message: "Email is required." };
-  }
-
-  const { profile } = await verifyUserRole();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.rpc("link_users_by_email", {
-    p_current_user_id: profile.user_id,
-    p_target_email: email,
-  });
-
-  if (error) {
-    return { status: "error", message: error.message };
-  }
-
-  const result = data as EmailLinkResult | null;
-
-  if (!result || typeof result.status !== "string") {
-    return { status: "error", message: "Unexpected response from email linking RPC." };
-  }
-
-  if (result.status === "success" || result.status === "pending") {
-    revalidatePath("/dashboard/parent");
-  }
-
-  return result;
 }
 
 export async function updateParentProfile(formData: FormData): Promise<ProfileUpdateResult> {
