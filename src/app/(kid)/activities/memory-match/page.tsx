@@ -25,6 +25,7 @@ import {
   saveMemoryCampaignProgress,
 } from "@/actions/activity.actions";
 import { toast } from "sonner";
+import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
 import { memoryCampaignLevels, MemoryLevel, MemoryStep } from "@/constant/MemoryCampaign";
 
 interface MemoryCard {
@@ -113,6 +114,7 @@ export default function MemoryMatchPage() {
           );
 
           if (res.success) {
+            triggerConfettiSideCannons();
             toast.success("Stage Cleared! 🎉", {
               description: `+${xpReward} XP earned! Next step unlocked!`,
             });

@@ -62,6 +62,7 @@ export default function ActivityTopicModal({
   const router = useRouter();
   const [topic, setTopic] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isRouting, setIsRouting] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
 
   const presets = activitySlug ? ACTIVITY_TOPICS_PRESETS[activitySlug] || [] : [];
@@ -106,10 +107,7 @@ export default function ActivityTopicModal({
         toast.error("Generation failed", { description: result.error });
         setIsGenerating(false);
       } else if (result.success && result.activityId) {
-        toast.success("Your smart activity is ready! 🚀");
-        setIsGenerating(false);
-        onClose();
-        // Route to the new custom generated activity detail interface
+        setIsRouting(true);
         router.push(`/activities/${activitySlug}/${result.activityId}`);
       } else {
         toast.error("Generation failed: No response payload received.");
@@ -278,9 +276,13 @@ export default function ActivityTopicModal({
               <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-500/80 shadow-[0_0_0_10px_rgba(14,165,233,0.12)]" />
             </div>
 
-            <h3 className="text-3xl font-black text-foreground">GPT-KID Crafting World... 🧙‍♂️</h3>
+            <h3 className="text-3xl font-black text-foreground">
+              {isRouting ? "Opening your adventure..." : "GPT-KID Crafting World... 🧙‍♂️"}
+            </h3>
             <div className="mt-4 px-6 py-3 bg-sky-500/10 text-sky-600 rounded-full font-bold text-sm sm:text-base animate-pulse min-h-12 flex items-center justify-center border border-sky-500/20">
-              {uiConfig.loadingWording[loadingStep]}
+              {isRouting
+                ? "Entering your custom adventure... 🚀"
+                : uiConfig.loadingWording[loadingStep]}
             </div>
 
             <p className="text-xs text-muted-foreground mt-5 leading-relaxed px-6">

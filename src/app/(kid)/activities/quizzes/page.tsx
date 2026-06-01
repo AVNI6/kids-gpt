@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
+import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
 import { type QuizQuestionItem } from "@/types/activities.type";
 import { getActivityXp } from "@/actions/activity.actions";
 
@@ -114,6 +115,7 @@ export default function QuizzesPage({
             scoreStr
           );
           if (res.success) {
+            triggerConfettiSideCannons();
             toast.success("Progress Saved! 🎉", {
               description: `+${xpReward} XP earned!`,
             });

@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
+import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
 import { toast } from "sonner";
 
 interface OptionItem {
@@ -106,6 +107,7 @@ export default function LogicPuzzlesPage({
             scoreStr
           );
           if (res.success) {
+            triggerConfettiSideCannons();
             toast.success("Mission Completed! 🎉", {
               description: `+${xpReward} XP automatically awarded!`,
             });

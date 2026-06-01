@@ -3,12 +3,7 @@
 import React, { useMemo, useRef, useState, CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { PuzzlePiece } from "@/types/puzzle";
-import {
-  getJigsawMaskURI,
-  getBoundingBoxSize,
-  TAB_RATIO,
-  getJigsawSVGPath,
-} from "@/lib/puzzle/geometry";
+import { getBoundingBoxSize, TAB_RATIO, getJigsawSVGPath } from "@/lib/puzzle/geometry";
 
 interface PuzzleTileProps {
   piece: PuzzlePiece;
@@ -46,18 +41,6 @@ export default function PuzzleTile({
   const bgSizePx = gridSize * tileSize;
   const bgOffsetX = -(srcCol * tileSize - pad);
   const bgOffsetY = -(srcRow * tileSize - pad);
-
-  // SVG mask URI (memoized)
-  const maskURI = useMemo(
-    () =>
-      getJigsawMaskURI({
-        tileW: tileSize,
-        tileH: tileSize,
-        edges,
-        variants: tabVariants,
-      }),
-    [tileSize, edges, tabVariants]
-  );
 
   // SVG path D attribute (memoized) - used for clipPath to restrict pointer events
   const pathD = useMemo(
@@ -114,14 +97,6 @@ export default function PuzzleTile({
     backgroundSize: `${bgSizePx}px ${bgSizePx}px`,
     backgroundPosition: `${bgOffsetX}px ${bgOffsetY}px`,
 
-    // SVG mask fallback
-    maskImage: maskURI,
-    WebkitMaskImage: maskURI,
-    maskSize: "100% 100%",
-    WebkitMaskSize: "100% 100%",
-    maskRepeat: "no-repeat",
-    WebkitMaskRepeat: "no-repeat",
-
     // High fidelity clipping of both geometry AND pointer event interactions
     clipPath: `url(#${clipPathId})`,
     WebkitClipPath: `url(#${clipPathId})`,
@@ -151,14 +126,11 @@ export default function PuzzleTile({
       }
     : isDragging
       ? {
-          filter:
-            "drop-shadow(0 12px 24px rgba(0,0,0,0.5))" +
-            " drop-shadow(0 0 8px rgba(56,189,248,0.4))",
+          filter: "drop-shadow(0px 8px 16px rgba(0,0,0,0.3))",
           cursor: "grabbing",
         }
       : {
-          filter:
-            "drop-shadow(0 4px 8px rgba(0,0,0,0.35))" + " drop-shadow(0 1px 2px rgba(0,0,0,0.25))",
+          filter: "drop-shadow(0px 3px 6px rgba(0,0,0,0.22))",
           cursor: "grab",
         };
 

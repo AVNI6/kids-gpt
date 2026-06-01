@@ -20,6 +20,7 @@ import { APP_ROUTES } from "@/constant/AppRoutes";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
 import { getActivityXp } from "@/actions/activity.actions";
 import { toast } from "sonner";
+import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
 
 interface Flashcard {
   question: string;
@@ -79,6 +80,7 @@ export default function FlashcardsPage({
           const res = await saveKidActivityProgress("flashcards", xpReward, deckTitle, scoreStr);
 
           if (res.success) {
+            triggerConfettiSideCannons();
             toast.success("Deck Completed! 🎉", {
               description: `+${Math.round((xpReward * scorePercent) / 100)} XP automatically awarded to your kid profile!`,
             });

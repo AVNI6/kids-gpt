@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Clock, Activity, Users, CheckCircle2, Sparkles } from "lucide-react";
 import { useParentDashboard } from "@/hooks/parent-dashboard/useParentDashboard";
 import { getSafeXP, getLevel } from "@/hooks/useChildXP";
@@ -199,8 +200,23 @@ export default function HomeSection() {
           </div>
           <CardContent className="p-6 md:p-8 pt-0 divide-y divide-slate-100 dark:divide-slate-800/40 max-h-[480px] overflow-y-auto pr-2">
             {isLoadingChildData && familyTimeline.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 gap-3">
-                <div className="w-8 h-8 border-4 border-sky-600 border-t-transparent rounded-full animate-spin" />
+              <div className="space-y-6 py-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex gap-4 items-start py-5 first:pt-0 border-b last:border-0 border-slate-100 dark:border-slate-800/40 animate-pulse"
+                  >
+                    <Skeleton className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+                    <div className="flex-1 space-y-2.5">
+                      <div className="flex justify-between items-center">
+                        <Skeleton className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                        <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                      </div>
+                      <Skeleton className="h-3 w-56 bg-slate-200 dark:bg-slate-800 rounded" />
+                    </div>
+                    <Skeleton className="h-5 w-14 bg-slate-200 dark:bg-slate-800 rounded-lg shrink-0" />
+                  </div>
+                ))}
               </div>
             ) : familyTimeline.length === 0 ? (
               <div className="text-center py-16 text-slate-400 font-bold text-sm">

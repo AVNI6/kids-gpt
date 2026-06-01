@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { claimJigsawXp } from "@/actions/activities/jigsawpuzzle.actions";
+import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 
 interface VictoryModalProps {
@@ -108,6 +109,7 @@ export default function VictoryModal({
         try {
           const result = await claimJigsawXp(activityId, gridSize);
           if (result.success) {
+            triggerConfettiSideCannons();
             toast.success("Awesome Job! 🎉", {
               description: `+${xpEarned} Experience Points automatically awarded to your kid profile!`,
             });

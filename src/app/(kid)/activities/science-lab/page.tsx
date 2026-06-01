@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
+import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
 import { toast } from "sonner";
 import { type ScienceLabItem } from "@/types/activities.type";
 
@@ -78,6 +79,7 @@ export default function ScienceLabPage({
             scoreStr
           );
           if (res.success) {
+            triggerConfettiSideCannons();
             toast.success("Lab Mission Completed! 🎉", {
               description: `+${xpReward} XP earned!`,
             });

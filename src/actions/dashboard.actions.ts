@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import { processActivityCompletion } from "@/actions/rewards.actions";
 import type { UserRole } from "@/types/auth";
 import type {
   DashboardUserProfile,
@@ -393,35 +394,6 @@ export async function saveKidActivityProgress(
     const result = rpcData as { success: boolean; error?: string } | null;
     if (!result || result.success !== true) {
       return { success: false, error: result?.error || "Failed to save activity progress via RPC" };
-    }
-
-    // 2. Trigger parent notification on successful completion
-    try {
-      const { data: prof } = await supabase
-        .from("profile")
-        .select("first_name")
-        .eq("user_id", userId)
-        .maybeSingle();
-      const kidName = prof?.first_name || "Your child";
-
-      // Query the latest reward for the kid to get its ID for metadata linking
-      const { data: latestReward } = await supabase
-        .from("rewards")
-        .select("id")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      await createParentNotification(
-        userId,
-        "quiz_completed",
-        "Activity Completed",
-        `${kidName} completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
-        latestReward ? { reward_id: latestReward.id } : {}
-      );
-    } catch (e) {
-      console.warn("Failed to trigger parent notification in RPC path:", e);
     }
 
     revalidatePath("/dashboard/kid");
