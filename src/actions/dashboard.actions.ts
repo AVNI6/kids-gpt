@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import { getLocalDateString } from "@/lib/utils";
+import { processActivityCompletion } from "@/actions/rewards.actions";
 import type { UserRole } from "@/types/auth";
 import type {
   DashboardUserProfile,
@@ -51,34 +52,6 @@ type ProfileUpdateResult = {
 
 async function getSupabaseClient() {
   return createClient();
-}
-
-function calculateDisplayStreak(
-  dbStreak: number,
-  lastRewardCreatedAt: string | null,
-  timezone: string = "Asia/Kolkata"
-): number {
-  if (!lastRewardCreatedAt || dbStreak === 0) {
-    return 0;
-  }
-
-  const todayStr = getLocalDateString(new Date(), timezone);
-  const lastDateStr = getLocalDateString(new Date(lastRewardCreatedAt), timezone);
-
-  if (lastDateStr === todayStr) {
-    return dbStreak;
-  }
-
-  const lastDate = new Date(lastDateStr + "T12:00:00");
-  const todayDate = new Date(todayStr + "T12:00:00");
-  const diffTime = todayDate.getTime() - lastDate.getTime();
-  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays <= 1) {
-    return dbStreak;
-  }
-
-  return 0;
 }
 
 async function verifyUserRole(allowedRole?: UserRole): Promise<VerifiedUser> {
@@ -401,235 +374,20 @@ export async function saveKidActivityProgress(
   score?: string,
   timezone: string = "Asia/Kolkata"
 ): Promise<{ success: boolean; error?: string }> {
-  try {
-    const { userId } = await verifyUserRole("kid");
-    const supabase = await getSupabaseClient();
+  const result = await processActivityCompletion({
+    activitySlug,
+    activityTitle,
+    score,
+    timezone,
+  });
 
-    // 1. Attempt to execute the atomic database RPC function first
-    const { data: rpcData, error: rpcError } = await supabase.rpc("save_kid_activity_progress", {
-      p_user_id: userId,
-      p_activity_slug: activitySlug,
-      p_activity_title: activityTitle,
-      p_score_str: score || null,
-      p_timezone: timezone,
-    });
-
-    // Check if RPC was successful
-    if (
-      !rpcError &&
-      rpcData &&
-      typeof rpcData === "object" &&
-      "success" in rpcData &&
-      (rpcData as import("@/types/json").JsonObject).success === true
-    ) {
-      try {
-        const { data: prof } = await supabase
-          .from("profile")
-          .select("first_name")
-          .eq("user_id", userId)
-          .maybeSingle();
-        const kidName = prof?.first_name || "Your child";
-
-        // Query the latest reward for the kid to get its ID
-        const { data: latestReward } = await supabase
-          .from("rewards")
-          .select("id")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        await createParentNotification(
-          userId,
-          "quiz_completed",
-          "Activity Completed",
-          `${kidName} completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
-          latestReward ? { reward_id: latestReward.id } : {}
-        );
-      } catch (e) {
-        console.warn("Failed to trigger parent notification in RPC path:", e);
-      }
-
-      revalidatePath("/dashboard/kid");
-      revalidatePath("/dashboard/parent");
-      return { success: true };
-    }
-
-    if (rpcError) {
-      console.warn(
-        "save_kid_activity_progress RPC failed, executing client-side fallback:",
-        rpcError.message
-      );
-    }
-
-    // 2. Client-side Fallback (in case migration is not fully deployed or has temporary failure)
-    // Securely query dynamic XP settings from DB, falling back to the client-provided parameter
-    let actualXp = xpEarned;
-    const { data: activitySetting } = await supabase
-      .from("activity_settings")
-      .select("id, slug, title, xp_reward")
-      .eq("slug", activitySlug)
-      .maybeSingle();
-
-    if (activitySetting?.xp_reward) {
-      actualXp = activitySetting.xp_reward;
-    }
-
-    // Parse score percentage if available (e.g. "80%" -> 80)
-    let parsedScore: number | null = null;
-    if (score) {
-      const percentMatch = score.match(/([0-9]+)\s*%/);
-      if (percentMatch) {
-        parsedScore = parseInt(percentMatch[1], 10);
-      } else {
-        const ratioMatch = score.match(/([0-9]+)\s*\/\s*([0-9]+)/);
-        if (ratioMatch) {
-          const correct = parseInt(ratioMatch[1], 10);
-          const total = parseInt(ratioMatch[2], 10);
-          if (total > 0) {
-            parsedScore = Math.round((correct / total) * 100);
-          }
-        } else {
-          const match = score.match(/([0-9]+)/);
-          if (match) {
-            parsedScore = parseInt(match[1], 10);
-          }
-        }
-      }
-    }
-
-    // Apply score-based XP scaling (100% correct score = full XP, else proportional)
-    if (parsedScore !== null) {
-      if (parsedScore === 100) {
-        // Full XP points
-      } else {
-        actualXp = Math.round(actualXp * (parsedScore / 100));
-      }
-    }
-    actualXp = Math.max(0, actualXp);
-
-    // Fetch current profile stats for streak computation
-    const { data: profile, error: profileError } = await supabase
-      .from("profile")
-      .select("total_experience_points, current_streak, longest_streak")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (profileError || !profile) {
-      return { success: false, error: "Profile not found." };
-    }
-
-    // Query the latest activity reward for this kid to calculate streak
-    const { data: lastRewards, error: lastRewardsError } = await supabase
-      .from("rewards")
-      .select("created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (lastRewardsError) {
-      return { success: false, error: lastRewardsError.message };
-    }
-
-    let currentStreak = profile.current_streak ?? 0;
-    let longestStreak = profile.longest_streak ?? 0;
-
-    const todayStr = getLocalDateString(new Date(), timezone);
-
-    if (lastRewards && lastRewards.length > 0) {
-      const lastDateStr = getLocalDateString(new Date(lastRewards[0].created_at), timezone);
-
-      if (lastDateStr === todayStr) {
-        // Activity completed today, maintain streak
-        if (currentStreak === 0) currentStreak = 1;
-      } else {
-        const lastDate = new Date(lastDateStr + "T12:00:00");
-        const todayDate = new Date(todayStr + "T12:00:00");
-
-        const diffTime = todayDate.getTime() - lastDate.getTime();
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 1) {
-          currentStreak += 1;
-        } else {
-          currentStreak = 1;
-        }
-      }
-    } else {
-      // First activity
-      currentStreak = 1;
-    }
-
-    if (currentStreak > longestStreak) {
-      longestStreak = currentStreak;
-    }
-
-    // Insert reward record with dynamic XP, description, and score column
-    const { data: insertedRewards, error: insertError } = await supabase
-      .from("rewards")
-      .insert({
-        user_id: userId,
-        rewards_amount: actualXp,
-        source_id: activitySetting?.id || null,
-        source_type: activitySetting?.slug || activitySlug,
-        description: `Completed ${activitySetting?.title || activityTitle}${score ? ` (Score: ${score})` : ""}`,
-        score: parsedScore,
-      })
-      .select("id");
-
-    if (insertError) {
-      return { success: false, error: insertError.message };
-    }
-
-    const insertedReward =
-      insertedRewards && insertedRewards.length > 0 ? insertedRewards[0] : null;
-
-    // Update profile with dynamic XP and streaks
-    const newXp = (profile.total_experience_points ?? 0) + actualXp;
-    const { error: updateError } = await supabase
-      .from("profile")
-      .update({
-        total_experience_points: newXp,
-        current_streak: currentStreak,
-        longest_streak: longestStreak,
-      })
-      .eq("user_id", userId);
-
-    if (updateError) {
-      return { success: false, error: updateError.message };
-    }
-
-    try {
-      const { data: prof } = await supabase
-        .from("profile")
-        .select("first_name")
-        .eq("user_id", userId)
-        .maybeSingle();
-      const kidName = prof?.first_name || "Your child";
-      await createParentNotification(
-        userId,
-        "quiz_completed",
-        "Activity Completed",
-        `${kidName} completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
-        insertedReward ? { reward_id: insertedReward.id } : {}
-      );
-    } catch (e) {
-      console.warn("Failed to trigger parent notification in fallback path:", e);
-    }
-
-    revalidatePath("/dashboard/kid");
-    revalidatePath("/dashboard/parent");
-
-    return { success: true };
-  } catch (err) {
-    const errorMsg = err instanceof Error ? err.message : "An unexpected error occurred.";
-    return { success: false, error: errorMsg };
-  }
+  return {
+    success: result.success,
+    error: result.error,
+  };
 }
 
-export async function getKidComprehensiveDetails(
-  timezone: string = "Asia/Kolkata"
-): Promise<ChildDetailsResult> {
+export async function getKidComprehensiveDetails(): Promise<ChildDetailsResult> {
   const { userId } = await verifyUserRole("kid");
   const supabase = await getSupabaseClient();
 

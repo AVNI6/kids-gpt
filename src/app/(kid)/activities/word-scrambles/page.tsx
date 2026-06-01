@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { toast } from "sonner";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
+import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
 import { type WordScrambleItem } from "@/types/activities.type";
 
 interface WordScramblesPageProps {
@@ -63,6 +64,7 @@ export default function WordScramblesPage({
             scoreStr
           );
           if (res.success) {
+            triggerConfettiSideCannons();
             toast.success("Progress Saved! 🎉", {
               description: `+${xpReward} XP automatically earned!`,
             });

@@ -48,10 +48,20 @@ export default function JigsawPuzzlePage() {
   // Calculate XP earned dynamically based on grid difficulty (scaled from base 120 XP)
   const xpEarned = useMemo(() => {
     const base = 120;
-    if (difficulty === 2) return Math.round(base * 0.6); // 72 XP
-    if (difficulty === 4) return Math.round(base * 1.2); // 144 XP
-    if (difficulty === 5) return Math.round(base * 1.5); // 180 XP
-    return base; // 3x3 = 120 XP
+    const multipliers: Record<number, number> = {
+      3: 1.0,
+      4: 1.2,
+      5: 1.5,
+      6: 1.8,
+      7: 2.1,
+      8: 2.4,
+      9: 2.7,
+      10: 3.0,
+      11: 3.3,
+      12: 3.6,
+    };
+    const mult = multipliers[difficulty] || 1.0;
+    return Math.round(base * mult);
   }, [difficulty]);
 
   const objectUrlsRef = useRef<string[]>([]);
@@ -207,7 +217,7 @@ export default function JigsawPuzzlePage() {
 
   return (
     <main
-      className="min-h-screen w-full bg-gradient-to-b from-sky-50/50 via-background to-sky-100/30 dark:from-[#0B0F19] dark:via-[#0E1528] dark:to-[#0A0D17] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 text-foreground flex flex-col gap-6 items-center justify-start overflow-visible transition-colors duration-300"
+      className="min-h-screen w-full bg-linear-to-b from-sky-50/50 via-background to-sky-100/30 dark:from-[#0B0F19] dark:via-[#0E1528] dark:to-[#0A0D17] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 text-foreground flex flex-col gap-6 items-center justify-start overflow-visible transition-colors duration-300"
       style={{ overflow: "visible" }}
     >
       {/* ─── SCREEN 1: Setup Workspace ─────────────────────────────────────── */}
@@ -257,10 +267,7 @@ export default function JigsawPuzzlePage() {
               <DifficultyControls
                 difficulty={difficulty}
                 onDifficultyChange={handleDifficultyChange}
-                onReset={handleReset}
                 onImageSelected={handleImageUploaded}
-                onShowHint={() => setIsHintOpen(true)}
-                isHintDisabled={true} // Hint disabled in setup screen
                 isLoading={isLoading}
               />
 
@@ -268,7 +275,7 @@ export default function JigsawPuzzlePage() {
               <button
                 onClick={handleStartPuzzle}
                 disabled={isLoading}
-                className="w-full py-4.5 rounded-[22px] bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-500 hover:brightness-110 active:scale-[0.98] text-white font-black text-lg tracking-wide shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full py-4.5 rounded-[22px] bg-linear-to-r from-sky-500 via-indigo-500 to-emerald-500 hover:brightness-110 active:scale-[0.98] text-white font-black text-lg tracking-wide shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {isLoading ? (
                   <Loader2 className="size-6 animate-spin" />
@@ -313,7 +320,7 @@ export default function JigsawPuzzlePage() {
 
             {/* Live Progress Bar HUD */}
             <div className="flex items-center gap-4 w-full md:w-auto max-w-sm flex-1 md:justify-end">
-              <div className="flex flex-col flex-1 max-w-[200px]">
+              <div className="flex flex-col flex-1 max-w-50">
                 <div className="flex justify-between items-end mb-1">
                   <span className="text-[10px] font-black text-sky-500 dark:text-sky-400 uppercase tracking-widest leading-none">
                     Placed
@@ -324,7 +331,7 @@ export default function JigsawPuzzlePage() {
                 </div>
                 <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden border border-border/50">
                   <div
-                    className="h-full bg-gradient-to-r from-sky-400 to-emerald-400 rounded-full transition-all duration-300"
+                    className="h-full bg-linear-to-r from-sky-400 to-emerald-400 rounded-full transition-all duration-300"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
@@ -392,7 +399,7 @@ export default function JigsawPuzzlePage() {
               style={{ overflow: "visible" }}
             >
               <div
-                className="relative w-full h-[320px] lg:h-[600px] border border-border/80 dark:border-slate-800/80 bg-card/75 dark:bg-slate-900/40 rounded-[32px] p-6 shadow-2xl backdrop-blur-md overflow-visible flex flex-col select-none"
+                className="relative w-full h-80 lg:h-150 border border-border/80 dark:border-slate-800/80 bg-card/75 dark:bg-slate-900/40 rounded-[32px] p-6 shadow-2xl backdrop-blur-md overflow-visible flex flex-col select-none"
                 style={{ overflow: "visible" }}
               >
                 {/* Decorative header */}

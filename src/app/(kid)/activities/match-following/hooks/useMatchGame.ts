@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { saveKidActivityProgress } from "@/actions/dashboard.actions";
+import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
 import { getActivityXp } from "@/actions/activity.actions";
 import { APP_ROUTES } from "@/constant/AppRoutes";
 import { MatchItem, ConnectionState, SelectedDot, DrawingState } from "../types";
@@ -139,6 +140,7 @@ export function useMatchGame({ pairs, matchTitle }: UseMatchGameProps) {
             scoreStr
           );
           if (res.success) {
+            triggerConfettiSideCannons();
             toast.success("Progress Saved! 🎉", {
               description: `+${scaledXp} XP automatically earned!`,
             });

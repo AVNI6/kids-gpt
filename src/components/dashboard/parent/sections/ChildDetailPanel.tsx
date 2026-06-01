@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Award, Clock, BookOpen, Search, School, ShieldCheck, Mail } from "lucide-react";
@@ -262,9 +263,80 @@ export default function ChildDetailPanel({
 
         {/* Main Tab Render view */}
         {isLoadingChildData && !activeChildCachedData ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-3 bg-white dark:bg-black/30 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60">
-            <div className="w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <>
+            {activeSubTab === "history" && (
+              <div className="space-y-6 bg-white dark:bg-black/30 p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 animate-pulse mt-6">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4">
+                  <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                  <Skeleton className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                </div>
+                <div className="space-y-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="p-5 border border-slate-200/60 dark:border-slate-800 rounded-[24px] flex items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <Skeleton className="w-11 h-11 bg-slate-200 dark:bg-slate-800 rounded-xl shrink-0" />
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-4.5 w-48 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                          <Skeleton className="h-3 w-32 bg-slate-200 dark:bg-slate-800 rounded" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-10 w-28 bg-slate-200 dark:bg-slate-800 rounded-xl shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeSubTab === "activities" && (
+              <div className="space-y-6 bg-white dark:bg-black/30 p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 animate-pulse mt-6">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4">
+                  <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                  <Skeleton className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Card
+                      key={i}
+                      className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white/45 dark:bg-black/20 overflow-hidden"
+                    >
+                      <CardContent className="p-5 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                          <Skeleton className="w-11 h-11 bg-slate-200 dark:bg-slate-800 rounded-xl shrink-0" />
+                          <div className="space-y-2 flex-1">
+                            <Skeleton className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                            <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                          </div>
+                        </div>
+                        <div className="space-y-2 items-end flex flex-col shrink-0">
+                          <Skeleton className="h-5 w-14 bg-slate-200 dark:bg-slate-800 rounded" />
+                          <Skeleton className="h-4 w-12 bg-slate-200 dark:bg-slate-800 rounded" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeSubTab === "progress" && (
+              <div className="space-y-6 bg-white dark:bg-black/30 p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 animate-pulse mt-6">
+                <div className="bg-slate-50/50 dark:bg-black/40 rounded-[28px] border border-slate-100 dark:border-slate-800 p-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
+                  <div className="flex items-center gap-4.5 flex-1">
+                    <Skeleton className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-2xl shrink-0" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-5 w-40 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                      <Skeleton className="h-3 w-32 bg-slate-200 dark:bg-slate-800 rounded" />
+                      <Skeleton className="h-3.5 w-48 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-10 w-36 bg-slate-200 dark:bg-slate-800 rounded-xl shrink-0" />
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <>
             {/* SUB TAB 1: AI Search History */}

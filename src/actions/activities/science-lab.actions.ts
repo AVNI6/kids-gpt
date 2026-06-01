@@ -1,8 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
-import { hasAnyGeminiApiKey, generateStructuredObject } from "@/lib/ai/structured-generator";
+import { generateBaseActivity } from "./base-generator";
 
 // Define the schema for a single science experiment multiple-choice option
 const scienceLabOptionSchema = z.object({
@@ -56,46 +55,12 @@ export type ScienceLabActivityContent = z.infer<typeof scienceLabSchema>;
  * on a given topic for a kid user using the Vercel AI SDK and Gemini model, and save it in Supabase.
  */
 export async function generateScienceLab(topic: string) {
-  try {
-    const trimmedTopic = topic.trim();
-    if (!trimmedTopic) {
-      return { error: "Please provide a topic for your science experiments!" };
-    }
-
-    // 1. Authenticate user & retrieve session/user_id
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return { error: "Unauthorized. Please sign in to continue." };
-    }
-
-    // 2. Double-check profile role is 'kid' to comply with RLS and user flows
-    const { data: profile, error: profileError } = await supabase
-      .from("profile")
-      .select("role")
-      .eq("user_id", user.id)
-      .is("deleted_at", null)
-      .single();
-
-    if (profileError || !profile || profile.role !== "kid") {
-      return { error: "Only kid accounts are authorized to generate new activities!" };
-    }
-
-    if (!hasAnyGeminiApiKey) {
-      return {
-        error: "AI generation is currently unavailable. Please contact support or try again later.",
-      };
-    }
-
-    // 3. Generate structured science lab object using our robust fallback orchestrator
-    const { object } = await generateStructuredObject({
-      schema: scienceLabSchema,
-      system: `You are an awesome, encouraging AI kid-teacher who makes science experiments incredibly fun, safe, and accessible.
-Your goal is to generate exactly 3 highly engaging and safe kid-friendly experiments or scenarios about the topic: "${trimmedTopic}".
+  return generateBaseActivity({
+    topic,
+    activityType: "science_lab",
+    schema: scienceLabSchema,
+    systemPrompt: `You are an awesome, encouraging AI kid-teacher who makes science experiments incredibly fun, safe, and accessible.
+Your goal is to generate exactly 3 highly engaging and safe kid-friendly experiments or scenarios about the topic: "${topic}".
 Each experiment must contain:
 1. 'title': A catchy, fun title for the experiment.
 2. 'setup': The setup question, hypothesis, or scenario suited for children ages 6-12.
@@ -103,37 +68,6 @@ Each experiment must contain:
 4. 'explanation': A simple, encouraging, and clear explanation of the science behind the correct outcome.
 
 Ensure the language is safe, encouraging, energetic, and uses colorful verbs. Avoid complex jargon.`,
-      prompt: `Generate 3 safe and fun science experiments themed around: "${trimmedTopic}".`,
-    });
-
-    // 4. Save the generated activity structure to 'generated_activities' table in Supabase
-    const { data: insertedRow, error: insertError } = await supabase
-      .from("generated_activities")
-      .insert({
-        kid_user_id: user.id,
-        activity_type: "science_lab",
-        content: object,
-      })
-      .select("id")
-      .single();
-
-    if (insertError) {
-      console.error("Database error saving generated science lab activity:", insertError);
-      return { error: `Failed to save science lab activity: ${insertError.message}` };
-    }
-
-    return {
-      success: true,
-      activityId: insertedRow.id,
-      data: object,
-    };
-  } catch (err) {
-    console.error("Error in generateScienceLab server action:", err);
-    return {
-      error:
-        err instanceof Error
-          ? err.message
-          : "An unexpected error occurred during science lab generation.",
-    };
-  }
+    userPrompt: `Generate 3 safe and fun science experiments themed around: "${topic}".`,
+  });
 }

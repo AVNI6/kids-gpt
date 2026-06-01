@@ -35,7 +35,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
   const [dailyLimitMinutes, setDailyLimitMinutes] = useState(60);
   const [isLimitEnabled, setIsLimitEnabled] = useState(false);
   const [localElapsedSeconds, setLocalElapsedSeconds] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [isLeader, setIsLeader] = useState(false);
   const isLeaderRef = useRef(false);
 
@@ -87,8 +86,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       }
     } catch (err) {
       console.error("Failed to fetch daily screen time limit:", err);
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -334,8 +331,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
     }, 1000);
 
     // Tab visibility change logic
-    let visibilityTimeout: NodeJS.Timeout;
-
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         if (stateRefs.current.isLeader) {
@@ -433,20 +428,6 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       }
     }
   }, [isLocked, childId, dailyLimitMinutes]);
-
-  // Loading state placeholder
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-[#0B0F19]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            Loading your playground...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   // SafeLock Overlay screen
   if (isLocked) {

@@ -28,11 +28,16 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const justCreatedSessionRef = useRef(false);
   const isFirstScrollRef = useRef(true);
+  const currentSessionIdRef = useRef(currentSessionId);
 
   const [input, setInput] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+
+  useEffect(() => {
+    currentSessionIdRef.current = currentSessionId;
+  }, [currentSessionId]);
 
   const { toggleSidebar, openMobile } = useSidebar();
   const { user, isUserLoggedIn, userRole, isLoading: isLoadingAuth } = useAuth();
@@ -86,23 +91,27 @@ export default function ChatInterface() {
   }, [currentSessionId]);
 
   // Keep Redux in sync with URL as the single source of truth.
+  //
+  // This effect's job is URL → Redux sync. It must only fire when the URL changes.
+  // Reading currentSessionId from a ref avoids re-running the effect when the local
+  // session state changes before router.replace() has committed the URL.
   useEffect(() => {
     // 1. If auth is loading, wait before syncing
     if (isLoadingAuth) return;
 
     // 2. If user is logged out, clear currentSessionId in Redux
     if (!isUserLoggedIn) {
-      if (currentSessionId !== null) {
+      if (currentSessionIdRef.current !== null) {
         dispatch(setCurrentSessionId(null));
       }
       return;
     }
 
     // 3. Sync Redux currentSessionId to match URL search parameter id
-    if (urlSessionId !== currentSessionId) {
+    if (urlSessionId !== currentSessionIdRef.current) {
       dispatch(setCurrentSessionId(urlSessionId));
     }
-  }, [urlSessionId, currentSessionId, isUserLoggedIn, isLoadingAuth, dispatch]);
+  }, [urlSessionId, isUserLoggedIn, isLoadingAuth, dispatch]); // ← currentSessionId intentionally omitted
 
   // Abort in-flight requests when component unmounts
   useEffect(() => {

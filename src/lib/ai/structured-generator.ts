@@ -24,7 +24,7 @@ export async function generateStructuredObject<T extends z.ZodTypeAny>({
   schema: T;
   system: string;
   prompt: string;
-}) {
+}): Promise<{ object: z.output<T> }> {
   const keys: string[] = [];
   if (process.env.GOOGLE_GEMINI_API_KEY) keys.push(process.env.GOOGLE_GEMINI_API_KEY);
   if (process.env.GOOGLE_GEMINI_API_KEY2) keys.push(process.env.GOOGLE_GEMINI_API_KEY2);
@@ -52,7 +52,10 @@ export async function generateStructuredObject<T extends z.ZodTypeAny>({
           prompt,
         });
 
-        return result;
+        return {
+          ...result,
+          object: result.object as z.output<T>,
+        };
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         console.warn(`[Activity AI] Failed with ${modelName} using key index ${i}: ${errMsg}`);

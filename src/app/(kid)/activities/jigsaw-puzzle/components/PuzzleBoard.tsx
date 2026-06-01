@@ -86,19 +86,6 @@ export default function PuzzleBoard({
         }}
       />
 
-      {/* Grid line indicator dots for high-fidelity alignments */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          borderRadius: 26,
-          backgroundImage: "radial-gradient(circle, var(--border) 1.5px, transparent 1.5px)",
-          backgroundSize: tileSize > 0 ? `${tileSize}px ${tileSize}px` : "60px 60px",
-          pointerEvents: "none",
-        }}
-      />
-
       {/* Absolutely positioned placed tile layer */}
       {tileSize > 0 && !isLoading && (
         <div

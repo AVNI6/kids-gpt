@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) {
   const [dailySeconds, setDailySeconds] = useState(0);
@@ -162,9 +163,38 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-3 bg-slate-50/50 dark:bg-black/20 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
-          <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold text-slate-400">Aggregating screen time stats...</p>
+        <div className="space-y-6 animate-pulse pr-2">
+          {/* Top card skeleton */}
+          <div className="bg-slate-50/50 dark:bg-black/30 border border-slate-200/60 dark:border-slate-800 p-6 rounded-[28px] space-y-4">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-800" />
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <Skeleton className="h-5 w-40 bg-slate-200 dark:bg-slate-800 rounded" />
+                </div>
+              </div>
+              <Skeleton className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
+            </div>
+          </div>
+          {/* Analytics grid skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-slate-50/30 dark:bg-black/20 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-4.5 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <Skeleton className="w-4 h-4 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <Skeleton className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="space-y-8 animate-in fade-in duration-300">
