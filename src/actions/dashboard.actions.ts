@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import { processActivityCompletion } from "@/actions/rewards.actions";
+import { uploadUserAvatar } from "@/lib/storage";
 import type { UserRole } from "@/types/auth";
 import type {
   DashboardUserProfile,
@@ -106,12 +107,8 @@ export async function getCurrentDashboardProfile(): Promise<DashboardUserProfile
   return profile;
 }
 
-function sanitizeFileName(fileName: string) {
-  return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-}
-
 async function uploadAvatarForUser(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   userId: string,
   avatarField: FormDataEntryValue | null
 ) {
@@ -119,28 +116,12 @@ async function uploadAvatarForUser(
     return undefined;
   }
 
-  if (!avatarField.type.startsWith("image/")) {
-    throw new Error("Avatar must be an image file.");
+  const result = await uploadUserAvatar(supabase, userId, avatarField);
+  if (!result.success || !result.publicUrl) {
+    throw new Error(result.error || "Failed to upload avatar.");
   }
 
-  const fileNameParts = avatarField.name.split(".");
-  const fileExtension = fileNameParts.length > 1 ? fileNameParts.pop() : "png";
-  const baseName = sanitizeFileName(fileNameParts.join(".") || "avatar");
-  const filePath = `avatars/${userId}/${Date.now()}-${baseName}.${fileExtension || "png"}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(filePath, avatarField, {
-      contentType: avatarField.type,
-      upsert: true,
-    });
-
-  if (uploadError) {
-    throw new Error(uploadError.message);
-  }
-
-  const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-  return publicUrlData.publicUrl;
+  return result.publicUrl;
 }
 
 export async function updateProfileFields(options: {
@@ -265,28 +246,11 @@ export async function updateKidProfile(formData: FormData) {
   let avatarUrl: string | null | undefined;
 
   if (avatarField instanceof File && avatarField.size > 0) {
-    if (!avatarField.type.startsWith("image/")) {
-      throw new Error("Avatar must be an image file.");
+    const result = await uploadUserAvatar(supabase, userId, avatarField);
+    if (!result.success || !result.publicUrl) {
+      throw new Error(result.error || "Failed to upload avatar.");
     }
-
-    const fileNameParts = avatarField.name.split(".");
-    const fileExtension = fileNameParts.length > 1 ? fileNameParts.pop() : "png";
-    const baseName = sanitizeFileName(fileNameParts.join(".") || "avatar");
-    const filePath = `avatars/${userId}/${Date.now()}-${baseName}.${fileExtension || "png"}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, avatarField, {
-        contentType: avatarField.type,
-        upsert: true,
-      });
-
-    if (uploadError) {
-      throw new Error(uploadError.message);
-    }
-
-    const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    avatarUrl = publicUrlData.publicUrl;
+    avatarUrl = result.publicUrl;
   }
 
   const updatePayload: {

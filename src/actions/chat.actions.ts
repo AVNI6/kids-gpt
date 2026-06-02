@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { ChatSessionRow, ChatMessageRow } from "@/types/chat.types";
 import { SubscriptionPlanRow } from "@/types/subscription.types";
+import { uploadChatAttachment } from "@/lib/storage";
 
 const supabase = createClient();
 
@@ -134,22 +135,14 @@ export async function uploadFileToStorage(
   // Path format: folder/filename (e.g., pdf/filename.pdf)
   const fullPath = `${path}`;
 
-  const { error } = await supabase.storage.from("materials").upload(fullPath, file, {
-    cacheControl: "3600",
-    upsert: true,
-  });
+  const result = await uploadChatAttachment(supabase, finalUserId, file, fullPath);
 
-  if (error) {
-    console.error("Error uploading to storage:", error);
-    throw error;
+  if (!result.success || !result.publicUrl) {
+    console.error("Error uploading to storage:", result.error);
+    throw new Error(result.error || "Failed to upload file.");
   }
 
-  // Get public URL
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("materials").getPublicUrl(fullPath);
-
-  return publicUrl;
+  return result.publicUrl;
 }
 
 export async function saveGeneratedMaterial(

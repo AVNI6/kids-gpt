@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { uploadUserAvatar } from "@/lib/storage";
 
 export type ActionResponse = {
   success: boolean;
@@ -176,27 +177,14 @@ export async function uploadChildAvatar(
       return { success: false, error: "Please select an avatar image." };
     }
 
-    if (!avatarField.type.startsWith("image/")) {
-      return { success: false, error: "Only image files are allowed." };
+    // Call centralized upload helper
+    const uploadResult = await uploadUserAvatar(supabase, childUserId, avatarField);
+
+    if (!uploadResult.success || !uploadResult.publicUrl) {
+      return { success: false, error: uploadResult.error || "Failed to upload child avatar." };
     }
 
-    const fileNameParts = avatarField.name.split(".");
-    const fileExtension = fileNameParts.length > 1 ? fileNameParts.pop() : "png";
-    const filePath = `avatars/${childUserId}/${Date.now()}.${fileExtension || "png"}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, avatarField, {
-        contentType: avatarField.type,
-        upsert: true,
-      });
-
-    if (uploadError) {
-      return { success: false, error: uploadError.message };
-    }
-
-    const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    const avatarUrl = publicUrlData.publicUrl;
+    const avatarUrl = uploadResult.publicUrl;
 
     // Update child profile in the profile table
     const { error: updateError } = await supabase
