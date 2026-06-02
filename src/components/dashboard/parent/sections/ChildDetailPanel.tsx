@@ -51,7 +51,7 @@ export default function ChildDetailPanel({
     const params = new URLSearchParams(window.location.search);
     params.set("subTab", subTab);
     const newUrl = `${window.location.pathname}?${params.toString()}`;
-    router.replace(newUrl);
+    router.replace(newUrl, { scroll: false });
   };
 
   const searchHistoryPagination = usePagination(searchHistory);
@@ -116,15 +116,15 @@ export default function ChildDetailPanel({
             </Avatar>
             <div>
               <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tight">
+                <h1 className="text-4xl font-black text-slate-900 dark:text-white leading-none tracking-tight">
                   {selectedChild.first_name} {selectedChild.last_name}
                 </h1>
-                <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 font-extrabold px-2.5 py-0.5 rounded-full text-[10px] shrink-0 border border-sky-100 dark:border-sky-900/30">
+                <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 font-extrabold px-3.5 py-1.5 rounded-full text-sm shrink-0 border border-sky-100 dark:border-sky-900/30">
                   Level {getLevel(selectedChild.total_experience_points ?? 0)}
                 </Badge>
               </div>
-              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-3">
-                <span className="text-sky-600 dark:text-sky-400 font-extrabold">{gradeStr}</span>
+              <p className="text-lg font-bold text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-3">
+                <span className="text-sky-600 dark:text-sky-400 font-black">{gradeStr}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
                 <span>{ageStr}</span>
               </p>
@@ -132,11 +132,11 @@ export default function ChildDetailPanel({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-white dark:bg-black/30 p-3 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 shrink-0">
-          <Award className="w-5 h-5 text-amber-500" />
+        <div className="flex items-center gap-3.5 bg-white dark:bg-black/30 p-3.5 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 shrink-0">
+          <Award className="w-6 h-6 text-amber-500" />
           <div className="text-left leading-none">
-            <span className="text-sm font-black block">{totalXP}</span>
-            <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wide">
+            <span className="text-lg sm:text-xl font-black block">{totalXP}</span>
+            <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wide">
               Total XP
             </span>
           </div>
@@ -146,86 +146,100 @@ export default function ChildDetailPanel({
       {/* Dynamic Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="flex gap-4 items-start justify-between">
-                <div className="flex gap-4 items-start">
-                  <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-900/40 border border-sky-100/30 flex items-center justify-center shrink-0">
-                    <Clock className="w-6 h-6 text-sky-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
-                      Time Spent Today
-                    </h3>
-                    <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
-                      {isLoadingChildData ? "..." : dailyTimeStr}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
-                  {isLimitEnabled ? `${usedMinutes} / ${limitMinutes} min` : "Unlimited"}
-                </span>
+          <CardContent className="p-6 flex flex-col justify-between h-full min-h-[140px]">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/40 border border-sky-100/30 flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5 text-sky-500" />
               </div>
+              <Badge
+                variant="secondary"
+                className="font-bold text-[9px] uppercase tracking-wider bg-slate-100 dark:bg-slate-800/60 text-slate-505 dark:text-slate-400 border border-slate-200/40 dark:border-slate-800/60 shrink-0"
+              >
+                {isLimitEnabled ? `${usedMinutes} / ${limitMinutes} min` : "Unlimited"}
+              </Badge>
+            </div>
 
-              {/* Visual Progress Bar (Only visible if limit is enabled) */}
-              {isLimitEnabled && (
-                <div className="space-y-1 pt-2 animate-in fade-in duration-200">
-                  <div className="h-2 w-full bg-slate-100 dark:bg-black/40 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full bg-gradient-to-r ${
-                        usagePercentage >= 90
-                          ? "from-rose-500 to-red-500"
-                          : usagePercentage >= 70
-                            ? "from-amber-500 to-orange-500"
-                            : "from-sky-400 to-indigo-500"
-                      }`}
-                      style={{
-                        width: `${isLoadingChildData ? 0 : usagePercentage}%`,
-                      }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[9px] font-bold text-slate-400">
-                    <span>{usagePercentage}% used</span>
-                    <span>{limitMinutes} min limit</span>
-                  </div>
+            <div className="space-y-1.5">
+              <h3 className="text-slate-400 dark:text-slate-500 font-bold text-xs sm:text-sm uppercase tracking-wider">
+                Time Spent Today
+              </h3>
+              <p className="text-4xl font-black text-slate-900 dark:text-white leading-none whitespace-nowrap">
+                {isLoadingChildData ? "..." : dailyTimeStr}
+              </p>
+            </div>
+
+            {/* Visual Progress Bar (Only visible if limit is enabled) */}
+            {isLimitEnabled && (
+              <div className="space-y-1 pt-3 animate-in fade-in duration-200 w-full">
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-black/40 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full bg-gradient-to-r ${
+                      usagePercentage >= 90
+                        ? "from-rose-500 to-red-500"
+                        : usagePercentage >= 70
+                          ? "from-amber-500 to-orange-500"
+                          : "from-sky-400 to-indigo-500"
+                    }`}
+                    style={{
+                      width: `${isLoadingChildData ? 0 : usagePercentage}%`,
+                    }}
+                  />
                 </div>
-              )}
+                <div className="flex justify-between text-[9px] font-bold text-slate-400">
+                  <span>{usagePercentage}% used</span>
+                  <span>{limitMinutes} min limit</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6 flex flex-col justify-between h-full min-h-[140px]">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/40 border border-sky-100/30 flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5 text-sky-500 animate-pulse" />
+              </div>
+              <Badge
+                variant="secondary"
+                className="font-bold text-[9px] uppercase tracking-wider bg-slate-100 dark:bg-slate-800/60 text-slate-505 dark:text-slate-400 border border-slate-200/40 dark:border-slate-800/60 shrink-0"
+              >
+                7 Days Active
+              </Badge>
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-slate-400 dark:text-slate-500 font-bold text-xs sm:text-sm uppercase tracking-wider">
+                Weekly Spent Time
+              </h3>
+              <p className="text-4xl font-black text-slate-900 dark:text-white leading-none whitespace-nowrap">
+                {isLoadingChildData ? "..." : weeklyTimeStr}
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex gap-6 items-start">
-              <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-900/40 border border-sky-100/30 flex items-center justify-center shrink-0">
-                <Clock className="w-6 h-6 text-sky-500 animate-pulse" />
+          <CardContent className="p-6 flex flex-col justify-between h-full min-h-[140px]">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100/30 flex items-center justify-center shrink-0">
+                <BookOpen className="w-5 h-5 text-emerald-500" />
               </div>
-              <div>
-                <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
-                  Weekly Spent Time
-                </h3>
-                <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
-                  {isLoadingChildData ? "..." : weeklyTimeStr}
-                </p>
-              </div>
+              <Badge
+                variant="secondary"
+                className="font-bold text-[9px] uppercase tracking-wider bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100/25 shrink-0"
+              >
+                Total Completed
+              </Badge>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex gap-6 items-start">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100/30 flex items-center justify-center shrink-0">
-                <BookOpen className="w-6 h-6 text-emerald-500" />
-              </div>
-              <div>
-                <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
-                  Completed Activities
-                </h3>
-                <p className="text-3xl font-black text-slate-900 dark:text-white leading-none mt-1">
-                  {isLoadingChildData ? "..." : totalCompleted}
-                </p>
-              </div>
+            <div className="space-y-1.5">
+              <h3 className="text-slate-400 dark:text-slate-500 font-bold text-xs sm:text-sm uppercase tracking-wider">
+                Completed Activities
+              </h3>
+              <p className="text-4xl font-black text-slate-900 dark:text-white leading-none whitespace-nowrap">
+                {isLoadingChildData ? "..." : totalCompleted}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -240,24 +254,30 @@ export default function ChildDetailPanel({
         }}
         className="w-full"
       >
-        <TabsList className="flex gap-1.5 py-6 px-1 bg-slate-100 dark:bg-black/40 rounded-2xl border border-slate-200/30 dark:border-slate-800/60 max-w-2xl mx-auto w-full h-auto">
+        <TabsList className="flex flex-row flex-nowrap overflow-x-auto no-scrollbar justify-start sm:justify-center gap-2 sm:gap-1.5 py-1.5 sm:py-4 px-1.5 bg-slate-100 dark:bg-black/40 rounded-full border border-slate-200/30 dark:border-slate-800/60 max-w-2xl mx-auto w-full! h-auto! group-data-horizontal/tabs:h-auto!">
           <TabsTrigger
             value="history"
-            className="flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer data-active:bg-white data-active:dark:bg-slate-900 data-active:text-sky-600 data-active:dark:text-white data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-black/20 border-none"
+            className="shrink-0 sm:flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer border-none bg-transparent data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap"
           >
-            <Search className="w-4.5 h-4.5" /> AI Search History
+            <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="hidden sm:inline">AI Search History</span>
+            <span className="inline sm:hidden">Search</span>
           </TabsTrigger>
           <TabsTrigger
             value="activities"
-            className="flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer data-active:bg-white data-active:dark:bg-slate-900 data-active:text-sky-600 data-active:dark:text-white data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-black/20 border-none"
+            className="shrink-0 sm:flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer border-none bg-transparent data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap"
           >
-            <BookOpen className="w-4.5 h-4.5" /> Completed Activities & Rewards
+            <BookOpen className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="hidden sm:inline">Completed Activities & Rewards</span>
+            <span className="inline sm:hidden">Activities</span>
           </TabsTrigger>
           <TabsTrigger
             value="progress"
-            className="flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer data-active:bg-white data-active:dark:bg-slate-900 data-active:text-sky-600 data-active:dark:text-white data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-black/20 border-none"
+            className="shrink-0 sm:flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer border-none bg-transparent data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap"
           >
-            <School className="w-4.5 h-4.5" /> Classroom & Progress
+            <School className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="hidden sm:inline">Classroom & Progress</span>
+            <span className="inline sm:hidden">Classroom</span>
           </TabsTrigger>
         </TabsList>
 
@@ -307,7 +327,7 @@ export default function ChildDetailPanel({
                           <Skeleton className="w-11 h-11 bg-slate-200 dark:bg-slate-800 rounded-xl shrink-0" />
                           <div className="space-y-2 flex-1">
                             <Skeleton className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                            <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                            <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
                           </div>
                         </div>
                         <div className="space-y-2 items-end flex flex-col shrink-0">
@@ -341,10 +361,10 @@ export default function ChildDetailPanel({
           <>
             {/* SUB TAB 1: AI Search History */}
             <TabsContent value="history" className="mt-6">
-              <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-8 shadow-sm">
+              <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-4 sm:p-8 shadow-sm">
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-4">
+                    <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
                       <span className="text-sky-500">✨</span> Curious AI Topic Searches
                     </h3>
                     <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 font-extrabold px-3 py-1 rounded-full text-xs shrink-0 border border-sky-100/50">
@@ -368,33 +388,35 @@ export default function ChildDetailPanel({
                       {searchHistoryPagination.currentItems.map((session, index) => (
                         <div
                           key={session.id || index}
-                          className="p-5 hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors flex items-center justify-between gap-4"
+                          className="p-4 sm:p-5 hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4"
                         >
-                          <div className="flex items-center gap-4 min-w-0">
-                            <div className="p-3 bg-sky-50 dark:bg-sky-950/20 rounded-xl text-sky-500 border border-sky-100/50 dark:border-sky-900/20 shrink-0">
-                              <Search className="w-5 h-5" />
+                          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <div className="p-2.5 sm:p-3 bg-sky-50 dark:bg-sky-950/20 rounded-xl text-sky-500 border border-sky-100/50 dark:border-sky-900/20 shrink-0">
+                              <Search className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-base font-bold text-slate-850 dark:text-slate-200 truncate leading-snug">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm sm:text-base font-bold text-slate-850 dark:text-slate-200 truncate leading-snug">
                                 {session.title || "Curiosity Search Session"}
                               </p>
-                              <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5 mt-1">
-                                <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                {session.created_at
-                                  ? new Date(session.created_at).toLocaleDateString("en-US", {
-                                      month: "short",
-                                      day: "numeric",
-                                      year: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })
-                                  : "Recent Topic"}
+                              <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5 mt-1.5">
+                                <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate">
+                                  {session.created_at
+                                    ? new Date(session.created_at).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : "Recent Topic"}
+                                </span>
                               </span>
                             </div>
                           </div>
                           <Button
                             onClick={() => router.push(`/chat/parent?id=${session.id}`)}
-                            className="rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-10 px-5 text-xs flex items-center gap-1.5 cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600 transition-all shadow-sm shrink-0"
+                            className="w-full sm:w-auto rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-9 sm:h-10 px-4 sm:px-5 text-xs flex items-center justify-center gap-1.5 cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600 transition-all shadow-sm shrink-0"
                           >
                             Open in Chat
                           </Button>
@@ -476,35 +498,46 @@ export default function ChildDetailPanel({
                         return (
                           <Card
                             key={act.id || index}
-                            className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white/40 dark:bg-black/20 hover:bg-slate-50/40 dark:hover:bg-black/40 transition-colors overflow-hidden"
+                            className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white/40 dark:bg-black/20 hover:bg-slate-50/40 dark:hover:bg-black/40 transition-colors overflow-hidden flex flex-col h-full justify-between"
                           >
-                            <CardContent className="p-5 flex items-center justify-between gap-4">
-                              <div className="flex items-center gap-3.5 min-w-0">
-                                <div
-                                  className={`p-3 rounded-xl shrink-0 ${
-                                    isHigh
-                                      ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 border border-emerald-100/30"
-                                      : "bg-amber-50 dark:bg-amber-900/20 text-amber-500 border border-amber-100/30"
-                                  }`}
-                                >
-                                  <Award className="w-5 h-5" />
+                            <CardContent className="p-5 flex flex-col h-full justify-between gap-4">
+                              <div>
+                                <div className="flex justify-between items-center mb-3">
+                                  <div
+                                    className={`p-2.5 rounded-xl shrink-0 ${
+                                      isHigh
+                                        ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 border border-emerald-100/30"
+                                        : "bg-amber-50 dark:bg-amber-900/20 text-amber-500 border border-amber-100/30"
+                                    }`}
+                                  >
+                                    <Award className="w-5 h-5" />
+                                  </div>
+                                  <Badge className="bg-sky-50 hover:bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 font-extrabold px-2 py-0.5 rounded text-[10px] border border-sky-100/50 dark:border-sky-900/30 shrink-0">
+                                    +{act.rewards_amount || 20} XP
+                                  </Badge>
                                 </div>
-                                <div className="min-w-0">
-                                  <p className="text-sm font-extrabold text-slate-850 dark:text-slate-200 truncate leading-snug">
+
+                                <div className="space-y-1 mb-3">
+                                  <h4 className="text-sm font-extrabold text-slate-850 dark:text-slate-200 line-clamp-1 leading-snug">
                                     {act.activity_settings?.title ||
                                       (act.description
                                         ? act.description.split(" (Score:")[0]
                                         : "Completed Activity")}
-                                  </p>
+                                  </h4>
                                   {act.description &&
                                     act.description !==
                                       (act.activity_settings?.title ||
                                         act.description.split(" (Score:")[0]) && (
-                                      <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                                      <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 line-clamp-2">
                                         {act.description}
                                       </p>
                                     )}
-                                  <span className="text-[10px] font-semibold text-slate-450 dark:text-slate-500 flex items-center gap-1.5 mt-1.5">
+                                </div>
+                              </div>
+
+                              <div className="space-y-3 mt-auto">
+                                <div className="flex items-center justify-between text-[10px] font-semibold text-slate-450 dark:text-slate-500">
+                                  <span className="flex items-center gap-1">
                                     <Clock className="w-3.5 h-3.5 shrink-0" />
                                     {act.created_at
                                       ? new Date(act.created_at).toLocaleDateString("en-US", {
@@ -516,37 +549,37 @@ export default function ChildDetailPanel({
                                       : "Recently"}
                                   </span>
                                 </div>
-                              </div>
 
-                              <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
-                                <Badge className="bg-sky-50 hover:bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 font-extrabold px-2 py-0.5 rounded text-[10px] border border-sky-100/50 dark:border-sky-900/30">
-                                  +{act.rewards_amount || 20} XP
-                                </Badge>
-                                {act.score !== null && act.score !== undefined ? (
-                                  <span
-                                    className={`text-xs font-black ${
-                                      isHigh
-                                        ? "text-emerald-600 dark:text-emerald-400"
-                                        : "text-amber-500"
-                                    }`}
-                                  >
-                                    Score: {act.score}%
+                                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/50 dark:bg-black/40 border border-slate-100/60 dark:border-slate-800/80">
+                                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                                    Performance Score
                                   </span>
-                                ) : scoreMatch ? (
-                                  <span
-                                    className={`text-xs font-black ${
-                                      isHigh
-                                        ? "text-emerald-600 dark:text-emerald-400"
-                                        : "text-amber-500"
-                                    }`}
-                                  >
-                                    Score: {scoreMatch[1]}%
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">
-                                    Completed
-                                  </span>
-                                )}
+                                  {act.score !== null && act.score !== undefined ? (
+                                    <span
+                                      className={`text-xs font-black ${
+                                        isHigh
+                                          ? "text-emerald-600 dark:text-emerald-400"
+                                          : "text-amber-500"
+                                      }`}
+                                    >
+                                      {act.score}%
+                                    </span>
+                                  ) : scoreMatch ? (
+                                    <span
+                                      className={`text-xs font-black ${
+                                        isHigh
+                                          ? "text-emerald-600 dark:text-emerald-400"
+                                          : "text-amber-500"
+                                      }`}
+                                    >
+                                      {scoreMatch[1]}%
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">
+                                      Completed
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </CardContent>
                           </Card>

@@ -7,25 +7,6 @@ BEGIN;
 DROP FUNCTION IF EXISTS public.save_kid_activity_progress(uuid, varchar, varchar, varchar);
 DROP FUNCTION IF EXISTS public.save_kid_activity_progress(uuid, varchar, varchar, varchar, varchar);
 
--- 2. Backfill any existing rewards where source_id is null to preserve historical streaks
-WITH mapping AS (
-  SELECT id, slug FROM public.activity_settings
-)
-UPDATE public.rewards r
-SET 
-  source_id = m.id,
-  source_type = m.slug
-FROM mapping m
-WHERE 
-  r.source_id IS NULL 
-  AND (
-    r.source_type = m.slug 
-    OR (r.description ILIKE '%' || m.slug || '%')
-    OR (r.description ILIKE '%Quiz%' AND m.slug = 'quizzes')
-    OR (r.description ILIKE '%Jigsaw%' AND m.slug = 'jigsaw-puzzle')
-    OR (r.description ILIKE '%Memory Match%' AND m.slug = 'memory-match')
-  );
-
 -- 3. Create the unified, timezone-aware, relational save_kid_activity_progress RPC
 CREATE OR REPLACE FUNCTION public.save_kid_activity_progress(
   p_user_id uuid,
@@ -36,6 +17,7 @@ CREATE OR REPLACE FUNCTION public.save_kid_activity_progress(
 ) RETURNS json AS $$
 DECLARE
   v_activity_id uuid;
+  v_activity_title varchar;
   v_xp_reward int;
   v_actual_xp int;
   v_score int;
@@ -48,13 +30,32 @@ DECLARE
   v_description varchar;
   v_response json;
 BEGIN
-  -- 1. Get base XP reward and ID from activity_settings
-  SELECT id, xp_reward INTO v_activity_id, v_xp_reward 
+  -- 1. Get base XP reward, ID, and Title from activity_settings dynamically
+  SELECT id, xp_reward, title INTO v_activity_id, v_xp_reward, v_activity_title 
   FROM public.activity_settings 
-  WHERE slug = p_activity_slug;
+  WHERE slug = p_activity_slug
+     OR p_activity_slug ILIKE '%' || slug || '%'
+     OR slug ILIKE '%' || p_activity_slug || '%'
+     OR EXISTS (
+       SELECT 1 
+       FROM regexp_split_to_table(p_activity_slug, '-') as input_word
+       WHERE length(input_word) > 2
+         AND input_word NOT IN ('dynamic', 'ai', 'play', 'game', 'quest', 'challenge', 'challenges', 'puzzle', 'puzzles', 'lab', 'mixer', 'master')
+         AND (
+           slug ILIKE '%' || input_word || '%'
+           OR input_word ILIKE '%' || slug || '%'
+           OR slug ILIKE '%' || substring(input_word from 1 for 4) || '%'
+         )
+     )
+  ORDER BY (slug = p_activity_slug) DESC, id ASC
+  LIMIT 1;
   
   IF v_xp_reward IS NULL THEN
     v_xp_reward := 100; -- Default fallback
+  END IF;
+
+  IF v_activity_title IS NULL THEN
+    v_activity_title := coalesce(p_activity_title, p_activity_slug);
   END IF;
 
   -- 2. Parse score percentage from the string (e.g. "80%" -> 80)
@@ -144,7 +145,7 @@ BEGIN
     p_user_id,
     v_actual_xp,
     v_activity_id,
-    p_activity_slug,
+    v_activity_title,
     v_description,
     v_score
   );
