@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { uploadUserAvatar } from "@/lib/storage";
 
 export type KidOnboardingState = {
   error: string | null;
@@ -32,10 +33,6 @@ export async function uploadAvatar(formData: FormData) {
     throw new Error("Please select an avatar image.");
   }
 
-  if (!avatarField.type.startsWith("image/")) {
-    throw new Error("Only image files are allowed.");
-  }
-
   const supabase = await createClient();
 
   const {
@@ -47,23 +44,14 @@ export async function uploadAvatar(formData: FormData) {
     throw new Error("Unauthorized.");
   }
 
-  const fileNameParts = avatarField.name.split(".");
-  const fileExtension = fileNameParts.length > 1 ? fileNameParts.pop() : "png";
-  const filePath = `avatars/${user.id}/${Date.now()}.${fileExtension || "png"}`;
+  // Use the centralized storage layer helper
+  const uploadResult = await uploadUserAvatar(supabase, user.id, avatarField);
 
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(filePath, avatarField, {
-      contentType: avatarField.type,
-      upsert: true,
-    });
-
-  if (uploadError) {
-    throw new Error(uploadError.message);
+  if (!uploadResult.success || !uploadResult.publicUrl) {
+    throw new Error(uploadResult.error || "Failed to upload avatar.");
   }
 
-  const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-  const avatarUrl = publicUrlData.publicUrl;
+  const avatarUrl = uploadResult.publicUrl;
 
   const { error: updateError } = await supabase
     .from("profile")

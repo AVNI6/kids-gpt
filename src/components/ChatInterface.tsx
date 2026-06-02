@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { calculateAge } from "@/utils/childAge";
 import ChatFooter from "./chat-interface/ChatFooter";
 import ChatMessageList from "./chat-interface/ChatMessageList";
 import ChatSuggestions from "./chat-interface/ChatSuggestions";
@@ -40,7 +41,12 @@ export default function ChatInterface() {
   }, [currentSessionId]);
 
   const { toggleSidebar, openMobile } = useSidebar();
-  const { user, isUserLoggedIn, userRole, isLoading: isLoadingAuth } = useAuth();
+  const { user, userProfile, isUserLoggedIn, userRole, isLoading: isLoadingAuth } = useAuth();
+
+  const childAge =
+    userRole === "kid" && userProfile?.date_of_birth
+      ? (calculateAge(userProfile.date_of_birth) ?? undefined)
+      : undefined;
 
   const { isSessionLoading } = useChatMessages({
     currentSessionId,
@@ -67,6 +73,7 @@ export default function ChatInterface() {
     isUserLoggedIn,
     isLoadingAuth,
     user,
+    age: childAge,
     userRole,
     input,
     image,

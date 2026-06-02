@@ -107,9 +107,7 @@ export default function ParentOnboardingPage() {
         {/* Right Side: Onboarding Card */}
         <Card className="rounded-[40px] border-2 border-border/50 bg-card/90 text-card-foreground p-8 shadow-[0_40px_80px_-24px_rgba(0,101,141,0.15)] backdrop-blur-xl sm:p-10 dark:border-slate-800">
           <div className="mb-8 text-center lg:text-left">
-            <h2 className="text-4xl font-black text-foreground tracking-tight sm:text-5xl">
-              Parent Profile
-            </h2>
+            <h2 className="text-4xl font-black text-foreground tracking-tight">Parent Profile</h2>
             <p className="mt-2 text-lg font-medium text-muted-foreground">
               Start your family adventure! 👨‍👩‍👧‍👦
             </p>

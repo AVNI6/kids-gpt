@@ -82,6 +82,20 @@ export interface ChatMessage {
   generatedImage?: string;
 }
 
+export interface LearnerContext {
+  age?: number;
+  grade?: string | number;
+  subject?: string;
+  currentTopic?: string;
+  learningGoal?: string;
+}
+
+export interface ActivityContext {
+  activityName?: string;
+  currentStep?: string;
+  objective?: string;
+}
+
 export interface ChatRequestBody {
   message: string;
   image?: string;
@@ -89,6 +103,9 @@ export interface ChatRequestBody {
   role?: UserRole;
   customTask?: "worksheet" | "storytelling" | "coding" | "socratic";
   responseStyle?: "concise" | "detailed" | "interactive" | "step_by_step";
+  age?: number;
+  learnerContext?: LearnerContext;
+  activityContext?: ActivityContext;
 }
 
 export interface GeminiPart {

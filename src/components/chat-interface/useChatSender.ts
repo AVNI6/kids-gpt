@@ -29,6 +29,7 @@ interface UseChatSenderArgs {
   isUserLoggedIn: boolean;
   isLoadingAuth: boolean;
   user: User | null;
+  age?: number;
   userRole: UserRole | null;
   input: string;
   image: string | null;
@@ -47,6 +48,7 @@ export function useChatSender({
   isUserLoggedIn,
   isLoadingAuth,
   user,
+  age,
   userRole,
   input,
   image,
@@ -269,6 +271,7 @@ export function useChatSender({
             image: currentImage,
             history: chatHistory,
             role: userRole || "kid",
+            age: age,
           };
 
       const apiStartTime = Date.now();
@@ -710,6 +713,7 @@ export function useChatSender({
     fileName,
     currentSessionId,
     user,
+    age,
     userRole,
     isUserLoggedIn,
     messages,

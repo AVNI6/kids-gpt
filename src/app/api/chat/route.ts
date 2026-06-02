@@ -47,6 +47,9 @@ export async function POST(req: NextRequest) {
       role = "kid",
       customTask,
       responseStyle,
+      age,
+      learnerContext,
+      activityContext,
     }: ChatRequestBody = await req.json();
 
     if (isImageGenerationRequest(message || "")) {
@@ -100,6 +103,9 @@ export async function POST(req: NextRequest) {
       mode,
       customTask,
       responseStyle,
+      age,
+      learnerContext,
+      activityContext,
     });
 
     // Log structured prompt metrics
