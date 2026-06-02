@@ -66,7 +66,7 @@ export default function ClassroomOverview() {
           </div>
         </div>
 
-        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 shadow-sm mb-6 flex-1 dark:bg-slate-950 dark:border-slate-800/80 dark:shadow-none">
+        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 shadow-sm mb-6 dark:bg-slate-950 dark:border-slate-800/80 dark:shadow-none">
           <div className="flex items-center gap-2 mb-2 text-rose-500 font-bold text-xs uppercase tracking-wider dark:text-rose-400">
             <Megaphone className="w-4 h-4" />
             Latest Announcement
@@ -76,7 +76,7 @@ export default function ClassroomOverview() {
           </p>
         </div>
 
-        <div className="flex gap-2 mt-auto shrink-0">
+        <div className="flex gap-2 shrink-0">
           <Button className="flex-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold h-10 shadow-sm dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950">
             View Class
           </Button>

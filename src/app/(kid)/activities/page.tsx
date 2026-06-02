@@ -61,7 +61,7 @@ export default function ActivitiesPage() {
             >
               <ArrowLeft className="w-6 h-6" />
             </Button>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-foreground">
               Learning Activities
             </h1>
           </div>

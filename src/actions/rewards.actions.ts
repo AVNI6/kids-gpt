@@ -430,11 +430,36 @@ export async function processActivityCompletion({
 
     // 2. Client-side Fallback
     let actualXp = 100; // generic fallback default
-    const { data: activitySetting } = await supabase
+    const { data: allSettings } = await supabase
       .from("activity_settings")
-      .select("id, slug, title, xp_reward")
-      .eq("slug", activitySlug)
-      .maybeSingle();
+      .select("id, slug, title, xp_reward");
+
+    const settingsList = allSettings ?? [];
+    const activitySetting = settingsList.find((s) => {
+      const slug = s.slug.toLowerCase();
+      const input = activitySlug.toLowerCase();
+      if (slug === input || input.includes(slug) || slug.includes(input)) {
+        return true;
+      }
+      const ignoreWords = [
+        "dynamic",
+        "ai",
+        "play",
+        "game",
+        "quest",
+        "challenge",
+        "challenges",
+        "puzzle",
+        "puzzles",
+        "lab",
+        "mixer",
+        "master",
+      ];
+      const inputWords = input.split("-").filter((w) => w.length > 2 && !ignoreWords.includes(w));
+      return inputWords.some(
+        (word) => slug.includes(word) || word.includes(slug) || slug.includes(word.substring(0, 4))
+      );
+    });
 
     if (activitySetting?.xp_reward) {
       actualXp = activitySetting.xp_reward;

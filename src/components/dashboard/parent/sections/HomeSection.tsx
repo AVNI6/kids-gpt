@@ -292,16 +292,8 @@ export default function HomeSection() {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-350 bg-sky-50/50 dark:bg-sky-950/20 p-4 rounded-2xl border border-sky-100/60 dark:border-sky-900/20 leading-relaxed">
-                  Your family dashboard aggregates learning habits across all linked children. Use
-                  the &quot;My Children&quot; tab to monitor specific histories, or head to
-                  &quot;Learning Progress&quot; for subject mastery details.
-                </p>
-
                 <div className="space-y-3">
-                  <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                    Active Streaks & Leader
-                  </h4>
+                  <p className="text-sm font-semibold text-slate-500">This Week&apos;s Highlight</p>
                   {linkedChildren.map((child) => {
                     const childData = cache[child.user_id];
                     const accuracy = childData?.details?.quiz_accuracy ?? 0;
@@ -336,6 +328,11 @@ export default function HomeSection() {
                     );
                   })}
                 </div>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-350 bg-sky-50/50 dark:bg-sky-950/20 p-4 rounded-2xl border border-sky-100/60 dark:border-sky-900/20 leading-relaxed">
+                  Your family dashboard aggregates learning habits across all linked children. Use
+                  the &quot;My Children&quot; tab to monitor specific histories, or head to
+                  &quot;Learning Progress&quot; for subject mastery details.
+                </p>
               </div>
             )}
           </div>

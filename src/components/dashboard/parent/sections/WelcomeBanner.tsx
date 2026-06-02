@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Users, Award } from "lucide-react";
 import { getSafeXP } from "@/hooks/useChildXP";
 import { getMaxStreak } from "@/hooks/useChildStreak";
-import StreakDisplay from "@/components/dashboard/StreakDisplay";
 import type {
   DashboardUserProfile,
   LinkedChildProfile,
@@ -136,7 +135,6 @@ export default function WelcomeBanner({
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300">
                 <Award className="w-3.5 h-3.5" /> {totalXP} Family XP
               </span>
-              <StreakDisplay streak={maxStreak} variant="badge" />
               <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider pt-1">
                 {linkedChildren.length === 1
                   ? "1 Linked Explorer"
