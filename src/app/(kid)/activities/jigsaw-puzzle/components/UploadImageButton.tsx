@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import { Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/shared/ui/button";
 import { validateImageFile } from "@/lib/puzzle/validators";
 import { toast } from "sonner";
 

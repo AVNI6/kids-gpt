@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { ArrowLeft, MessageSquare, Users, Trophy, Sparkles } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/ui/card";
+import { Button } from "@/components/shared/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { APP_ROUTES } from "@/constant/AppRoutes";
+} from "@/components/shared/ui/accordion";
+import { APP_ROUTES } from "@/lib/constants/common";
 
 export default function StudentHelpPage() {
   return (

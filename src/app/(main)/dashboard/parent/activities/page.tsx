@@ -1,7 +1,7 @@
 "use client";
 
-import ActivitiesGrid from "@/components/dashboard/parent/sections/ActivitiesGrid";
-import ChildSelectorTabs from "@/components/dashboard/parent/ChildSelectorTabs";
+import ActivitiesGrid from "@/components/parent/dashboard/ActivitiesGrid";
+import ChildSelectorTabs from "@/components/parent/dashboard/ChildSelectorTabs";
 import { useDashboard } from "@/context/parent-dashboard/DashboardContext";
 
 export default function ActivitiesPage() {

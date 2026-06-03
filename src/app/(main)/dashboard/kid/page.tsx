@@ -1,20 +1,20 @@
 import { Suspense } from "react";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/shared/ui/card";
+import { Skeleton } from "@/components/shared/ui/skeleton";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
-import { getKidComprehensiveDetails } from "@/actions/dashboard.actions";
+import { getKidComprehensiveDetails } from "@/lib/services/kid/dashboard.actions";
 
-import KidProfileManager from "@/components/dashboard/kid/KidProfileManager";
-import KidStreakBanner from "@/components/dashboard/kid/KidStreakBanner";
-import HomeworkPendingCard from "@/components/dashboard/kid/HomeworkPendingCard";
+import KidProfileManager from "@/components/kid/profile/KidProfileManager";
+import KidStreakBanner from "@/components/kid/dashboard/KidStreakBanner";
+import HomeworkPendingCard from "@/components/kid/dashboard/HomeworkPendingCard";
 
 import {
   GameHistory,
   GameHistorySkeleton,
   ClassroomOverview,
   ClassroomOverviewSkeleton,
-} from "@/components/dashboard/kid/sections";
+} from "@/components/kid/dashboard";
 
 function KidStreakBannerSkeleton() {
   return (

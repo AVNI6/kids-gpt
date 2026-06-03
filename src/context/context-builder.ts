@@ -1,4 +1,4 @@
-// import { GeminiContent, ChatMessage } from "@/types/chat.types";
+// import { GeminiContent, ChatMessage } from "@/types/common";
 
 // const MAX_RECENT_MESSAGES = 12;
 

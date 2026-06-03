@@ -13,14 +13,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
-import { APP_ROUTES } from "@/constant/AppRoutes";
-import { saveKidActivityProgress } from "@/actions/dashboard.actions";
-import { getActivityXp } from "@/actions/activity.actions";
+import { Button } from "@/components/shared/ui/button";
+import { Progress } from "@/components/shared/ui/progress";
+import { Card, CardContent } from "@/components/shared/ui/card";
+import { APP_ROUTES } from "@/lib/constants/common";
+import { saveKidActivityProgress } from "@/lib/services/kid/dashboard.actions";
+import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import { toast } from "sonner";
-import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
+import { triggerConfettiSideCannons } from "@/components/shared/ui/confetti-side-cannons";
 
 interface Flashcard {
   question: string;

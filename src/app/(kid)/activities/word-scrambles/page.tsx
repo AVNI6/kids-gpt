@@ -2,16 +2,16 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Type, Sparkles, CheckCircle2, ArrowLeft, Award, RotateCcw } from "lucide-react";
-import { getActivityXp } from "@/actions/activity.actions";
+import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
-import { APP_ROUTES } from "@/constant/AppRoutes";
+import { Button } from "@/components/shared/ui/button";
+import { Progress } from "@/components/shared/ui/progress";
+import { Card, CardContent } from "@/components/shared/ui/card";
+import { APP_ROUTES } from "@/lib/constants/common";
 import { toast } from "sonner";
-import { saveKidActivityProgress } from "@/actions/dashboard.actions";
-import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
+import { saveKidActivityProgress } from "@/lib/services/kid/dashboard.actions";
+import { triggerConfettiSideCannons } from "@/components/shared/ui/confetti-side-cannons";
 import { type WordScrambleItem } from "@/types/activities.type";
 
 interface WordScramblesPageProps {

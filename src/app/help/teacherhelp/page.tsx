@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { ArrowLeft, School, WandSparkles, LineChart, FileDown } from "lucide-react";
-import { APP_ROUTES } from "@/constant/AppRoutes";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { APP_ROUTES } from "@/lib/constants/common";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/ui/card";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/shared/ui/accordion";
 
 export default function TeacherHelpPage() {
   return (

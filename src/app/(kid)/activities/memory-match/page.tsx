@@ -15,18 +15,18 @@ import {
   Trophy,
 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Card } from "@/components/ui/card";
-import { APP_ROUTES } from "@/constant/AppRoutes";
+import { Button } from "@/components/shared/ui/button";
+import { Progress } from "@/components/shared/ui/progress";
+import { Card } from "@/components/shared/ui/card";
+import { APP_ROUTES } from "@/lib/constants/common";
 import {
   getActivityXp,
   getMemoryMatchProgress,
   saveMemoryCampaignProgress,
-} from "@/actions/activity.actions";
+} from "@/lib/services/kid/activities/activity.actions";
 import { toast } from "sonner";
-import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
-import { memoryCampaignLevels, MemoryLevel, MemoryStep } from "@/constant/MemoryCampaign";
+import { triggerConfettiSideCannons } from "@/components/shared/ui/confetti-side-cannons";
+import { memoryCampaignLevels, MemoryLevel, MemoryStep } from "@/lib/constants/kid";
 
 interface MemoryCard {
   id: number;

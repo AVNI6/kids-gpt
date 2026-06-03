@@ -8,8 +8,8 @@ import { ArrowRight, Lightbulb, HelpCircle, Shield, Lock } from "lucide-react";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 import { createClient } from "@/lib/supabase/client";
-import { APP_ROUTES } from "@/constant/AppRoutes";
-import Logo from "@/components/common/logo/Logo";
+import { APP_ROUTES } from "@/lib/constants/common";
+import Logo from "@/components/shared/ui/Logo";
 
 const supabase = createClient();
 

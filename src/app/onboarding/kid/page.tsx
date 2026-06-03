@@ -9,13 +9,16 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
 
-import { submitKidOnboarding, type KidOnboardingState } from "@/actions/profile.actions";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { AvatarUpload } from "@/components/ui/avatar-upload";
-import Logo from "@/components/common/logo/Logo";
+import {
+  submitKidOnboarding,
+  type KidOnboardingState,
+} from "@/lib/services/shared/profile.actions";
+import { Button } from "@/components/shared/ui/button";
+import { Card, CardContent } from "@/components/shared/ui/card";
+import { Input } from "@/components/shared/ui/input";
+import { Label } from "@/components/shared/ui/label";
+import { AvatarUpload } from "@/components/shared/ui/avatar-upload";
+import Logo from "@/components/shared/ui/Logo";
 
 const initialKidState: KidOnboardingState = { error: null };
 

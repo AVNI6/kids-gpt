@@ -1,7 +1,7 @@
 "use client";
 
-import LearningProgress from "@/components/dashboard/parent/sections/LearningProgress";
-import ChildSelectorTabs from "@/components/dashboard/parent/ChildSelectorTabs";
+import LearningProgress from "@/components/parent/dashboard/LearningProgress";
+import ChildSelectorTabs from "@/components/parent/dashboard/ChildSelectorTabs";
 import { useDashboard } from "@/context/parent-dashboard/DashboardContext";
 
 export default function ProgressPage() {

@@ -1,11 +1,11 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import Sidebar from "@/components/Sidebar";
-import { SidebarProvider, SidebarInset, useSidebar } from "@/components/ui/sidebar";
+import Sidebar from "@/components/shared/sidebar/Sidebar";
+import { SidebarProvider, SidebarInset, useSidebar } from "@/components/shared/ui/sidebar";
 import { Menu } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import ScreenTimeTracker from "@/components/screentime/ScreenTimeTracker";
+import ScreenTimeTracker from "@/components/shared/screentime/ScreenTimeTracker";
 
 function GlobalMobileTrigger() {
   const { toggleSidebar, openMobile } = useSidebar();

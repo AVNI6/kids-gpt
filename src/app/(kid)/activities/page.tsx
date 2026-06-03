@@ -3,14 +3,17 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Star, Timer, Zap, ArrowLeft } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/shared/ui/card";
+import { Button } from "@/components/shared/ui/button";
+import { Badge } from "@/components/shared/ui/badge";
 import { kidActivities, activityButtonStyles, activityColorStyles } from "@/lib/kid-activities";
-import { useSidebar } from "@/components/ui/sidebar";
-import { getActivitySettings, type ActivityDbSettings } from "@/actions/activity.actions";
+import { useSidebar } from "@/components/shared/ui/sidebar";
+import {
+  getActivitySettings,
+  type ActivityDbSettings,
+} from "@/lib/services/kid/activities/activity.actions";
 import { type ActivitySlug } from "@/types/activities.type";
-import ActivityTopicModal from "@/components/ActivityTopicModal";
+import ActivityTopicModal from "@/components/kid/activities/ActivityTopicModal";
 
 export default function ActivitiesPage() {
   const router = useRouter();
@@ -21,7 +24,7 @@ export default function ActivitiesPage() {
   const isSidebarExpanded = state === "expanded" && !isMobile;
 
   useEffect(() => {
-    getActivitySettings().then((data) => {
+    getActivitySettings().then((data: Record<string, ActivityDbSettings>) => {
       setActivitySettings(data);
     });
   }, []);

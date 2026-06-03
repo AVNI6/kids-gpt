@@ -1,4 +1,4 @@
-import { ChatRequestBody } from "@/types/chat.types";
+import { ChatRequestBody } from "@/types/common";
 import { ChatMode } from "../prompts";
 
 export function extractUserQuery(message: string): string {

@@ -4,7 +4,8 @@ import type {
   CacheData,
   ParentActivityItem,
   SearchHistoryItem,
-} from "@/types/parent-dashboard/dashboard.types";
+  LinkedChildProfile,
+} from "@/types/parent";
 import {
   getChildAiInsights,
   getChildDetails,
@@ -13,10 +14,10 @@ import {
   getLinkedChildren,
   getParentActivities,
   getParentSearchHistory,
-} from "@/actions/parent-dashboard.actions";
-import { getDailyScreenTime } from "@/actions/screentime.actions";
+} from "@/lib/services/parent/parent-dashboard.actions";
+import { getDailyScreenTime } from "@/lib/services/shared/screentime.actions";
 import { DashboardProvider } from "@/context/parent-dashboard/DashboardContext";
-import ParentTopNav from "@/components/dashboard/parent/ParentTopNav";
+import ParentTopNav from "@/components/parent/dashboard/ParentTopNav";
 
 export default async function ParentDashboardLayout({ children }: { children: React.ReactNode }) {
   // 1. Verify dashboard access
@@ -41,7 +42,7 @@ export default async function ParentDashboardLayout({ children }: { children: Re
   if (linkedChildren.length > 0) {
     try {
       await Promise.all(
-        linkedChildren.map(async (child) => {
+        linkedChildren.map(async (child: LinkedChildProfile) => {
           const childId = child.user_id;
           try {
             const [detailsData, safetyData, historyData, activitiesData, screenTimeData] =

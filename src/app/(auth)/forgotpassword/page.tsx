@@ -5,9 +5,9 @@ import { Mail, ArrowRight, Lightbulb, ArrowLeft, HelpCircle, Shield } from "luci
 import { createClient } from "@/lib/supabase/client";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { APP_ROUTES } from "@/constant/AppRoutes";
+import { APP_ROUTES } from "@/lib/constants/common";
 import { useState } from "react";
-import Logo from "@/components/common/logo/Logo";
+import Logo from "@/components/shared/ui/Logo";
 
 const supabase = createClient();
 export default function ForgotPasswordPage() {

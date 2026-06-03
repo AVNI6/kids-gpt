@@ -4,11 +4,11 @@ import { useMatchGame } from "./hooks/useMatchGame";
 import { MatchBoard } from "./components/MatchBoard";
 import { ScoreCard } from "./components/ScoreCard";
 import { MatchItem } from "./types";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/shared/ui/button";
+import { Progress } from "@/components/shared/ui/progress";
 import { ArrowLeft, RotateCcw, HelpCircle } from "lucide-react";
 import Link from "next/link";
-import { APP_ROUTES } from "@/constant/AppRoutes";
+import { APP_ROUTES } from "@/lib/constants/common";
 import { toast } from "sonner";
 
 interface MatchFollowingPageProps {

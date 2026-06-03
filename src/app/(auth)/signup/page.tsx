@@ -3,18 +3,18 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lightbulb, ShieldCheck, School, User, Mail, Lock, Rocket } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/shared/ui/button";
+import { Card, CardContent } from "@/components/shared/ui/card";
+import { Input } from "@/components/shared/ui/input";
+import { Checkbox } from "@/components/shared/ui/checkbox";
 
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { APP_ROUTES } from "@/constant/AppRoutes";
+import { APP_ROUTES } from "@/lib/constants/common";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
-import Logo from "@/components/common/logo/Logo";
+import Logo from "@/components/shared/ui/Logo";
 
 const supabase = createClient();
 

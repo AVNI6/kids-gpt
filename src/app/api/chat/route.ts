@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ChatRequestBody } from "@/types/chat.types";
+import { ChatRequestBody } from "@/types/common";
 import { generateAIResponse, generateAIResponseStream } from "@/lib/ai/model-orchestrator";
 import { buildSystemPrompt, ChatMode } from "@/lib/ai/prompts";
 import { buildGeminiContents } from "@/lib/ai/context-window";

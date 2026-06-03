@@ -2,7 +2,7 @@
 
 import React from "react";
 import { LayoutGrid } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/shared/ui/button";
 import { Difficulty } from "@/types/puzzle";
 import UploadImageButton from "./UploadImageButton";
 

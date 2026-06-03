@@ -3,9 +3,9 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft, Award, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { APP_ROUTES } from "@/constant/AppRoutes";
+import { Button } from "@/components/shared/ui/button";
+import { Card } from "@/components/shared/ui/card";
+import { APP_ROUTES } from "@/lib/constants/common";
 import { MatchItem, ConnectionState } from "../types";
 
 interface ScoreCardProps {

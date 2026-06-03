@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { saveKidActivityProgress } from "@/actions/dashboard.actions";
-import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
-import { getActivityXp } from "@/actions/activity.actions";
-import { APP_ROUTES } from "@/constant/AppRoutes";
+import { saveKidActivityProgress } from "@/lib/services/kid/dashboard.actions";
+import { triggerConfettiSideCannons } from "@/components/shared/ui/confetti-side-cannons";
+import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
+import { APP_ROUTES } from "@/lib/constants/common";
 import { MatchItem, ConnectionState, SelectedDot, DrawingState } from "../types";
 
 interface UseMatchGameProps {

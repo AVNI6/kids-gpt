@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { Trophy, RefreshCw, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/shared/ui/button";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -10,12 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
+} from "@/components/shared/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { claimJigsawXp } from "@/actions/activities/jigsawpuzzle.actions";
-import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
-import { APP_ROUTES } from "@/constant/AppRoutes";
+import { claimJigsawXp } from "@/lib/services/kid/activities/jigsawpuzzle.actions";
+import { triggerConfettiSideCannons } from "@/components/shared/ui/confetti-side-cannons";
+import { APP_ROUTES } from "@/lib/constants/common";
 
 interface VictoryModalProps {
   isOpen: boolean;

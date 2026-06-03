@@ -16,8 +16,8 @@ import type {
   LinkedChildProfile,
   CacheData,
   NotificationItem,
-} from "@/types/parent-dashboard/dashboard.types";
-import { getChildComprehensiveData } from "@/actions/parent-dashboard.actions";
+} from "@/types/parent";
+import { getChildComprehensiveData } from "@/lib/services/parent/parent-dashboard.actions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface DashboardContextType {

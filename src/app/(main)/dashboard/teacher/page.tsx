@@ -1,14 +1,14 @@
 import { Suspense } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/shared/ui/card";
+import { Skeleton } from "@/components/shared/ui/skeleton";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
-import { getCurrentDashboardProfile } from "@/actions/dashboard.actions";
-import TeacherStatsOverview from "@/components/dashboard/teacher/TeacherStatsOverview";
-import ActivityCompletionBoard from "@/components/dashboard/teacher/ActivityCompletionBoard";
-import RecentResourcesGrid from "@/components/dashboard/teacher/RecentResourcesGrid";
-import ClassInsightsCard from "@/components/dashboard/teacher/ClassInsightsCard";
-import ActiveStudentsList from "@/components/dashboard/teacher/ActiveStudentsList";
-import TeacherProfileManager from "@/components/dashboard/teacher/TeacherProfileManager";
+import { getCurrentDashboardProfile } from "@/lib/services/kid/dashboard.actions";
+import TeacherStatsOverview from "@/components/teacher/dashboard/TeacherStatsOverview";
+import ActivityCompletionBoard from "@/components/teacher/dashboard/ActivityCompletionBoard";
+import RecentResourcesGrid from "@/components/teacher/dashboard/RecentResourcesGrid";
+import ClassInsightsCard from "@/components/teacher/dashboard/ClassInsightsCard";
+import ActiveStudentsList from "@/components/teacher/dashboard/ActiveStudentsList";
+import TeacherProfileManager from "@/components/teacher/profile/TeacherProfileManager";
 
 function StatsOverviewSkeleton() {
   return (

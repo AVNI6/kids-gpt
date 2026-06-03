@@ -1,4 +1,4 @@
-import { UserProfile } from "@/types/auth";
+import { UserProfile } from "@/types/user";
 
 declare module "@supabase/supabase-js" {
   interface User {

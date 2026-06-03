@@ -21,9 +21,9 @@ import DifficultyControls from "./components/DifficultyControls";
 import HintOverlay from "./components/HintOverlay";
 import VictoryModal from "./components/VictoryModal";
 import ThemeSelector from "./components/ThemeSelector";
-import { Skeleton } from "@/components/ui/skeleton";
-import { APP_ROUTES } from "@/constant/AppRoutes";
-import { JIGSAW_THEMES } from "@/constant/JigsawThemes";
+import { Skeleton } from "@/components/shared/ui/skeleton";
+import { APP_ROUTES } from "@/lib/constants/common";
+import { JIGSAW_THEMES } from "@/lib/constants/JigsawThemes";
 
 const DEFAULT_IMAGE = JIGSAW_THEMES[0].url;
 

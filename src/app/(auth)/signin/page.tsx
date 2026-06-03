@@ -1,9 +1,9 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { Suspense } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/shared/ui/checkbox";
 import { createClient } from "@/lib/supabase/client";
-import GoogleSignInButton from "@/components/GoogleSignInButton";
+import GoogleSignInButton from "@/components/shared/forms/GoogleSignInButton";
 import { Mail, Lock, CheckCircle, BookOpen, Brain } from "lucide-react";
 import Link from "next/link";
 
@@ -11,10 +11,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Image from "next/image";
-import { APP_ROUTES } from "@/constant/AppRoutes";
+import { APP_ROUTES } from "@/lib/constants/common";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { useState } from "react";
-import Logo from "@/components/common/logo/Logo";
+import Logo from "@/components/shared/ui/Logo";
 
 const supabase = createClient();
 

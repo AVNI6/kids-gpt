@@ -1,7 +1,7 @@
 "use client";
 
 import { Image as ImageIcon } from "lucide-react";
-import { JIGSAW_THEMES } from "@/constant/JigsawThemes";
+import { JIGSAW_THEMES } from "@/lib/constants/JigsawThemes";
 
 interface ThemeSelectorProps {
   selectedUrl: string;
