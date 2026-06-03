@@ -432,7 +432,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
   // SafeLock Overlay screen
   if (isLocked) {
     return (
-      <div className="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center bg-gradient-to-br from-sky-400 via-indigo-500 to-purple-650 dark:from-[#0B0F19] dark:via-[#111827] dark:to-[#1F1F35] overflow-hidden p-6 animate-in fade-in duration-500">
+      <div className="fixed inset-0 z-9999 flex h-screen w-screen items-center justify-center bg-linear-to-br from-sky-400 via-indigo-500 to-purple-650 dark:from-[#0B0F19] dark:via-[#111827] dark:to-[#1F1F35] overflow-hidden p-6 animate-in fade-in duration-500">
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-sky-300/10 dark:bg-sky-500/5 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-300/10 dark:bg-purple-500/5 rounded-full blur-3xl animate-pulse delay-700" />
 
@@ -443,7 +443,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
             </div>
 
             <CardContent className="p-0 flex flex-col items-center space-y-6">
-              <div className="w-24 h-24 rounded-[36px] bg-gradient-to-tr from-amber-400 to-orange-555 dark:from-amber-500 dark:to-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-500/20 relative">
+              <div className="w-24 h-24 rounded-[36px] bg-linear-to-tr from-amber-400 to-orange-555 dark:from-amber-500 dark:to-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-500/20 relative">
                 <Sun className="w-12 h-12 animate-spin-slow" />
                 <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-indigo-550 flex items-center justify-center text-white border-2 border-white dark:border-slate-900 animate-bounce">
                   <Moon className="w-3 h-3" />
@@ -451,7 +451,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-650 dark:from-sky-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent leading-none">
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight bg-linear-to-r from-sky-600 via-indigo-600 to-purple-650 dark:from-sky-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent leading-none">
                   Great job today! 🎉
                 </h1>
                 <p className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-1.5 pt-1">

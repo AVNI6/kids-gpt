@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -14,7 +13,7 @@ export default function KidTopNav() {
 
   return (
     <nav className="sticky top-0 z-40 w-full h-16 bg-background border-b border-border flex items-center shrink-0">
-      <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 w-full">
+      <div className="max-w-400 mx-auto px-4 md:px-6 lg:px-8 w-full">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Left Section: Mobile Hamburger Trigger & Brand */}
           <div className="flex items-center shrink-0 gap-3">
@@ -28,7 +27,7 @@ export default function KidTopNav() {
             </button>
 
             <div className="flex items-center shrink-0 ">
-              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-sky-500 to-indigo-600 bg-clip-text text-transparent drop-shadow-xs">
+              <span className="font-extrabold text-xl tracking-tight bg-linear-to-r from-sky-500 to-indigo-600 bg-clip-text text-transparent drop-shadow-xs">
                 {brandText}
               </span>
             </div>

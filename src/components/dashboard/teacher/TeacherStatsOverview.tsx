@@ -1,28 +1,38 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, Users, TrendingUp } from "lucide-react";
+import { CheckCircle2, Users, School } from "lucide-react";
 
-export default async function TeacherStatsOverview() {
+type Props = {
+  totalClassrooms: number;
+  totalStudents: number;
+  pendingRequests: number;
+};
+
+export default function TeacherStatsOverview({
+  totalClassrooms,
+  totalStudents,
+  pendingRequests,
+}: Props) {
   const stats = [
     {
-      label: "Pending Reviews",
-      value: "8",
-      sublabel: "Assignments to check",
-      icon: CheckCircle2,
-      color: "pink",
+      label: "Classrooms",
+      value: String(totalClassrooms),
+      sublabel: "Active Classrooms",
+      icon: School,
+      color: "yellow",
     },
     {
-      label: "Active Now",
-      value: "4",
-      sublabel: "Out of 5 students",
+      label: "Total Students",
+      value: String(totalStudents),
+      sublabel: "Enrolled in your classes",
       icon: Users,
       color: "blue",
     },
     {
-      label: "Class Average",
-      value: "82%",
-      sublabel: "+5% this week",
-      icon: TrendingUp,
-      color: "yellow",
+      label: "Pending Requests",
+      value: String(pendingRequests),
+      sublabel: "Awaiting approval",
+      icon: CheckCircle2,
+      color: "pink",
     },
   ];
 
@@ -68,7 +78,7 @@ export default async function TeacherStatsOverview() {
                   <p className="text-3xl font-black text-slate-900">{stat.value}</p>
                 </div>
                 <div className={`rounded-full ${colors.bg} p-3`}>
-                  <IconComponent className={`h-6 w-6 ${colors.icon}`} />
+                  <IconComponent className="h-6 w-6" data-icon="inline-start" />
                 </div>
               </div>
 

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getKidComprehensiveDetails } from "@/actions/dashboard.actions";
+import { getKidClassroomData } from "@/actions/classroom.actions";
 
 import KidProfileManager from "@/components/dashboard/kid/KidProfileManager";
 import KidStreakBanner from "@/components/dashboard/kid/KidStreakBanner";
@@ -78,6 +79,8 @@ function HomeworkPendingCardSkeleton() {
 export default async function KidDashboardPage() {
   await checkDashboardAccess(["kid"]);
   const details = await getKidComprehensiveDetails();
+  const classroomData = await getKidClassroomData();
+  const memberships = classroomData.memberships || [];
 
   return (
     <main className="min-h-full bg-linear-to-br from-sky-50 via-white to-emerald-50 px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-50">
@@ -91,21 +94,21 @@ export default async function KidDashboardPage() {
             <Suspense fallback={<KidProfileManagerSkeleton />}>
               <KidProfileManager />
             </Suspense>
-
-            <Suspense fallback={<HomeworkPendingCardSkeleton />}>
-              <HomeworkPendingCard />
-            </Suspense>
           </div>
 
           <div className="space-y-6 flex flex-col">
             <Suspense fallback={<GameHistorySkeleton />}>
               <GameHistory timeline={details.timeline} />
             </Suspense>
-
-            <Suspense fallback={<ClassroomOverviewSkeleton />}>
-              <ClassroomOverview />
-            </Suspense>
           </div>
+        </div>
+        <div className="space-y-6 flex flex-col">
+          <Suspense fallback={<ClassroomOverviewSkeleton />}>
+            <ClassroomOverview memberships={memberships} />
+          </Suspense>
+          <Suspense fallback={<HomeworkPendingCardSkeleton />}>
+            <HomeworkPendingCard />
+          </Suspense>
         </div>
       </div>
     </main>
