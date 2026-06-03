@@ -309,7 +309,7 @@ export default function Sidebar() {
           if (!open) setSessionToDelete(null);
         }}
       >
-        <DialogContent className="sm:max-w-[425px] rounded-2xl border-border bg-background">
+        <DialogContent className="sm:max-w-106.25 rounded-2xl border-border bg-background">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-foreground">Delete Chat?</DialogTitle>
             <DialogDescription className="text-muted-foreground pt-2">

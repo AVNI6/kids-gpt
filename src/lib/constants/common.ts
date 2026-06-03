@@ -16,4 +16,10 @@ export const APP_ROUTES = {
   ParentProgress: "/dashboard/parent/progress",
   ParentActivities: "/dashboard/parent/activities",
   ParentNotifications: "/dashboard/parent/notifications",
+
+  // Teacher Dashboard Central Routes
+  TeacherDashboard: "/dashboard/teacher",
+  TeacherClassrooms: "/dashboard/teacher/classrooms",
+  TeacherNotifications: "/dashboard/teacher/notifications",
+  TeacherSettings: "/dashboard/teacher/settings",
 };
