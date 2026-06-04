@@ -765,12 +765,14 @@ export async function gradeAssignment(
     });
 
     // 6. Award XP! (Check for existing reward, calculate delta, and update kid profile total XP)
+    // NOTE: source_id must reference activity_settings(id) per FK constraint — use null for assignment rewards.
+    //       Idempotency is checked via the assignment_id column (added in MVP migration).
     const { data: existingReward, error: rewardErr } = await supabase
       .from("rewards")
       .select("id, rewards_amount")
       .eq("user_id", submission.student_user_id)
       .eq("source_type", "assignment")
-      .eq("source_id", submission.assignment_id)
+      .eq("assignment_id", submission.assignment_id)
       .is("deleted_at", null)
       .maybeSingle();
 
@@ -796,7 +798,8 @@ export async function gradeAssignment(
         user_id: submission.student_user_id,
         rewards_amount: score,
         source_type: "assignment",
-        source_id: submission.assignment_id,
+        source_id: null, // FK references activity_settings(id); assignment IDs are not valid — use null
+        assignment_id: submission.assignment_id,
         description: `Earned XP for Assignment: "${assignment.title}" (Score: ${score}/${assignment.total_points})`,
       });
 
@@ -1323,7 +1326,21 @@ export async function submitAssignmentActivityCompletion(
       .eq("slug", assignment.activity_type)
       .maybeSingle();
 
-    const desc = `Completed ${activitySetting?.title || "Activity"} for Assignment: ${assignment.title} [${assignment.subject || "General"}] (Score: ${percentage}%)`;
+    const desc = `Completed ${activitySetting?.title || "Activity"}
+for Assignment:
+${assignment.title}
+[[${assignment.subject || "General"}]]
+(Score: ${percentage}%)`;
+
+    // Fetch previous last reward date before inserting the new one to calculate streak correctly
+    const { data: lastRewards } = await supabase
+      .from("rewards")
+      .select("created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const lastRewardDate = lastRewards && lastRewards.length > 0 ? lastRewards[0].created_at : null;
 
     // 7. Insert reward record
     const { error: insRewardErr } = await supabase.from("rewards").insert({
@@ -1336,7 +1353,15 @@ export async function submitAssignmentActivityCompletion(
       score: percentage,
     });
 
-    if (insRewardErr) return { success: false, error: insRewardErr.message };
+    if (insRewardErr) {
+      if (
+        insRewardErr.code === "23505" ||
+        insRewardErr.message?.includes("uq_rewards_assignment_user")
+      ) {
+        return { success: true, classroomId: assignment.classroom_id };
+      }
+      return { success: false, error: insRewardErr.message };
+    }
 
     // 8. Update kid profile XP and daily streak index
     const { data: profile } = await supabase
@@ -1347,14 +1372,6 @@ export async function submitAssignmentActivityCompletion(
 
     const newXp = (profile?.total_experience_points || 0) + gradedScore;
 
-    const { data: lastRewards } = await supabase
-      .from("rewards")
-      .select("created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    const lastRewardDate = lastRewards && lastRewards.length > 0 ? lastRewards[0].created_at : null;
     const { currentStreak, longestStreak } = calculateUpdatedStreak(
       lastRewardDate,
       profile?.current_streak ?? 0,
