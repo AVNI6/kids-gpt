@@ -1,8 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
-import { Inbox, School, Award } from "lucide-react";
+import { Award } from "lucide-react";
 import type { DashboardUserProfile } from "@/types/kid";
 
 type Props = {
@@ -21,8 +20,8 @@ export default function TeacherHeroBanner({
   totalStudents,
   pendingRequests,
   pendingReviews,
-  onCreateClick,
-  onInboxClick,
+  // onCreateClick,
+  // onInboxClick,
 }: Props) {
   const school = profile.standard || "School / Organization not set";
 
@@ -61,7 +60,7 @@ export default function TeacherHeroBanner({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
+          {/* <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
             <Button
               onClick={onCreateClick}
               className="rounded-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white shadow-md hover:shadow-lg transition-all h-11 px-6 font-bold cursor-pointer"
@@ -78,7 +77,7 @@ export default function TeacherHeroBanner({
               <Inbox className="mr-2 h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
               <span>Review Requests</span>
             </Button>
-          </div>
+          </div> */}
         </div>
 
         {/* Classroom Summary Card right */}

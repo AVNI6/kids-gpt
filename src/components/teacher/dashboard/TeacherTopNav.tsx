@@ -66,7 +66,7 @@ export default function TeacherTopNav({ profile, onCreateClassroom }: Props) {
   const organization = profile.standard || "School / Organization not set";
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+    <div className="flex flex-col items-stretch sm:items-center gap-4 w-full sm:w-auto">
       {/* Slim Profile Hub Row */}
       <div className="flex items-center gap-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-1.5 pr-4 rounded-full border border-slate-200/50 dark:border-slate-800/50 shadow-sm w-full sm:w-auto justify-between sm:justify-start">
         <Avatar className="h-10 w-10 border border-slate-200 dark:border-slate-700">
@@ -190,15 +190,6 @@ export default function TeacherTopNav({ profile, onCreateClassroom }: Props) {
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* Create Classroom Action */}
-      <Button
-        onClick={onCreateClassroom}
-        className="w-full sm:w-auto justify-center rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm font-bold h-11 px-6 transition-all"
-      >
-        <PlusCircle className="mr-2 h-4 w-4 shrink-0" />
-        <span>Create Classroom</span>
-      </Button>
     </div>
   );
 }

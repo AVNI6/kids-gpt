@@ -201,58 +201,6 @@ async function TeacherDashboardContent() {
       .filter((id) => teacherStudentIds.has(id))
   ).size;
 
-  // Needs Attention logic
-  const emptyAnnouncementClassroomsCount = enrichedClassrooms.filter(
-    (c) => c.announcements_count === 0
-  ).length;
-
-  // 4. Fetch activity events feed (using our new RPC) with fallback to raw query
-  let activityEvents = [];
-  try {
-    const { data, error } = await supabase.rpc("get_teacher_activity_feed");
-    if (!error && data) {
-      activityEvents = data;
-    } else {
-      console.warn("RPC get_teacher_activity_feed failed, falling back to manual query.", error);
-      const { data: fallbackEvents } = await supabase
-        .from("activity_events")
-        .select(
-          `
-          id,
-          event_type,
-          actor_user_id,
-          actor_role,
-          source_type,
-          source_id,
-          metadata,
-          created_at
-        `
-        )
-        .order("created_at", { ascending: false })
-        .limit(20);
-      activityEvents = fallbackEvents || [];
-    }
-  } catch (err) {
-    console.warn("RPC get_teacher_activity_feed threw error, falling back to manual query.", err);
-    const { data: fallbackEvents } = await supabase
-      .from("activity_events")
-      .select(
-        `
-        id,
-        event_type,
-        actor_user_id,
-        actor_role,
-        source_type,
-        source_id,
-        metadata,
-        created_at
-      `
-      )
-      .order("created_at", { ascending: false })
-      .limit(20);
-    activityEvents = fallbackEvents || [];
-  }
-
   // Aggregate stats
   const metrics = {
     activeClassrooms: classrooms.length,
@@ -278,8 +226,6 @@ async function TeacherDashboardContent() {
       students={students}
       metrics={metrics}
       snapshot={snapshot}
-      emptyAnnouncementClassroomsCount={emptyAnnouncementClassroomsCount}
-      activityEvents={activityEvents}
     />
   );
 }

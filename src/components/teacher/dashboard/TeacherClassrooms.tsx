@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { School, Trash2, Plus, CopyIcon, CheckIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -35,9 +35,16 @@ type Props = {
 };
 
 export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpen }: Props) {
-  const [localOpen, setLocalOpen] = useState(false);
-  const isOpen = createOpen !== undefined ? createOpen : localOpen;
+  const [localOpen, setLocalOpen] = useState(createOpen || false);
+  const isOpen = setCreateOpen ? createOpen || false : localOpen;
   const setIsOpen = setCreateOpen || setLocalOpen;
+
+  useEffect(() => {
+    if (createOpen !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocalOpen(createOpen);
+    }
+  }, [createOpen]);
 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

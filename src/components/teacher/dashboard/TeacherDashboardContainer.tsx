@@ -1,14 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { BarChart3, AlertTriangle, Activity, School } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BarChart3 } from "lucide-react";
 import TeacherHeroBanner from "./TeacherHeroBanner";
 import TeacherMetricsRow from "./TeacherMetricsRow";
 import TodaySnapshot from "./TodaySnapshot";
-import NeedsAttention from "./NeedsAttention";
-import RecentClassrooms from "./RecentClassrooms";
-import TeacherActivityFeed, { ActivityEvent } from "./TeacherActivityFeed";
-import TeacherClassrooms from "./TeacherClassrooms";
 import TeacherTopNav from "./TeacherTopNav";
 import type { DashboardUserProfile } from "@/types/kid";
 import type { Classroom, PendingEnrollmentRequest, ApprovedStudent } from "@/types/classroom.types";
@@ -36,8 +32,6 @@ type Props = {
   students: ApprovedStudent[];
   metrics: Metrics;
   snapshot: Snapshot;
-  emptyAnnouncementClassroomsCount: number;
-  activityEvents: ActivityEvent[];
 };
 
 /** Section divider with title and description — matches Parent dashboard visual rhythm */
@@ -68,16 +62,15 @@ export default function TeacherDashboardContainer({
   students,
   metrics,
   snapshot,
-  emptyAnnouncementClassroomsCount,
-  activityEvents,
 }: Props) {
-  const [createClassroomOpen, setCreateClassroomOpen] = useState(false);
-  const needsAttentionRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const handleInboxClick = () => {
-    if (needsAttentionRef.current) {
-      needsAttentionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    router.push("/dashboard/teacher/classrooms");
+  };
+
+  const handleCreateClick = () => {
+    router.push("/dashboard/teacher/classrooms?create=true");
   };
 
   return (
@@ -86,7 +79,7 @@ export default function TeacherDashboardContainer({
           SECTION A — Teacher Account Hub
           Mirrors Parent Dashboard "Parent Settings & Account Hub" bar.
       ───────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white dark:bg-black/30 p-6 md:p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 shadow-sm backdrop-blur-md">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white dark:bg-black/30 p-6 md:p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 shadow-sm backdrop-blur-md">
         <div className="flex flex-col gap-1">
           <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
             <span>Teacher Settings &amp; Account Hub</span>
@@ -95,7 +88,7 @@ export default function TeacherDashboardContainer({
             Manage your educator profile, school organization settings, and class setup.
           </p>
         </div>
-        <TeacherTopNav profile={profile} onCreateClassroom={() => setCreateClassroomOpen(true)} />
+        <TeacherTopNav profile={profile} onCreateClassroom={handleCreateClick} />
       </div>
 
       {/* ─────────────────────────────────────────────────
@@ -108,7 +101,7 @@ export default function TeacherDashboardContainer({
         totalStudents={students.length}
         pendingRequests={pendingRequests.length}
         pendingReviews={metrics.pendingGrading}
-        onCreateClick={() => setCreateClassroomOpen(true)}
+        onCreateClick={handleCreateClick}
         onInboxClick={handleInboxClick}
       />
 
@@ -124,56 +117,6 @@ export default function TeacherDashboardContainer({
         />
         <TeacherMetricsRow metrics={metrics} />
         <TodaySnapshot snapshot={snapshot} />
-      </div>
-
-      {/* ─────────────────────────────────────────────────
-          SECTION D — Action Center
-          Items that require immediate teacher attention.
-      ───────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-6" ref={needsAttentionRef}>
-        <SectionHeader
-          icon={AlertTriangle}
-          title="Action Center"
-          description="Pending enrollment requests, submissions awaiting grading, and silent classrooms that need attention."
-        />
-        <NeedsAttention
-          pendingRequests={pendingRequests}
-          pendingGrading={metrics.pendingGrading}
-          emptyAnnouncementClassroomsCount={emptyAnnouncementClassroomsCount}
-        />
-      </div>
-
-      {/* ─────────────────────────────────────────────────
-          SECTION E — Teaching Activity
-          Quick classroom access + live educational event feed.
-      ───────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-6">
-        <SectionHeader
-          icon={Activity}
-          title="Teaching Activity"
-          description="Quick access to recent classrooms and a live feed of educational events across your classes."
-        />
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-8 items-start">
-          <RecentClassrooms classrooms={classrooms} />
-          <TeacherActivityFeed activityEvents={activityEvents} />
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────
-          SECTION F — Classroom Management
-          Full classroom grid with create, edit, delete flows.
-      ───────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-6">
-        <SectionHeader
-          icon={School}
-          title="Classroom Management"
-          description="View all your classrooms, manage student enrollment, and open individual classroom workspaces."
-        />
-        <TeacherClassrooms
-          classrooms={classrooms}
-          createOpen={createClassroomOpen}
-          setCreateOpen={setCreateClassroomOpen}
-        />
       </div>
     </div>
   );
