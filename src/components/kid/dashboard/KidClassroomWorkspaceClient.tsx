@@ -118,7 +118,7 @@ export default function KidClassroomWorkspaceClient({
   };
 
   const getPendingCount = () => {
-    return assignments.filter((a) => !a.submission_id).length;
+    return assignments.filter((a) => !a.submission_id || a.submitted_at === null).length;
   };
 
   return (
@@ -215,7 +215,30 @@ export default function KidClassroomWorkspaceClient({
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {assignments.map((assign) => {
                 const isSubmitted = !!assign.submission_id;
+                const isCompleted = isSubmitted && assign.submitted_at !== null;
+                const isInProgress = isSubmitted && assign.submitted_at === null;
+                const isOverdue =
+                  !isCompleted && assign.due_date && new Date(assign.due_date) < new Date();
                 const isGraded = assign.score !== null;
+
+                let statusLabel = "Pending";
+                let statusBadgeStyle = "border-indigo-100 bg-indigo-50 text-indigo-700";
+                let stripeStyle = "bg-indigo-500";
+
+                if (isCompleted) {
+                  statusLabel = "Completed";
+                  statusBadgeStyle = "border-emerald-100 bg-emerald-50 text-emerald-700";
+                  stripeStyle = "bg-emerald-500";
+                } else if (isInProgress) {
+                  statusLabel = "In Progress";
+                  statusBadgeStyle = "border-sky-100 bg-sky-50 text-sky-700";
+                  stripeStyle = "bg-sky-500";
+                } else if (isOverdue) {
+                  statusLabel = "Overdue";
+                  statusBadgeStyle = "border-rose-100 bg-rose-50 text-rose-700";
+                  stripeStyle = "bg-rose-505";
+                }
+
                 const formattedDate = assign.due_date
                   ? new Date(assign.due_date).toLocaleDateString(undefined, {
                       month: "short",
@@ -228,9 +251,7 @@ export default function KidClassroomWorkspaceClient({
                     key={assign.id}
                     className="rounded-[32px] border-slate-200/50 bg-white dark:bg-slate-900/40 shadow-xs hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between"
                   >
-                    <div
-                      className={`absolute top-0 left-0 right-0 h-1.5 ${isGraded ? "bg-emerald-500" : isSubmitted ? "bg-amber-500" : "bg-indigo-500"}`}
-                    />
+                    <div className={`absolute top-0 left-0 right-0 h-1.5 ${stripeStyle}`} />
 
                     <CardContent className="p-6 pt-8 space-y-4 flex-1 flex flex-col justify-between">
                       <div className="space-y-2">
@@ -245,15 +266,9 @@ export default function KidClassroomWorkspaceClient({
                           )}
                           <Badge
                             variant="outline"
-                            className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${
-                              isGraded
-                                ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-                                : isSubmitted
-                                  ? "border-amber-100 bg-amber-50 text-amber-700"
-                                  : "border-indigo-100 bg-indigo-50 text-indigo-700"
-                            }`}
+                            className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${statusBadgeStyle}`}
                           >
-                            {isGraded ? "Graded" : isSubmitted ? "Awaiting Grade" : "Pending"}
+                            {statusLabel}
                           </Badge>
                         </div>
 
@@ -268,165 +283,215 @@ export default function KidClassroomWorkspaceClient({
                       </div>
 
                       <div className="space-y-4 pt-4 border-t border-slate-100/80">
-                        {isGraded ? (
-                          <div className="bg-emerald-50/20 p-3.5 rounded-2xl border border-emerald-100/30 space-y-2.5">
-                            <div className="flex items-center justify-between text-xs">
+                        {assign.activity_type ? (
+                          // MVP Auto-Graded Activity Flow
+                          isCompleted ? (
+                            <div className="bg-emerald-50/20 p-3.5 rounded-2xl border border-emerald-100/30 flex items-center justify-between text-xs">
                               <span className="font-extrabold text-emerald-700 flex items-center gap-1">
                                 <Award className="w-3.5 h-3.5" />
-                                Grade Released
+                                Completed Activity
                               </span>
                               <span className="font-black text-emerald-800 bg-emerald-100/50 px-2 py-0.5 rounded-md text-[10px]">
                                 {assign.score} / {assign.total_points}
                               </span>
                             </div>
-                            {assign.feedback && (
-                              <p className="text-[11px] text-slate-600 font-medium italic leading-relaxed">
-                                &ldquo;{assign.feedback}&rdquo;
-                              </p>
-                            )}
-                          </div>
-                        ) : isSubmitted ? (
-                          <div className="bg-amber-50/10 p-3.5 rounded-2xl border border-amber-100/20 text-xs font-semibold text-amber-700 flex items-center gap-1.5">
-                            <Clock className="h-4 w-4 text-amber-500 animate-pulse" />
-                            Awaiting review by your teacher
-                          </div>
+                          ) : isOverdue ? (
+                            <div className="bg-rose-50/20 p-3.5 rounded-2xl border border-rose-100/30 flex items-center justify-between text-xs font-bold text-rose-700">
+                              <span className="flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5 text-rose-400" />
+                                Overdue (Due {formattedDate})
+                              </span>
+                              <span className="font-bold text-rose-800 bg-rose-100/50 px-2 py-0.5 rounded-md text-[10px]">
+                                0 / {assign.total_points} Pts
+                              </span>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                                <span className="flex items-center gap-1.5">
+                                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                  {formattedDate}
+                                </span>
+                                <span className="font-bold text-slate-700">
+                                  {assign.total_points} Points
+                                </span>
+                              </div>
+                              <Link
+                                href={`/activities/launcher?assignment_id=${assign.id}`}
+                                className={`w-full rounded-full font-bold h-10 text-xs px-4 flex items-center justify-center cursor-pointer transition-colors ${
+                                  isInProgress
+                                    ? "bg-amber-500 hover:bg-amber-600 text-white"
+                                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                }`}
+                              >
+                                {isInProgress ? "Resume Activity" : "Launch Activity"}
+                              </Link>
+                            </>
+                          )
                         ) : (
-                          <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-                            <span className="flex items-center gap-1.5">
-                              <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                              {formattedDate}
-                            </span>
-                            <span className="font-bold text-slate-700">
-                              {assign.total_points} Points
-                            </span>
-                          </div>
-                        )}
-
-                        {!isSubmitted && (
-                          <Dialog
-                            open={submissionOpen && selectedAssignment?.id === assign.id}
-                            onOpenChange={(open) => {
-                              setSubmissionOpen(open);
-                              if (open) {
-                                setSelectedAssignment(assign);
-                              } else {
-                                setSelectedAssignment(null);
-                              }
-                            }}
-                          >
-                            <DialogTrigger
-                              render={
-                                <Button className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 text-xs px-4 cursor-pointer">
-                                  Submit Assignment
-                                </Button>
-                              }
-                            />
-                            <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
-                              <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
-                                <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight">
-                                  Submit Work
-                                </DialogTitle>
-                                <DialogDescription className="text-sm text-slate-500">
-                                  Complete and upload your submission details below.
-                                </DialogDescription>
-                              </DialogHeader>
-
-                              <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
-                                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50 space-y-1">
-                                  <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">
-                                    Instructions
+                          // Fallback Manual Submission Flow
+                          <>
+                            {isGraded ? (
+                              <div className="bg-emerald-50/20 p-3.5 rounded-2xl border border-emerald-100/30 space-y-2.5">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-extrabold text-emerald-700 flex items-center gap-1">
+                                    <Award className="w-3.5 h-3.5" />
+                                    Grade Released
                                   </span>
-                                  <h5 className="text-xs font-black text-slate-950">
-                                    {assign.title}
-                                  </h5>
-                                  {assign.description && (
-                                    <p className="text-[11px] text-slate-500 font-semibold leading-relaxed pt-1">
-                                      {assign.description}
-                                    </p>
-                                  )}
+                                  <span className="font-black text-emerald-800 bg-emerald-100/50 px-2 py-0.5 rounded-md text-[10px]">
+                                    {assign.score} / {assign.total_points}
+                                  </span>
                                 </div>
-
-                                <div className="space-y-1.5">
-                                  <Label
-                                    htmlFor="subType"
-                                    className="text-xs font-bold text-slate-700 ml-1"
-                                  >
-                                    Submission Type*
-                                  </Label>
-                                  <select
-                                    id="subType"
-                                    value={subType}
-                                    onChange={(e) =>
-                                      setSubType(
-                                        e.target.value as "TEXT" | "PDF" | "IMAGE" | "LINK"
-                                      )
-                                    }
-                                    className="w-full rounded-xl border border-slate-200 px-3.5 h-11 text-sm font-semibold focus:border-indigo-500 focus:ring-0"
-                                  >
-                                    <option value="TEXT">Text Answer</option>
-                                    <option value="LINK">Website Link</option>
-                                    <option value="PDF">PDF File Link</option>
-                                    <option value="IMAGE">Image Link</option>
-                                  </select>
-                                </div>
-
-                                {subType === "TEXT" ? (
-                                  <div className="space-y-1.5">
-                                    <Label
-                                      htmlFor="subText"
-                                      className="text-xs font-bold text-slate-700 ml-1"
-                                    >
-                                      Your Answer*
-                                    </Label>
-                                    <textarea
-                                      id="subText"
-                                      value={subText}
-                                      onChange={(e) => setSubText(e.target.value)}
-                                      required
-                                      placeholder="Write your submission text here..."
-                                      className="rounded-xl w-full border border-slate-200 p-3.5 text-xs font-semibold focus:border-indigo-500 focus:ring-0 resize-none h-28"
-                                    />
-                                  </div>
-                                ) : (
-                                  <div className="space-y-1.5">
-                                    <Label
-                                      htmlFor="subUrl"
-                                      className="text-xs font-bold text-slate-700 ml-1"
-                                    >
-                                      Submission URL / Link*
-                                    </Label>
-                                    <Input
-                                      id="subUrl"
-                                      value={subUrl}
-                                      onChange={(e) => setSubUrl(e.target.value)}
-                                      required
-                                      placeholder="https://example.com/your-submission"
-                                      className="rounded-xl h-11 text-sm font-semibold"
-                                    />
-                                  </div>
+                                {assign.feedback && (
+                                  <p className="text-[11px] text-slate-600 font-medium italic leading-relaxed">
+                                    &ldquo;{assign.feedback}&rdquo;
+                                  </p>
                                 )}
+                              </div>
+                            ) : isSubmitted ? (
+                              <div className="bg-amber-50/10 p-3.5 rounded-2xl border border-amber-100/20 text-xs font-semibold text-amber-700 flex items-center gap-1.5">
+                                <Clock className="h-4 w-4 text-amber-500 animate-pulse" />
+                                Awaiting review by your teacher
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                                <span className="flex items-center gap-1.5">
+                                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                  {formattedDate}
+                                </span>
+                                <span className="font-bold text-slate-700">
+                                  {assign.total_points} Points
+                                </span>
+                              </div>
+                            )}
 
-                                <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 -mx-6 -mb-6 flex gap-2 rounded-b-[32px]">
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setSubmissionOpen(false)}
-                                    className="rounded-full"
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    type="submit"
-                                    disabled={isLoading}
-                                    className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
-                                  >
-                                    <Send className="mr-2 h-4 w-4" />
-                                    Submit
-                                  </Button>
-                                </DialogFooter>
-                              </form>
-                            </DialogContent>
-                          </Dialog>
+                            {!isSubmitted && (
+                              <Dialog
+                                open={submissionOpen && selectedAssignment?.id === assign.id}
+                                onOpenChange={(open) => {
+                                  setSubmissionOpen(open);
+                                  if (open) {
+                                    setSelectedAssignment(assign);
+                                  } else {
+                                    setSelectedAssignment(null);
+                                  }
+                                }}
+                              >
+                                <DialogTrigger
+                                  render={
+                                    <Button className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 text-xs px-4 cursor-pointer">
+                                      Submit Assignment
+                                    </Button>
+                                  }
+                                />
+                                <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
+                                  <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
+                                    <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight">
+                                      Submit Work
+                                    </DialogTitle>
+                                    <DialogDescription className="text-sm text-slate-500">
+                                      Complete and upload your submission details below.
+                                    </DialogDescription>
+                                  </DialogHeader>
+
+                                  <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
+                                    <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50 space-y-1">
+                                      <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">
+                                        Instructions
+                                      </span>
+                                      <h5 className="text-xs font-black text-slate-950">
+                                        {assign.title}
+                                      </h5>
+                                      {assign.description && (
+                                        <p className="text-[11px] text-slate-500 font-semibold leading-relaxed pt-1">
+                                          {assign.description}
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                      <Label
+                                        htmlFor="subType"
+                                        className="text-xs font-bold text-slate-700 ml-1"
+                                      >
+                                        Submission Type*
+                                      </Label>
+                                      <select
+                                        id="subType"
+                                        value={subType}
+                                        onChange={(e) =>
+                                          setSubType(
+                                            e.target.value as "TEXT" | "PDF" | "IMAGE" | "LINK"
+                                          )
+                                        }
+                                        className="w-full rounded-xl border border-slate-200 px-3.5 h-11 text-sm font-semibold focus:border-indigo-500 focus:ring-0"
+                                      >
+                                        <option value="TEXT">Text Answer</option>
+                                        <option value="LINK">Website Link</option>
+                                        <option value="PDF">PDF File Link</option>
+                                        <option value="IMAGE">Image Link</option>
+                                      </select>
+                                    </div>
+
+                                    {subType === "TEXT" ? (
+                                      <div className="space-y-1.5">
+                                        <Label
+                                          htmlFor="subText"
+                                          className="text-xs font-bold text-slate-700 ml-1"
+                                        >
+                                          Your Answer*
+                                        </Label>
+                                        <textarea
+                                          id="subText"
+                                          value={subText}
+                                          onChange={(e) => setSubText(e.target.value)}
+                                          required
+                                          placeholder="Write your submission text here..."
+                                          className="rounded-xl w-full border border-slate-200 p-3.5 text-xs font-semibold focus:border-indigo-500 focus:ring-0 resize-none h-28"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-1.5">
+                                        <Label
+                                          htmlFor="subUrl"
+                                          className="text-xs font-bold text-slate-700 ml-1"
+                                        >
+                                          Submission URL / Link*
+                                        </Label>
+                                        <Input
+                                          id="subUrl"
+                                          value={subUrl}
+                                          onChange={(e) => setSubUrl(e.target.value)}
+                                          required
+                                          placeholder="https://example.com/your-submission"
+                                          className="rounded-xl h-11 text-sm font-semibold"
+                                        />
+                                      </div>
+                                    )}
+
+                                    <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 -mx-6 -mb-6 flex gap-2 rounded-b-[32px]">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setSubmissionOpen(false)}
+                                        className="rounded-full"
+                                      >
+                                        Cancel
+                                      </Button>
+                                      <Button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
+                                      >
+                                        <Send className="mr-2 h-4 w-4" />
+                                        Submit
+                                      </Button>
+                                    </DialogFooter>
+                                  </form>
+                                </DialogContent>
+                              </Dialog>
+                            )}
+                          </>
                         )}
                       </div>
                     </CardContent>

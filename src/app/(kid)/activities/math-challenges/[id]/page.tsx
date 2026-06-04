@@ -6,11 +6,15 @@ interface PageProps {
   params: Promise<{
     id: string;
   }>;
+  searchParams: Promise<{
+    assignment_id?: string;
+  }>;
 }
 
-export default async function MathActivityPage({ params }: PageProps) {
+export default async function MathActivityPage({ params, searchParams }: PageProps) {
   // Await params as required by Next.js 15/16 rules
   const { id } = await params;
+  const { assignment_id } = await searchParams;
 
   if (!id) {
     notFound();
@@ -56,5 +60,11 @@ export default async function MathActivityPage({ params }: PageProps) {
   // Define a nice dynamic math challenge title
   const challengeTitle = "Dynamic Math Challenge 🧮";
 
-  return <MathChallengesPage challengeTitle={challengeTitle} equations={content.equations} />;
+  return (
+    <MathChallengesPage
+      challengeTitle={challengeTitle}
+      equations={content.equations}
+      assignmentId={assignment_id}
+    />
+  );
 }

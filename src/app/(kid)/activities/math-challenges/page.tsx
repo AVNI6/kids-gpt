@@ -17,6 +17,7 @@ import { type MathChallengeItem } from "@/types/activities.type";
 interface MathChallengesPageProps {
   challengeTitle?: string;
   equations?: MathChallengeItem[];
+  assignmentId?: string;
 }
 
 const defaultEquations: MathChallengeItem[] = [
@@ -28,6 +29,7 @@ const defaultEquations: MathChallengeItem[] = [
 export default function MathChallengesPage({
   challengeTitle = "Math Hero 🧮",
   equations = defaultEquations,
+  assignmentId,
 }: MathChallengesPageProps) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -35,6 +37,7 @@ export default function MathChallengesPage({
   const [correctCount, setCorrectCount] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(130);
+  const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
   const hasClaimed = useRef(false);
 
   useEffect(() => {
@@ -51,22 +54,39 @@ export default function MathChallengesPage({
         const scorePercent = Math.round((correctCount / safeEquations.length) * 100);
         const scoreStr = `${scorePercent}%`;
         try {
-          const slugKey = challengeTitle
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)/g, "");
+          if (assignmentId) {
+            const { submitAssignmentActivityCompletion } =
+              await import("@/lib/services/kid/classroom.actions");
+            const res = await submitAssignmentActivityCompletion(assignmentId, scoreStr);
+            if (res.success) {
+              if (res.classroomId) {
+                setCompletedClassroomId(res.classroomId);
+              }
+              triggerConfettiSideCannons();
+              toast.success("Assignment Completed! 🎉", {
+                description: `Your score has been submitted.`,
+              });
+            } else {
+              toast.error(res.error || "Failed to submit assignment.");
+            }
+          } else {
+            const slugKey = challengeTitle
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/(^-|-$)/g, "");
 
-          const res = await saveKidActivityProgress(
-            slugKey || "math-challenges",
-            xpReward,
-            challengeTitle,
-            scoreStr
-          );
-          if (res.success) {
-            triggerConfettiSideCannons();
-            toast.success("Progress Saved! 🎉", {
-              description: `+${xpReward} XP earned!`,
-            });
+            const res = await saveKidActivityProgress(
+              slugKey || "math-challenges",
+              xpReward,
+              challengeTitle,
+              scoreStr
+            );
+            if (res.success) {
+              triggerConfettiSideCannons();
+              toast.success("Progress Saved! 🎉", {
+                description: `+${xpReward} XP earned!`,
+              });
+            }
           }
         } catch (err) {
           console.error("Auto-claim error:", err);
@@ -74,7 +94,14 @@ export default function MathChallengesPage({
       };
       autoClaim();
     }
-  }, [challengeCompleted, correctCount, safeEquations.length, challengeTitle, xpReward]);
+  }, [
+    challengeCompleted,
+    correctCount,
+    safeEquations.length,
+    challengeTitle,
+    xpReward,
+    assignmentId,
+  ]);
 
   const eq = safeEquations[currentIndex] || safeEquations[0];
   const progress = ((currentIndex + 1) / safeEquations.length) * 100;
@@ -98,7 +125,13 @@ export default function MathChallengesPage({
   };
 
   const handleFinishMission = () => {
-    router.push(APP_ROUTES.Activities);
+    if (assignmentId && completedClassroomId) {
+      router.push(`/dashboard/kid/classrooms/${completedClassroomId}`);
+    } else if (assignmentId) {
+      router.push("/dashboard/kid");
+    } else {
+      router.push(APP_ROUTES.Activities);
+    }
   };
 
   const handleRestart = () => {

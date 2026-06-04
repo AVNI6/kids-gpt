@@ -15,9 +15,7 @@ const quizOptionSchema = z.object({
 
 // Define the schema for a single quiz question
 const quizQuestionSchema = z.object({
-  question: z
-    .string()
-    .describe("An engaging multiple-choice question suitable for children ages 6-12."),
+  question: z.string().describe("An engaging multiple-choice question suitable for children."),
   options: z
     .array(quizOptionSchema)
     .length(4)
@@ -32,46 +30,42 @@ const quizQuestionSchema = z.object({
     .describe("A fun, exciting, or mind-blowing extra trivia fact related to the question."),
 });
 
-// Define the full schema for generated quiz activity (internal-only to avoid Next.js Server Action build errors)
+// Define the full schema for generated quiz activity (without hardcoded length restriction)
 const quizSchema = z.object({
   questions: z
     .array(quizQuestionSchema)
-    .length(3)
-    .describe("An array containing exactly 3 fun educational quiz questions."),
+    .describe("An array containing fun educational quiz questions."),
 });
 
 export type QuizActivityContent = z.infer<typeof quizSchema>;
 
 /**
- * Server Action to dynamically generate a 3-question multiple-choice educational quiz
+ * Server Action to dynamically generate a parameterized multiple-choice educational quiz
  * on a given topic for a kid user using the Vercel AI SDK and Gemini model, and save it in Supabase.
  */
-export async function generateQuiz(topic: string) {
+export async function generateQuiz(
+  topic: string,
+  count: number = 3,
+  difficulty: string = "Grade 5"
+) {
+  const clampedCount = Math.max(1, Math.min(20, count));
+
   return generateBaseActivity({
     topic,
     activityType: "quiz",
     schema: quizSchema,
     systemPrompt: `
-You are an intelligent, friendly AI teacher for children ages 6–12.
+You are an intelligent, friendly AI teacher for children.
 
 Your job is to create fun, educational, and engaging multiple-choice quizzes based on the user's topic.
 
 IMPORTANT INSTRUCTIONS:
 - If the user makes spelling mistakes, typing mistakes, grammar mistakes, or uses incomplete words, intelligently understand and correct the intended topic automatically.
 - Infer the most likely educational topic from the user's input.
-- Example:
-  - "dinosar" → "dinosaur"
-  - "solr systm" → "solar system"
-  - "animls" → "animals"
-  - "maths additon" → "math addition"
 
-QUIZ COUNT RULES:
-- Detect if the user requested a specific number of quiz questions.
-- Examples:
-  - "generate 10 quiz questions about space" → generate 10 questions
-  - "give me 5 dinosaur quiz questions" → generate 5 questions
-- If the user does NOT mention any number, generate EXACTLY 3 quiz questions by default.
-- Always generate the exact requested number of questions.
+QUIZ COUNT & DIFFICULTY RULES:
+- Generate EXACTLY ${clampedCount} quiz questions.
+- Target the cognitive difficulty level to: "${difficulty}".
 
 Each quiz question must contain:
 1. "question"
@@ -93,9 +87,9 @@ Each quiz question must contain:
    - A fun, surprising, or mind-blowing trivia fact related to the question.
 
 RULES:
-- Use simple English suitable for children ages 6–12.
+- Use simple English suitable for children matching the targeted difficulty: "${difficulty}".
 - Keep explanations short, exciting, and easy to understand.
-- Avoid difficult scientific or technical jargon.
+- Avoid difficult technical jargon unless appropriate for "${difficulty}".
 - Use energetic and encouraging language.
 - Make learning feel like an adventure.
 - Ensure all content is safe, positive, educational, and age-appropriate.
@@ -109,9 +103,7 @@ The child wants to learn about this topic:
 
 Instructions:
 1. First understand and auto-correct the intended topic if needed.
-2. Detect whether the user requested a specific number of quiz questions.
-3. If no number is mentioned, generate 3 quiz questions by default.
-4. Generate a fun and educational multiple-choice quiz for kids.
+2. Generate a fun and educational multiple-choice quiz with exactly ${clampedCount} questions at a "${difficulty}" difficulty level.
 `,
   });
 }

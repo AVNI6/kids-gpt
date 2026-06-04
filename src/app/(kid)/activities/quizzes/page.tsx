@@ -18,6 +18,7 @@ import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 interface QuizzesPageProps {
   quizTitle?: string;
   questions?: QuizQuestionItem[];
+  assignmentId?: string;
 }
 
 const defaultQuestions: QuizQuestionItem[] = [
@@ -59,6 +60,7 @@ const defaultQuestions: QuizQuestionItem[] = [
 export default function QuizzesPage({
   quizTitle = "Solar System Explorers",
   questions = defaultQuestions,
+  assignmentId,
 }: QuizzesPageProps) {
   const router = useRouter();
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -67,6 +69,7 @@ export default function QuizzesPage({
   const [correctCount, setCorrectCount] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(120);
+  const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
   const hasClaimed = useRef(false);
 
   useEffect(() => {
@@ -103,22 +106,39 @@ export default function QuizzesPage({
         const finalScorePercent = Math.round((correctCount / safeQuestions.length) * 100);
         const scoreStr = `${finalScorePercent}%`;
         try {
-          const slug = quizTitle
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)/g, "");
+          if (assignmentId) {
+            const { submitAssignmentActivityCompletion } =
+              await import("@/lib/services/kid/classroom.actions");
+            const res = await submitAssignmentActivityCompletion(assignmentId, scoreStr);
+            if (res.success) {
+              if (res.classroomId) {
+                setCompletedClassroomId(res.classroomId);
+              }
+              triggerConfettiSideCannons();
+              toast.success("Assignment Completed! 🎉", {
+                description: `Your score has been submitted.`,
+              });
+            } else {
+              toast.error(res.error || "Failed to submit assignment.");
+            }
+          } else {
+            const slug = quizTitle
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/(^-|-$)/g, "");
 
-          const res = await saveKidActivityProgress(
-            slug || "quizzes",
-            xpReward,
-            quizTitle,
-            scoreStr
-          );
-          if (res.success) {
-            triggerConfettiSideCannons();
-            toast.success("Progress Saved! 🎉", {
-              description: `+${xpReward} XP earned!`,
-            });
+            const res = await saveKidActivityProgress(
+              slug || "quizzes",
+              xpReward,
+              quizTitle,
+              scoreStr
+            );
+            if (res.success) {
+              triggerConfettiSideCannons();
+              toast.success("Progress Saved! 🎉", {
+                description: `+${xpReward} XP earned!`,
+              });
+            }
           }
         } catch (err) {
           console.error("Auto-claim error:", err);
@@ -126,7 +146,7 @@ export default function QuizzesPage({
       };
       autoClaim();
     }
-  }, [quizCompleted, correctCount, safeQuestions.length, quizTitle, xpReward]);
+  }, [quizCompleted, correctCount, safeQuestions.length, quizTitle, xpReward, assignmentId]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -154,7 +174,13 @@ export default function QuizzesPage({
   };
 
   const handleFinishMission = () => {
-    router.push(APP_ROUTES.Activities);
+    if (assignmentId && completedClassroomId) {
+      router.push(`/dashboard/kid/classrooms/${completedClassroomId}`);
+    } else if (assignmentId) {
+      router.push("/dashboard/kid");
+    } else {
+      router.push(APP_ROUTES.Activities);
+    }
   };
 
   const handleReset = () => {

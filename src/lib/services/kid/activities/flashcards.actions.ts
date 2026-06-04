@@ -12,11 +12,9 @@ const flashcardItemSchema = z.object({
     .describe("An interesting, mind-blowing fun fact related to the topic to spark curiosity."),
 });
 
-// Define the full schema for generated flashcards activity (internal-only to avoid Next.js Server Action build errors)
+// Define the full schema for generated flashcards activity (without static constraints)
 const flashcardSchema = z.object({
-  flashcards: z
-    .array(flashcardItemSchema)
-    .describe("An array containing exactly 5 kid-friendly flashcards."),
+  flashcards: z.array(flashcardItemSchema).describe("An array containing kid-friendly flashcards."),
 });
 
 export type FlashcardActivityContent = z.infer<typeof flashcardSchema>;
@@ -25,44 +23,39 @@ export type FlashcardActivityContent = z.infer<typeof flashcardSchema>;
  * Server Action to dynamically generate educational flashcards on a given topic
  * for a kid user using the Vercel AI SDK and Gemini model, and save it in Supabase.
  */
-export async function generateFlashcards(topic: string) {
+export async function generateFlashcards(
+  topic: string,
+  count: number = 5,
+  difficulty: string = "Grade 5"
+) {
+  const clampedCount = Math.max(1, Math.min(20, count));
+
   return generateBaseActivity({
     topic,
     activityType: "flashcards",
     schema: flashcardSchema,
     systemPrompt: `
-You are an intelligent, friendly AI teacher for children ages 6-12.
+You are an intelligent, friendly AI teacher for children.
 
 Your job is to create fun and educational flashcards based on the user's topic.
 
 IMPORTANT INSTRUCTIONS:
 - If the user makes spelling mistakes, typing mistakes, grammar mistakes, or uses incomplete words, intelligently understand and correct the intended topic automatically.
 - Infer the most likely educational topic from the user's input.
-- Example:
-  - "dinosar" → "dinosaur"
-  - "solr systm" → "solar system"
-  - "animls" → "animals"
-  - "maths additon" → "math addition"
 
-FLASHCARD COUNT RULES:
-- Detect if the user requested a specific number of flashcards.
-- Examples:
-  - "generate 10 cards about space" → generate 10 flashcards
-  - "give me 3 dinosaur flashcards" → generate 3 flashcards
-- If the user does NOT mention any number, generate EXACTLY 5 flashcards by default.
-- Always generate the exact requested number of flashcards.
+FLASHCARD COUNT & DIFFICULTY RULES:
+- Generate EXACTLY ${clampedCount} flashcards.
+- Target the cognitive difficulty level to: "${difficulty}".
 
-After understanding the corrected topic:
-- Generate flashcards dynamically based on the requested count.
-- Each flashcard must contain:
-  1. "question" → A fun, engaging question suitable for kids.
-  2. "answer" → A simple, exciting, kid-friendly explanation.
-  3. "fact" → A surprising, funny, or mind-blowing fact related to the topic.
+Each flashcard must contain:
+1. "question" → A fun, engaging question suitable for kids matching the difficulty: "${difficulty}".
+2. "answer" → A simple, exciting, kid-friendly explanation.
+3. "fact" → A surprising, funny, or mind-blowing fact related to the topic.
 
 RULES:
-- Use simple English.
+- Use simple English suitable for children.
 - Keep answers short and exciting.
-- Avoid difficult scientific jargon.
+- Avoid difficult scientific jargon unless appropriate for "${difficulty}".
 - Use energetic and encouraging language.
 - Make learning feel like an adventure.
 - Ensure all content is safe, positive, educational, and age-appropriate.
@@ -75,9 +68,7 @@ The child wants to learn about this topic:
 
 Instructions:
 1. First understand and auto-correct the intended topic if needed.
-2. Detect whether the user requested a specific number of flashcards.
-3. If no number is mentioned, generate 5 flashcards by default.
-4. Generate fun and educational flashcards for kids.
+2. Generate exactly ${clampedCount} fun and educational flashcards at a "${difficulty}" difficulty level.
 `,
   });
 }

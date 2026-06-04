@@ -100,6 +100,10 @@ export default function TeacherClassroomWorkspaceClient({
   const [assignSubject, setAssignSubject] = useState("");
   const [assignPoints, setAssignPoints] = useState(100);
   const [assignDueDate, setAssignDueDate] = useState("");
+  const [assignActivityType, setAssignActivityType] = useState("quizzes");
+  const [assignTopic, setAssignTopic] = useState("");
+  const [assignDifficulty, setAssignDifficulty] = useState("Grade 5");
+  const [assignQuestionCount, setAssignQuestionCount] = useState(3);
 
   // Upload Resource inputs
   const [resTitle, setResTitle] = useState("");
@@ -140,7 +144,11 @@ export default function TeacherClassroomWorkspaceClient({
         assignDesc,
         assignSubject,
         assignPoints,
-        assignDueDate || null
+        assignDueDate || null,
+        assignActivityType,
+        assignTopic,
+        assignDifficulty,
+        assignQuestionCount
       );
 
       if (result.success && result.assignment) {
@@ -153,6 +161,10 @@ export default function TeacherClassroomWorkspaceClient({
         setAssignSubject("");
         setAssignPoints(100);
         setAssignDueDate("");
+        setAssignActivityType("quizzes");
+        setAssignTopic("");
+        setAssignDifficulty("Grade 5");
+        setAssignQuestionCount(3);
       } else {
         toast.error(result.error || "Failed to create assignment.");
       }
@@ -489,6 +501,88 @@ export default function TeacherClassroomWorkspaceClient({
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="assignActivityType"
+                        className="text-xs font-bold text-slate-700 ml-1"
+                      >
+                        Activity Type
+                      </Label>
+                      <select
+                        id="assignActivityType"
+                        value={assignActivityType}
+                        onChange={(e) => setAssignActivityType(e.target.value)}
+                        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      >
+                        <option value="quizzes">Quiz</option>
+                        <option value="flashcards">Flashcards</option>
+                        <option value="math-challenges">Math Challenge</option>
+                        <option value="word-scrambles">Spelling Scramble</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="assignQuestionCount"
+                        className="text-xs font-bold text-slate-700 ml-1"
+                      >
+                        Question Count
+                      </Label>
+                      <Input
+                        id="assignQuestionCount"
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={assignQuestionCount}
+                        onChange={(e) => setAssignQuestionCount(Number(e.target.value))}
+                        required
+                        className="rounded-xl h-11 text-sm font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="assignTopic"
+                        className="text-xs font-bold text-slate-700 ml-1"
+                      >
+                        Topic*
+                      </Label>
+                      <Input
+                        id="assignTopic"
+                        value={assignTopic}
+                        onChange={(e) => setAssignTopic(e.target.value)}
+                        required
+                        placeholder="e.g. Addition, Dinosaurs"
+                        className="rounded-xl h-11 text-sm font-semibold"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="assignDifficulty"
+                        className="text-xs font-bold text-slate-700 ml-1"
+                      >
+                        Difficulty
+                      </Label>
+                      <select
+                        id="assignDifficulty"
+                        value={assignDifficulty}
+                        onChange={(e) => setAssignDifficulty(e.target.value)}
+                        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      >
+                        <option value="Grade 1">Grade 1</option>
+                        <option value="Grade 2">Grade 2</option>
+                        <option value="Grade 3">Grade 3</option>
+                        <option value="Grade 4">Grade 4</option>
+                        <option value="Grade 5">Grade 5</option>
+                        <option value="Grade 6">Grade 6</option>
+                        <option value="Grade 7">Grade 7</option>
+                        <option value="Grade 8">Grade 8</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div className="space-y-1.5">
                     <Label
                       htmlFor="assignDueDate"
@@ -597,6 +691,65 @@ export default function TeacherClassroomWorkspaceClient({
                           <p className="text-xs text-slate-500 font-semibold line-clamp-2 leading-relaxed">
                             {assign.description}
                           </p>
+                        )}
+
+                        {/* Config Fields */}
+                        {assign.activity_type && (
+                          <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-600 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 mt-2">
+                            <div>
+                              <span className="text-slate-400 block uppercase tracking-wider text-[8px]">
+                                Type
+                              </span>
+                              <span className="capitalize">
+                                {assign.activity_type.replace("-", " ")}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block uppercase tracking-wider text-[8px]">
+                                Topic
+                              </span>
+                              <span className="truncate block">{assign.topic || "N/A"}</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block uppercase tracking-wider text-[8px]">
+                                Difficulty
+                              </span>
+                              <span>{assign.difficulty || "Grade 5"}</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block uppercase tracking-wider text-[8px]">
+                                Count
+                              </span>
+                              <span>{assign.question_count ?? 3} questions</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Metrics section */}
+                        {!isDraft && (
+                          <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] mt-2">
+                            <div className="flex justify-between items-center text-slate-600 font-bold">
+                              <span>Completion Rate</span>
+                              <span className="text-indigo-600">
+                                {assign.total_students && assign.total_students > 0
+                                  ? Math.round(
+                                      ((assign.submissions_count || 0) / assign.total_students) *
+                                        100
+                                    )
+                                  : 0}
+                                % ({assign.submissions_count || 0}/{assign.total_students || 0})
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-slate-600 font-bold">
+                              <span>Average Score</span>
+                              <span className="text-emerald-600">
+                                {assign.average_score
+                                  ? Math.round(Number(assign.average_score))
+                                  : 0}
+                                %
+                              </span>
+                            </div>
+                          </div>
                         )}
                       </div>
 

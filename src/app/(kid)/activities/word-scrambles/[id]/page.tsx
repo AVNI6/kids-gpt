@@ -6,11 +6,15 @@ interface PageProps {
   params: Promise<{
     id: string;
   }>;
+  searchParams: Promise<{
+    assignment_id?: string;
+  }>;
 }
 
-export default async function ScrambleActivityPage({ params }: PageProps) {
+export default async function ScrambleActivityPage({ params, searchParams }: PageProps) {
   // Await params as required by Next.js 15/16 rules
   const { id } = await params;
+  const { assignment_id } = await searchParams;
 
   if (!id) {
     notFound();
@@ -56,5 +60,11 @@ export default async function ScrambleActivityPage({ params }: PageProps) {
   // Define a nice dynamic scramble title
   const scrambleTitle = "Dynamic Word Scramble 🔠";
 
-  return <WordScramblesPage scrambleTitle={scrambleTitle} words={content.words} />;
+  return (
+    <WordScramblesPage
+      scrambleTitle={scrambleTitle}
+      words={content.words}
+      assignmentId={assignment_id}
+    />
+  );
 }

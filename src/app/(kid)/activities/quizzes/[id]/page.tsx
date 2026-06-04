@@ -7,11 +7,15 @@ interface PageProps {
   params: Promise<{
     id: string;
   }>;
+  searchParams: Promise<{
+    assignment_id?: string;
+  }>;
 }
 
-export default async function QuizActivityPage({ params }: PageProps) {
+export default async function QuizActivityPage({ params, searchParams }: PageProps) {
   // Await params as required by Next.js 15/16 rules
   const { id } = await params;
+  const { assignment_id } = await searchParams;
 
   if (!id) {
     notFound();
@@ -49,5 +53,7 @@ export default async function QuizActivityPage({ params }: PageProps) {
 
   const quizTitle = "AI Quiz Quest ✨";
 
-  return <QuizzesPage quizTitle={quizTitle} questions={content.questions} />;
+  return (
+    <QuizzesPage quizTitle={quizTitle} questions={content.questions} assignmentId={assignment_id} />
+  );
 }

@@ -31,6 +31,7 @@ interface Flashcard {
 interface FlashcardsPageProps {
   deckTitle?: string;
   flashcards?: Flashcard[];
+  assignmentId?: string;
 }
 
 export default function FlashcardsPage({
@@ -52,6 +53,7 @@ export default function FlashcardsPage({
       fact: "The Milky Way has over 100 billion stars!",
     },
   ],
+  assignmentId,
 }: FlashcardsPageProps) {
   const router = useRouter();
   const [currentCard, setCurrentCard] = useState(0);
@@ -60,6 +62,7 @@ export default function FlashcardsPage({
   const [reviewIds, setReviewIds] = useState<number[]>([]);
   const [deckCompleted, setDeckCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(100);
+  const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
   const hasClaimed = useRef(false);
 
   useEffect(() => {
@@ -77,15 +80,32 @@ export default function FlashcardsPage({
             flashcards.length > 0 ? Math.round((correctCount / flashcards.length) * 100) : 0;
           const scoreStr = `${scorePercent}% Mastered (${correctCount}/${flashcards.length})`;
 
-          const res = await saveKidActivityProgress("flashcards", xpReward, deckTitle, scoreStr);
-
-          if (res.success) {
-            triggerConfettiSideCannons();
-            toast.success("Deck Completed! 🎉", {
-              description: `+${Math.round((xpReward * scorePercent) / 100)} XP automatically awarded to your kid profile!`,
-            });
+          if (assignmentId) {
+            const { submitAssignmentActivityCompletion } =
+              await import("@/lib/services/kid/classroom.actions");
+            const res = await submitAssignmentActivityCompletion(assignmentId, `${scorePercent}%`);
+            if (res.success) {
+              if (res.classroomId) {
+                setCompletedClassroomId(res.classroomId);
+              }
+              triggerConfettiSideCannons();
+              toast.success("Assignment Completed! 🎉", {
+                description: `Your score has been submitted.`,
+              });
+            } else {
+              toast.error(res.error || "Failed to submit assignment.");
+            }
           } else {
-            console.error("Auto-claim failed:", res.error);
+            const res = await saveKidActivityProgress("flashcards", xpReward, deckTitle, scoreStr);
+
+            if (res.success) {
+              triggerConfettiSideCannons();
+              toast.success("Deck Completed! 🎉", {
+                description: `+${Math.round((xpReward * scorePercent) / 100)} XP automatically awarded to your kid profile!`,
+              });
+            } else {
+              console.error("Auto-claim failed:", res.error);
+            }
           }
         } catch (err) {
           console.error("Auto-claim exception:", err);
@@ -94,7 +114,7 @@ export default function FlashcardsPage({
 
       autoClaim();
     }
-  }, [deckCompleted, masteredIds.length, flashcards.length, xpReward, deckTitle]);
+  }, [deckCompleted, masteredIds.length, flashcards.length, xpReward, deckTitle, assignmentId]);
 
   const card = flashcards[currentCard] || flashcards[0];
   const progress = ((currentCard + 1) / flashcards.length) * 100;
@@ -134,7 +154,13 @@ export default function FlashcardsPage({
   };
 
   const handleFinish = () => {
-    router.push(APP_ROUTES.Activities);
+    if (assignmentId && completedClassroomId) {
+      router.push(`/dashboard/kid/classrooms/${completedClassroomId}`);
+    } else if (assignmentId) {
+      router.push("/dashboard/kid");
+    } else {
+      router.push(APP_ROUTES.Activities);
+    }
   };
 
   return (

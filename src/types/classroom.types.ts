@@ -97,6 +97,13 @@ export interface ClassroomAssignment {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  activity_type?: string | null;
+  topic?: string | null;
+  difficulty?: string | null;
+  question_count?: number | null;
+  total_students?: number;
+  submissions_count?: number;
+  average_score?: number;
 }
 
 export interface StudentAssignment extends ClassroomAssignment {
