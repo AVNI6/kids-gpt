@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/shared/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Logo from "@/components/shared/ui/Logo";
+import { useAuth } from "@/hooks/useAuth";
 
 const supabase = createClient();
 
@@ -29,6 +30,7 @@ type Props = {
 
 export function RoleOnboardingPage({ role }: Props) {
   const router = useRouter();
+  const { user } = useAuth();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -36,9 +38,6 @@ export function RoleOnboardingPage({ role }: Props) {
   const handleSelectRole = async (selected: Role) => {
     setIsSubmitting(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("Please sign in first.");
 
       const { error } = await supabase

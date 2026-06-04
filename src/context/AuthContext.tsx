@@ -1,12 +1,11 @@
 "use client";
-
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useEffect, useState, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { UserRole, UserProfile } from "@/types/user";
 import { useRouter } from "next/navigation";
-
-interface AuthContextType {
+import { AuthService } from "@/lib/services/auth.service";
+export interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   userRole: UserRole | null;
@@ -15,9 +14,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -28,40 +25,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const lastLoadedUserIdRef = useRef<string | null>(null);
   const supabase = createClient();
   const router = useRouter();
-
   useEffect(() => {
-    // Check current user on mount
+    let isMounted = true;
+    // Check current user securely on mount using the coordinated AuthService
     const checkUser = async () => {
       if (isLoggingOutRef.current) return;
       try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-
-        if (isLoggingOutRef.current) return;
-
+        const { user: currentUser, profile, role } = await AuthService.getInitialAuth();
+        if (!isMounted || isLoggingOutRef.current) return;
         if (currentUser) {
           setUser(currentUser);
           setIsUserLoggedIn(true);
-
-          // Only fetch profile if not already fetched for this user ID
-          if (lastLoadedUserIdRef.current !== currentUser.id) {
-            lastLoadedUserIdRef.current = currentUser.id;
-            const { data: profile } = await supabase
-              .from("profile")
-              .select("*")
-              .eq("user_id", currentUser.id)
-              .maybeSingle();
-
-            if (isLoggingOutRef.current) return;
-
-            if (profile) {
-              setUserProfile(profile);
-              if (profile.role) {
-                setUserRole(profile.role as UserRole);
-              }
-            }
-          }
+          lastLoadedUserIdRef.current = currentUser.id;
+          setUserProfile(profile);
+          setUserRole(role);
         } else {
           lastLoadedUserIdRef.current = null;
           setUser(null);
@@ -70,33 +47,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setIsUserLoggedIn(false);
         }
       } catch (error) {
-        console.error("Error checking user:", error);
-        lastLoadedUserIdRef.current = null;
-        setUser(null);
-        setUserProfile(null);
-        setUserRole(null);
-        setIsUserLoggedIn(false);
+        console.error("AuthContext: Error checking user:", error);
+        if (isMounted) {
+          lastLoadedUserIdRef.current = null;
+          setUser(null);
+          setUserProfile(null);
+          setUserRole(null);
+          setIsUserLoggedIn(false);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
-
     checkUser();
-
-    // Subscribe to auth state changes
+    // Subscribe to auth state changes reactively
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
-      if (isLoggingOutRef.current) {
+      if (!isMounted || isLoggingOutRef.current) {
         setIsLoading(false);
         return;
       }
-
+      // Ignore INITIAL_SESSION if we are already bootstrapping
+      if (event === "INITIAL_SESSION") {
+        return;
+      }
+      // Clear cache on significant session modifications to get fresh details next time
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
+        AuthService.clearInitialAuthCache();
+      }
       if (session?.user) {
         setUser(session.user);
         setIsUserLoggedIn(true);
-
-        // Only fetch profile if not already fetched for this user ID
+        // Fetch profile if not already loaded for this user
         if (lastLoadedUserIdRef.current !== session.user.id) {
           lastLoadedUserIdRef.current = session.user.id;
           const { data: profile } = await supabase
@@ -104,9 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .select("*")
             .eq("user_id", session.user.id)
             .maybeSingle();
-
-          if (isLoggingOutRef.current) return;
-
+          if (!isMounted || isLoggingOutRef.current) return;
           if (profile) {
             setUserProfile(profile);
             if (profile.role) {
@@ -123,24 +106,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setIsLoading(false);
     });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   const refreshProfile = async () => {
     try {
+      AuthService.clearInitialAuthCache();
       const {
         data: { user: currentUser },
       } = await supabase.auth.getUser();
-
       if (currentUser) {
         const { data: profile } = await supabase
           .from("profile")
           .select("*")
           .eq("user_id", currentUser.id)
           .maybeSingle();
-
         if (profile) {
           setUserProfile(profile);
           if (profile.role) {
@@ -152,21 +135,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Error refreshing profile:", error);
     }
   };
-
   const logout = async () => {
     try {
       isLoggingOutRef.current = true;
-
+      AuthService.clearInitialAuthCache();
       // 1. Optimistically clear local states immediately
       lastLoadedUserIdRef.current = null;
       setUser(null);
       setUserProfile(null);
       setUserRole(null);
       setIsUserLoggedIn(false);
-
       // 2. Await full signOut to ensure locks are cleanly released
       await supabase.auth.signOut();
-
       // 3. Navigate home
       router.push("/");
     } catch (error) {
@@ -175,7 +155,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoggingOutRef.current = false;
     }
   };
-
   const value = {
     user,
     userProfile,
@@ -185,14 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     refreshProfile,
   };
-
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
+// Re-export the useAuth hook from the new hook file for backwards compatibility
+export { useAuth } from "@/hooks/useAuth";

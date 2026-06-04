@@ -41,17 +41,13 @@ interface DashboardContextType {
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
-const fetchNotifications = async () => {
+const fetchNotifications = async (parentUserId: string) => {
+  if (!parentUserId) return [];
   const supabase = createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.user?.id) return [];
-
   const { data, error } = await supabase
     .from("parent_notifications")
     .select("*")
-    .eq("parent_id", session.user.id)
+    .eq("parent_id", parentUserId)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -108,8 +104,8 @@ export function DashboardProvider({
 
   const { data: notificationsQueryData, isLoading: isLoadingNotificationsQuery } = useQuery({
     queryKey: ["parent-dashboard", "notifications"],
-    queryFn: fetchNotifications,
-    enabled: true, // Always fetch for the top nav bell icon popover
+    queryFn: () => fetchNotifications(initialProfile.user_id),
+    enabled: !!initialProfile.user_id,
     staleTime: Infinity,
   });
 
@@ -287,21 +283,17 @@ export function DashboardProvider({
   );
 
   const markAllAsRead = useCallback(async () => {
+    if (!initialProfile.user_id) return;
     const previous = notificationsRef.current;
     // Optimistic Update
     updateNotifications(previous.map((n) => ({ ...n, is_read: true })));
 
     try {
       const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.user?.id) return;
-
       const { error } = await supabase
         .from("parent_notifications")
         .update({ is_read: true })
-        .eq("parent_id", session.user.id)
+        .eq("parent_id", initialProfile.user_id)
         .eq("is_read", false);
 
       if (error) {
@@ -311,7 +303,7 @@ export function DashboardProvider({
       console.error("Failed to mark all read:", err);
       updateNotifications(previous);
     }
-  }, [updateNotifications]);
+  }, [initialProfile.user_id, updateNotifications]);
 
   // Notifications Realtime Subscription (Only connect on user interaction, not on initial load)
   useEffect(() => {

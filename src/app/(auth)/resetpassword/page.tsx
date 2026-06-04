@@ -33,16 +33,19 @@ export default function ResetPasswordPage() {
   } = useForm<FormInputs>();
 
   useEffect(() => {
+    let isMounted = true;
     const initRecoverySession = async () => {
       try {
         const url = new URL(window.location.href);
         const code = url.searchParams.get("code");
         let sessionReady = false;
+        let activeSession = null;
 
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (!error) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (!error && data?.session) {
             sessionReady = true;
+            activeSession = data.session;
           }
         }
 
@@ -53,35 +56,50 @@ export default function ResetPasswordPage() {
           const type = hashParams.get("type");
 
           if (type === "recovery" && accessToken && refreshToken) {
-            const { error } = await supabase.auth.setSession({
+            const { data, error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
 
-            if (!error) {
+            if (!error && data?.session) {
               sessionReady = true;
+              activeSession = data.session;
             }
           }
         }
 
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        // Only query getSession if not already loaded to minimize parallel auth lock contention
+        let currentSession = activeSession;
+        if (!currentSession) {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          currentSession = session;
+        }
 
-        if (!session && !sessionReady) {
+        if (!isMounted) return;
+
+        if (!currentSession && !sessionReady) {
           setLinkError("This reset link is invalid or expired. Please request a new one.");
         } else {
           setLinkError("");
           window.history.replaceState({}, "", "/resetpassword");
         }
       } catch {
-        setLinkError("Unable to verify reset link. Please request a new one.");
+        if (isMounted) {
+          setLinkError("Unable to verify reset link. Please request a new one.");
+        }
       } finally {
-        setLinkChecked(true);
+        if (isMounted) {
+          setLinkChecked(true);
+        }
       }
     };
 
     initRecoverySession();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
