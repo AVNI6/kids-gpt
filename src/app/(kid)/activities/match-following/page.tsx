@@ -41,7 +41,6 @@ export default function MatchFollowingPage({
         toggleShowAnswers={game.toggleShowAnswers}
         handleFinishMission={game.handleFinishMission}
         resetGame={game.resetGame}
-        matchTitle={matchTitle}
       />
     );
   }

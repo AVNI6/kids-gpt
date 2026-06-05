@@ -90,11 +90,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
   };
 
   const handleDeleteClass = async (classroomId: string, className: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete classroom "${className}"? This will soft-delete the class.`
-      )
-    ) {
+    if (!confirm(`Are you sure you want to delete classroom "${className}"?`)) {
       return;
     }
 

@@ -18,7 +18,6 @@ interface ScoreCardProps {
   toggleShowAnswers: () => void;
   handleFinishMission: () => void;
   resetGame: () => void;
-  matchTitle: string;
 }
 
 export const ScoreCard = React.memo(function ScoreCard({
@@ -31,7 +30,6 @@ export const ScoreCard = React.memo(function ScoreCard({
   toggleShowAnswers,
   handleFinishMission,
   resetGame,
-  matchTitle,
 }: ScoreCardProps) {
   const accuracy = Math.round((correctCount / pairs.length) * 100);
 

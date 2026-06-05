@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/shared/ui/card";
 import { Button } from "@/components/shared/ui/button";
 import { Sparkles, Users, Award } from "lucide-react";
 import { getSafeXP } from "@/hooks/kid/useChildXP";
-import { getMaxStreak } from "@/hooks/kid/useChildStreak";
 import type { DashboardUserProfile, LinkedChildProfile, ChildDetailsResult } from "@/types/kid";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
@@ -25,7 +24,6 @@ export default function WelcomeBanner({
   let totalXP = 0;
   let totalCompleted = 0;
   let completedToday = 0;
-  const maxStreak = getMaxStreak(linkedChildren);
 
   linkedChildren.forEach((child) => {
     totalXP += getSafeXP(child.total_experience_points);

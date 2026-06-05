@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PencilLine, PlusCircle, Upload } from "lucide-react";
+import { PencilLine, Upload } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { AvatarUpload } from "@/components/shared/ui/avatar-upload";
 import { Button } from "@/components/shared/ui/button";
@@ -23,7 +23,6 @@ import { toast } from "sonner";
 
 type Props = {
   profile: DashboardUserProfile;
-  onCreateClassroom: () => void;
 };
 
 function getInitials(firstName: string | null, lastName: string | null) {
@@ -35,7 +34,7 @@ function formatDisplayName(profile: DashboardUserProfile) {
   return [profile.first_name, profile.last_name].filter(Boolean).join(" ").trim() || "Educator";
 }
 
-export default function TeacherTopNav({ profile, onCreateClassroom }: Props) {
+export default function TeacherTopNav({ profile }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(profile.avatar_url);
