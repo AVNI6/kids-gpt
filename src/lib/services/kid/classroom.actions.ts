@@ -533,20 +533,20 @@ export async function publishAssignment(assignmentId: string) {
       .eq("classroom_id", assignment.classroom_id)
       .eq("status", "APPROVED");
 
+    const eventData = {
+      actor_user_id: userId,
+      actor_role: "teacher" as const,
+      target_user_id: null,
+      target_type: "classroom",
+      event_type: "ASSIGNMENT_CREATED",
+      source_type: "assignments",
+      source_id: assignmentId,
+      metadata: { title: assignment.title, classroom_id: assignment.classroom_id },
+    };
+
+    await supabase.from("activity_events").insert(eventData);
+
     if (members && members.length > 0) {
-      const actorId = userId;
-
-      const eventsData = members.map((m) => ({
-        actor_user_id: actorId,
-        actor_role: "teacher" as const,
-        target_user_id: m.student_user_id,
-        target_type: "classroom",
-        event_type: "ASSIGNMENT_CREATED",
-        source_type: "assignments",
-        source_id: assignmentId,
-        metadata: { title: assignment.title, classroom_id: assignment.classroom_id },
-      }));
-
       const notificationsData = members.map((m) => ({
         recipient_user_id: m.student_user_id,
         recipient_role: "kid" as const,
@@ -557,11 +557,7 @@ export async function publishAssignment(assignmentId: string) {
         source_id: assignmentId,
         metadata: { classroom_id: assignment.classroom_id },
       }));
-
-      await Promise.all([
-        supabase.from("activity_events").insert(eventsData),
-        supabase.from("notifications").insert(notificationsData),
-      ]);
+      await supabase.from("notifications").insert(notificationsData);
     }
 
     revalidatePath(`/dashboard/teacher/classrooms/${assignment.classroom_id}`);
@@ -879,18 +875,20 @@ export async function uploadResource(
       .eq("classroom_id", classroomId)
       .eq("status", "APPROVED");
 
-    if (members && members.length > 0) {
-      const eventsData = members.map((m) => ({
-        actor_user_id: userId,
-        actor_role: "teacher" as const,
-        target_user_id: m.student_user_id,
-        target_type: "classroom",
-        event_type: "RESOURCE_UPLOADED",
-        source_type: "classroom_resources",
-        source_id: resource.id,
-        metadata: { title: resource.title, classroom_id: classroomId },
-      }));
+    const eventData = {
+      actor_user_id: userId,
+      actor_role: "teacher" as const,
+      target_user_id: null,
+      target_type: "classroom",
+      event_type: "RESOURCE_UPLOADED",
+      source_type: "classroom_resources",
+      source_id: resource.id,
+      metadata: { title: resource.title, classroom_id: classroomId },
+    };
 
+    await supabase.from("activity_events").insert(eventData);
+
+    if (members && members.length > 0) {
       const notificationsData = members.map((m) => ({
         recipient_user_id: m.student_user_id,
         recipient_role: "kid" as const,
@@ -901,11 +899,7 @@ export async function uploadResource(
         source_id: resource.id,
         metadata: { classroom_id: classroomId },
       }));
-
-      await Promise.all([
-        supabase.from("activity_events").insert(eventsData),
-        supabase.from("notifications").insert(notificationsData),
-      ]);
+      await supabase.from("notifications").insert(notificationsData);
     }
 
     revalidatePath(`/dashboard/teacher/classrooms/${classroomId}`);
@@ -987,18 +981,20 @@ export async function createAnnouncement(classroomId: string, title: string, mes
       .eq("classroom_id", classroomId)
       .eq("status", "APPROVED");
 
-    if (members && members.length > 0) {
-      const eventsData = members.map((m) => ({
-        actor_user_id: userId,
-        actor_role: "teacher" as const,
-        target_user_id: m.student_user_id,
-        target_type: "classroom",
-        event_type: "ANNOUNCEMENT_POSTED",
-        source_type: "announcements",
-        source_id: announcement.id,
-        metadata: { title: announcement.title, classroom_id: classroomId },
-      }));
+    const eventData = {
+      actor_user_id: userId,
+      actor_role: "teacher" as const,
+      target_user_id: null,
+      target_type: "classroom",
+      event_type: "ANNOUNCEMENT_POSTED",
+      source_type: "announcements",
+      source_id: announcement.id,
+      metadata: { title: announcement.title, classroom_id: classroomId },
+    };
 
+    await supabase.from("activity_events").insert(eventData);
+
+    if (members && members.length > 0) {
       const notificationsData = members.map((m) => ({
         recipient_user_id: m.student_user_id,
         recipient_role: "kid" as const,
@@ -1009,11 +1005,7 @@ export async function createAnnouncement(classroomId: string, title: string, mes
         source_id: announcement.id,
         metadata: { classroom_id: classroomId },
       }));
-
-      await Promise.all([
-        supabase.from("activity_events").insert(eventsData),
-        supabase.from("notifications").insert(notificationsData),
-      ]);
+      await supabase.from("notifications").insert(notificationsData);
     }
 
     revalidatePath(`/dashboard/teacher/classrooms/${classroomId}`);

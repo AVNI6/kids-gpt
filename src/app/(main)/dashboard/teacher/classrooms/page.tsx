@@ -5,15 +5,29 @@ import { getTeacherDashboardData } from "@/lib/services/kid/classroom.actions";
 import { createClient } from "@/lib/supabase/server";
 import TeacherClassrooms from "@/components/teacher/dashboard/TeacherClassrooms";
 import NeedsAttention from "@/components/teacher/dashboard/NeedsAttention";
-import RecentClassrooms from "@/components/teacher/dashboard/RecentClassrooms";
 import TeacherActivityFeed from "@/components/teacher/dashboard/TeacherActivityFeed";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import { Card, CardContent } from "@/components/shared/ui/card";
-import { School } from "lucide-react";
 
 function ClassroomsSkeleton() {
   return (
     <div className="flex flex-col gap-10">
+      {/* Classroom list Skeleton */}
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-5 w-48 bg-slate-100 rounded-full" />
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="rounded-[32px] border-indigo-100/50 bg-white shadow-sm">
+              <CardContent className="p-6 flex flex-col gap-4">
+                <Skeleton className="h-5 w-40 bg-slate-100" />
+                <Skeleton className="h-4 w-56 bg-slate-100" />
+                <Skeleton className="h-12 w-full bg-slate-100 rounded-2xl" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
       {/* Action Center Skeleton */}
       <div className="flex flex-col gap-4">
         <Skeleton className="h-5 w-48 bg-slate-100 rounded-full" />
@@ -30,20 +44,25 @@ function ClassroomsSkeleton() {
         </div>
       </div>
 
-      {/* Classroom list Skeleton */}
+      {/* Activity Feed Skeleton */}
       <div className="flex flex-col gap-4">
         <Skeleton className="h-5 w-48 bg-slate-100 rounded-full" />
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="rounded-[32px] border-indigo-100/50 bg-white shadow-sm">
-              <CardContent className="p-6 flex flex-col gap-4">
-                <Skeleton className="h-5 w-40 bg-slate-100" />
-                <Skeleton className="h-4 w-56 bg-slate-100" />
-                <Skeleton className="h-12 w-full bg-slate-100 rounded-2xl" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card className="rounded-[32px] border border-slate-100 bg-white shadow-sm">
+          <CardContent className="p-6 space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-4 py-2 border-b last:border-0 border-slate-50"
+              >
+                <Skeleton className="h-10 w-10 rounded-full bg-slate-100 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3 bg-slate-100" />
+                  <Skeleton className="h-3 w-1/2 bg-slate-100" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -172,27 +191,13 @@ async function ClassroomsPageContent({ createOpen }: { createOpen: boolean }) {
 
   return (
     <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* ─────────────────────────────────────────────────
-            SECTION 1 — Classroom Management (Full list)
-        ───────────────────────────────────────────────── */}
       <TeacherClassrooms classrooms={enrichedClassrooms} createOpen={createOpen} />
-
-      {/* ─────────────────────────────────────────────────
-          SECTION 2 — Action Center (Needs Attention)
-      ───────────────────────────────────────────────── */}
       <NeedsAttention
         pendingRequests={pendingRequests}
         pendingGrading={pendingGrading}
         emptyAnnouncementClassroomsCount={emptyAnnouncementClassroomsCount}
       />
-
-      {/* ─────────────────────────────────────────────────
-          SECTION 3 — Teaching Activity (Recent Classrooms & Activity Feed)
-      ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-8 items-start">
-        <RecentClassrooms classrooms={classrooms} />
-        <TeacherActivityFeed activityEvents={activityEvents} />
-      </div>
+      <TeacherActivityFeed activityEvents={activityEvents} />
     </div>
   );
 }

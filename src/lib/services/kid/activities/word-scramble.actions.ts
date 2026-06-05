@@ -24,14 +24,12 @@ const aiWordScrambleSchema = z.object({
 });
 
 // The final schema structure that matches what database/frontend expects
-const wordScrambleItemSchema = z.object({
-  answer: z.string(),
-  scrambled: z.string(),
-  hint: z.string(),
-});
-
 export type WordScrambleActivityContent = {
-  words: z.infer<typeof wordScrambleItemSchema>[];
+  words: {
+    answer: string;
+    scrambled: string;
+    hint: string;
+  }[];
 };
 
 /**

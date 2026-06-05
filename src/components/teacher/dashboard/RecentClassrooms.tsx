@@ -65,23 +65,20 @@ export default function RecentClassrooms({ classrooms }: Props) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-          <School className="w-4 h-4 text-indigo-500" /> Recent Classrooms
-        </h3>
-        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-          Quick Access Portal
-        </p>
-      </div>
+    <div className="h-full flex flex-col">
+      <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm relative overflow-hidden flex-1 flex flex-col">
+        <CardContent className="p-5 md:p-6 flex flex-col gap-4 flex-1">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 w-full border-b border-slate-100 dark:border-slate-800 pb-3.5">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <School className="w-4 h-4 text-indigo-500" />
+              Recent Classrooms
+            </h3>
+          </div>
 
-      <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm relative overflow-hidden">
-        <CardContent className="p-6 md:p-7 flex flex-wrap items-center gap-4 sm:gap-6">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-bold max-w-[120px] shrink-0 leading-tight">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-bold shrink-0 leading-tight">
             Jump back into a class:
           </span>
-
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             {recentClasses.map((cls, idx) => (
               <Link
                 key={cls.id}

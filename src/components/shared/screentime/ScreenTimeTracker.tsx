@@ -58,66 +58,73 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
   const syncChannelRef = useRef<BroadcastChannel | null>(null);
 
   // Helper to fetch the latest screen time details from the DB
-  const fetchScreenTime = useCallback(async (tz: string) => {
-    try {
-      const data = await getDailyScreenTime("", tz);
-      if (data.success) {
-        setDbScreenTimeSeconds(data.screenTimeSeconds);
-        setDailyLimitMinutes(data.dailyLimitMinutes);
-        setIsLimitEnabled(data.isLimitEnabled);
+  const fetchScreenTime = useCallback(
+    async (tz: string) => {
+      if (!childId) return;
+      try {
+        const data = await getDailyScreenTime(childId, tz);
+        if (data.success) {
+          setDbScreenTimeSeconds(data.screenTimeSeconds);
+          setDailyLimitMinutes(data.dailyLimitMinutes);
+          setIsLimitEnabled(data.isLimitEnabled);
 
-        // Broadcast to observer tabs
-        if (syncChannelRef.current) {
-          try {
-            syncChannelRef.current.postMessage({
-              type: "db_sync",
-              dbScreenTimeSeconds: data.screenTimeSeconds,
-              dailyLimitMinutes: data.dailyLimitMinutes,
-              isLimitEnabled: data.isLimitEnabled,
-              sourceTab: tabIdRef.current,
-            });
-          } catch (err) {
-            console.warn(
-              "[ScreenTimeTracker] Broadcast sync failed (channel might be closed):",
-              err
-            );
+          // Broadcast to observer tabs
+          if (syncChannelRef.current) {
+            try {
+              syncChannelRef.current.postMessage({
+                type: "db_sync",
+                dbScreenTimeSeconds: data.screenTimeSeconds,
+                dailyLimitMinutes: data.dailyLimitMinutes,
+                isLimitEnabled: data.isLimitEnabled,
+                sourceTab: tabIdRef.current,
+              });
+            } catch (err) {
+              console.warn(
+                "[ScreenTimeTracker] Broadcast sync failed (channel might be closed):",
+                err
+              );
+            }
           }
         }
+      } catch (err) {
+        console.error("Failed to fetch daily screen time limit:", err);
       }
-    } catch (err) {
-      console.error("Failed to fetch daily screen time limit:", err);
-    }
-  }, []);
+    },
+    [childId]
+  );
 
   // Helper to save tracked seconds to DB with offline queuing
-  const saveScreenTime = useCallback(async (seconds: number, tz: string) => {
-    if (seconds <= 0) return;
+  const saveScreenTime = useCallback(
+    async (seconds: number, tz: string) => {
+      if (!childId || seconds <= 0) return;
 
-    // Read any pending unsynced queue from localStorage
-    let unsynced = 0;
-    try {
-      unsynced = parseInt(localStorage.getItem("screen_time_unsynced") || "0", 10);
-      if (isNaN(unsynced)) unsynced = 0;
-    } catch {
-      unsynced = 0;
-    }
+      // Read any pending unsynced queue from localStorage
+      let unsynced = 0;
+      try {
+        unsynced = parseInt(localStorage.getItem("screen_time_unsynced") || "0", 10);
+        if (isNaN(unsynced)) unsynced = 0;
+      } catch {
+        unsynced = 0;
+      }
 
-    const totalToSync = seconds + unsynced;
+      const totalToSync = seconds + unsynced;
 
-    try {
-      const result = await logScreenTimeSession("", totalToSync, tz);
-      if (result.success) {
-        // Success -> Clear unsynced queue
-        localStorage.removeItem("screen_time_unsynced");
-      } else {
-        // Failure -> Queue it locally
+      try {
+        const result = await logScreenTimeSession(childId, totalToSync, tz);
+        if (result.success) {
+          // Success -> Clear unsynced queue
+          localStorage.removeItem("screen_time_unsynced");
+        } else {
+          // Failure -> Queue it locally
+          localStorage.setItem("screen_time_unsynced", String(totalToSync));
+        }
+      } catch (err) {
+        console.warn("[ScreenTimeTracker] Network error, queuing screen time offline:", err);
         localStorage.setItem("screen_time_unsynced", String(totalToSync));
       }
-    } catch (err) {
-      console.warn("[ScreenTimeTracker] Network error, queuing screen time offline:", err);
-      localStorage.setItem("screen_time_unsynced", String(totalToSync));
-    }
-  }, []);
+    },
+    [childId]
+  );
 
   // NEW: Store latest state to prevent stale closures and dependency loops
   const stateRefs = useRef({
@@ -139,11 +146,11 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
   // Dedicated Mount-Only initial fetch guarded by hasFetchedRef
   const hasFetchedRef = useRef(false);
   useEffect(() => {
-    if (hasFetchedRef.current) return;
+    if (hasFetchedRef.current || !childId) return;
     hasFetchedRef.current = true;
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata";
     void fetchScreenTime(tz);
-  }, [fetchScreenTime]);
+  }, [fetchScreenTime, childId]);
 
   // Effect 1: Core Lifecycle Tracking, Multi-Tab Election, Inactivity & Drift Safety
   // Core lifecycle effect: runs once on mount. Uses refs for mutable values.

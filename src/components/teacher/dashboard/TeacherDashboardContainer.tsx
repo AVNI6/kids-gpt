@@ -8,6 +8,7 @@ import TodaySnapshot from "./TodaySnapshot";
 import TeacherTopNav from "./TeacherTopNav";
 import type { DashboardUserProfile } from "@/types/kid";
 import type { Classroom, PendingEnrollmentRequest, ApprovedStudent } from "@/types/classroom.types";
+import RecentClassrooms from "./RecentClassrooms";
 
 type Metrics = {
   activeClassrooms: number;
@@ -33,27 +34,6 @@ type Props = {
   metrics: Metrics;
   snapshot: Snapshot;
 };
-
-/** Section divider with title and description — matches Parent dashboard visual rhythm */
-function SectionHeader({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <h2 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
-        <Icon className="size-4 text-indigo-500 shrink-0" />
-        {title}
-      </h2>
-      <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold pl-6">{description}</p>
-    </div>
-  );
-}
 
 export default function TeacherDashboardContainer({
   profile,
@@ -88,7 +68,7 @@ export default function TeacherDashboardContainer({
             Manage your educator profile, school organization settings, and class setup.
           </p>
         </div>
-        <TeacherTopNav profile={profile} onCreateClassroom={handleCreateClick} />
+        <TeacherTopNav profile={profile} />
       </div>
 
       {/* ─────────────────────────────────────────────────
@@ -105,17 +85,20 @@ export default function TeacherDashboardContainer({
         onInboxClick={handleInboxClick}
       />
 
-      {/* ─────────────────────────────────────────────────
-          SECTION C — Performance Overview
-          Metrics row + Today's Snapshot grouped together.
-      ───────────────────────────────────────────────── */}
       <div className="flex flex-col gap-6">
-        <SectionHeader
-          icon={BarChart3}
-          title="Performance Overview"
-          description="Cumulative classroom activity, published content, and grading status across all your classes."
-        />
+        <h2 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+          <BarChart3 className="size-4 text-indigo-500 shrink-0" />
+          Performance Overview
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold pl-6">
+          Cumulative classroom activity, published content, and grading status across all your
+          classes.
+        </p>
         <TeacherMetricsRow metrics={metrics} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <RecentClassrooms classrooms={classrooms} />
         <TodaySnapshot snapshot={snapshot} />
       </div>
     </div>

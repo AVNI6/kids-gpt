@@ -4,98 +4,36 @@ import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Bell,
-  Menu,
-  X,
-  GraduationCap,
-  CheckCircle2,
-  Users,
-  Megaphone,
-  BookOpen,
-} from "lucide-react";
+import { Bell, Menu, X, GraduationCap } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/shared/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase/client";
 import { getRelativeTime } from "@/hooks/shared/timeUtils";
 import { APP_ROUTES } from "@/lib/constants/common";
-import type { ClassroomNotification } from "@/types/classroom.types";
+import { useTeacherNotifications } from "@/hooks/teacher/useTeacherNotifications";
+import { getNotifIcon, getNotifBg } from "@/utils/teacherNotificationHelpers";
 
 export const TEACHER_NAV_ITEMS = [
   { label: "Home", href: APP_ROUTES.TeacherDashboard, exact: true },
   { label: "Classrooms", href: APP_ROUTES.TeacherClassrooms, exact: false },
-  { label: "Notifications", href: APP_ROUTES.TeacherNotifications, exact: false },
   { label: "Settings", href: APP_ROUTES.TeacherSettings, exact: false },
-];
-
-function getNotifIcon(type: string) {
-  switch (type) {
-    case "classroom_request":
-      return <Users className="size-4 text-indigo-600 dark:text-indigo-400" />;
-    case "assignment_submitted":
-      return <BookOpen className="size-4 text-amber-600 dark:text-amber-400" />;
-    case "assignment_graded":
-      return <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />;
-    case "announcement":
-      return <Megaphone className="size-4 text-sky-600 dark:text-sky-400" />;
-    default:
-      return <GraduationCap className="size-4 text-indigo-600 dark:text-indigo-400" />;
-  }
-}
-
-function getNotifBg(type: string) {
-  switch (type) {
-    case "classroom_request":
-      return "bg-indigo-50 dark:bg-indigo-950/20";
-    case "assignment_submitted":
-      return "bg-amber-50 dark:bg-amber-950/20";
-    case "assignment_graded":
-      return "bg-emerald-50 dark:bg-emerald-950/20";
-    default:
-      return "bg-indigo-50 dark:bg-indigo-950/20";
-  }
-}
+] as const;
 
 export default function TeacherNavBar() {
   const pathname = usePathname();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [notifications, setNotifications] = useState<ClassroomNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
+
+  // Consume shared state & actions from the custom hook (only fetch latest 10 for dropdown)
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useTeacherNotifications(10);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
-
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("recipient_role", "teacher")
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (data) {
-        const typed = data as ClassroomNotification[];
-        setNotifications(typed);
-        setUnreadCount(typed.filter((n) => !n.is_read).length);
-      }
-    } catch {
-      // Silently fail — notifications are non-critical
-    }
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchNotifications();
-  }, [fetchNotifications]);
 
   // Auto-dismiss mobile menu on scroll
   useEffect(() => {
@@ -105,40 +43,18 @@ export default function TeacherNavBar() {
     return () => window.removeEventListener("scroll", handleDismiss);
   }, [isMobileMenuOpen]);
 
-  const markAsRead = async (id: string) => {
-    try {
-      const supabase = createClient();
-      await supabase.from("notifications").update({ is_read: true }).eq("id", id);
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch {
-      // Silently fail
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      const supabase = createClient();
-      const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
-      if (unreadIds.length === 0) return;
-      await supabase.from("notifications").update({ is_read: true }).in("id", unreadIds);
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-    } catch {
-      // Silently fail
-    }
-  };
-
-  const isLinkActive = (item: (typeof TEACHER_NAV_ITEMS)[0]) => {
-    if (item.exact) return pathname === item.href;
-    return pathname.startsWith(item.href);
-  };
+  const isLinkActive = useCallback(
+    (item: (typeof TEACHER_NAV_ITEMS)[number]) => {
+      if (item.exact) return pathname === item.href;
+      return pathname.startsWith(item.href);
+    },
+    [pathname]
+  );
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-background/80 backdrop-blur-xl">
       <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
-          {/* Mobile Branding */}
           <div className="flex lg:hidden items-center pl-1">
             <span className="font-extrabold text-lg bg-linear-to-r from-indigo-500 to-sky-500 bg-clip-text text-transparent">
               Teacher Hub
@@ -165,7 +81,6 @@ export default function TeacherNavBar() {
             })}
           </div>
 
-          {/* Right: Notifications Bell + Mobile Toggle */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Notification Bell Dropdown */}
             <DropdownMenu open={isNotifOpen} onOpenChange={setIsNotifOpen}>
@@ -187,7 +102,7 @@ export default function TeacherNavBar() {
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllAsRead}
-                      className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:underline cursor-pointer"
+                      className="text-xs font-bold text-indigo-650 dark:text-indigo-400 hover:text-indigo-750 hover:underline cursor-pointer"
                     >
                       Mark all as read
                     </button>
@@ -255,7 +170,7 @@ export default function TeacherNavBar() {
                 <Link
                   href={APP_ROUTES.TeacherNotifications}
                   onClick={() => setIsNotifOpen(false)}
-                  className="block p-3 text-center text-xs font-black text-indigo-600 dark:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800/60 cursor-pointer transition-colors"
+                  className="block p-3 text-center text-xs font-black text-indigo-650 dark:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800/60 cursor-pointer transition-colors"
                 >
                   View all notifications
                 </Link>
@@ -321,7 +236,6 @@ export default function TeacherNavBar() {
                   })}
                 </div>
 
-                {/* Drawer Footer */}
                 <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center">
                   <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
                     Teacher Mode Active
