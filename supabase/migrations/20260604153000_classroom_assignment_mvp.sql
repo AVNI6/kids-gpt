@@ -24,6 +24,11 @@ ALTER TABLE public.rewards
 CREATE INDEX IF NOT EXISTS idx_rewards_assignment_id
   ON public.rewards(assignment_id);
 
+-- Create unique index to guarantee database-level idempotency
+CREATE UNIQUE INDEX IF NOT EXISTS uq_rewards_assignment_user
+  ON public.rewards(user_id, assignment_id)
+  WHERE assignment_id IS NOT NULL AND deleted_at IS NULL;
+
 -- 3. Update get_teacher_classroom_workspace to return configuration columns
 CREATE OR REPLACE FUNCTION public.get_teacher_classroom_workspace(p_classroom_id uuid)
 RETURNS jsonb
