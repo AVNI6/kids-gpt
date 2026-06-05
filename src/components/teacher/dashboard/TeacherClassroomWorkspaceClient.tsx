@@ -835,7 +835,12 @@ export default function TeacherClassroomWorkspaceClient({
                       {assignmentOverview.submissions.map((sub: SubmissionDetails) => {
                         const name =
                           `${sub.first_name || ""} ${sub.last_name || ""}`.trim() || "Student";
-                        const isGraded = sub.score !== null;
+                        // Auto-graded assignments: score is set by the system on activity completion.
+                        // A submission with submitted_at set is already system-graded.
+                        const isAutoGraded = !!selectedAssignment?.activity_type;
+                        const isGraded = isAutoGraded
+                          ? sub.score !== null || sub.submitted_at !== null
+                          : sub.score !== null;
                         const active = activeSubmission?.id === sub.id;
 
                         return (
@@ -875,7 +880,11 @@ export default function TeacherClassroomWorkspaceClient({
                             <div className="shrink-0 flex items-center gap-2">
                               {isGraded ? (
                                 <Badge className="bg-emerald-50 text-emerald-700 border-none font-bold text-[10px] px-2 py-0.5">
-                                  {sub.score}/{selectedAssignment?.total_points}
+                                  {sub.score !== null
+                                    ? `${sub.score}/${selectedAssignment?.total_points}`
+                                    : isAutoGraded
+                                      ? "Auto-Graded"
+                                      : "Graded"}
                                 </Badge>
                               ) : (
                                 <Badge className="bg-amber-50 text-amber-700 border-none font-bold text-[10px] px-2 py-0.5 flex items-center gap-1">
@@ -893,95 +902,153 @@ export default function TeacherClassroomWorkspaceClient({
                 {/* Right Side: Grading Action Panel */}
                 <div className="w-full md:w-[320px] shrink-0 border-t md:border-t-0 md:border-l border-slate-150/80 pt-6 md:pt-0 md:pl-6 flex flex-col justify-between">
                   {activeSubmission ? (
-                    <form
-                      onSubmit={handleGradeSubmission}
-                      className="space-y-4 flex-1 flex flex-col justify-between"
-                    >
-                      <div className="space-y-4">
-                        <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 block mb-1">
-                            Submission Info
-                          </span>
-                          <p className="text-xs font-bold text-slate-900">
-                            Type:{" "}
-                            <span className="font-black text-indigo-700">
-                              {activeSubmission.submission_type}
+                    selectedAssignment?.activity_type ? (
+                      // Auto-graded assignment: show read-only summary, no manual grading
+                      <div className="space-y-4 flex-1 flex flex-col justify-between">
+                        <div className="space-y-4">
+                          <div className="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-100">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 block mb-1">
+                              Auto-Graded Activity
                             </span>
-                          </p>
-                          {activeSubmission.submission_text && (
-                            <p className="text-xs text-slate-600 mt-2 bg-white p-2.5 rounded-xl border border-slate-100/50 max-h-[120px] overflow-y-auto font-medium leading-relaxed italic">
-                              &ldquo;{activeSubmission.submission_text}&rdquo;
+                            <p className="text-xs font-bold text-slate-900">
+                              Type:{" "}
+                              <span className="font-black text-emerald-700 capitalize">
+                                {activeSubmission.submission_type}
+                              </span>
                             </p>
-                          )}
-                          {activeSubmission.submission_url && (
-                            <a
-                              href={activeSubmission.submission_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-xs font-extrabold text-indigo-600 hover:text-indigo-700 mt-3.5 hover:underline"
-                            >
-                              <span>View Submitted Link</span>
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          )}
+                            {activeSubmission.submitted_at ? (
+                              <p className="text-xs text-slate-500 font-semibold mt-2">
+                                Completed:{" "}
+                                {new Date(activeSubmission.submitted_at).toLocaleString()}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-amber-600 font-semibold mt-2">
+                                Activity started but not yet completed.
+                              </p>
+                            )}
+                            {activeSubmission.score !== null &&
+                            activeSubmission.score !== undefined ? (
+                              <p className="text-sm font-black text-emerald-800 mt-3">
+                                Score:{" "}
+                                <span className="text-xl">
+                                  {activeSubmission.score}/{selectedAssignment?.total_points}
+                                </span>
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+                            <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 mb-1">
+                              Activity Type
+                            </p>
+                            <p className="text-xs font-bold text-slate-700 capitalize">
+                              {selectedAssignment.activity_type?.replace(/-/g, " ")}
+                            </p>
+                            {selectedAssignment.topic && (
+                              <p className="text-[10px] text-slate-500 mt-0.5 font-semibold">
+                                Topic: {selectedAssignment.topic}
+                              </p>
+                            )}
+                          </div>
                         </div>
-
-                        <div className="space-y-1.5">
-                          <Label
-                            htmlFor="gradeScore"
-                            className="text-xs font-bold text-slate-700 ml-1"
-                          >
-                            Award Score*
-                          </Label>
-                          <div className="relative">
-                            <Input
-                              id="gradeScore"
-                              type="number"
-                              value={gradingScore}
-                              onChange={(e) => setGradingScore(Number(e.target.value))}
-                              required
-                              min={0}
-                              max={selectedAssignment?.total_points}
-                              className="rounded-xl h-11 pr-12 font-black text-sm"
-                            />
-                            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
-                              / {selectedAssignment?.total_points}
+                        <p className="text-[10px] text-slate-400 text-center font-semibold italic">
+                          This assignment is auto-graded by the system.
+                        </p>
+                      </div>
+                    ) : (
+                      // Manual grading form
+                      <form
+                        onSubmit={handleGradeSubmission}
+                        className="space-y-4 flex-1 flex flex-col justify-between"
+                      >
+                        <div className="space-y-4">
+                          <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 block mb-1">
+                              Submission Info
                             </span>
+                            <p className="text-xs font-bold text-slate-900">
+                              Type:{" "}
+                              <span className="font-black text-indigo-700">
+                                {activeSubmission.submission_type}
+                              </span>
+                            </p>
+                            {activeSubmission.submission_text && (
+                              <p className="text-xs text-slate-600 mt-2 bg-white p-2.5 rounded-xl border border-slate-100/50 max-h-[120px] overflow-y-auto font-medium leading-relaxed italic">
+                                &ldquo;{activeSubmission.submission_text}&rdquo;
+                              </p>
+                            )}
+                            {activeSubmission.submission_url && (
+                              <a
+                                href={activeSubmission.submission_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-xs font-extrabold text-indigo-600 hover:text-indigo-700 mt-3.5 hover:underline"
+                              >
+                                <span>View Submitted Link</span>
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label
+                              htmlFor="gradeScore"
+                              className="text-xs font-bold text-slate-700 ml-1"
+                            >
+                              Award Score*
+                            </Label>
+                            <div className="relative">
+                              <Input
+                                id="gradeScore"
+                                type="number"
+                                value={gradingScore}
+                                onChange={(e) => setGradingScore(Number(e.target.value))}
+                                required
+                                min={0}
+                                max={selectedAssignment?.total_points}
+                                className="rounded-xl h-11 pr-12 font-black text-sm"
+                              />
+                              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                                / {selectedAssignment?.total_points}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label
+                              htmlFor="gradeFeedback"
+                              className="text-xs font-bold text-slate-700 ml-1"
+                            >
+                              Grade Feedback
+                            </Label>
+                            <textarea
+                              id="gradeFeedback"
+                              value={gradingFeedback}
+                              onChange={(e) => setGradingFeedback(e.target.value)}
+                              placeholder="Great job! Keep it up..."
+                              className="rounded-xl w-full border border-slate-200 dark:border-slate-800 p-3 text-xs font-semibold focus:border-indigo-500 focus:ring-0 resize-none h-24"
+                            />
                           </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                          <Label
-                            htmlFor="gradeFeedback"
-                            className="text-xs font-bold text-slate-700 ml-1"
-                          >
-                            Grade Feedback
-                          </Label>
-                          <textarea
-                            id="gradeFeedback"
-                            value={gradingFeedback}
-                            onChange={(e) => setGradingFeedback(e.target.value)}
-                            placeholder="Great job! Keep it up..."
-                            className="rounded-xl w-full border border-slate-200 dark:border-slate-800 p-3 text-xs font-semibold focus:border-indigo-500 focus:ring-0 resize-none h-24"
-                          />
-                        </div>
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 shadow-sm mt-4 cursor-pointer"
-                      >
-                        <Send className="mr-2 h-4 w-4" />
-                        Submit Grade
-                      </Button>
-                    </form>
+                        <Button
+                          type="submit"
+                          disabled={isLoading}
+                          className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 shadow-sm mt-4 cursor-pointer"
+                        >
+                          <Send className="mr-2 h-4 w-4" />
+                          Submit Grade
+                        </Button>
+                      </form>
+                    )
                   ) : (
+                    // No active submission selected
                     <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 border border-slate-100 rounded-2xl">
                       <HelpCircle className="w-8 h-8 text-slate-300 mb-2" />
                       <p className="text-xs text-slate-600 font-bold">Select student submission</p>
                       <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                        Click any submission on the left to grade and award XP.
+                        {selectedAssignment?.activity_type
+                          ? "Click any submission on the left to view results."
+                          : "Click any submission on the left to grade and award XP."}
                       </p>
                     </div>
                   )}
