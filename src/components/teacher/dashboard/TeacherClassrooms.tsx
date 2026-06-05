@@ -19,6 +19,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/shared/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/shared/ui/alert-dialog";
 import type { Classroom } from "@/types/classroom.types";
 
 export interface EnrichedClassroom extends Classroom {
@@ -49,6 +58,10 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteClassroomTarget, setDeleteClassroomTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Form Fields
   const [name, setName] = useState("");
@@ -89,25 +102,8 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
     }
   };
 
-  const handleDeleteClass = async (classroomId: string, className: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete classroom "${className}"? This will soft-delete the class.`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const result = await deleteClassroom(classroomId);
-      if (result.success) {
-        toast.success(`Classroom "${className}" deleted.`);
-      } else {
-        toast.error(result.error || "Failed to delete classroom.");
-      }
-    } catch {
-      toast.error("Failed to delete classroom.");
-    }
+  const handleDeleteClass = (classroomId: string, className: string) => {
+    setDeleteClassroomTarget({ id: classroomId, name: className });
   };
 
   return (
@@ -240,6 +236,53 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
             </form>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog
+          open={deleteClassroomTarget !== null}
+          onOpenChange={(open) => {
+            if (!open) setDeleteClassroomTarget(null);
+          }}
+        >
+          <AlertDialogContent className="sm:max-w-[400px] rounded-[24px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-black text-slate-900 dark:text-white">
+                Delete Classroom?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-slate-500 dark:text-slate-400 pt-2 font-medium">
+                Are you sure you want to delete classroom &ldquo;{deleteClassroomTarget?.name}
+                &rdquo;? This will soft-delete the class.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-2 pt-4">
+              <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+              <Button
+                variant="destructive"
+                disabled={isLoading}
+                onClick={async () => {
+                  if (!deleteClassroomTarget) return;
+                  const target = deleteClassroomTarget;
+                  setDeleteClassroomTarget(null);
+                  try {
+                    setIsLoading(true);
+                    const result = await deleteClassroom(target.id);
+                    if (result.success) {
+                      toast.success(`Classroom "${target.name}" deleted.`);
+                    } else {
+                      toast.error(result.error || "Failed to delete classroom.");
+                    }
+                  } catch {
+                    toast.error("Failed to delete classroom.");
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm font-bold px-5"
+              >
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Grid of Classrooms */}

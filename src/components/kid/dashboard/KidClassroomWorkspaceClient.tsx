@@ -292,7 +292,10 @@ export default function KidClassroomWorkspaceClient({
                                 Completed Activity
                               </span>
                               <span className="font-black text-emerald-800 bg-emerald-100/50 px-2 py-0.5 rounded-md text-[10px]">
-                                {assign.score} / {assign.total_points}
+                                {Math.round(
+                                  ((assign.score ?? 0) / (assign.total_points || 100)) * 100
+                                )}
+                                %
                               </span>
                             </div>
                           ) : isOverdue ? (
@@ -302,7 +305,7 @@ export default function KidClassroomWorkspaceClient({
                                 Overdue (Due {formattedDate})
                               </span>
                               <span className="font-bold text-rose-800 bg-rose-100/50 px-2 py-0.5 rounded-md text-[10px]">
-                                0 / {assign.total_points} Pts
+                                0%
                               </span>
                             </div>
                           ) : (
@@ -339,7 +342,10 @@ export default function KidClassroomWorkspaceClient({
                                     Grade Released
                                   </span>
                                   <span className="font-black text-emerald-800 bg-emerald-100/50 px-2 py-0.5 rounded-md text-[10px]">
-                                    {assign.score} / {assign.total_points}
+                                    {Math.round(
+                                      ((assign.score ?? 0) / (assign.total_points || 100)) * 100
+                                    )}
+                                    %
                                   </span>
                                 </div>
                                 {assign.feedback && (

@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { Type, Sparkles, CheckCircle2, ArrowLeft, Award, RotateCcw } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/shared/ui/button";
 import { Progress } from "@/components/shared/ui/progress";
 import { Card, CardContent } from "@/components/shared/ui/card";
@@ -32,10 +34,22 @@ export default function WordScramblesPage({
   assignmentId,
 }: WordScramblesPageProps) {
   const router = useRouter();
-  const [currentWord, setCurrentWord] = useState(0);
-  const [input, setInput] = useState("");
-  const [showResult, setShowResult] = useState(false);
-  const [correctCount, setCorrectCount] = useState(0);
+  const params = useParams();
+  const { user } = useAuth();
+  const activityId = params?.id as string | undefined;
+
+  const storageKey = user
+    ? assignmentId
+      ? `user-${user.id}-assignment-${assignmentId}`
+      : activityId
+        ? `user-${user.id}-activity-word-scrambles-${activityId}`
+        : ""
+    : "";
+
+  const [currentWord, setCurrentWord] = useSessionStorageState(`${storageKey}-current`, 0);
+  const [input, setInput] = useSessionStorageState(`${storageKey}-input`, "");
+  const [showResult, setShowResult] = useSessionStorageState(`${storageKey}-showResult`, false);
+  const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [scrambleCompleted, setScrambleCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(140);
   const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
@@ -49,6 +63,14 @@ export default function WordScramblesPage({
 
   // Background Auto-Claiming Logic
   useEffect(() => {
+    if (scrambleCompleted) {
+      if (storageKey) {
+        sessionStorage.removeItem(`${storageKey}-current`);
+        sessionStorage.removeItem(`${storageKey}-input`);
+        sessionStorage.removeItem(`${storageKey}-showResult`);
+        sessionStorage.removeItem(`${storageKey}-correct`);
+      }
+    }
     if (scrambleCompleted && !hasClaimed.current) {
       hasClaimed.current = true;
       const autoClaim = async () => {
@@ -95,7 +117,15 @@ export default function WordScramblesPage({
       };
       autoClaim();
     }
-  }, [scrambleCompleted, correctCount, safeWords.length, scrambleTitle, xpReward, assignmentId]);
+  }, [
+    scrambleCompleted,
+    correctCount,
+    safeWords.length,
+    scrambleTitle,
+    xpReward,
+    assignmentId,
+    storageKey,
+  ]);
 
   const word = safeWords[currentWord] || safeWords[0];
   const progress = ((currentWord + 1) / safeWords.length) * 100;
@@ -132,6 +162,12 @@ export default function WordScramblesPage({
   };
 
   const handleRestart = () => {
+    if (storageKey) {
+      sessionStorage.removeItem(`${storageKey}-current`);
+      sessionStorage.removeItem(`${storageKey}-input`);
+      sessionStorage.removeItem(`${storageKey}-showResult`);
+      sessionStorage.removeItem(`${storageKey}-correct`);
+    }
     setCurrentWord(0);
     setInput("");
     setShowResult(false);

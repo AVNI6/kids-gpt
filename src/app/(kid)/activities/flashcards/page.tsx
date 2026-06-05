@@ -12,7 +12,9 @@ import {
   Star,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/shared/ui/button";
 import { Progress } from "@/components/shared/ui/progress";
 import { Card, CardContent } from "@/components/shared/ui/card";
@@ -56,10 +58,25 @@ export default function FlashcardsPage({
   assignmentId,
 }: FlashcardsPageProps) {
   const router = useRouter();
-  const [currentCard, setCurrentCard] = useState(0);
+  const params = useParams();
+  const { user } = useAuth();
+  const activityId = params?.id as string | undefined;
+
+  const storageKey = user
+    ? assignmentId
+      ? `user-${user.id}-assignment-${assignmentId}`
+      : activityId
+        ? `user-${user.id}-activity-flashcards-${activityId}`
+        : ""
+    : "";
+
+  const [currentCard, setCurrentCard] = useSessionStorageState(`${storageKey}-currentCard`, 0);
   const [flipped, setFlipped] = useState(false);
-  const [masteredIds, setMasteredIds] = useState<number[]>([]);
-  const [reviewIds, setReviewIds] = useState<number[]>([]);
+  const [masteredIds, setMasteredIds] = useSessionStorageState<number[]>(
+    `${storageKey}-mastered`,
+    []
+  );
+  const [reviewIds, setReviewIds] = useSessionStorageState<number[]>(`${storageKey}-review`, []);
   const [deckCompleted, setDeckCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(100);
   const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
@@ -70,6 +87,13 @@ export default function FlashcardsPage({
   }, []);
 
   useEffect(() => {
+    if (deckCompleted) {
+      if (storageKey) {
+        sessionStorage.removeItem(`${storageKey}-currentCard`);
+        sessionStorage.removeItem(`${storageKey}-mastered`);
+        sessionStorage.removeItem(`${storageKey}-review`);
+      }
+    }
     if (deckCompleted && !hasClaimed.current) {
       hasClaimed.current = true;
 
@@ -114,7 +138,15 @@ export default function FlashcardsPage({
 
       autoClaim();
     }
-  }, [deckCompleted, masteredIds.length, flashcards.length, xpReward, deckTitle, assignmentId]);
+  }, [
+    deckCompleted,
+    masteredIds.length,
+    flashcards.length,
+    xpReward,
+    deckTitle,
+    assignmentId,
+    storageKey,
+  ]);
 
   const card = flashcards[currentCard] || flashcards[0];
   const progress = ((currentCard + 1) / flashcards.length) * 100;
@@ -145,6 +177,11 @@ export default function FlashcardsPage({
   };
 
   const handleRestart = () => {
+    if (storageKey) {
+      sessionStorage.removeItem(`${storageKey}-currentCard`);
+      sessionStorage.removeItem(`${storageKey}-mastered`);
+      sessionStorage.removeItem(`${storageKey}-review`);
+    }
     setCurrentCard(0);
     setFlipped(false);
     setMasteredIds([]);

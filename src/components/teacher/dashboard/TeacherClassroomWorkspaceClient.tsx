@@ -355,7 +355,7 @@ export default function TeacherClassroomWorkspaceClient({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link
-            href="/dashboard/teacher"
+            href="/dashboard/teacher/classrooms"
             className={cn(
               buttonVariants({ variant: "outline" }),
               "rounded-full h-10 w-10 p-0 hover:bg-slate-50 border-slate-200 flex items-center justify-center"
@@ -881,7 +881,7 @@ export default function TeacherClassroomWorkspaceClient({
                               {isGraded ? (
                                 <Badge className="bg-emerald-50 text-emerald-700 border-none font-bold text-[10px] px-2 py-0.5">
                                   {sub.score !== null
-                                    ? `${sub.score}/${selectedAssignment?.total_points}`
+                                    ? `${Math.round((sub.score / (selectedAssignment?.total_points || 100)) * 100)}%`
                                     : isAutoGraded
                                       ? "Auto-Graded"
                                       : "Graded"}
@@ -931,7 +931,12 @@ export default function TeacherClassroomWorkspaceClient({
                               <p className="text-sm font-black text-emerald-800 mt-3">
                                 Score:{" "}
                                 <span className="text-xl">
-                                  {activeSubmission.score}/{selectedAssignment?.total_points}
+                                  {Math.round(
+                                    (activeSubmission.score /
+                                      (selectedAssignment?.total_points || 100)) *
+                                      100
+                                  )}
+                                  %
                                 </span>
                               </p>
                             ) : null}

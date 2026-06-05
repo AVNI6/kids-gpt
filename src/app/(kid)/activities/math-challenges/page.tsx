@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { Trophy, ArrowLeft, Award, RotateCcw } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/shared/ui/button";
 import { Progress } from "@/components/shared/ui/progress";
 import { Card, CardContent } from "@/components/shared/ui/card";
@@ -32,9 +34,24 @@ export default function MathChallengesPage({
   assignmentId,
 }: MathChallengesPageProps) {
   const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [correctCount, setCorrectCount] = useState(0);
+  const params = useParams();
+  const { user } = useAuth();
+  const activityId = params?.id as string | undefined;
+
+  const storageKey = user
+    ? assignmentId
+      ? `user-${user.id}-assignment-${assignmentId}`
+      : activityId
+        ? `user-${user.id}-activity-math-challenges-${activityId}`
+        : ""
+    : "";
+
+  const [currentIndex, setCurrentIndex] = useSessionStorageState(`${storageKey}-current`, 0);
+  const [selected, setSelected] = useSessionStorageState<number | null>(
+    `${storageKey}-selected`,
+    null
+  );
+  const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(130);
   const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
@@ -48,6 +65,13 @@ export default function MathChallengesPage({
 
   // Background Auto-Claiming Logic
   useEffect(() => {
+    if (challengeCompleted) {
+      if (storageKey) {
+        sessionStorage.removeItem(`${storageKey}-current`);
+        sessionStorage.removeItem(`${storageKey}-selected`);
+        sessionStorage.removeItem(`${storageKey}-correct`);
+      }
+    }
     if (challengeCompleted && !hasClaimed.current) {
       hasClaimed.current = true;
       const autoClaim = async () => {
@@ -101,6 +125,7 @@ export default function MathChallengesPage({
     challengeTitle,
     xpReward,
     assignmentId,
+    storageKey,
   ]);
 
   const eq = safeEquations[currentIndex] || safeEquations[0];
@@ -135,6 +160,11 @@ export default function MathChallengesPage({
   };
 
   const handleRestart = () => {
+    if (storageKey) {
+      sessionStorage.removeItem(`${storageKey}-current`);
+      sessionStorage.removeItem(`${storageKey}-selected`);
+      sessionStorage.removeItem(`${storageKey}-correct`);
+    }
     setCurrentIndex(0);
     setSelected(null);
     setCorrectCount(0);

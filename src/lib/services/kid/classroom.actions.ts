@@ -710,7 +710,7 @@ export async function gradeAssignment(
     // 2. Fetch assignment
     const { data: assignment, error: assignErr } = await supabase
       .from("assignments")
-      .select("title, total_points, classroom_id")
+      .select("title, total_points, classroom_id, activity_type")
       .eq("id", submission.assignment_id)
       .single();
 
@@ -718,9 +718,15 @@ export async function gradeAssignment(
       return { success: false, error: "Assignment not found." };
     }
 
+    if (assignment.activity_type) {
+      return { success: false, error: "Auto-graded assignments cannot be graded manually." };
+    }
+
     if (score < 0 || score > assignment.total_points) {
       return { success: false, error: `Score must be between 0 and ${assignment.total_points}.` };
     }
+
+    const scorePercent = Math.round((score / assignment.total_points) * 100);
 
     // 3. Update grading
     const { error: gradeErr } = await supabase
@@ -758,7 +764,7 @@ export async function gradeAssignment(
       recipient_role: "kid",
       type: "ASSIGNMENT_GRADED",
       title: "Assignment Graded",
-      message: `Your assignment "${assignment.title}" has been graded. Score: ${score}/${assignment.total_points}`,
+      message: `Your assignment "${assignment.title}" has been graded. Score: ${scorePercent}%`,
       source_type: "assignment_submissions",
       source_id: submissionId,
       metadata: { classroom_id: assignment.classroom_id },
@@ -787,7 +793,8 @@ export async function gradeAssignment(
         .from("rewards")
         .update({
           rewards_amount: score,
-          description: `Earned XP for Assignment: "${assignment.title}" (Score: ${score}/${assignment.total_points})`,
+          description: `Earned XP for Assignment: "${assignment.title}" (Score: ${scorePercent}%)`,
+          score: scorePercent,
           updated_at: new Date().toISOString(),
         })
         .eq("id", existingReward.id);
@@ -800,7 +807,8 @@ export async function gradeAssignment(
         source_type: "assignment",
         source_id: null, // FK references activity_settings(id); assignment IDs are not valid — use null
         assignment_id: submission.assignment_id,
-        description: `Earned XP for Assignment: "${assignment.title}" (Score: ${score}/${assignment.total_points})`,
+        description: `Earned XP for Assignment: "${assignment.title}" (Score: ${scorePercent}%)`,
+        score: scorePercent,
       });
 
       if (insRewardErr) return { success: false, error: insRewardErr.message };
@@ -1423,7 +1431,7 @@ ${assignment.title}
       recipient_role: "teacher",
       type: "ASSIGNMENT_COMPLETED",
       title: "Assignment Completed",
-      message: `${kidName} completed assignment "${assignment.title}". Score: ${gradedScore}/${assignment.total_points}`,
+      message: `${kidName} completed assignment "${assignment.title}". Score: ${percentage}%`,
       source_type: "assignments",
       source_id: assignmentId,
       metadata: { classroom_id: assignment.classroom_id },

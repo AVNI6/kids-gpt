@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { CheckCircle2, Timer, ArrowLeft, Star, Award } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 
 import { Button } from "@/components/shared/ui/button";
 import { Progress } from "@/components/shared/ui/progress";
@@ -63,10 +65,25 @@ export default function QuizzesPage({
   assignmentId,
 }: QuizzesPageProps) {
   const router = useRouter();
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState(600);
-  const [correctCount, setCorrectCount] = useState(0);
+  const params = useParams();
+  const { user } = useAuth();
+  const activityId = params?.id as string | undefined;
+
+  const storageKey = user
+    ? assignmentId
+      ? `user-${user.id}-assignment-${assignmentId}`
+      : activityId
+        ? `user-${user.id}-activity-quizzes-${activityId}`
+        : ""
+    : "";
+
+  const [currentQuestion, setCurrentQuestion] = useSessionStorageState(`${storageKey}-current`, 0);
+  const [selected, setSelected] = useSessionStorageState<string | null>(
+    `${storageKey}-selected`,
+    null
+  );
+  const [timeLeft, setTimeLeft] = useSessionStorageState(`${storageKey}-time`, 600);
+  const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(120);
   const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
@@ -96,10 +113,18 @@ export default function QuizzesPage({
       setTimeLeft((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, quizCompleted]);
+  }, [timeLeft, quizCompleted, setTimeLeft]);
 
   // Background Auto-Claiming Logic
   useEffect(() => {
+    if (quizCompleted) {
+      if (storageKey) {
+        sessionStorage.removeItem(`${storageKey}-current`);
+        sessionStorage.removeItem(`${storageKey}-selected`);
+        sessionStorage.removeItem(`${storageKey}-correct`);
+        sessionStorage.removeItem(`${storageKey}-time`);
+      }
+    }
     if (quizCompleted && !hasClaimed.current) {
       hasClaimed.current = true;
       const autoClaim = async () => {
@@ -146,7 +171,15 @@ export default function QuizzesPage({
       };
       autoClaim();
     }
-  }, [quizCompleted, correctCount, safeQuestions.length, quizTitle, xpReward, assignmentId]);
+  }, [
+    quizCompleted,
+    correctCount,
+    safeQuestions.length,
+    quizTitle,
+    xpReward,
+    assignmentId,
+    storageKey,
+  ]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -184,6 +217,12 @@ export default function QuizzesPage({
   };
 
   const handleReset = () => {
+    if (storageKey) {
+      sessionStorage.removeItem(`${storageKey}-current`);
+      sessionStorage.removeItem(`${storageKey}-selected`);
+      sessionStorage.removeItem(`${storageKey}-correct`);
+      sessionStorage.removeItem(`${storageKey}-time`);
+    }
     setCurrentQuestion(0);
     setSelected(null);
     setTimeLeft(600);

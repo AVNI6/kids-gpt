@@ -133,7 +133,10 @@ export default function TeacherActivityFeed({ activityEvents }: Props) {
             </span>
             .
             <span className="block text-[10px] text-slate-400 font-semibold mt-0.5">
-              Score: {event.metadata.score}/{event.metadata.total_points}
+              Score:{" "}
+              {event.metadata.score !== undefined && event.metadata.total_points
+                ? `${Math.round((event.metadata.score / event.metadata.total_points) * 100)}%`
+                : "N/A"}
             </span>
           </p>
         );
