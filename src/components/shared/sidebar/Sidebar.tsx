@@ -66,7 +66,7 @@ export default function Sidebar() {
 
   const { setTheme, theme } = useTheme();
   const { state, toggleSidebar, isMobile } = useSidebar();
-  const isOpen = state === "expanded";
+  const isOpen = state === "expanded" || isMobile;
 
   // Load chat sessions for authenticated user
   useEffect(() => {

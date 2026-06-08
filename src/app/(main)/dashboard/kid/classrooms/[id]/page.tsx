@@ -51,25 +51,26 @@ async function StudentWorkspaceLoader({ classroomId }: { classroomId: string }) 
               "You are not an approved member of this classroom or it has been deleted."}
           </p>
           <Link
-            href="/dashboard/kid"
+            href="/dashboard/kid/classrooms"
             className={cn(
               buttonVariants({ variant: "default" }),
               "rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 shadow-sm flex items-center justify-center"
             )}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Back to Classrooms
           </Link>
         </CardContent>
       </Card>
     );
   }
 
-  const { assignments, resources, announcements } = result.data as StudentWorkspaceData;
+  const { classroom, assignments, resources, announcements } = result.data;
 
   return (
     <KidClassroomWorkspaceClient
       classroomId={classroomId}
+      classroom={classroom}
       initialAssignments={assignments}
       initialResources={resources}
       initialAnnouncements={announcements}

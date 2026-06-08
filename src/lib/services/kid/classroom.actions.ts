@@ -220,6 +220,7 @@ export async function joinClassroomByCode(code: string) {
     });
 
     revalidatePath("/dashboard/kid");
+    revalidatePath("/dashboard/kid/classrooms");
     return { success: true, message: "Join request submitted successfully!" };
   } catch (err) {
     return {
@@ -248,6 +249,7 @@ export async function leaveClassroom(classroomId: string) {
     }
 
     revalidatePath("/dashboard/kid");
+    revalidatePath("/dashboard/kid/classrooms");
     return { success: true };
   } catch (err) {
     return {
@@ -1104,15 +1106,60 @@ export async function getTeacherAssignmentOverview(assignmentId: string) {
  */
 export async function getStudentClassroomWorkspace(classroomId: string) {
   try {
-    await verifyUserRole("kid");
+    const { userId } = await verifyUserRole("kid");
     const supabase = await createClient();
 
-    const { data, error } = await supabase.rpc("get_student_classroom_workspace", {
+    // 1. Fetch classroom metadata
+    const { data: classroom, error: classErr } = await supabase
+      .from("classrooms")
+      .select(
+        `
+        id,
+        name,
+        description,
+        subject,
+        grade,
+        class_code,
+        teacher_user_id,
+        is_active,
+        created_at,
+        updated_at,
+        deleted_at
+      `
+      )
+      .eq("id", classroomId)
+      .is("deleted_at", null)
+      .single();
+
+    if (classErr || !classroom) {
+      throw new Error(classErr?.message || "Classroom not found.");
+    }
+
+    // 2. Fetch teacher profile details
+    const { data: teacher } = await supabase
+      .from("profile")
+      .select("first_name, last_name, avatar_url")
+      .eq("user_id", classroom.teacher_user_id)
+      .single();
+
+    // 3. Fetch RPC data for assignments, resources, announcements
+    const { data: rpcData, error } = await supabase.rpc("get_student_classroom_workspace", {
       p_classroom_id: classroomId,
     });
 
     if (error) throw new Error(error.message);
-    return { success: true, data };
+
+    const mergedData = {
+      classroom: {
+        ...classroom,
+        teacher: teacher || null,
+      },
+      assignments: rpcData.assignments || [],
+      resources: rpcData.resources || [],
+      announcements: rpcData.announcements || [],
+    };
+
+    return { success: true, data: mergedData };
   } catch (err) {
     return {
       success: false,
@@ -1472,5 +1519,63 @@ export async function updateAssignmentSubmissionUrl(submissionId: string, submis
       success: false,
       error: err instanceof Error ? err.message : "Failed to update submission URL.",
     };
+  }
+}
+
+/**
+ * Fetch total number of published, uncompleted assignments across all classrooms the kid is approved in
+ */
+export async function getKidPendingAssignmentsCount(): Promise<number> {
+  try {
+    const { userId } = await verifyUserRole("kid");
+    const supabase = await createClient();
+
+    // Fetch classrooms student is approved in
+    const { data: members, error: memberErr } = await supabase
+      .from("classroom_members")
+      .select("classroom_id")
+      .eq("student_user_id", userId)
+      .eq("status", "APPROVED");
+
+    if (memberErr || !members || members.length === 0) {
+      return 0;
+    }
+
+    const classroomIds = members.map((m) => m.classroom_id);
+
+    // Fetch active published assignments in those classrooms
+    const { data: assignments, error: assignErr } = await supabase
+      .from("assignments")
+      .select("id")
+      .in("classroom_id", classroomIds)
+      .eq("status", "PUBLISHED")
+      .is("deleted_at", null);
+
+    if (assignErr || !assignments || assignments.length === 0) {
+      return 0;
+    }
+
+    const assignmentIds = assignments.map((a) => a.id);
+
+    // Fetch completed submissions for these assignments
+    const { data: submissions, error: subErr } = await supabase
+      .from("assignment_submissions")
+      .select("assignment_id")
+      .in("assignment_id", assignmentIds)
+      .eq("student_user_id", userId)
+      .not("submitted_at", "is", null)
+      .is("deleted_at", null);
+
+    if (subErr) {
+      return assignments.length;
+    }
+
+    const completedAssignmentIds = new Set((submissions || []).map((s) => s.assignment_id));
+    const pendingCount = assignments.filter((a) => !completedAssignmentIds.has(a.id)).length;
+
+    return pendingCount;
+  } catch (err) {
+    console.error("Failed to get pending assignments count:", err);
+    return 0;
   }
 }

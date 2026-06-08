@@ -154,6 +154,13 @@ export interface WorkspaceStudent {
 }
 
 export interface StudentWorkspaceData {
+  classroom: Classroom & {
+    teacher: {
+      first_name: string | null;
+      last_name: string | null;
+      avatar_url: string | null;
+    } | null;
+  };
   assignments: StudentAssignment[];
   resources: ClassroomResource[];
   announcements: ClassroomAnnouncement[];

@@ -51,14 +51,14 @@ async function WorkspaceLoader({ classroomId }: { classroomId: string }) {
               "The classroom you are looking for does not exist or you do not have permission to view it."}
           </p>
           <Link
-            href="/dashboard/teacher"
+            href="/dashboard/teacher/classrooms"
             className={cn(
               buttonVariants({ variant: "default" }),
               "rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 shadow-sm flex items-center justify-center"
             )}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Back to Classrooms
           </Link>
         </CardContent>
       </Card>

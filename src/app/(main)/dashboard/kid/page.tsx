@@ -4,17 +4,15 @@ import { Card, CardContent } from "@/components/shared/ui/card";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getKidComprehensiveDetails } from "@/lib/services/kid/dashboard.actions";
-import { getKidClassroomData } from "@/lib/services/kid/classroom.actions";
 
 import KidProfileManager from "@/components/kid/profile/KidProfileManager";
 import KidStreakBanner from "@/components/kid/dashboard/KidStreakBanner";
-import HomeworkPendingCard from "@/components/kid/dashboard/HomeworkPendingCard";
 
 import {
   GameHistory,
   GameHistorySkeleton,
-  ClassroomOverview,
-  ClassroomOverviewSkeleton,
+  NotificationsUpdates,
+  NotificationsUpdatesSkeleton,
 } from "@/components/kid/dashboard";
 
 function KidStreakBannerSkeleton() {
@@ -58,29 +56,9 @@ function KidProfileManagerSkeleton() {
   );
 }
 
-function HomeworkPendingCardSkeleton() {
-  return (
-    <Card className="rounded-[28px] border-violet-200 bg-violet-500 shadow-sm dark:border-violet-950/40 dark:bg-violet-900">
-      <CardContent className="space-y-4 p-6 text-white">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-3">
-            <Skeleton className="h-5 w-24 bg-white/20 dark:bg-white/10" />
-            <Skeleton className="h-7 w-36 bg-white/20 dark:bg-white/10" />
-          </div>
-          <Skeleton className="h-8 w-14 rounded-full bg-white/20 dark:bg-white/10" />
-        </div>
-        <Skeleton className="h-20 rounded-2xl bg-white/15 dark:bg-white/5" />
-        <Skeleton className="h-20 rounded-2xl bg-white/15 dark:bg-white/5" />
-      </CardContent>
-    </Card>
-  );
-}
-
 export default async function KidDashboardPage() {
   await checkDashboardAccess(["kid"]);
   const details = await getKidComprehensiveDetails();
-  const classroomData = await getKidClassroomData();
-  const memberships = classroomData.memberships || [];
 
   return (
     <main className="min-h-full bg-linear-to-br from-sky-50 via-white to-emerald-50 px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-50">
@@ -102,12 +80,10 @@ export default async function KidDashboardPage() {
             </Suspense>
           </div>
         </div>
-        <div className="space-y-6 flex flex-col">
-          <Suspense fallback={<ClassroomOverviewSkeleton />}>
-            <ClassroomOverview memberships={memberships} />
-          </Suspense>
-          <Suspense fallback={<HomeworkPendingCardSkeleton />}>
-            <HomeworkPendingCard />
+
+        <div className="w-full">
+          <Suspense fallback={<NotificationsUpdatesSkeleton />}>
+            <NotificationsUpdates />
           </Suspense>
         </div>
       </div>

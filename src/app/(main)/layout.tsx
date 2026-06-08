@@ -4,28 +4,10 @@ import { ReactNode, useState } from "react";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/shared/sidebar/Sidebar";
-import { SidebarProvider, SidebarInset, useSidebar } from "@/components/shared/ui/sidebar";
-import { Menu } from "lucide-react";
+import { SidebarProvider, SidebarInset } from "@/components/shared/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import ScreenTimeTracker from "@/components/shared/screentime/ScreenTimeTracker";
-import KidTopNav from "@/components/kid/dashboard/KidTopNav";
-
-function GlobalMobileTrigger() {
-  const { toggleSidebar, openMobile } = useSidebar();
-
-  if (openMobile) return null;
-
-  return (
-    <button
-      onClick={toggleSidebar}
-      title="Open Menu"
-      suppressHydrationWarning
-      className="lg:hidden fixed top-4 left-4 z-55 h-8 w-8 rounded-xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95 cursor-pointer"
-    >
-      <Menu className="w-4 h-4" />
-    </button>
-  );
-}
+import DashboardNavbar from "@/components/shared/dashboard/DashboardNavbar";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "";
@@ -53,15 +35,12 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     pathname.startsWith("/activities") ||
     pathname.startsWith("/chat/kid");
 
-  const hideFloatingTrigger = showKidNav || isKidPath;
-
   const layoutContent = (
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
       <div className="w-full h-screen flex bg-background text-foreground overflow-hidden">
         <Sidebar />
         <SidebarInset className="flex-1 min-w-0 h-full overflow-hidden flex flex-col relative">
-          {!hideFloatingTrigger && <GlobalMobileTrigger />}
-          {showKidNav && <KidTopNav />}
+          {showKidNav && <DashboardNavbar role="kid" />}
           <div className="flex-1 min-w-0 h-full overflow-y-auto bg-background">{children}</div>
         </SidebarInset>
       </div>

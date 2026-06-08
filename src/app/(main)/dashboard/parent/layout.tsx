@@ -17,7 +17,7 @@ import {
 } from "@/lib/services/parent/parent-dashboard.actions";
 import { getDailyScreenTime } from "@/lib/services/shared/screentime.actions";
 import { DashboardProvider } from "@/context/parent-dashboard/DashboardContext";
-import ParentTopNav from "@/components/parent/layout/ParentTopNav";
+import DashboardShell from "@/components/shared/dashboard/DashboardShell";
 
 export default async function ParentDashboardLayout({ children }: { children: React.ReactNode }) {
   // 1. Verify dashboard access
@@ -137,12 +137,7 @@ export default async function ParentDashboardLayout({ children }: { children: Re
         initialLinkedChildren={linkedChildren}
         initialCache={initialCache}
       >
-        <div className="min-h-screen bg-background font-sans flex flex-col transition-colors duration-300">
-          <ParentTopNav />
-          <div className="flex-1 w-full max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-            {children}
-          </div>
-        </div>
+        <DashboardShell role="parent">{children}</DashboardShell>
       </DashboardProvider>
     </Suspense>
   );

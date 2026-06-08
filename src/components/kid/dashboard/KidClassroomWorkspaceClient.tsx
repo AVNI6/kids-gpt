@@ -15,6 +15,8 @@ import {
   ExternalLink,
   Send,
   Award,
+  School,
+  Trophy,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/shared/ui/card";
 import { Button, buttonVariants } from "@/components/shared/ui/button";
@@ -22,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/shared/ui/badge";
 import { Input } from "@/components/shared/ui/input";
 import { Label } from "@/components/shared/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { submitAssignment } from "@/lib/services/kid/classroom.actions";
 import { toast } from "sonner";
 import {
@@ -38,23 +41,32 @@ import type {
   StudentAssignment,
   ClassroomResource,
   ClassroomAnnouncement,
+  Classroom,
 } from "@/types/classroom.types";
 
 type Props = {
   classroomId: string;
+  classroom: Classroom & {
+    teacher: {
+      first_name: string | null;
+      last_name: string | null;
+      avatar_url: string | null;
+    } | null;
+  };
   initialAssignments: StudentAssignment[];
   initialResources: ClassroomResource[];
   initialAnnouncements: ClassroomAnnouncement[];
 };
 
 export default function KidClassroomWorkspaceClient({
+  classroom,
   initialAssignments,
   initialResources,
   initialAnnouncements,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<"assignments" | "resources" | "announcements">(
-    "assignments"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "assignments" | "resources" | "announcements"
+  >("overview");
   const [isLoading, setIsLoading] = useState(false);
 
   // States
@@ -121,26 +133,46 @@ export default function KidClassroomWorkspaceClient({
     return assignments.filter((a) => !a.submission_id || a.submitted_at === null).length;
   };
 
+  const getInitials = (firstName?: string | null, lastName?: string | null) => {
+    return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.trim().toUpperCase() || "T";
+  };
+
+  const formatTeacherName = (
+    teacher?: { first_name: string | null; last_name: string | null } | null
+  ) => {
+    if (!teacher) return "Educator";
+    return `Mr/Ms. ${teacher.first_name || ""} ${teacher.last_name || ""}`.trim();
+  };
+
+  // Overview Tab Calculations
+  const completedCount = assignments.filter(
+    (a) => a.submission_id && a.submitted_at !== null
+  ).length;
+  const completionRate =
+    assignments.length > 0 ? Math.round((completedCount / assignments.length) * 100) : 100;
+  const totalXPEarned = assignments.reduce((acc, curr) => acc + (curr.score || 0), 0);
+
   return (
     <div className="mx-auto w-full max-w-7xl flex flex-col gap-6">
       {/* 1. Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link
-            href="/dashboard/kid"
+            href="/dashboard/kid/classrooms"
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "rounded-full h-10 w-10 p-0 hover:bg-slate-50 border-slate-200 flex items-center justify-center"
+              "rounded-full h-10 w-10 p-0 hover:bg-slate-50 border-slate-200 flex items-center justify-center cursor-pointer"
             )}
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              Classroom Workspace
+              {classroom.name}
             </h1>
             <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
-              Learn, view tasks, and complete assignments.
+              {classroom.subject || "General"} • {classroom.grade || "No Grade Set"} • Teacher:{" "}
+              <span className="font-bold">{formatTeacherName(classroom.teacher)}</span>
             </p>
           </div>
         </div>
@@ -148,6 +180,7 @@ export default function KidClassroomWorkspaceClient({
         {/* Tab Controls */}
         <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-slate-950/40 p-1.5 rounded-full border border-slate-200/50 dark:border-slate-850 self-start sm:self-auto overflow-x-auto">
           {[
+            { id: "overview", label: "Overview", icon: School },
             { id: "assignments", label: "Assignments", icon: BookOpen, count: getPendingCount() },
             { id: "resources", label: "Resources", icon: FolderOpen },
             { id: "announcements", label: "Announcements", icon: Megaphone },
@@ -158,7 +191,7 @@ export default function KidClassroomWorkspaceClient({
               <button
                 key={tab.id}
                 onClick={() =>
-                  setActiveTab(tab.id as "assignments" | "resources" | "announcements")
+                  setActiveTab(tab.id as "overview" | "assignments" | "resources" | "announcements")
                 }
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer select-none shrink-0 ${
                   active
@@ -180,6 +213,148 @@ export default function KidClassroomWorkspaceClient({
       </div>
 
       {/* 2. Content Sections */}
+
+      {/* Tab: Overview */}
+      {activeTab === "overview" && (
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Left Side: Teacher card & Class description */}
+          <div className="md:col-span-2 space-y-6">
+            <Card className="rounded-[32px] border-slate-200/50 bg-white dark:bg-slate-900/40 shadow-sm overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+              <CardContent className="p-6 md:p-8 space-y-6">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16 border-2 border-indigo-100 shadow-sm shrink-0 dark:border-slate-850">
+                    <AvatarImage src={classroom.teacher?.avatar_url ?? undefined} />
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-indigo-650 text-white font-extrabold text-lg">
+                      {getInitials(classroom.teacher?.first_name, classroom.teacher?.last_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <span className="text-[10px] font-black text-indigo-750 dark:text-indigo-400 uppercase tracking-widest block mb-0.5">
+                      Teacher
+                    </span>
+                    <h3 className="text-xl font-black text-slate-950 dark:text-white leading-tight">
+                      {formatTeacherName(classroom.teacher)}
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                    About this class
+                  </h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
+                    {classroom.description ||
+                      "Welcome to our classroom! Use the tabs above to launch assignments, download reference materials, and stay updated with teacher announcements."}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Latest Announcement Card */}
+            <div className="space-y-3">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Megaphone className="h-4.5 w-4.5 text-indigo-650 dark:text-indigo-400" />
+                Latest Announcement
+              </h3>
+              {announcements.length === 0 ? (
+                <Card className="rounded-[28px] border-slate-200 bg-white/40 dark:bg-slate-900/10 p-6 text-center text-xs font-semibold text-slate-500">
+                  No announcements posted yet.
+                </Card>
+              ) : (
+                <Card className="rounded-[28px] border-indigo-150 bg-white dark:bg-slate-900/40 shadow-xs relative overflow-hidden">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-black text-slate-950 dark:text-white leading-tight">
+                        {announcements[0].title}
+                      </h4>
+                      <p className="text-[10px] font-semibold text-slate-400">
+                        {new Date(announcements[0].created_at).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                      <p className="text-xs text-slate-700 dark:text-slate-350 font-medium leading-relaxed pt-2 line-clamp-3">
+                        {announcements[0].message}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setActiveTab("announcements")}
+                      className="text-indigo-600 hover:text-indigo-750 dark:text-indigo-400 font-bold text-xs p-0 h-auto cursor-pointer"
+                    >
+                      Read all announcements &rarr;
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {/* Right Side: Progress and Stats */}
+          <div className="space-y-6">
+            <Card className="rounded-[32px] border-slate-200/50 bg-white dark:bg-slate-900/40 shadow-sm">
+              <CardContent className="p-6 space-y-5">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  Your Progress
+                </h3>
+
+                <div className="space-y-4">
+                  {/* Total Assignments Progress */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+                      <span>Tasks Finished</span>
+                      <span className="text-slate-950 dark:text-white">
+                        {completedCount} of {assignments.length}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                        style={{ width: `${completionRate}%` }}
+                      />
+                    </div>
+                    <div className="text-[10px] text-right text-slate-400 font-semibold">
+                      {completionRate}% Completed
+                    </div>
+                  </div>
+
+                  {/* XP Earned */}
+                  <div className="pt-4 border-t border-slate-150 dark:border-slate-800 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                        XP Earned Here
+                      </p>
+                      <p className="text-2xl font-black text-slate-950 dark:text-white mt-0.5">
+                        {totalXPEarned} XP
+                      </p>
+                    </div>
+                    <div className="h-10 w-10 bg-amber-50 dark:bg-amber-950/20 text-amber-500 rounded-2xl flex items-center justify-center shrink-0">
+                      <Trophy className="h-5 w-5" />
+                    </div>
+                  </div>
+                </div>
+
+                {getPendingCount() > 0 ? (
+                  <Button
+                    onClick={() => setActiveTab("assignments")}
+                    className="w-full rounded-full bg-indigo-650 hover:bg-indigo-700 text-white font-bold h-11 text-xs px-4 cursor-pointer border-none shadow-sm"
+                  >
+                    View Pending Tasks ({getPendingCount()})
+                  </Button>
+                ) : (
+                  <div className="bg-emerald-50/20 p-3 rounded-2xl border border-emerald-100/30 text-center text-xs font-bold text-emerald-700">
+                    All tasks completed!
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       {/* Tab: Assignments */}
       {activeTab === "assignments" && (
@@ -236,7 +411,7 @@ export default function KidClassroomWorkspaceClient({
                 } else if (isOverdue) {
                   statusLabel = "Overdue";
                   statusBadgeStyle = "border-rose-100 bg-rose-50 text-rose-700";
-                  stripeStyle = "bg-rose-505";
+                  stripeStyle = "bg-rose-500";
                 }
 
                 const formattedDate = assign.due_date
@@ -286,7 +461,7 @@ export default function KidClassroomWorkspaceClient({
                         {assign.activity_type ? (
                           // MVP Auto-Graded Activity Flow
                           isCompleted ? (
-                            <div className="bg-emerald-50/20 p-3.5 rounded-2xl border border-emerald-100/30 flex items-center justify-between text-xs">
+                            <div className="bg-emerald-50/20 p-3.5 rounded-2xl border border-emerald-100/30 flex items-center justify-between text-xs w-full">
                               <span className="font-extrabold text-emerald-700 flex items-center gap-1">
                                 <Award className="w-3.5 h-3.5" />
                                 Completed Activity
@@ -299,7 +474,7 @@ export default function KidClassroomWorkspaceClient({
                               </span>
                             </div>
                           ) : isOverdue ? (
-                            <div className="bg-rose-50/20 p-3.5 rounded-2xl border border-rose-100/30 flex items-center justify-between text-xs font-bold text-rose-700">
+                            <div className="bg-rose-50/20 p-3.5 rounded-2xl border border-rose-100/30 flex items-center justify-between text-xs font-bold text-rose-700 w-full">
                               <span className="flex items-center gap-1.5">
                                 <Calendar className="h-3.5 w-3.5 text-rose-400" />
                                 Overdue (Due {formattedDate})
@@ -335,7 +510,7 @@ export default function KidClassroomWorkspaceClient({
                           // Fallback Manual Submission Flow
                           <>
                             {isGraded ? (
-                              <div className="bg-emerald-50/20 p-3.5 rounded-2xl border border-emerald-100/30 space-y-2.5">
+                              <div className="bg-emerald-50/20 p-3.5 rounded-2xl border border-emerald-100/30 space-y-2.5 w-full">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="font-extrabold text-emerald-700 flex items-center gap-1">
                                     <Award className="w-3.5 h-3.5" />
@@ -355,7 +530,7 @@ export default function KidClassroomWorkspaceClient({
                                 )}
                               </div>
                             ) : isSubmitted ? (
-                              <div className="bg-amber-50/10 p-3.5 rounded-2xl border border-amber-100/20 text-xs font-semibold text-amber-700 flex items-center gap-1.5">
+                              <div className="bg-amber-50/10 p-3.5 rounded-2xl border border-amber-100/20 text-xs font-semibold text-amber-700 flex items-center gap-1.5 w-full">
                                 <Clock className="h-4 w-4 text-amber-500 animate-pulse" />
                                 Awaiting review by your teacher
                               </div>
@@ -385,7 +560,7 @@ export default function KidClassroomWorkspaceClient({
                               >
                                 <DialogTrigger
                                   render={
-                                    <Button className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 text-xs px-4 cursor-pointer">
+                                    <Button className="w-full rounded-full bg-indigo-650 hover:bg-indigo-750 text-white font-bold h-10 text-xs px-4 cursor-pointer border-none shadow-sm">
                                       Submit Assignment
                                     </Button>
                                   }
@@ -401,11 +576,11 @@ export default function KidClassroomWorkspaceClient({
                                   </DialogHeader>
 
                                   <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
-                                    <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50 space-y-1">
-                                      <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">
+                                    <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50 space-y-1 dark:bg-slate-950">
+                                      <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block">
                                         Instructions
                                       </span>
-                                      <h5 className="text-xs font-black text-slate-950">
+                                      <h5 className="text-xs font-black text-slate-950 dark:text-slate-150">
                                         {assign.title}
                                       </h5>
                                       {assign.description && (
@@ -418,7 +593,7 @@ export default function KidClassroomWorkspaceClient({
                                     <div className="space-y-1.5">
                                       <Label
                                         htmlFor="subType"
-                                        className="text-xs font-bold text-slate-700 ml-1"
+                                        className="text-xs font-bold text-slate-700 dark:text-slate-400 ml-1"
                                       >
                                         Submission Type*
                                       </Label>
@@ -430,7 +605,7 @@ export default function KidClassroomWorkspaceClient({
                                             e.target.value as "TEXT" | "PDF" | "IMAGE" | "LINK"
                                           )
                                         }
-                                        className="w-full rounded-xl border border-slate-200 px-3.5 h-11 text-sm font-semibold focus:border-indigo-500 focus:ring-0"
+                                        className="w-full rounded-xl border border-slate-200 px-3.5 h-11 text-sm font-semibold focus:border-indigo-500 focus:ring-0 dark:bg-slate-950 dark:border-slate-800"
                                       >
                                         <option value="TEXT">Text Answer</option>
                                         <option value="LINK">Website Link</option>
@@ -443,7 +618,7 @@ export default function KidClassroomWorkspaceClient({
                                       <div className="space-y-1.5">
                                         <Label
                                           htmlFor="subText"
-                                          className="text-xs font-bold text-slate-700 ml-1"
+                                          className="text-xs font-bold text-slate-700 dark:text-slate-400 ml-1"
                                         >
                                           Your Answer*
                                         </Label>
@@ -453,14 +628,14 @@ export default function KidClassroomWorkspaceClient({
                                           onChange={(e) => setSubText(e.target.value)}
                                           required
                                           placeholder="Write your submission text here..."
-                                          className="rounded-xl w-full border border-slate-200 p-3.5 text-xs font-semibold focus:border-indigo-500 focus:ring-0 resize-none h-28"
+                                          className="rounded-xl w-full border border-slate-200 p-3.5 text-xs font-semibold focus:border-indigo-500 focus:ring-0 resize-none h-28 dark:bg-slate-950 dark:border-slate-800"
                                         />
                                       </div>
                                     ) : (
                                       <div className="space-y-1.5">
                                         <Label
                                           htmlFor="subUrl"
-                                          className="text-xs font-bold text-slate-700 ml-1"
+                                          className="text-xs font-bold text-slate-700 dark:text-slate-400 ml-1"
                                         >
                                           Submission URL / Link*
                                         </Label>
@@ -487,7 +662,7 @@ export default function KidClassroomWorkspaceClient({
                                       <Button
                                         type="submit"
                                         disabled={isLoading}
-                                        className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
+                                        className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 border-none"
                                       >
                                         <Send className="mr-2 h-4 w-4" />
                                         Submit
@@ -591,7 +766,7 @@ export default function KidClassroomWorkspaceClient({
                         rel="noreferrer"
                         className={cn(
                           buttonVariants({ variant: "outline", size: "sm" }),
-                          "rounded-xl w-full border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 font-bold text-xs h-9 shadow-xs flex items-center justify-center gap-1.5"
+                          "rounded-xl w-full border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 font-bold text-xs h-9 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
                         )}
                       >
                         <span>Access File</span>

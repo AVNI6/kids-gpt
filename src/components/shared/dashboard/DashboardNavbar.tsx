@@ -1,0 +1,136 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useKidNotifications } from "@/hooks/kid/useKidNotifications";
+import { useNotifications } from "@/hooks/parent/useNotifications";
+import { useTeacherNotifications } from "@/hooks/teacher/useTeacherNotifications";
+import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
+import { getKidPendingAssignmentsCount } from "@/lib/services/kid/classroom.actions";
+import { APP_ROUTES } from "@/lib/constants/common";
+
+// Configs
+import { kidNavItems } from "@/config/navigation/kid-nav";
+import { parentNavItems } from "@/config/navigation/parent-nav";
+import { teacherNavItems } from "@/config/navigation/teacher-nav";
+import type { NavItemConfig } from "@/config/navigation/kid-nav";
+
+// Presentation Base
+import DashboardNavbarBase from "./DashboardNavbarBase";
+
+interface DashboardNavbarProps {
+  role: "kid" | "parent" | "teacher";
+}
+
+function KidNavbarWrapper({ pathname }: { pathname: string }) {
+  const [dueCount, setDueCount] = useState(0);
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } =
+    useKidNotifications(10);
+
+  useEffect(() => {
+    getKidPendingAssignmentsCount().then(setDueCount);
+  }, [pathname]);
+
+  const isLinkActive = (item: NavItemConfig) => {
+    if (item.exact) return pathname === item.href;
+    return pathname.startsWith(item.href);
+  };
+
+  const getNavItemHref = (item: NavItemConfig) => item.href;
+
+  return (
+    <DashboardNavbarBase
+      role="kid"
+      navItems={kidNavItems}
+      pathname={pathname}
+      notifications={notifications}
+      unreadCount={unreadCount}
+      markAsRead={markAsRead}
+      markAllAsRead={markAllAsRead}
+      isLoadingNotifications={isLoading}
+      showSidebarToggle={true}
+      dueCount={dueCount}
+      getNavItemHref={getNavItemHref}
+      isLinkActive={isLinkActive}
+    />
+  );
+}
+
+function ParentNavbarWrapper({ pathname }: { pathname: string }) {
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isLoadingNotifications } =
+    useNotifications();
+  const { activeChildId } = useParentDashboard();
+
+  const isLinkActive = (item: NavItemConfig) => {
+    if (item.exact) return pathname === item.href;
+    return pathname.startsWith(item.href);
+  };
+
+  const getNavItemHref = (item: NavItemConfig) => {
+    if (item.isParameterized && activeChildId) {
+      return `${item.href}?childId=${activeChildId}`;
+    }
+    return item.href;
+  };
+
+  return (
+    <DashboardNavbarBase
+      role="parent"
+      navItems={parentNavItems}
+      pathname={pathname}
+      notifications={notifications}
+      unreadCount={unreadCount}
+      markAsRead={markAsRead}
+      markAllAsRead={markAllAsRead}
+      viewAllNotificationsHref={APP_ROUTES.ParentNotifications}
+      isLoadingNotifications={isLoadingNotifications}
+      showSidebarToggle={true}
+      getNavItemHref={getNavItemHref}
+      isLinkActive={isLinkActive}
+    />
+  );
+}
+
+function TeacherNavbarWrapper({ pathname }: { pathname: string }) {
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } =
+    useTeacherNotifications(10);
+
+  const isLinkActive = (item: NavItemConfig) => {
+    if (item.exact) return pathname === item.href;
+    return pathname.startsWith(item.href);
+  };
+
+  const getNavItemHref = (item: NavItemConfig) => item.href;
+
+  return (
+    <DashboardNavbarBase
+      role="teacher"
+      navItems={teacherNavItems}
+      pathname={pathname}
+      notifications={notifications}
+      unreadCount={unreadCount}
+      markAsRead={markAsRead}
+      markAllAsRead={markAllAsRead}
+      viewAllNotificationsHref={APP_ROUTES.TeacherNotifications}
+      isLoadingNotifications={isLoading}
+      showSidebarToggle={true}
+      getNavItemHref={getNavItemHref}
+      isLinkActive={isLinkActive}
+    />
+  );
+}
+
+export default function DashboardNavbar({ role }: DashboardNavbarProps) {
+  const pathname = usePathname() || "";
+
+  switch (role) {
+    case "kid":
+      return <KidNavbarWrapper pathname={pathname} />;
+    case "parent":
+      return <ParentNavbarWrapper pathname={pathname} />;
+    case "teacher":
+      return <TeacherNavbarWrapper pathname={pathname} />;
+    default:
+      return null;
+  }
+}
