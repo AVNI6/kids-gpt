@@ -14,23 +14,23 @@ function WorkspaceSkeleton() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <div className="flex items-center gap-4">
-        <Skeleton className="h-10 w-24 rounded-full bg-slate-200" />
+        <Skeleton className="h-10 w-24 rounded-full" />
         <div className="space-y-2 flex-1">
-          <Skeleton className="h-8 w-48 bg-slate-200" />
-          <Skeleton className="h-4 w-32 bg-slate-200" />
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-32" />
         </div>
       </div>
-      <Card className="rounded-[32px] border-0 bg-slate-100/50 p-6 shadow-sm">
+      <Card className="rounded-[32px] border border-slate-200/50 dark:border-slate-800/50 bg-slate-100/50 dark:bg-slate-900/50 p-6 shadow-sm">
         <CardContent className="p-0 space-y-4">
           <div className="flex gap-4 border-b pb-4">
-            <Skeleton className="h-8 w-24 bg-slate-200 rounded-md" />
-            <Skeleton className="h-8 w-24 bg-slate-200 rounded-md" />
-            <Skeleton className="h-8 w-24 bg-slate-200 rounded-md" />
+            <Skeleton className="h-8 w-24 rounded-md" />
+            <Skeleton className="h-8 w-24 rounded-md" />
+            <Skeleton className="h-8 w-24 rounded-md" />
           </div>
           <div className="grid gap-4 md:grid-cols-3">
-            <Skeleton className="h-32 rounded-[28px] bg-slate-200" />
-            <Skeleton className="h-32 rounded-[28px] bg-slate-200" />
-            <Skeleton className="h-32 rounded-[28px] bg-slate-200" />
+            <Skeleton className="h-32 rounded-[28px]" />
+            <Skeleton className="h-32 rounded-[28px]" />
+            <Skeleton className="h-32 rounded-[28px]" />
           </div>
         </CardContent>
       </Card>

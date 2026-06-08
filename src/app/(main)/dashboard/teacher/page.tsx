@@ -9,17 +9,17 @@ import TeacherDashboardContainer from "@/components/teacher/home/TeacherDashboar
 
 function HeroBannerSkeleton() {
   return (
-    <Card className="rounded-[32px] border-0 bg-slate-100/50 p-8 shadow-sm">
+    <Card className="rounded-[32px] border border-slate-200/50 dark:border-slate-800/50 bg-slate-100/50 dark:bg-slate-900/50 p-8 shadow-sm">
       <CardContent className="p-0 flex flex-col lg:flex-row items-center justify-between gap-8">
         <div className="flex-1 flex flex-col lg:flex-row items-center gap-6 w-full">
-          <Skeleton className="h-24 w-24 md:h-28 md:w-28 rounded-full bg-slate-200 shrink-0" />
+          <Skeleton className="h-24 w-24 md:h-28 md:w-28 rounded-full shrink-0" />
           <div className="space-y-3 flex-1 w-full max-w-md">
-            <Skeleton className="h-8 w-2/3 bg-slate-200" />
-            <Skeleton className="h-4 w-1/3 bg-slate-200" />
-            <Skeleton className="h-4 w-1/2 bg-slate-200" />
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-4 w-1/2" />
             <div className="flex gap-3 pt-2">
-              <Skeleton className="h-10 w-36 rounded-full bg-slate-200" />
-              <Skeleton className="h-10 w-36 rounded-full bg-slate-200" />
+              <Skeleton className="h-10 w-36 rounded-full" />
+              <Skeleton className="h-10 w-36 rounded-full" />
             </div>
           </div>
         </div>
@@ -30,12 +30,12 @@ function HeroBannerSkeleton() {
 
 function StudentListSkeleton() {
   return (
-    <Card className="rounded-[32px] border-sky-100 bg-white shadow-sm">
+    <Card className="rounded-[32px] border border-sky-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
       <CardContent className="space-y-4 p-6">
-        <Skeleton className="h-6 w-40 bg-slate-100" />
+        <Skeleton className="h-6 w-40" />
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-2xl bg-slate-100" />
+            <Skeleton key={i} className="h-16 rounded-2xl" />
           ))}
         </div>
       </CardContent>
@@ -47,16 +47,19 @@ function ClassroomsSkeleton() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Skeleton className="h-6 w-48 bg-slate-100" />
-        <Skeleton className="h-10 w-32 bg-slate-100 rounded-full" />
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-10 w-32 rounded-full" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {Array.from({ length: 2 }).map((_, i) => (
-          <Card key={i} className="rounded-[32px] border-indigo-100 bg-white shadow-sm">
+          <Card
+            key={i}
+            className="rounded-[32px] border border-indigo-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+          >
             <CardContent className="p-6 space-y-4">
-              <Skeleton className="h-5 w-40 bg-slate-100" />
-              <Skeleton className="h-4 w-56 bg-slate-100" />
-              <Skeleton className="h-12 w-full bg-slate-100 rounded-2xl" />
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-56" />
+              <Skeleton className="h-12 w-full rounded-2xl" />
             </CardContent>
           </Card>
         ))}

@@ -49,7 +49,13 @@ export default function Profile({ isCollapsed }: ProfileProps) {
   const pathname = usePathname();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [openPath, setOpenPath] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const isPopoverOpen = openPath === pathname;
+
+  // Wait until mounted on client to prevent theme mismatches or hydration errors
+  useState(() => {
+    setMounted(true);
+  });
 
   if (!isUserLoggedIn || !user) return null;
 
@@ -131,7 +137,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                     setTheme("light");
                     setOpenPath(null);
                   }}
-                  className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${theme === "light" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${mounted && theme === "light" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Sun className="h-4 w-4" />
                 </button>
@@ -140,7 +146,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                     setTheme("dark");
                     setOpenPath(null);
                   }}
-                  className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${theme === "dark" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${mounted && theme === "dark" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Moon className="h-4 w-4" />
                 </button>
@@ -149,7 +155,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                     setTheme("system");
                     setOpenPath(null);
                   }}
-                  className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${theme === "system" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${mounted && theme === "system" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Monitor className="h-4 w-4" />
                 </button>

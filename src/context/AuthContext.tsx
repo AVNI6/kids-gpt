@@ -1,9 +1,8 @@
 "use client";
-import React, { createContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { UserRole, UserProfile } from "@/types/user";
-import { useRouter } from "next/navigation";
 import { AuthService } from "@/lib/services/auth.service";
 export interface AuthContextType {
   user: User | null;
@@ -24,7 +23,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isLoggingOutRef = useRef(false);
   const lastLoadedUserIdRef = useRef<string | null>(null);
   const supabase = createClient();
-  const router = useRouter();
   useEffect(() => {
     let isMounted = true;
     // Check current user securely on mount using the coordinated AuthService
@@ -112,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     try {
       AuthService.clearInitialAuthCache();
       const {
@@ -134,37 +132,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Error refreshing profile:", error);
     }
-  };
-  const logout = async () => {
+  }, [supabase]);
+
+  const logout = useCallback(async () => {
     try {
       isLoggingOutRef.current = true;
       AuthService.clearInitialAuthCache();
-      // 1. Optimistically clear local states immediately
       lastLoadedUserIdRef.current = null;
       setUser(null);
       setUserProfile(null);
       setUserRole(null);
       setIsUserLoggedIn(false);
-      // 2. Await full signOut to ensure locks are cleanly released
       await supabase.auth.signOut();
-      // 3. Navigate home
-      router.push("/");
+      window.location.href = "/";
     } catch (error) {
       console.error("Error logging out:", error);
     } finally {
       isLoggingOutRef.current = false;
     }
-  };
-  const value = {
-    user,
-    userProfile,
-    userRole,
-    isLoading,
-    isUserLoggedIn,
-    logout,
-    refreshProfile,
-  };
+  }, [supabase]);
+
+  const value = useMemo(
+    () => ({
+      user,
+      userProfile,
+      userRole,
+      isLoading,
+      isUserLoggedIn,
+      logout,
+      refreshProfile,
+    }),
+    [user, userProfile, userRole, isLoading, isUserLoggedIn, logout, refreshProfile]
+  );
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-// Re-export the useAuth hook from the new hook file for backwards compatibility
+
 export { useAuth } from "@/hooks/useAuth";
