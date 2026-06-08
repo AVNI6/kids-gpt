@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/shared/ui/card";
 import { Button } from "@/components/shared/ui/button";
-import { Sparkles, Users, Award } from "lucide-react";
+import { Users, Award } from "lucide-react";
+import { GiProgression } from "react-icons/gi";
 import { getSafeXP } from "@/hooks/kid/useChildXP";
 import type { DashboardUserProfile, LinkedChildProfile, ChildDetailsResult } from "@/types/kid";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
@@ -97,7 +98,7 @@ export default function WelcomeBanner({
                 }
                 className="flex items-center justify-center gap-2"
               >
-                <Sparkles className="w-4 h-4 text-sky-500 shrink-0" />
+                <GiProgression className="w-4 h-4 text-sky-500 shrink-0" />
                 <span>View Family Progress</span>
               </Link>
             </Button>

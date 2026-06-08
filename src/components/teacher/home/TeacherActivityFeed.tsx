@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, CardContent } from "@/components/shared/ui/card";
-import { Badge } from "@/components/shared/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { Activity, Send, Award, FileUp, Megaphone, PlusCircle, HelpCircle } from "lucide-react";
 import { getRelativeTime } from "@/hooks/shared/timeUtils";
@@ -176,14 +175,8 @@ export default function TeacherActivityFeed({ activityEvents }: Props) {
     <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm overflow-hidden">
       <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
         <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-indigo-500" /> Recent Classroom Activity
+          <Activity className="w-4 h-4 text-indigo-500 animate-pulse" /> Recent Classroom Activity
         </h3>
-        <Badge
-          variant="secondary"
-          className="bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-bold px-3 py-1 rounded-full text-[10px]"
-        >
-          Live Feed
-        </Badge>
       </div>
 
       <CardContent className="divide-slate-100 dark:divide-slate-800/40 max-h-[360px] overflow-y-auto pr-2">

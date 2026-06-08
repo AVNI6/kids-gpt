@@ -3,9 +3,9 @@ import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getCurrentDashboardProfile } from "@/lib/services/kid/dashboard.actions";
 import { getTeacherDashboardData } from "@/lib/services/kid/classroom.actions";
 import { createClient } from "@/lib/supabase/server";
-import TeacherClassrooms from "@/components/teacher/dashboard/TeacherClassrooms";
-import NeedsAttention from "@/components/teacher/dashboard/NeedsAttention";
-import TeacherActivityFeed from "@/components/teacher/dashboard/TeacherActivityFeed";
+import TeacherClassrooms from "@/components/teacher/classrooms/TeacherClassrooms";
+import NeedsAttention from "@/components/teacher/home/NeedsAttention";
+import TeacherActivityFeed from "@/components/teacher/home/TeacherActivityFeed";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import { Card, CardContent } from "@/components/shared/ui/card";
 

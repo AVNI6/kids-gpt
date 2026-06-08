@@ -5,7 +5,7 @@ import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getCurrentDashboardProfile } from "@/lib/services/kid/dashboard.actions";
 import { getTeacherDashboardData } from "@/lib/services/kid/classroom.actions";
 import { createClient } from "@/lib/supabase/server";
-import TeacherDashboardContainer from "@/components/teacher/dashboard/TeacherDashboardContainer";
+import TeacherDashboardContainer from "@/components/teacher/home/TeacherDashboardContainer";
 
 function HeroBannerSkeleton() {
   return (

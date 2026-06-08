@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import ShareLink from "./ShareLink";
 import Navbar from "../ui/Navbar";
-import Logo from "../ui/Logo";
+import Logo from "@/components/shared/logo/Logo";
 
 interface ChatHeaderProps {
   openMobile: boolean;

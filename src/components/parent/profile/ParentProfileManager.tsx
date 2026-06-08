@@ -18,8 +18,8 @@ import { Input } from "@/components/shared/ui/input";
 import { Label } from "@/components/shared/ui/label";
 import type { DashboardUserProfile } from "@/types/parent";
 import { getInitials, formatDisplayName } from "@/lib/utils/parent/dashboard.utils";
-import { DashboardService } from "../dashboard/dashboard.service";
-import LinkChildDialog from "./LinkChildDialog";
+import { DashboardService } from "@/components/parent/home/dashboard.service";
+import LinkChildDialog from "@/components/parent/children/LinkChildDialog";
 
 type Props = {
   profile: DashboardUserProfile;

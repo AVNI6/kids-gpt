@@ -1,6 +1,6 @@
 "use client";
 
-import MyChildrenManagement from "@/components/parent/dashboard/MyChildrenManagement";
+import MyChildrenManagement from "@/components/parent/children/MyChildrenManagement";
 import { useDashboard } from "@/context/parent-dashboard/DashboardContext";
 
 export default function ChildrenPage() {

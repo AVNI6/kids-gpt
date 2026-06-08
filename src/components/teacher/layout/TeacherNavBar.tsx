@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Menu, X, GraduationCap } from "lucide-react";
@@ -25,15 +24,8 @@ export default function TeacherNavBar() {
   const pathname = usePathname();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
   // Consume shared state & actions from the custom hook (only fetch latest 10 for dropdown)
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useTeacherNotifications(10);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMounted(true);
-  }, []);
 
   // Auto-dismiss mobile menu on scroll
   useEffect(() => {
@@ -189,63 +181,59 @@ export default function TeacherNavBar() {
         </div>
       </div>
 
-      {/* Mobile Drawer — rendered via React Portal at body level */}
-      {isMounted && isMobileMenuOpen
-        ? createPortal(
-            <div className="lg:hidden fixed inset-0 z-[9999] flex">
-              {/* Backdrop */}
-              <div
-                className="fixed inset-0 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md transition-opacity duration-300"
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-[9999] flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md transition-opacity duration-300"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          {/* Drawer Panel (slides in from right) */}
+          <div className="relative ml-auto w-80 max-w-xs h-screen bg-white dark:bg-slate-900 p-6 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 border-l border-slate-200 dark:border-slate-800 z-50">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800/60 mb-6">
+              <span className="font-black text-lg bg-linear-to-r from-indigo-500 to-sky-500 bg-clip-text text-transparent">
+                Teacher Hub
+              </span>
+              <button
                 onClick={() => setIsMobileMenuOpen(false)}
-              />
+                className="p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-900 transition-colors"
+                aria-label="Close menu"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
 
-              {/* Drawer Panel (slides in from right) */}
-              <div className="relative ml-auto w-80 max-w-xs h-screen bg-white dark:bg-slate-900 p-6 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 border-l border-slate-200 dark:border-slate-800 z-50">
-                {/* Drawer Header */}
-                <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800/60 mb-6">
-                  <span className="font-black text-lg bg-linear-to-r from-indigo-500 to-sky-500 bg-clip-text text-transparent">
-                    Teacher Hub
-                  </span>
-                  <button
+            {/* Nav Items */}
+            <div className="flex-1 flex flex-col gap-2">
+              {TEACHER_NAV_ITEMS.map((item) => {
+                const active = isLinkActive(item);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-900 transition-colors"
-                    aria-label="Close menu"
+                    className={`w-full block text-left px-4 py-3 rounded-2xl font-black transition-all cursor-pointer text-sm ${
+                      active
+                        ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 border border-indigo-100/20 dark:border-indigo-500/20"
+                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-white"
+                    }`}
                   >
-                    <X className="size-5" />
-                  </button>
-                </div>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
 
-                {/* Nav Items */}
-                <div className="flex-1 flex flex-col gap-2">
-                  {TEACHER_NAV_ITEMS.map((item) => {
-                    const active = isLinkActive(item);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={`w-full block text-left px-4 py-3 rounded-2xl font-black transition-all cursor-pointer text-sm ${
-                          active
-                            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 border border-indigo-100/20 dark:border-indigo-500/20"
-                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-white"
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-
-                <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center">
-                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                    Teacher Mode Active
-                  </p>
-                </div>
-              </div>
-            </div>,
-            document.body
-          )
-        : null}
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center">
+              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+                Teacher Mode Active
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

@@ -14,7 +14,7 @@ import Image from "next/image";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { useState } from "react";
-import Logo from "@/components/shared/ui/Logo";
+import Logo from "@/components/shared/logo/Logo";
 
 const supabase = createClient();
 

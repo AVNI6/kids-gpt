@@ -4,9 +4,9 @@ import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/shared/ui/dialog";
 import { User, Clock, Trash2, Settings, ShieldAlert } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/kid";
-import EditProfileTab from "./EditProfileTab";
-import ScreenTimeTab from "./ScreenTimeTab";
-import DeleteAccountTab from "./DeleteAccountTab";
+import EditProfileTab from "@/components/parent/profile/EditProfileTab";
+import ScreenTimeTab from "@/components/parent/children/ScreenTimeTab";
+import DeleteAccountTab from "@/components/parent/profile/DeleteAccountTab";
 
 type SettingsTab = "profile" | "screentime" | "delete";
 

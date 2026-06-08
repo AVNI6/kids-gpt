@@ -5,12 +5,13 @@ import { Card, CardContent } from "@/components/shared/ui/card";
 import { Badge } from "@/components/shared/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { Skeleton } from "@/components/shared/ui/skeleton";
-import { Trophy, Clock, Activity, Users, CheckCircle2, Sparkles } from "lucide-react";
+import { MdFamilyRestroom } from "react-icons/md";
+import { Trophy, Clock, Activity, Users, CheckCircle2 } from "lucide-react";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
 import { getSafeXP, getLevel } from "@/hooks/kid/useChildXP";
 import type { ChildDetailsResult } from "@/types/parent";
-import ParentProfileManager from "../profile/ParentProfileManager";
-import WelcomeBanner from "./WelcomeBanner";
+import ParentProfileManager from "@/components/parent/profile/ParentProfileManager";
+import WelcomeBanner from "@/components/parent/home/WelcomeBanner";
 
 interface FamilyTimelineItem {
   id: string;
@@ -191,12 +192,6 @@ export default function HomeSection() {
             <h3 className="text-xl font-black flex items-center gap-2">
               <Activity className="w-5 h-5 text-sky-600 animate-pulse" /> Recent Family Activity
             </h3>
-            <Badge
-              variant="secondary"
-              className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 font-bold px-3 py-1 rounded-full text-xs"
-            >
-              Live Feed
-            </Badge>
           </div>
           <CardContent className="p-6 md:p-8 pt-0 divide-y divide-slate-100 dark:divide-slate-800/40 max-h-[480px] overflow-y-auto pr-2">
             {isLoadingChildData && familyTimeline.length === 0 ? (
@@ -277,7 +272,7 @@ export default function HomeSection() {
           <div className="space-y-6">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-sky-50 dark:bg-sky-950/40 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-sky-500" />
+                <MdFamilyRestroom className="w-5 h-5 text-sky-500" />
               </div>
               <h3 className="text-lg font-black">Family AI Insights</h3>
             </div>

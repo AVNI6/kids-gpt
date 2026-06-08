@@ -11,9 +11,9 @@ import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
 import { displayAge } from "@/lib/utils/kid/childAge";
 import { displayGrade } from "@/lib/utils/kid/childGrade";
 import { getLevelTitle } from "@/hooks/kid/useChildXP";
-import ChildSettingsModal from "../profile/ChildSettingsModal";
-import LinkChildDialog from "../profile/LinkChildDialog";
-import ChildDetailPanel from "./ChildDetailPanel";
+import ChildSettingsModal from "@/components/parent/children/ChildSettingsModal";
+import LinkChildDialog from "@/components/parent/children/LinkChildDialog";
+import ChildDetailPanel from "@/components/parent/children/ChildDetailPanel";
 
 export default function MyChildrenManagement({
   linkedChildren,

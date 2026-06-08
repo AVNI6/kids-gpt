@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Menu, X, AlertTriangle, Trophy, BookOpen, CheckCircle2, Clock } from "lucide-react";
@@ -209,63 +208,59 @@ export default function ParentTopNav() {
         </div>
       </div>
 
-      {/* Mobile Navigation Sidedrawer rendered via React Portal at body level */}
-      {isMobileMenuOpen && typeof document !== "undefined"
-        ? createPortal(
-            <div className="lg:hidden fixed inset-0 z-[9999] flex">
-              {/* Backdrop Blur Overlay */}
-              <div
-                className="fixed inset-0 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md transition-opacity duration-350"
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-[9999] flex">
+          {/* Backdrop Blur Overlay */}
+          <div
+            className="fixed inset-0 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md transition-opacity duration-350"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          {/* Drawer Body Panel (Slides in from the right, full screen height) */}
+          <div className="relative ml-auto w-80 max-w-xs h-screen bg-white dark:bg-slate-900 p-6 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 border-l border-slate-200 dark:border-slate-800 z-50">
+            {/* Header / Brand */}
+            <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800/60 mb-6">
+              <span className="font-black text-lg bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
+                Parent Hub
+              </span>
+              <button
                 onClick={() => setIsMobileMenuOpen(false)}
-              />
+                className="p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-900 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              {/* Drawer Body Panel (Slides in from the right, full screen height) */}
-              <div className="relative ml-auto w-80 max-w-xs h-screen bg-white dark:bg-slate-900 p-6 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 border-l border-slate-200 dark:border-slate-800 z-50">
-                {/* Header / Brand */}
-                <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800/60 mb-6">
-                  <span className="font-black text-lg bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
-                    Parent Hub
-                  </span>
-                  <button
+            {/* Nav items list */}
+            <div className="flex-1 space-y-2">
+              {PARENT_NAV_ITEMS.map((item) => {
+                const active = isLinkActive(item);
+                return (
+                  <Link
+                    key={item.href}
+                    href={getNavItemHref(item)}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-900 transition-colors"
+                    className={`w-full block text-left px-4.5 py-3 rounded-2xl font-black transition-all cursor-pointer ${
+                      active
+                        ? "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300 border border-sky-100/20 dark:border-sky-500/20"
+                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-white"
+                    }`}
                   >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
 
-                {/* Nav items list */}
-                <div className="flex-1 space-y-2">
-                  {PARENT_NAV_ITEMS.map((item) => {
-                    const active = isLinkActive(item);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={getNavItemHref(item)}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={`w-full block text-left px-4.5 py-3 rounded-2xl font-black transition-all cursor-pointer ${
-                          active
-                            ? "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300 border border-sky-100/20 dark:border-sky-500/20"
-                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-white"
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-
-                {/* Footer */}
-                <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center">
-                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                    Parent Mode Enforced
-                  </p>
-                </div>
-              </div>
-            </div>,
-            document.body
-          )
-        : null}
+            {/* Footer */}
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center">
+              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+                Parent Mode Enforced
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

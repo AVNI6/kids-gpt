@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lightbulb, ShieldCheck, School, User, Mail, Lock, Rocket } from "lucide-react";
+import { ShieldCheck, School, User, Mail, Lock, Rocket } from "lucide-react";
 import { Button } from "@/components/shared/ui/button";
 import { Card, CardContent } from "@/components/shared/ui/card";
 import { Input } from "@/components/shared/ui/input";
@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
-import Logo from "@/components/shared/ui/Logo";
+import Logo from "@/components/shared/logo/Logo";
 
 const supabase = createClient();
 
@@ -91,10 +91,6 @@ export default function ChatGPTKidSignupPage() {
 
           <Card className="relative border-2 border-border/50 rounded-[32px] bg-card p-2 shadow-xl overflow-visible">
             <CardContent className="p-8">
-              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full bg-sky-600 flex items-center justify-center shadow-lg">
-                <Lightbulb className="text-white" />
-              </div>
-
               <p className="text-xl text-muted-foreground italic leading-relaxed">
                 “Hi there! I’m your AI learning buddy. Let’s create your account and start exploring
                 fun adventures together!”

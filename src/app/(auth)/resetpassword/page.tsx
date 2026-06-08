@@ -9,7 +9,7 @@ import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 import { createClient } from "@/lib/supabase/client";
 import { APP_ROUTES } from "@/lib/constants/common";
-import Logo from "@/components/shared/ui/Logo";
+import Logo from "@/components/shared/logo/Logo";
 
 const supabase = createClient();
 
@@ -133,22 +133,29 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6fafe] flex flex-col items-center px-6 py-3 relative overflow-hidden">
-      <div className="my-auto w-full flex flex-col items-center">
-        <header className="mb-3 text-center">
-          <Logo size="md" iconType="bot" className="justify-center" />
+    <div className="min-h-screen bg-background text-foreground flex flex-col items-center px-6 py-3 relative overflow-hidden transition-colors duration-300">
+      {/* Background accents */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40 dark:opacity-10">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-sky-400/20 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-400/20 blur-[120px]" />
+      </div>
 
-          <p className="text-[#3e484f] text-lg">Your AI Learning Buddy</p>
+      <div className="my-auto w-full flex flex-col items-center relative z-10">
+        <header className="mb-3 text-center flex flex-col items-center">
+          <Logo size="md" className="justify-center" />
+          <p className="text-muted-foreground text-sm mt-1">Your AI Learning Buddy</p>
         </header>
 
-        <main className="w-full max-w-140 relative">
-          <section className="bg-white border-2 border-[#4cc2ff] rounded-[2rem] p-8 shadow-[12px_12px_0px_0px_#c6e7ff] relative overflow-hidden">
-            <div className="bg-[#f0f4f8] rounded-2xl p-5 mb-8 border-2 border-dashed border-[#4cc2ff] flex gap-4 items-start">
-              <Lightbulb className="w-8 h-8 text-[#00658d] shrink-0" />
+        <main className="w-full max-w-lg relative">
+          <section className="bg-card border-2 border-border/80 rounded-[2rem] p-8 shadow-xl relative overflow-hidden dark:border-slate-800">
+            <div className="bg-muted/50 rounded-2xl p-5 mb-8 border-2 border-dashed border-sky-450/40 flex gap-4 items-start">
+              <Lightbulb className="w-8 h-8 text-sky-500 shrink-0" />
 
               <div>
-                <h3 className="text-2xl font-bold text-[#00658d] mb-2">Reset Your Password</h3>
-                <p className="text-[#3e484f] leading-relaxed">
+                <h3 className="text-xl font-bold text-sky-600 dark:text-sky-400 mb-2">
+                  Reset Your Password
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {linkChecked
                     ? linkError
                       ? linkError
@@ -159,20 +166,19 @@ export default function ResetPasswordPage() {
             </div>
 
             {message && (
-              <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md">{message}</div>
+              <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold rounded-2xl text-center">
+                {message}
+              </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-              <div>
-                <label className="block text-sm font-bold text-[#3e484f] mb-3 px-2">
-                  ENTER YOUR PASSWORD
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
+                  Enter Your Password
                 </label>
 
                 <div className="relative">
-                  <Lock
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50"
-                    size={20}
-                  />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 w-5 h-5" />
                   <input
                     {...register("password", {
                       required: true,
@@ -183,71 +189,72 @@ export default function ResetPasswordPage() {
                     })}
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="w-full rounded-full border-2 border-border bg-muted/50 py-4 pl-12 pr-12 outline-none transition focus:border-sky-500 text-foreground"
+                    className="w-full h-14 pl-12 pr-12 bg-muted/30 border-2 border-border focus:border-sky-500 focus:ring-0 rounded-2xl text-base outline-none transition-all text-foreground"
                   />
 
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors z-10"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground/60 hover:text-foreground transition-colors z-10"
                   >
                     {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                   </button>
                 </div>
 
                 {errors.password && (
-                  <p className="mt-2 px-2 text-sm text-red-500">{errors.password.message}</p>
+                  <p className="mt-2 px-1 text-xs text-red-500 font-bold">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting || !linkChecked || !!linkError}
-                className="w-full h-16 bg-[#00658d] text-white text-xl font-bold rounded-2xl border-b-8 border-[#004c6b] hover:-translate-y-1 active:translate-y-1 active:border-b-2 transition-all duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                className="w-full h-14 bg-sky-600 hover:bg-sky-700 text-white text-base font-bold rounded-2xl shadow-lg hover:shadow-sky-500/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
               >
                 <span>{isSubmitting ? "Resetting..." : "Reset password"}</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
             </form>
 
-            <div className="mt-4 pt-4 border-t-2 border-gray-200 flex flex-col items-center gap-4">
-              <p className="text-[#3e484f]">Remembered your password?</p>
+            <div className="mt-6 pt-6 border-t border-border flex flex-col items-center gap-3">
+              <p className="text-sm text-muted-foreground">Remembered your password?</p>
 
               <Link
                 href={APP_ROUTES.Signin}
-                className="flex items-center gap-2 font-bold text-[#00658d] hover:text-[#004c6b] transition-colors"
+                className="flex items-center gap-2 font-bold text-sky-600 hover:text-sky-700 transition-colors text-sm"
               >
                 Back to sign in
               </Link>
             </div>
           </section>
-
-          <div className="absolute -bottom-6 -left-6 -z-10 w-24 h-24 bg-orange-300 rounded-full opacity-20 blur-2xl" />
-          <div className="absolute -top-12 -left-12 -z-10 w-32 h-32 bg-green-300 rounded-full opacity-20 blur-2xl" />
         </main>
 
         <footer className="mt-6 text-center">
-          <div className="flex items-center justify-center gap-6">
+          <div className="flex items-center justify-center gap-6 text-sm">
             <Link
               href={APP_ROUTES.Help}
-              className="flex items-center gap-2 text-gray-500 hover:text-[#00658d] font-semibold"
+              className="flex items-center gap-2 text-muted-foreground hover:text-sky-500 font-semibold"
             >
               <HelpCircle className="w-4 h-4" />
               Help Center
             </Link>
 
-            <span className="text-gray-300">•</span>
+            <span className="text-muted-foreground/30">•</span>
 
             <Link
               href="/safety"
-              className="flex items-center gap-2 text-gray-500 hover:text-[#00658d] font-semibold"
+              className="flex items-center gap-2 text-muted-foreground hover:text-sky-500 font-semibold"
             >
               <Shield className="w-4 h-4" />
               Safety First
             </Link>
           </div>
 
-          <p className="mt-5 text-sm text-gray-400">© 2026 ChatGPT Kid AI Learning Buddy</p>
+          <p className="mt-5 text-xs text-muted-foreground/50">
+            © 2026 ChatGPT Kid AI Learning Buddy
+          </p>
         </footer>
       </div>
     </div>

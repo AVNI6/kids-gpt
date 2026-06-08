@@ -17,7 +17,7 @@ import {
 } from "@/lib/services/parent/parent-dashboard.actions";
 import { getDailyScreenTime } from "@/lib/services/shared/screentime.actions";
 import { DashboardProvider } from "@/context/parent-dashboard/DashboardContext";
-import ParentTopNav from "@/components/parent/dashboard/ParentTopNav";
+import ParentTopNav from "@/components/parent/layout/ParentTopNav";
 
 export default async function ParentDashboardLayout({ children }: { children: React.ReactNode }) {
   // 1. Verify dashboard access

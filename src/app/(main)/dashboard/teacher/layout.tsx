@@ -1,5 +1,5 @@
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
-import TeacherNavBar from "@/components/teacher/dashboard/TeacherNavBar";
+import TeacherNavBar from "@/components/teacher/layout/TeacherNavBar";
 
 export default async function TeacherDashboardLayout({ children }: { children: React.ReactNode }) {
   await checkDashboardAccess(["teacher"]);

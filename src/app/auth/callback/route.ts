@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const next = searchParams.get("next") ?? "";
 
   if (code) {
     try {
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
           error: userError,
         } = await supabase.auth.getUser();
 
-        let targetPath = "/onboarding";
+        let targetPath = next || "/onboarding";
 
         if (user) {
           // Query the public.profile table for this user_id
@@ -39,13 +40,16 @@ export async function GET(request: Request) {
             console.error("Error querying profile in OAuth callback:", profileError.message);
           }
 
-          // Implement conditional routing logic:
           if (profile && profile.is_onboarded === true) {
-            // Condition B: Returning onboarded user - send them to their role-specific dashboard
+            // Already onboarded: send them directly to their role-specific dashboard
             targetPath = profile.role ? `/dashboard/${profile.role}` : "/dashboard";
           } else {
-            // Condition A: New or incomplete user (profile doesn't exist, or is_onboarded is false/null)
-            targetPath = "/onboarding";
+            // Not onboarded: direct them to onboarding flow
+            if (next && next !== "/onboarding") {
+              targetPath = next;
+            } else {
+              targetPath = profile?.role ? `/onboarding/${profile.role}` : "/onboarding";
+            }
           }
         } else {
           if (userError) {

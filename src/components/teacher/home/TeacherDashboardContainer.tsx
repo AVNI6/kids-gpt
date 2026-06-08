@@ -2,13 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { BarChart3 } from "lucide-react";
-import TeacherHeroBanner from "./TeacherHeroBanner";
-import TeacherMetricsRow from "./TeacherMetricsRow";
-import TodaySnapshot from "./TodaySnapshot";
-import TeacherTopNav from "./TeacherTopNav";
+import TeacherHeroBanner from "@/components/teacher/home/TeacherHeroBanner";
+import TeacherMetricsRow from "@/components/teacher/home/TeacherMetricsRow";
+import TodaySnapshot from "@/components/teacher/home/TodaySnapshot";
+import TeacherProfileWidget from "@/components/teacher/profile/TeacherProfileWidget";
 import type { DashboardUserProfile } from "@/types/kid";
 import type { Classroom, PendingEnrollmentRequest, ApprovedStudent } from "@/types/classroom.types";
-import RecentClassrooms from "./RecentClassrooms";
+import RecentClassrooms from "@/components/teacher/home/RecentClassrooms";
 
 type Metrics = {
   activeClassrooms: number;
@@ -68,7 +68,7 @@ export default function TeacherDashboardContainer({
             Manage your educator profile, school organization settings, and class setup.
           </p>
         </div>
-        <TeacherTopNav profile={profile} />
+        <TeacherProfileWidget profile={profile} />
       </div>
 
       {/* ─────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   Mail,
 } from "lucide-react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
 
@@ -23,12 +22,11 @@ import {
   type TeacherOnboardingState,
 } from "@/lib/services/shared/profile.actions";
 import { Button } from "@/components/shared/ui/button";
-import { Card, CardContent } from "@/components/shared/ui/card";
 import { Input } from "@/components/shared/ui/input";
 import { Label } from "@/components/shared/ui/label";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { AvatarUpload } from "@/components/shared/ui/avatar-upload";
-import Logo from "@/components/shared/ui/Logo";
+import { OnboardingLayout } from "@/components/shared/onboarding/onboarding-layout";
 
 const initialTeacherState: TeacherOnboardingState = { error: null };
 
@@ -63,9 +61,11 @@ export default function TeacherOnboardingPage() {
     submitTeacherOnboarding,
     initialTeacherState
   );
+  const toastShownRef = useRef(false);
 
   useEffect(() => {
-    if (teacherState.success) {
+    if (teacherState.success && !toastShownRef.current) {
+      toastShownRef.current = true;
       toast.success(teacherState.message || "Classroom setup complete!");
       refreshProfile().then(() => {
         router.push("/");
@@ -76,148 +76,100 @@ export default function TeacherOnboardingPage() {
   }, [teacherState, router, refreshProfile]);
 
   return (
-    <main className="min-h-screen flex flex-col px-6 font-sans bg-gradient-to-br from-sky-100 via-background to-emerald-50/30 dark:from-slate-950 dark:via-background dark:to-slate-950">
-      <div className="my-auto mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2">
-        {/* Left Side: Creative Content */}
-        <div className="hidden flex-col gap-8 lg:flex">
-          <Link href="/" className="flex items-center gap-4">
-            <Logo />
+    <OnboardingLayout
+      leftIcon={GraduationCap}
+      quote="“Hello Educator! Ready to inspire young minds? Let’s set up your classroom profile so you can start creating magical learning moments.”"
+      badges={[
+        { text: "Classroom Ready", icon: School },
+        { text: "Quick Start", icon: CheckCircle2 },
+      ]}
+      title="Teacher Profile"
+      description="Inspire the next generation!"
+      footer={
+        <p className="text-center text-xs font-bold text-muted-foreground">
+          Need another account?{" "}
+          <Link href={APP_ROUTES.Signin} className="text-sky-500 hover:underline">
+            Sign in
           </Link>
+        </p>
+      }
+    >
+      {/* Avatar Section */}
+      <AvatarUpload />
 
-          <Card className="relative border-2 border-border/50 rounded-[32px] bg-card text-card-foreground p-2 shadow-xl overflow-visible dark:border-slate-800">
-            <CardContent className="p-8">
-              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full bg-sky-600 flex items-center justify-center shadow-lg dark:bg-sky-500">
-                <GraduationCap className="text-white" />
-              </div>
-
-              <p className="text-xl text-muted-foreground italic leading-relaxed">
-                “Hello Educator! Ready to inspire young minds? Let’s set up your classroom profile
-                so you can start creating magical learning moments.”
-              </p>
-
-              <div className="mt-8 flex gap-3 flex-wrap">
-                <div className="flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-4 py-2 dark:border-sky-500/30 dark:bg-sky-500/20">
-                  <School className="w-4 h-4 text-sky-500" />
-                  <span className="font-bold text-sm text-foreground/80">Classroom Ready</span>
-                </div>
-                <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 dark:border-emerald-500/30 dark:bg-emerald-500/20">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span className="font-bold text-sm text-foreground/80">Quick Start</span>
-                </div>
-              </div>
-
-              <div className="absolute -bottom-16 -right-8 pointer-events-none">
-                <Image
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxDgf-02-AXOs-V48tFjAQajOESWiJjOwgWc5kV1J90hdnwLqvUzFHNgYtZVHxmSl3C0mAUzg5Emwp_wwfdaYtZ9R33Sd2HlPVhWz_W8UrWEkscg-9r9kj3CmDECSyeRVwdDCaWQ8iBH5lqJ9WudeXzVoENYkxd33KnUk_r41pVqHoC_VRof_D9_zUE8N1VbWuXqekSJ9SM0tTGJ7R5zovAzRphvaDvSoWEkjUZnLZp97qZXP_Qds__dLdJ_J5r_r5LaT8jE5_lvI"
-                  alt="Mascot"
-                  width={140}
-                  height={140}
-                  className="h-32 w-32 object-contain"
-                />
-              </div>
-            </CardContent>
-          </Card>
+      {/* Info Section */}
+      <form action={teacherAction} className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="firstName" className="text-sm font-bold text-foreground ml-1">
+              First Name<span className="text-red-500">*</span>
+            </Label>
+            <div className="relative">
+              <UserRound className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
+              <Input
+                id="firstName"
+                name="firstName"
+                placeholder="e.g. Jordan"
+                required
+                className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lastName" className="text-sm font-bold text-foreground ml-1">
+              Last Name
+            </Label>
+            <div className="relative">
+              <UserRound className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
+              <Input
+                id="lastName"
+                name="lastName"
+                placeholder="e.g. Williams"
+                className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Right Side: Onboarding Card */}
-        <Card className="rounded-[40px] border-2 border-border/50 bg-card/90 text-card-foreground p-8 shadow-[0_40px_80px_-24px_rgba(0,101,141,0.15)] backdrop-blur-xl sm:p-10 dark:border-slate-800">
-          <div className="mb-8 text-center lg:text-left">
-            <h2 className="text-4xl font-black text-foreground tracking-tight">Teacher Profile</h2>
-            <p className="mt-2 text-lg font-medium text-muted-foreground">
-              Inspire the next generation!
-            </p>
+        <div className="space-y-2">
+          <Label htmlFor="organizationName" className="text-sm font-bold text-foreground ml-1">
+            School <span className="text-muted-foreground">(Optional)</span>
+          </Label>
+          <div className="relative">
+            <Building2 className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
+            <Input
+              id="organizationName"
+              name="organizationName"
+              placeholder="e.g. Bright Future Academy"
+              className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
+            />
           </div>
+        </div>
 
-          <div className="space-y-8">
-            {/* Avatar Section */}
-            <AvatarUpload />
-
-            {/* Info Section */}
-            <form action={teacherAction} className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-sm font-bold text-foreground ml-1">
-                    First Name<span className="text-red-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <UserRound className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
-                    <Input
-                      id="firstName"
-                      name="firstName"
-                      placeholder="e.g. Jordan"
-                      required
-                      className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-sm font-bold text-foreground ml-1">
-                    Last Name
-                  </Label>
-                  <div className="relative">
-                    <UserRound className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
-                    <Input
-                      id="lastName"
-                      name="lastName"
-                      placeholder="e.g. Williams"
-                      className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label
-                  htmlFor="organizationName"
-                  className="text-sm font-bold text-foreground ml-1"
-                >
-                  School <span className="text-muted-foreground">(Optional)</span>
-                </Label>
-                <div className="relative">
-                  <Building2 className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
-                  <Input
-                    id="organizationName"
-                    name="organizationName"
-                    placeholder="e.g. Bright Future Academy"
-                    className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="studentEmail" className="text-sm font-bold text-foreground ml-1">
-                  Student&apos;s Email <span className="text-muted-foreground">(Optional)</span>
-                </Label>
-                <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
-                  <Input
-                    id="studentEmail"
-                    name="studentEmail"
-                    type="email"
-                    placeholder="student@example.com"
-                    className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
-                  />
-                </div>
-              </div>
-
-              {teacherState.error && (
-                <div className="animate-in fade-in slide-in-from-top-2 rounded-2xl border-2 border-rose-500/20 bg-rose-500/10 p-3 text-sm font-bold text-rose-500 text-center">
-                  {teacherState.error}
-                </div>
-              )}
-
-              <TeacherSubmitButton />
-            </form>
-
-            <p className="text-center text-xs font-bold text-muted-foreground">
-              Need another account?{" "}
-              <Link href={APP_ROUTES.Signin} className="text-sky-500 hover:underline">
-                Sign in
-              </Link>
-            </p>
+        <div className="space-y-2">
+          <Label htmlFor="studentEmail" className="text-sm font-bold text-foreground ml-1">
+            Student&apos;s Email <span className="text-muted-foreground">(Optional)</span>
+          </Label>
+          <div className="relative">
+            <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
+            <Input
+              id="studentEmail"
+              name="studentEmail"
+              type="email"
+              placeholder="student@example.com"
+              className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
+            />
           </div>
-        </Card>
-      </div>
-    </main>
+        </div>
+
+        {teacherState.error && (
+          <div className="animate-in fade-in slide-in-from-top-2 rounded-2xl border-2 border-rose-500/20 bg-rose-500/10 p-3 text-sm font-bold text-rose-500 text-center">
+            {teacherState.error}
+          </div>
+        )}
+
+        <TeacherSubmitButton />
+      </form>
+    </OnboardingLayout>
   );
 }

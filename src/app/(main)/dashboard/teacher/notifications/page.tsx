@@ -1,6 +1,6 @@
 "use client";
 
-import TeacherNotificationsSection from "@/components/teacher/dashboard/TeacherNotificationsSection";
+import TeacherNotificationsSection from "@/components/teacher/notifications/TeacherNotificationsSection";
 
 export default function TeacherNotificationsPage() {
   return (

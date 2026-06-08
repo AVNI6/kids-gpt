@@ -1,6 +1,6 @@
 "use client";
 
-import NotificationsSection from "@/components/parent/dashboard/NotificationsSection";
+import NotificationsSection from "@/components/parent/home/NotificationsSection";
 
 export default function NotificationsPage() {
   return (

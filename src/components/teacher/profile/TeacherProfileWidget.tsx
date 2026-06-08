@@ -34,7 +34,7 @@ function formatDisplayName(profile: DashboardUserProfile) {
   return [profile.first_name, profile.last_name].filter(Boolean).join(" ").trim() || "Educator";
 }
 
-export default function TeacherTopNav({ profile }: Props) {
+export default function TeacherProfileWidget({ profile }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(profile.avatar_url);
@@ -117,7 +117,7 @@ export default function TeacherTopNav({ profile }: Props) {
                 <div className="space-y-1.5">
                   <Label
                     htmlFor="first_name"
-                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    className="text-xs font-bold text-slate-700 dark:text-slate-350 ml-1"
                   >
                     First name
                   </Label>
@@ -132,7 +132,7 @@ export default function TeacherTopNav({ profile }: Props) {
                 <div className="space-y-1.5">
                   <Label
                     htmlFor="last_name"
-                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    className="text-xs font-bold text-slate-700 dark:text-slate-350 ml-1"
                   >
                     Last name
                   </Label>
@@ -148,7 +148,7 @@ export default function TeacherTopNav({ profile }: Props) {
               <div className="space-y-1.5">
                 <Label
                   htmlFor="organizationName"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                  className="text-xs font-bold text-slate-700 dark:text-slate-350 ml-1"
                 >
                   Organization / School
                 </Label>

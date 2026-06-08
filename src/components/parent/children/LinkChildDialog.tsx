@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/shared/ui/button";
 import { Input } from "@/components/shared/ui/input";
 import { Label } from "@/components/shared/ui/label";
-import { DashboardService } from "../dashboard/dashboard.service";
+import { DashboardService } from "@/components/parent/home/dashboard.service";
 
 interface LinkChildDialogProps {
   trigger?: React.ReactElement;

@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getTeacherClassroomWorkspace } from "@/lib/services/kid/classroom.actions";
 import type { TeacherWorkspaceData } from "@/types/classroom.types";
-import TeacherClassroomWorkspaceClient from "@/components/teacher/dashboard/TeacherClassroomWorkspaceClient";
+import TeacherClassroomWorkspaceClient from "@/components/teacher/classrooms/TeacherClassroomWorkspaceClient";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import { Card, CardContent } from "@/components/shared/ui/card";
 import { buttonVariants } from "@/components/shared/ui/button";
