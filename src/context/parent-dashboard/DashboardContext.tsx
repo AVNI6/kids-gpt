@@ -354,30 +354,44 @@ export function DashboardProvider({
     };
   }, [initialProfile.user_id]);
 
-  return (
-    <DashboardContext.Provider
-      value={{
-        profile: initialProfile,
-        linkedChildren: initialLinkedChildren,
-        activeChildId,
-        setActiveChildId,
-        activeChild,
-        cache,
-        isLoadingChildData,
-        fetchChildData,
-        prefetchChildData,
+  const value = useMemo(
+    () => ({
+      profile: initialProfile,
+      linkedChildren: initialLinkedChildren,
+      activeChildId,
+      setActiveChildId,
+      activeChild,
+      cache,
+      isLoadingChildData,
+      fetchChildData,
+      prefetchChildData,
 
-        // Notifications
-        notifications,
-        unreadCount,
-        isLoadingNotifications,
-        markAsRead,
-        markAllAsRead,
-      }}
-    >
-      {children}
-    </DashboardContext.Provider>
+      // Notifications
+      notifications,
+      unreadCount,
+      isLoadingNotifications,
+      markAsRead,
+      markAllAsRead,
+    }),
+    [
+      initialProfile,
+      initialLinkedChildren,
+      activeChildId,
+      setActiveChildId,
+      activeChild,
+      cache,
+      isLoadingChildData,
+      fetchChildData,
+      prefetchChildData,
+      notifications,
+      unreadCount,
+      isLoadingNotifications,
+      markAsRead,
+      markAllAsRead,
+    ]
   );
+
+  return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 }
 
 export function useDashboard() {

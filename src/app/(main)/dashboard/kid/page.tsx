@@ -20,15 +20,15 @@ function KidStreakBannerSkeleton() {
     <Card className="rounded-[32px] border-amber-200/70 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <CardContent className="flex flex-col gap-6 p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
-          <Skeleton className="h-16 w-16 rounded-3xl bg-amber-100 dark:bg-slate-800" />
+          <Skeleton className="h-16 w-16 rounded-3xl" />
           <div className="space-y-3">
-            <Skeleton className="h-7 w-48 bg-amber-100 dark:bg-slate-800" />
-            <Skeleton className="h-4 w-72 bg-amber-100/80 dark:bg-slate-800/80" />
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-4 w-72" />
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:w-[320px]">
-          <Skeleton className="h-24 rounded-3xl bg-white/80 dark:bg-slate-950/80" />
-          <Skeleton className="h-24 rounded-3xl bg-white/80 dark:bg-slate-950/80" />
+          <Skeleton className="h-24 rounded-3xl" />
+          <Skeleton className="h-24 rounded-3xl" />
         </div>
       </CardContent>
     </Card>
@@ -40,17 +40,17 @@ function KidProfileManagerSkeleton() {
     <Card className="rounded-[28px] border-sky-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <CardContent className="space-y-4 p-5">
         <div className="flex items-center gap-3">
-          <Skeleton className="h-14 w-14 rounded-3xl bg-slate-100 dark:bg-slate-800" />
+          <Skeleton className="h-14 w-14 rounded-3xl" />
           <div className="space-y-3">
-            <Skeleton className="h-5 w-36 bg-slate-100 dark:bg-slate-800" />
-            <Skeleton className="h-4 w-28 bg-slate-100 dark:bg-slate-800" />
+            <Skeleton className="h-5 w-36" />
+            <Skeleton className="h-4 w-28" />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Skeleton className="h-20 rounded-2xl bg-slate-100 dark:bg-slate-800" />
-          <Skeleton className="h-20 rounded-2xl bg-slate-100 dark:bg-slate-800" />
+          <Skeleton className="h-20 rounded-2xl" />
+          <Skeleton className="h-20 rounded-2xl" />
         </div>
-        <Skeleton className="h-10 rounded-full bg-slate-100 dark:bg-slate-800" />
+        <Skeleton className="h-10 rounded-full" />
       </CardContent>
     </Card>
   );
