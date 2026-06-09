@@ -26,6 +26,7 @@ export interface Message {
   token_used?: number;
   attachmentUrl?: string | null;
   fileName?: string | null;
+  created_at?: string;
 }
 
 export interface ChatState {

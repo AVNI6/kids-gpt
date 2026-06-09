@@ -1,10 +1,9 @@
 "use client";
 
-import { MoreVertical, Edit2, Share2, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React, { useCallback } from "react";
 import { ScrollArea } from "@/components/shared/ui/scroll-area";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
 import { ChatSessionRow } from "@/types/common";
+import RecentChatItem from "./RecentChatItem";
 
 interface RecentChatListProps {
   sessions: ChatSessionRow[];
@@ -20,6 +19,9 @@ interface RecentChatListProps {
   onStartRename: (e: React.MouseEvent, session: ChatSessionRow) => void;
   onSetSessionToShare: (sessionId: string | null) => void;
   onSetSessionToDelete: (sessionId: string | null) => void;
+  onLoadMoreSessions: () => void;
+  hasMoreSessions: boolean;
+  isLoadingMoreSessions: boolean;
 }
 
 export default function RecentChatList({
@@ -36,104 +38,58 @@ export default function RecentChatList({
   onStartRename,
   onSetSessionToShare,
   onSetSessionToDelete,
+  onLoadMoreSessions,
+  hasMoreSessions,
+  isLoadingMoreSessions,
 }: RecentChatListProps) {
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const target = e.currentTarget;
+      if (target.scrollHeight - target.scrollTop - target.clientHeight < 20) {
+        if (hasMoreSessions && !isLoadingMoreSessions) {
+          onLoadMoreSessions();
+        }
+      }
+    },
+    [hasMoreSessions, isLoadingMoreSessions, onLoadMoreSessions]
+  );
+
   return (
     <div className="flex flex-col flex-1 min-h-0 transition-all">
       <h3 className="px-4 shrink-0 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 truncate">
         Recent Chats
       </h3>
-      <ScrollArea className="w-full flex-1 min-h-0">
+      <ScrollArea onScroll={handleScroll} className="w-full flex-1 min-h-0">
         <div className="space-y-1 w-full pl-4 pr-3 py-1">
           {sessions.length > 0 ? (
             sessions.map((session) => (
-              <div key={session.id}>
-                {editingSessionId === session.id ? (
-                  <form
-                    onSubmit={(e) => onSaveRename(e, session.id)}
-                    className="flex items-center gap-2 p-1"
-                  >
-                    <input
-                      autoFocus
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      onBlur={(e) => onSaveRename(e, session.id)}
-                      className="w-full bg-sidebar-accent border border-sky-500 rounded-md px-2 py-1 text-sm focus:outline-none text-foreground"
-                      placeholder="Save..."
-                    />
-                  </form>
-                ) : (
-                  <div
-                    onClick={() => onSelectSession(session.id)}
-                    className={cn(
-                      "w-full flex items-center justify-between rounded-xl pl-1 py-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors cursor-pointer group/chat",
-                      (pathname === "/" || pathname.startsWith("/chat/")) &&
-                        currentSessionId === session.id
-                        ? "bg-sidebar-accent text-sky-500"
-                        : "text-sidebar-foreground"
-                    )}
-                  >
-                    <span className="whitespace-nowrap overflow-hidden text-sm pointer-events-none truncate mr-2">
-                      {session.title}
-                    </span>
-
-                    <Popover
-                      open={openPopoverId === session.id}
-                      onOpenChange={(open) => setOpenPopoverId(open ? session.id : null)}
-                    >
-                      <PopoverTrigger
-                        onClick={(e) => e.stopPropagation()}
-                        suppressHydrationWarning={true}
-                        className={cn(
-                          "p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-all cursor-pointer shrink-0",
-                          openPopoverId === session.id
-                            ? "opacity-100"
-                            : "opacity-100 xl:opacity-0 xl:group-hover/chat:opacity-100"
-                        )}
-                      >
-                        <MoreVertical className="w-4 h-4 text-slate-400" />
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className="w-40 p-1"
-                        side="right"
-                        align="start"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="flex flex-col">
-                          <button
-                            onClick={(e) => onStartRename(e, session)}
-                            className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors cursor-pointer text-left text-foreground"
-                          >
-                            <Edit2 className="w-4 h-4 text-slate-500" /> Rename
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenPopoverId(null);
-                              onSetSessionToShare(session.id);
-                            }}
-                            className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-sky-500 w-full text-left cursor-pointer"
-                          >
-                            <Share2 className="w-4 h-4" /> Share
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenPopoverId(null);
-                              onSetSessionToDelete(session.id);
-                            }}
-                            className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-red-500 w-full text-left cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4 pointer-events-none" /> Delete
-                          </button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                )}
-              </div>
+              <RecentChatItem
+                key={session.id}
+                session={session}
+                isActive={
+                  (pathname === "/" || pathname.startsWith("/chat/")) &&
+                  currentSessionId === session.id
+                }
+                isEditing={editingSessionId === session.id}
+                isPopoverOpen={openPopoverId === session.id}
+                editTitle={editTitle}
+                setEditTitle={setEditTitle}
+                setOpenPopoverId={setOpenPopoverId}
+                onSelectSession={onSelectSession}
+                onSaveRename={onSaveRename}
+                onStartRename={onStartRename}
+                onSetSessionToShare={onSetSessionToShare}
+                onSetSessionToDelete={onSetSessionToDelete}
+              />
             ))
           ) : (
             <p className="text-xs text-slate-400 ml-3 italic">No recent chats</p>
+          )}
+          {isLoadingMoreSessions && (
+            <div className="flex justify-center py-2 text-xs font-semibold text-muted-foreground gap-2 items-center">
+              <span className="w-3.5 h-3.5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin shrink-0" />
+              <span>Loading...</span>
+            </div>
           )}
         </div>
       </ScrollArea>

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import ChatInterface from "@/components/shared/chat-interface/ChatInterface";
-import { SidebarProvider } from "@/components/shared/ui/sidebar";
+import MainLayout from "@/app/(main)/layout";
 
 type Role = "parent" | "kid" | "teacher";
 
@@ -23,9 +23,9 @@ export default async function ChatRoute({ params }: { params: Promise<{ role: st
         </div>
       }
     >
-      <SidebarProvider>
+      <MainLayout>
         <ChatInterface />
-      </SidebarProvider>
+      </MainLayout>
     </Suspense>
   );
 }

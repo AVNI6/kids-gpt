@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Sparkles, PanelLeftClose, Copy, Check, PanelRightClose } from "lucide-react";
 import { Button, buttonVariants } from "@/components/shared/ui/button";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -8,6 +8,7 @@ import {
   setSessions,
   setCurrentSessionId,
   updateSessionTitleInList,
+  appendSessions,
 } from "@/store/slices/chatSlice";
 import {
   fetchUserSessions,
@@ -51,6 +52,7 @@ export default function Sidebar() {
   const sessions = useAppSelector((state) => state.chat.sessions);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
   const { user, userProfile, isUserLoggedIn, isLoading: isLoadingAuth } = useAuth();
+  const userId = user?.id;
   const userRole = userProfile?.role ?? "kid";
 
   // Dialogs & Inline Action States
@@ -68,6 +70,9 @@ export default function Sidebar() {
   const { state, toggleSidebar, isMobile } = useSidebar();
   const isOpen = state === "expanded" || isMobile;
 
+  const [hasMoreSessions, setHasMoreSessions] = useState(true);
+  const [isLoadingMoreSessions, setIsLoadingMoreSessions] = useState(false);
+
   // Load chat sessions for authenticated user
   useEffect(() => {
     let active = true;
@@ -78,17 +83,24 @@ export default function Sidebar() {
         return;
       }
       try {
-        const userId = user?.id;
         if (userId) {
           controller.abort();
           controller = new AbortController();
-          const userSessions = await fetchUserSessions(userId);
+
+          setHasMoreSessions(true);
+          setIsLoadingMoreSessions(false);
+
+          const userSessions = await fetchUserSessions(userId, undefined, undefined, 20);
           if (active) {
             dispatch(setSessions(userSessions));
+            if (userSessions.length < 20) {
+              setHasMoreSessions(false);
+            }
           }
         } else {
           if (active) {
             dispatch(setSessions([]));
+            setHasMoreSessions(false);
           }
         }
       } catch (err) {
@@ -103,53 +115,92 @@ export default function Sidebar() {
       active = false;
       controller.abort();
     };
-  }, [user?.id, isLoadingAuth, dispatch]);
+  }, [userId, isLoadingAuth, dispatch]);
 
-  const handleNewChat = () => {
+  const handleLoadMoreSessions = useCallback(async () => {
+    if (isLoadingMoreSessions || !hasMoreSessions || !userId) return;
+    setIsLoadingMoreSessions(true);
+
+    const oldestSession = sessions[sessions.length - 1];
+    if (!oldestSession) {
+      setHasMoreSessions(false);
+      setIsLoadingMoreSessions(false);
+      return;
+    }
+
+    try {
+      const nextSessions = await fetchUserSessions(
+        userId,
+        oldestSession.updated_at,
+        oldestSession.id,
+        20
+      );
+
+      if (nextSessions.length < 20) {
+        setHasMoreSessions(false);
+      }
+
+      if (nextSessions.length > 0) {
+        dispatch(appendSessions(nextSessions));
+      }
+    } catch (err) {
+      console.error("Failed to load more sessions:", err);
+    } finally {
+      setIsLoadingMoreSessions(false);
+    }
+  }, [isLoadingMoreSessions, hasMoreSessions, userId, sessions, dispatch]);
+
+  const handleNewChat = useCallback(() => {
     getSessionManager().abortActiveRequest();
     if (isMobile && isOpen) {
       toggleSidebar();
     }
     const chatRoute = userRole === "kid" ? "/" : `/chat/${userRole}`;
     router.push(chatRoute);
-  };
+  }, [isMobile, isOpen, toggleSidebar, userRole, router]);
 
-  const handleSelectSession = (sessionId: string) => {
-    if (editingSessionId === sessionId) return;
-    getSessionManager().abortActiveRequest();
-    setOpenPopoverId(null);
-    if (isMobile && isOpen) {
-      toggleSidebar();
-    }
-
-    const chatRoute = userRole === "kid" ? "/" : `/chat/${userRole}`;
-    const targetUrl = `${chatRoute}?id=${sessionId}`;
-
-    router.push(targetUrl);
-  };
-
-  const handleDeleteSession = async (sessionId: string) => {
-    const originalSessions = [...sessions];
-    const updatedSessions = sessions.filter((s: ChatSessionRow) => s.id !== sessionId);
-    dispatch(setSessions(updatedSessions));
-
-    const wasCurrentSession = currentSessionId === sessionId;
-    if (wasCurrentSession) {
-      handleNewChat();
-    }
-
-    try {
-      await deleteChatSession(sessionId);
-    } catch {
-      dispatch(setSessions(originalSessions));
-      if (wasCurrentSession) {
-        dispatch(setCurrentSessionId(sessionId));
+  const handleSelectSession = useCallback(
+    (sessionId: string) => {
+      if (editingSessionId === sessionId) return;
+      getSessionManager().abortActiveRequest();
+      setOpenPopoverId(null);
+      if (isMobile && isOpen) {
+        toggleSidebar();
       }
-      alert("Failed to delete chat.");
-    }
-  };
 
-  const handleConfirmDelete = async () => {
+      const chatRoute = userRole === "kid" ? "/" : `/chat/${userRole}`;
+      const targetUrl = `${chatRoute}?id=${sessionId}`;
+
+      router.push(targetUrl);
+    },
+    [editingSessionId, isMobile, isOpen, toggleSidebar, userRole, router]
+  );
+
+  const handleDeleteSession = useCallback(
+    async (sessionId: string) => {
+      const originalSessions = [...sessions];
+      const updatedSessions = sessions.filter((s: ChatSessionRow) => s.id !== sessionId);
+      dispatch(setSessions(updatedSessions));
+
+      const wasCurrentSession = currentSessionId === sessionId;
+      if (wasCurrentSession) {
+        handleNewChat();
+      }
+
+      try {
+        await deleteChatSession(sessionId);
+      } catch {
+        dispatch(setSessions(originalSessions));
+        if (wasCurrentSession) {
+          dispatch(setCurrentSessionId(sessionId));
+        }
+        alert("Failed to delete chat.");
+      }
+    },
+    [sessions, currentSessionId, dispatch, handleNewChat]
+  );
+
+  const handleConfirmDelete = useCallback(async () => {
     if (!sessionToDelete) return;
     const targetSessionId = sessionToDelete;
 
@@ -160,9 +211,9 @@ export default function Sidebar() {
       setIsDeleting(false);
       setSessionToDelete(null);
     }
-  };
+  }, [sessionToDelete, handleDeleteSession]);
 
-  const handleCopyShareLink = async (sessionId: string) => {
+  const handleCopyShareLink = useCallback(async (sessionId: string) => {
     const shareUrl = `${window.location.origin}/share/${sessionId}`;
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -171,31 +222,34 @@ export default function Sidebar() {
     } catch (err) {
       console.error("Failed to copy share link:", err);
     }
-  };
+  }, []);
 
-  const handleStartRename = (e: React.MouseEvent, session: ChatSessionRow) => {
+  const handleStartRename = useCallback((e: React.MouseEvent, session: ChatSessionRow) => {
     e.preventDefault();
     e.stopPropagation();
     setOpenPopoverId(null);
     setEditingSessionId(session.id);
     setEditTitle(session.title);
-  };
+  }, []);
 
-  const handleSaveRename = async (e: React.FormEvent | React.FocusEvent, sessionId: string) => {
-    e.preventDefault();
-    if (editingSessionId !== sessionId) return;
-    if (!editTitle.trim()) {
-      setEditingSessionId(null);
-      return;
-    }
-    try {
-      dispatch(updateSessionTitleInList({ id: sessionId, title: editTitle }));
-      setEditingSessionId(null);
-      await updateSessionTitle(sessionId, editTitle);
-    } catch {
-      console.error("Rename failed");
-    }
-  };
+  const handleSaveRename = useCallback(
+    async (e: React.FormEvent | React.FocusEvent, sessionId: string) => {
+      e.preventDefault();
+      if (editingSessionId !== sessionId) return;
+      if (!editTitle.trim()) {
+        setEditingSessionId(null);
+        return;
+      }
+      try {
+        dispatch(updateSessionTitleInList({ id: sessionId, title: editTitle }));
+        setEditingSessionId(null);
+        await updateSessionTitle(sessionId, editTitle);
+      } catch {
+        console.error("Rename failed");
+      }
+    },
+    [editingSessionId, editTitle, dispatch]
+  );
 
   return (
     <>
@@ -278,6 +332,9 @@ export default function Sidebar() {
               onStartRename={handleStartRename}
               onSetSessionToShare={setSessionToShare}
               onSetSessionToDelete={setSessionToDelete}
+              onLoadMoreSessions={handleLoadMoreSessions}
+              hasMoreSessions={hasMoreSessions}
+              isLoadingMoreSessions={isLoadingMoreSessions}
             />
           )}
         </SidebarContent>

@@ -5,7 +5,12 @@ import { uploadChatAttachment } from "@/lib/storage";
 
 const supabase = createClient();
 
-export async function fetchUserSessions(userId?: string): Promise<ChatSessionRow[]> {
+export async function fetchUserSessions(
+  userId?: string,
+  cursorUpdatedAt?: string,
+  cursorId?: string,
+  limit: number = 20
+): Promise<ChatSessionRow[]> {
   let finalUserId = userId;
 
   if (!finalUserId) {
@@ -17,12 +22,22 @@ export async function fetchUserSessions(userId?: string): Promise<ChatSessionRow
 
   if (!finalUserId) return [];
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("chat_sessions")
     .select("id, title, updated_at, created_at")
     .eq("user_id", finalUserId)
-    .is("deleted_at", null)
-    .order("updated_at", { ascending: false });
+    .is("deleted_at", null);
+
+  if (cursorUpdatedAt && cursorId) {
+    query = query.or(
+      `updated_at.lt.${cursorUpdatedAt},and(updated_at.eq.${cursorUpdatedAt},id.lt.${cursorId})`
+    );
+  }
+
+  const { data, error } = await query
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(limit);
 
   if (error) {
     console.error("Error fetching sessions:", error);
@@ -346,18 +361,36 @@ export async function trackDailyUsage(
   }
 }
 
-export async function fetchSessionMessages(sessionId: string): Promise<ChatMessageRow[]> {
-  const { data, error } = await supabase
+export async function fetchSessionMessages(
+  sessionId: string,
+  cursorCreatedAt?: string,
+  cursorId?: string,
+  limit: number = 30
+): Promise<ChatMessageRow[]> {
+  let query = supabase
     .from("chat_messages")
     .select("*")
     .eq("session_id", sessionId)
-    .order("created_at", { ascending: true });
+    .is("deleted_at", null);
+
+  if (cursorCreatedAt && cursorId) {
+    query = query.or(
+      `created_at.lt.${cursorCreatedAt},and(created_at.eq.${cursorCreatedAt},id.lt.${cursorId})`
+    );
+  }
+
+  const { data, error } = await query
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(limit);
 
   if (error) {
     console.error("Error fetching messages:", error);
     return [];
   }
-  return (data as ChatMessageRow[]) || [];
+
+  const results = (data as ChatMessageRow[]) || [];
+  return [...results].reverse();
 }
 
 export async function updateSessionTitle(sessionId: string, title: string) {

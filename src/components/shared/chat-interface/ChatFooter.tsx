@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
 import { Send, Plus, X, FileText, BrainCircuit, Camera } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/shared/ui/button";
@@ -9,30 +9,30 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/
 import { cn } from "@/lib/utils";
 
 type Props = {
-  input: string;
-  setInput: (val: string) => void;
-  onSend: () => void;
+  onSend: (
+    text: string,
+    img: string | null,
+    fileText: string | null,
+    fileMeta: string | null
+  ) => void;
   isLoading: boolean;
   isAuthLoading?: boolean;
-  image: string | null;
-  setImage: (val: string | null) => void;
-  setFileContent: (val: string | null) => void;
-  setFileName: (val: string | null) => void;
-  fileName: string | null;
+  currentSessionId: string | null;
 };
 
-export default function ChatFooter({
-  input,
-  setInput,
-  onSend,
-  isLoading,
-  isAuthLoading = false,
-  image,
-  setImage,
-  setFileContent,
-  setFileName,
-  fileName,
-}: Props) {
+export interface ChatFooterRef {
+  setInputText: (text: string) => void;
+}
+
+export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
+  { onSend, isLoading, isAuthLoading = false, currentSessionId },
+  ref
+) {
+  const [input, setInput] = useState("");
+  const [image, setImage] = useState<string | null>(null);
+  const [fileContent, setFileContent] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+
   const [isDragging, setIsDragging] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
@@ -40,7 +40,22 @@ export default function ChatFooter({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync native file inputs when image/fileName state is cleared by parent or user
+  // Expose imperative handle to set input externally (e.g. from suggestions click)
+  useImperativeHandle(ref, () => ({
+    setInputText: (text: string) => {
+      setInput(text);
+    },
+  }));
+
+  // Sync inputs when session changes to prevent leaking data across sessions
+  useEffect(() => {
+    setInput("");
+    setImage(null);
+    setFileContent(null);
+    setFileName(null);
+  }, [currentSessionId]);
+
+  // Sync native file inputs when image/fileName state is cleared
   useEffect(() => {
     if (!image && !fileName) {
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -48,66 +63,74 @@ export default function ChatFooter({
     }
   }, [image, fileName]);
 
-  const handleFile = useCallback(
-    async (file: File) => {
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = () => setImage(reader.result as string);
-        reader.readAsDataURL(file);
-        setFileContent(null);
-        setFileName(null);
-      } else if (file.type === "application/pdf") {
-        const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
-        if (file.size > MAX_PDF_SIZE) {
-          alert("The PDF file is too large. Please upload a file smaller than 10MB.");
-          return;
-        }
-
-        setIsParsing(true);
-        try {
-          const getPDFText = (await import("react-pdftotext")).default;
-
-          // Wrap parsing with a 20-second timeout to prevent deadlocks
-          const parsePromise = getPDFText(file);
-          const timeoutPromise = new Promise<string>((_, reject) =>
-            setTimeout(
-              () => reject(new Error("Timeout (20s) exceeded while parsing the PDF.")),
-              20000
-            )
-          );
-
-          const text = await Promise.race([parsePromise, timeoutPromise]);
-          setImage(null);
-          setFileName(file.name);
-          setFileContent(text);
-        } catch (e) {
-          console.error("PDF parsing failed:", e);
-          const errorMsg = e instanceof Error ? e.message : "Failed to read PDF text.";
-          alert(`${errorMsg} Please try another file.`);
-        } finally {
-          setIsParsing(false);
-        }
-      } else {
-        const MAX_TEXT_SIZE = 5 * 1024 * 1024; // 5MB
-        if (file.size > MAX_TEXT_SIZE) {
-          alert("The file is too large. Please upload a file smaller than 5MB.");
-          return;
-        }
-
-        // Basic text file support
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setImage(null);
-          setFileName(file.name);
-          setFileContent(e.target?.result as string);
-        };
-        reader.readAsText(file);
+  const handleFile = useCallback(async (file: File) => {
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => setImage(reader.result as string);
+      reader.readAsDataURL(file);
+      setFileContent(null);
+      setFileName(null);
+    } else if (file.type === "application/pdf") {
+      const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
+      if (file.size > MAX_PDF_SIZE) {
+        alert("The PDF file is too large. Please upload a file smaller than 10MB.");
+        return;
       }
-    },
-    [setImage, setFileName, setFileContent]
-  );
+
+      setIsParsing(true);
+      try {
+        const getPDFText = (await import("react-pdftotext")).default;
+
+        // Wrap parsing with a 20-second timeout to prevent deadlocks
+        const parsePromise = getPDFText(file);
+        const timeoutPromise = new Promise<string>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Timeout (20s) exceeded while parsing the PDF.")),
+            20000
+          )
+        );
+
+        const text = await Promise.race([parsePromise, timeoutPromise]);
+        setImage(null);
+        setFileName(file.name);
+        setFileContent(text);
+      } catch (e) {
+        console.error("PDF parsing failed:", e);
+        const errorMsg = e instanceof Error ? e.message : "Failed to read PDF text.";
+        alert(`${errorMsg} Please try another file.`);
+      } finally {
+        setIsParsing(false);
+      }
+    } else {
+      const MAX_TEXT_SIZE = 5 * 1024 * 1024; // 5MB
+      if (file.size > MAX_TEXT_SIZE) {
+        alert("The file is too large. Please upload a file smaller than 5MB.");
+        return;
+      }
+
+      // Basic text file support
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImage(null);
+        setFileName(file.name);
+        setFileContent(e.target?.result as string);
+      };
+      reader.readAsText(file);
+    }
+  }, []);
 
   const removeAttachment = () => {
+    setImage(null);
+    setFileContent(null);
+    setFileName(null);
+  };
+
+  const handleSend = () => {
+    if ((!input.trim() && !image && !fileName) || isLoading || isParsing || isAuthLoading) {
+      return;
+    }
+    onSend(input, image, fileContent, fileName);
+    setInput("");
     setImage(null);
     setFileContent(null);
     setFileName(null);
@@ -308,14 +331,14 @@ export default function ChatFooter({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={isAuthLoading ? "Loading chat session..." : "Ask anything"}
-                onKeyDown={(e) => e.key === "Enter" && !isAuthLoading && onSend()}
+                onKeyDown={(e) => e.key === "Enter" && !isAuthLoading && handleSend()}
                 disabled={isAuthLoading || isLoading || isParsing}
                 className="border-0 shadow-none focus-visible:ring-0 h-14 text-base"
                 suppressHydrationWarning={true}
               />
 
               <Button
-                onClick={onSend}
+                onClick={handleSend}
                 size="icon"
                 disabled={
                   (!input.trim() && !image && !fileName) || isLoading || isParsing || isAuthLoading
@@ -340,4 +363,4 @@ export default function ChatFooter({
       )}
     </div>
   );
-}
+});

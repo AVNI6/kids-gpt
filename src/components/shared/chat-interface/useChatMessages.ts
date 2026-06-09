@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAppDispatch } from "@/store/hooks";
-import { setMessages } from "@/store/slices/chatSlice";
+import { setMessages, prependMessages } from "@/store/slices/chatSlice";
 import { fetchSessionMessages } from "@/lib/services/shared/chat.actions";
 import { getParentSessionMessages } from "@/lib/services/parent/parent-dashboard.actions";
 import { Message, ChatMessageRow } from "@/types/common";
@@ -18,14 +18,70 @@ const messagesCache = new Map<string, CachedMessages>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const MAX_CACHE_SIZE = 50;
 
-interface UseChatMessagesArgs {
-  currentSessionId: string | null;
-  messages: Message[];
-  isLoadingAuth: boolean;
-  isUserLoggedIn: boolean;
-  justCreatedSessionRef: React.MutableRefObject<boolean>;
-  userRole?: string | null;
-  userId?: string | null;
+export function mapDbMessageToClient(m: ChatMessageRow): Message {
+  const isImage =
+    m.content.includes("supabase.co/storage/") ||
+    m.content.startsWith("data:image/") ||
+    m.content.includes("pollinations.ai") ||
+    m.attachment_url?.includes("image/") ||
+    m.attachment_url?.includes("_image_") ||
+    /\.(jpg|jpeg|png|webp|gif)$/i.test(m.attachment_url || "");
+
+  let isPdf =
+    m.attachment_url?.includes(".pdf") ||
+    (m.content.includes("pdf/") && m.content.includes(".pdf")) ||
+    m.content.includes("<!-- OVERVIEW -->");
+
+  // Extract embedded file name if present (format: [File: filename.ext] content)
+  let content = m.content;
+  let fileName: string | null = null;
+  const fileMatch = content.match(/^\[File:\s*([^\]]+)\]\s*([\s\S]*)/);
+  if (fileMatch) {
+    fileName = fileMatch[1];
+    content = fileMatch[2];
+  }
+
+  let pdfContent = content;
+  let suggestedTitle: string | undefined = undefined;
+  let pdfTheme: Message["pdfTheme"] = undefined;
+
+  if (content.includes("<!-- OVERVIEW -->")) {
+    const parts = content.split("<!-- OVERVIEW -->");
+    pdfContent = parts[0].trim();
+    let rest = parts[1];
+
+    // Parse title
+    const titleMatch = rest.match(/<!-- TITLE:(.*?) -->/);
+    if (titleMatch) {
+      suggestedTitle = titleMatch[1].trim() || undefined;
+      rest = rest.replace(/<!-- TITLE:(.*?) -->/, "");
+    }
+
+    // Parse theme
+    const themeMatch = rest.match(/<!-- THEME:(.*?) -->/);
+    if (themeMatch) {
+      pdfTheme = (themeMatch[1].trim() as Message["pdfTheme"]) || undefined;
+      rest = rest.replace(/<!-- THEME:(.*?) -->/, "");
+    }
+
+    content = rest.trim();
+    isPdf = true;
+  }
+
+  return {
+    id: m.id,
+    role: (m.sender_role as string) === "assistant" ? "model" : m.sender_role,
+    content: content,
+    isImage,
+    isPdfRequest: isPdf,
+    pdfContent: pdfContent,
+    suggestedTitle: suggestedTitle,
+    pdfTheme: pdfTheme,
+    attachmentUrl: m.attachment_url,
+    fileName: fileName,
+    uploadedImage: m.sender_role === "user" && isImage ? m.attachment_url || content : undefined,
+    created_at: m.created_at || undefined,
+  };
 }
 
 export function useChatMessages({
@@ -39,6 +95,8 @@ export function useChatMessages({
 }: UseChatMessagesArgs) {
   const dispatch = useAppDispatch();
   const [isSessionLoading, setIsSessionLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Clear message cache on logout
   useEffect(() => {
@@ -116,17 +174,21 @@ export function useChatMessages({
         setIsSessionLoading(true);
       }
 
+      // Reset pagination state on session switch
+      setHasMore(true);
+      setIsLoadingMore(false);
+
       // 5. Fetch fresh messages from Supabase DB (either to populate cache or revalidate it)
       try {
-        let dbMessages;
+        let dbMessages: ChatMessageRow[] = [];
         // Always try the regular fetch first (works for user's own sessions via RLS).
         // For parents viewing a child's session from the dashboard, the regular fetch
         // will return empty due to RLS, so we fall back to getParentSessionMessages.
-        dbMessages = await fetchSessionMessages(currentSessionId);
+        dbMessages = await fetchSessionMessages(currentSessionId, undefined, undefined, 30);
 
         if (userRole === "parent" && (!dbMessages || dbMessages.length === 0)) {
           try {
-            dbMessages = await getParentSessionMessages(currentSessionId);
+            dbMessages = await getParentSessionMessages(currentSessionId, undefined, undefined, 30);
           } catch {
             // getParentSessionMessages may throw if session doesn't belong to a linked child
             dbMessages = [];
@@ -138,71 +200,11 @@ export function useChatMessages({
           return;
         }
 
-        const mappedMessages: Message[] = dbMessages.map((m: ChatMessageRow) => {
-          const isImage =
-            m.content.includes("supabase.co/storage/") ||
-            m.content.startsWith("data:image/") ||
-            m.content.includes("pollinations.ai") ||
-            m.attachment_url?.includes("image/") ||
-            m.attachment_url?.includes("_image_") ||
-            /\.(jpg|jpeg|png|webp|gif)$/i.test(m.attachment_url || "");
+        if (dbMessages.length < 30) {
+          setHasMore(false);
+        }
 
-          let isPdf =
-            m.attachment_url?.includes(".pdf") ||
-            (m.content.includes("pdf/") && m.content.includes(".pdf")) ||
-            m.content.includes("<!-- OVERVIEW -->");
-
-          // Extract embedded file name if present (format: [File: filename.ext] content)
-          let content = m.content;
-          let fileName: string | null = null;
-          const fileMatch = content.match(/^\[File:\s*([^\]]+)\]\s*([\s\S]*)/);
-          if (fileMatch) {
-            fileName = fileMatch[1];
-            content = fileMatch[2];
-          }
-
-          let pdfContent = content;
-          let suggestedTitle: string | undefined = undefined;
-          let pdfTheme: Message["pdfTheme"] = undefined;
-
-          if (content.includes("<!-- OVERVIEW -->")) {
-            const parts = content.split("<!-- OVERVIEW -->");
-            pdfContent = parts[0].trim();
-            let rest = parts[1];
-
-            // Parse title
-            const titleMatch = rest.match(/<!-- TITLE:(.*?) -->/);
-            if (titleMatch) {
-              suggestedTitle = titleMatch[1].trim() || undefined;
-              rest = rest.replace(/<!-- TITLE:(.*?) -->/, "");
-            }
-
-            // Parse theme
-            const themeMatch = rest.match(/<!-- THEME:(.*?) -->/);
-            if (themeMatch) {
-              pdfTheme = (themeMatch[1].trim() as Message["pdfTheme"]) || undefined;
-              rest = rest.replace(/<!-- THEME:(.*?) -->/, "");
-            }
-
-            content = rest.trim();
-            isPdf = true;
-          }
-
-          return {
-            id: m.id,
-            role: (m.sender_role as string) === "assistant" ? "model" : m.sender_role,
-            content: content,
-            isImage,
-            isPdfRequest: isPdf,
-            pdfContent: pdfContent,
-            suggestedTitle: suggestedTitle,
-            pdfTheme: pdfTheme,
-            attachmentUrl: m.attachment_url,
-            fileName: fileName,
-            uploadedImage:
-              m.sender_role === "user" && isImage ? m.attachment_url || content : undefined,
-          };
-        });
+        const mappedMessages: Message[] = dbMessages.map(mapDbMessageToClient);
 
         // Compare if data changed before dispatching to avoid unnecessary rerenders
         const cachedMessages = messagesCache.get(currentSessionId);
@@ -227,7 +229,6 @@ export function useChatMessages({
               timestamp: Date.now(),
             });
           }
-        } else {
         }
       } catch (error) {
         console.error("[ChatInterface] Failed to fetch session messages from DB:", error);
@@ -261,5 +262,62 @@ export function useChatMessages({
     userId,
   ]);
 
-  return { isSessionLoading };
+  const loadMore = useCallback(async () => {
+    if (!currentSessionId || isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+
+    const oldestMsg = messages[0];
+    if (!oldestMsg || !oldestMsg.created_at) {
+      setHasMore(false);
+      setIsLoadingMore(false);
+      return;
+    }
+
+    try {
+      let dbMessages = await fetchSessionMessages(
+        currentSessionId,
+        oldestMsg.created_at,
+        oldestMsg.id,
+        30
+      );
+
+      if (userRole === "parent" && (!dbMessages || dbMessages.length === 0)) {
+        try {
+          dbMessages = await getParentSessionMessages(
+            currentSessionId,
+            oldestMsg.created_at,
+            oldestMsg.id,
+            30
+          );
+        } catch {
+          dbMessages = [];
+        }
+      }
+
+      if (dbMessages.length < 30) {
+        setHasMore(false);
+      }
+
+      if (dbMessages.length > 0) {
+        const mapped = dbMessages.map(mapDbMessageToClient);
+        dispatch(prependMessages(mapped));
+      }
+    } catch (err) {
+      console.error("[useChatMessages] Failed to load more messages:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [currentSessionId, isLoadingMore, hasMore, messages, userRole, dispatch]);
+
+  return { isSessionLoading, hasMore, isLoadingMore, loadMore };
+}
+
+interface UseChatMessagesArgs {
+  currentSessionId: string | null;
+  messages: Message[];
+  isLoadingAuth: boolean;
+  isUserLoggedIn: boolean;
+  justCreatedSessionRef: React.MutableRefObject<boolean>;
+  userRole?: string | null;
+  userId?: string | null;
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { calculateAge } from "@/lib/utils/kid/childAge";
-import ChatFooter from "./ChatFooter";
+import ChatFooter, { ChatFooterRef } from "./ChatFooter";
 import ChatMessageList from "./ChatMessageList";
 import ChatSuggestions from "./ChatSuggestions";
 import ChatSkeleton from "./ChatSkeleton";
@@ -30,11 +30,8 @@ export default function ChatInterface() {
   const justCreatedSessionRef = useRef(false);
   const isFirstScrollRef = useRef(true);
   const currentSessionIdRef = useRef(currentSessionId);
-
-  const [input, setInput] = useState("");
-  const [image, setImage] = useState<string | null>(null);
-  const [fileContent, setFileContent] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const lastMessageIdRef = useRef<string | null>(null);
+  const chatFooterRef = useRef<ChatFooterRef>(null);
 
   useEffect(() => {
     currentSessionIdRef.current = currentSessionId;
@@ -48,7 +45,7 @@ export default function ChatInterface() {
       ? (calculateAge(userProfile.date_of_birth) ?? undefined)
       : undefined;
 
-  const { isSessionLoading } = useChatMessages({
+  const { isSessionLoading, hasMore, isLoadingMore, loadMore } = useChatMessages({
     currentSessionId,
     messages,
     isLoadingAuth,
@@ -75,27 +72,15 @@ export default function ChatInterface() {
     user,
     age: childAge,
     userRole,
-    input,
-    image,
-    fileContent,
-    fileName,
-    setInput,
-    setImage,
-    setFileContent,
-    setFileName,
     justCreatedSessionRef,
   });
 
-  // Clear staging states (images, files, inputs) on session / route change to prevent leakage
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setImage(null);
-      setFileContent(null);
-      setFileName(null);
-      setInput("");
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [currentSessionId]);
+  const handleSend = useCallback(
+    (text: string, img: string | null, fileText: string | null, fileMeta: string | null) => {
+      void sendMessage(text, img, fileText, fileMeta);
+    },
+    [sendMessage]
+  );
 
   // Keep Redux in sync with URL as the single source of truth.
   //
@@ -127,28 +112,41 @@ export default function ChatInterface() {
     };
   }, []);
 
-  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior });
-  };
+  }, []);
 
   // Reset scroll speed on session change
   useEffect(() => {
     isFirstScrollRef.current = true;
   }, [currentSessionId]);
 
-  // Scroll to bottom whenever messages update; use instant on first load of a session
+  // Scroll to bottom whenever messages update; use instant on first load of a session,
+  // or smooth scroll when a new message is appended (last message ID changed)
   useEffect(() => {
-    if (messages.length === 0) return;
+    if (messages.length === 0) {
+      lastMessageIdRef.current = null;
+      return;
+    }
+
+    const lastMsg = messages[messages.length - 1];
+    const prevLastMsgId = lastMessageIdRef.current;
+    lastMessageIdRef.current = lastMsg.id;
+
     const isFirst = isFirstScrollRef.current;
     if (isFirst) {
       scrollToBottom("instant");
       isFirstScrollRef.current = false;
-    } else {
+    } else if (prevLastMsgId !== null && lastMsg.id !== prevLastMsgId) {
       scrollToBottom("smooth");
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, scrollToBottom]);
 
   const showHeader = userRole !== "kid";
+
+  const handleSelectSuggestion = useCallback((suggestion: string) => {
+    chatFooterRef.current?.setInputText(suggestion);
+  }, []);
 
   return (
     <div className="flex-1 flex flex-col h-full w-full bg-background overflow-hidden">
@@ -164,7 +162,7 @@ export default function ChatInterface() {
         {isSessionLoading && messages.length === 0 ? (
           <ChatSkeleton />
         ) : messages.length === 0 ? (
-          <ChatSuggestions suggestions={suggestions} onSelectSuggestion={setInput} />
+          <ChatSuggestions suggestions={suggestions} onSelectSuggestion={handleSelectSuggestion} />
         ) : (
           <ChatMessageList
             messages={messages}
@@ -172,20 +170,18 @@ export default function ChatInterface() {
             pdfStates={pdfStates}
             handleDownloadPDF={handleDownloadPDF}
             messagesEndRef={messagesEndRef}
+            hasMore={hasMore}
+            isLoadingMore={isLoadingMore}
+            onLoadMore={loadMore}
           />
         )}
 
         <ChatFooter
-          input={input}
-          setInput={setInput}
-          onSend={sendMessage}
+          ref={chatFooterRef}
+          onSend={handleSend}
           isLoading={isLoading}
           isAuthLoading={isLoadingAuth}
-          image={image}
-          setImage={setImage}
-          setFileContent={setFileContent}
-          setFileName={setFileName}
-          fileName={fileName}
+          currentSessionId={currentSessionId}
         />
       </main>
     </div>

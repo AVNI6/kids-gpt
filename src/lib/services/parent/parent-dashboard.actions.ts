@@ -10,6 +10,7 @@ import type {
   ChildSafetyAndUsageResult,
   ParentActivityItem,
 } from "@/types/kid";
+import type { ChatMessageRow } from "@/types/common";
 import { getDailyScreenTime } from "../shared/screentime.actions";
 import type { SearchHistoryItem, CacheData } from "@/types/parent";
 import {
@@ -77,8 +78,9 @@ interface ActivitySettingItem {
 let activitySettingsCache: ActivitySettingItem[] | null = null;
 let activitySettingsCacheExpiry = 0;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getCachedActivitySettings(supabase: any) {
+type SupabaseClientLike = Awaited<ReturnType<typeof createClient>>;
+
+async function getCachedActivitySettings(supabase: SupabaseClientLike) {
   const now = Date.now();
   if (activitySettingsCache && now < activitySettingsCacheExpiry) {
     return activitySettingsCache;
@@ -394,70 +396,86 @@ export async function getParentSearchHistory(childUserId: string) {
   return data || [];
 }
 
-export async function getParentSessionMessages(sessionId: string) {
+export async function getParentSessionMessages(
+  sessionId: string,
+  cursorCreatedAt?: string,
+  cursorId?: string,
+  limit: number = 30
+) {
   const { userId: parentId } = await verifyUserRole("parent");
   const supabase = await createClient();
 
-  // Call SECURITY DEFINER RPC to bypass child RLS on sessions and messages
-  const { data, error } = await supabase.rpc("get_parent_session_messages", {
-    p_parent_id: parentId,
-    p_session_id: sessionId,
-  });
+  const isCursorActive = !!(cursorCreatedAt && cursorId);
 
-  if (error) {
-    console.error("RPC get_parent_session_messages failed, trying native fallback:", error.message);
+  if (!isCursorActive) {
+    const { data, error } = await supabase.rpc("get_parent_session_messages", {
+      p_parent_id: parentId,
+      p_session_id: sessionId,
+    });
 
-    // Native RLS direct select fallback (if RLS policies are applied)
-    try {
-      const { data: session, error: sessionError } = await supabase
-        .from("chat_sessions")
-        .select("user_id")
-        .eq("id", sessionId)
-        .maybeSingle();
-
-      if (sessionError || !session) {
-        console.error(
-          "Fallback session check failed:",
-          sessionError?.message || "Session not found"
-        );
-        return [];
-      }
-
-      const childUserId = session.user_id;
-
-      // Verify parent access to this child
-      const { data: link, error: linkError } = await supabase
-        .from("parent_child_link")
-        .select("id")
-        .eq("parent_user_id", parentId)
-        .eq("child_user_id", childUserId)
-        .eq("is_approved", true)
-        .is("deleted_at", null)
-        .maybeSingle();
-
-      if (linkError || !link) {
-        console.error("Fallback linkage check unauthorized:", linkError?.message);
-        return [];
-      }
-
-      const { data: fallbackMessages, error: messagesError } = await supabase
-        .from("chat_messages")
-        .select("*")
-        .eq("session_id", sessionId)
-        .order("created_at", { ascending: true });
-
-      if (messagesError) {
-        console.error("Fallback messages query error:", messagesError.message);
-        return [];
-      }
-      return fallbackMessages || [];
-    } catch (fallbackErr) {
-      console.error("Fallback messages query caught exception:", fallbackErr);
-      return [];
+    if (!error && data) {
+      const results = (data as ChatMessageRow[]) || [];
+      return results.slice(-limit);
     }
   }
 
-  return data || [];
+  // Native RLS direct select fallback (if RLS policies are applied)
+  try {
+    const { data: session, error: sessionError } = await supabase
+      .from("chat_sessions")
+      .select("user_id")
+      .eq("id", sessionId)
+      .maybeSingle();
+
+    if (sessionError || !session) {
+      console.error("Fallback session check failed:", sessionError?.message || "Session not found");
+      return [];
+    }
+
+    const childUserId = session.user_id;
+
+    // Verify parent access to this child
+    const { data: link, error: linkError } = await supabase
+      .from("parent_child_link")
+      .select("id")
+      .eq("parent_user_id", parentId)
+      .eq("child_user_id", childUserId)
+      .eq("is_approved", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (linkError || !link) {
+      console.error("Fallback linkage check unauthorized:", linkError?.message);
+      return [];
+    }
+
+    let query = supabase
+      .from("chat_messages")
+      .select("*")
+      .eq("session_id", sessionId)
+      .is("deleted_at", null);
+
+    if (cursorCreatedAt && cursorId) {
+      query = query.or(
+        `created_at.lt.${cursorCreatedAt},and(created_at.eq.${cursorCreatedAt},id.lt.${cursorId})`
+      );
+    }
+
+    const { data: fallbackMessages, error: messagesError } = await query
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(limit);
+
+    if (messagesError) {
+      console.error("Fallback messages query error:", messagesError.message);
+      return [];
+    }
+    const results = (fallbackMessages as ChatMessageRow[]) || [];
+    return [...results].reverse();
+  } catch (fallbackErr) {
+    console.error("Fallback messages query caught exception:", fallbackErr);
+    return [];
+  }
 }
 
 export async function getParentNotifications() {
