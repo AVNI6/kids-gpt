@@ -38,10 +38,13 @@ function KidNavbarWrapper({ pathname }: { pathname: string }) {
 
   const getNavItemHref = (item: NavItemConfig) => item.href;
 
+  const isDashboard = pathname.startsWith("/dashboard/kid") || pathname.startsWith("/activities");
+  const navItems = isDashboard ? kidNavItems : [];
+
   return (
     <DashboardNavbarBase
       role="kid"
-      navItems={kidNavItems}
+      navItems={navItems}
       pathname={pathname}
       notifications={notifications}
       unreadCount={unreadCount}

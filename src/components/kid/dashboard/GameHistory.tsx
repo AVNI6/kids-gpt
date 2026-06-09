@@ -40,7 +40,7 @@ export default function GameHistory({ timeline }: { timeline: GameHistoryItem[] 
   const gameTimeline = timeline.slice(0, 10);
 
   return (
-    <Card className="rounded-[32px] border-sky-100 bg-white shadow-sm h-[400px] flex flex-col overflow-hidden dark:border-slate-800 dark:bg-slate-900">
+    <Card className="rounded-[32px] border-sky-100 bg-white shadow-sm h-105.75 flex flex-col overflow-hidden dark:border-slate-800 dark:bg-slate-900">
       <CardContent className="p-6 sm:p-7 flex flex-col h-full overflow-hidden">
         <div className="flex items-center gap-3 mb-6 shrink-0">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400">

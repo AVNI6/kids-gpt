@@ -83,77 +83,84 @@ export default function DashboardNavbarBase({
             )}
 
             <div className="flex items-center shrink-0">
-              <span className="font-extrabold text-xl tracking-tight bg-linear-to-r from-sky-500 to-indigo-650 bg-clip-text text-transparent drop-shadow-xs">
+              <span className="font-extrabold text-xl tracking-tight bg-linear-to-r from-sky-500 to-sky-900 bg-clip-text text-transparent drop-shadow-xs">
                 {brandText}
               </span>
             </div>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => {
-              const active = isLinkActive(item);
-              const isClassrooms = item.label === "Classrooms";
-              return (
-                <Link
-                  key={item.href}
-                  href={getNavItemHref(item)}
+          {/* Right Section holding Desktop Links & Notification/Menu Utilities */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            {/* Desktop Navigation Links */}
+            <div className="hidden lg:flex items-center gap-1">
+              {navItems.map((item) => {
+                const active = isLinkActive(item);
+                const isClassrooms = item.label === "Classrooms";
+                return (
+                  <Link
+                    key={item.href}
+                    href={getNavItemHref(item)}
+                    className={cn(
+                      "px-4 py-2 rounded-full text-sm font-bold transition-all cursor-pointer flex items-center gap-2",
+                      active
+                        ? activeLinkClass
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
+                    )}
+                  >
+                    <span>{item.label}</span>
+                    {isClassrooms && dueCount > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-slate-950">
+                        {dueCount}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Notification Bell Dropdown & Mobile Menu Toggle */}
+            {role !== "kid" && (
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Notification Bell Dropdown */}
+                <NotificationBell
+                  role={role}
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  markAsRead={markAsRead}
+                  markAllAsRead={markAllAsRead}
+                  viewAllHref={viewAllNotificationsHref}
+                  isLoading={isLoadingNotifications}
+                />
+
+                {/* Mobile Navigation Drawer Toggle */}
+                <button
                   className={cn(
-                    "px-4 py-2 rounded-full text-sm font-bold transition-all cursor-pointer flex items-center gap-2",
-                    active
-                      ? activeLinkClass
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
+                    "lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 cursor-pointer",
+                    toggleSidebarRing
                   )}
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label="Toggle navigation menu"
                 >
-                  <span>{item.label}</span>
-                  {isClassrooms && dueCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-slate-950">
-                      {dueCount}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Right Section: Notification Bell Dropdown & Mobile Menu Toggle */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Notification Bell Dropdown */}
-            <NotificationBell
-              role={role}
-              notifications={notifications}
-              unreadCount={unreadCount}
-              markAsRead={markAsRead}
-              markAllAsRead={markAllAsRead}
-              viewAllHref={viewAllNotificationsHref}
-              isLoading={isLoadingNotifications}
-            />
-
-            {/* Mobile Navigation Drawer Toggle */}
-            <button
-              className={cn(
-                "lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 cursor-pointer",
-                toggleSidebarRing
-              )}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Toggle navigation menu"
-            >
-              <Menu className="size-5" />
-            </button>
+                  <Menu className="size-5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Mobile Drawer (general page navigation sliding from the right) */}
-      <MobileNavDrawer
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        role={role}
-        navItems={navItems}
-        getNavItemHref={getNavItemHref}
-        isLinkActive={isLinkActive}
-        dueCount={dueCount}
-      />
+      {role !== "kid" && (
+        <MobileNavDrawer
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+          role={role}
+          navItems={navItems}
+          getNavItemHref={getNavItemHref}
+          isLinkActive={isLinkActive}
+          dueCount={dueCount}
+        />
+      )}
     </nav>
   );
 }

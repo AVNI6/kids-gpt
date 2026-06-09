@@ -70,7 +70,7 @@ function LoginPageContent() {
       }
 
       router.push("/");
-      toast.success("Welcome back!", {
+      toast.success("Welcome!", {
         description: "Login successful!",
       });
     }
@@ -93,7 +93,7 @@ function LoginPageContent() {
           </Link>
 
           <div className="relative rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl">
-            <h2 className="mb-4 text-3xl font-bold text-foreground">Welcome Back!</h2>
+            <h2 className="mb-4 text-3xl font-bold text-foreground">Welcome!</h2>
 
             <p className="leading-relaxed text-muted-foreground">
               Your AI learning buddy is waiting for you 🚀
