@@ -26,24 +26,30 @@ export default function AchievementsRewards({ xp }: { xp: number }) {
       name: "Fast Learner",
       icon: Zap,
       unlocked: true,
-      color: "text-amber-500",
-      bg: "bg-amber-100",
+      color: "text-amber-500 dark:text-amber-400",
+      bg: "bg-amber-100 dark:bg-amber-950/40",
     },
     {
       name: "Quiz Master",
       icon: Trophy,
       unlocked: true,
-      color: "text-rose-500",
-      bg: "bg-rose-100",
+      color: "text-rose-500 dark:text-rose-400",
+      bg: "bg-rose-100 dark:bg-rose-950/40",
     },
     {
       name: "Science Pro",
       icon: Medal,
       unlocked: false,
-      color: "text-slate-400",
-      bg: "bg-slate-100",
+      color: "text-slate-400 dark:text-slate-500",
+      bg: "bg-slate-100 dark:bg-slate-800",
     },
-    { name: "Code Star", icon: Star, unlocked: false, color: "text-slate-400", bg: "bg-slate-100" },
+    {
+      name: "Code Star",
+      icon: Star,
+      unlocked: false,
+      color: "text-slate-400 dark:text-slate-500",
+      bg: "bg-slate-100 dark:bg-slate-800",
+    },
   ];
 
   return (
@@ -51,7 +57,7 @@ export default function AchievementsRewards({ xp }: { xp: number }) {
       <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
         Achievements 🏆
       </h2>
-      <Card className="rounded-[32px] border-amber-200 bg-linear-to-br from-amber-50 to-orange-50 shadow-sm flex-1">
+      <Card className="rounded-[32px] border-amber-200 bg-linear-to-br from-amber-50 to-orange-50 shadow-sm flex-1 dark:border-amber-900/40 dark:from-amber-950/20 dark:to-orange-950/20">
         <CardContent className="p-6 h-full flex flex-col justify-between">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -62,19 +68,19 @@ export default function AchievementsRewards({ xp }: { xp: number }) {
                 <h3 className="font-black text-xl text-slate-900 dark:text-slate-50">
                   Level {level}
                 </h3>
-                <p className="text-sm font-bold text-amber-600">
+                <p className="text-sm font-bold text-amber-600 dark:text-amber-400">
                   {xp} / {level * 1000} XP
                 </p>
               </div>
             </div>
-            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-full">
+            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-full dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-950/60">
               4 Badges
             </Badge>
           </div>
 
           <Progress
             value={(xp % 1000) / 10}
-            className="h-3 mb-6 bg-amber-200/50"
+            className="h-3 mb-6 bg-amber-200/50 dark:bg-amber-950/30"
             indicatorClassName="bg-gradient-to-r from-amber-400 to-orange-500"
           />
 
@@ -84,7 +90,7 @@ export default function AchievementsRewards({ xp }: { xp: number }) {
               return (
                 <div
                   key={i}
-                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border ${badge.unlocked ? "bg-white border-amber-100 shadow-sm dark:bg-slate-800 dark:border-slate-700" : "bg-slate-50 border-slate-100 opacity-70 dark:bg-slate-900 dark:border-slate-800"} text-center group`}
+                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border ${badge.unlocked ? "bg-white border-amber-100 shadow-sm dark:bg-slate-800 dark:border-slate-700" : "bg-slate-50 border-slate-100 opacity-70 dark:bg-slate-900 dark:border-slate-850"} text-center group`}
                 >
                   <div
                     className={`p-3 rounded-full ${badge.bg} ${badge.color} mb-2 group-hover:scale-110 transition-transform`}

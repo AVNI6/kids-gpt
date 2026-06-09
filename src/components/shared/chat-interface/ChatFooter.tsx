@@ -178,7 +178,7 @@ export default function ChatFooter({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <footer className="bg-background p-2 sm:p-4 pb-4 sm:pb-6">
+      <footer className="bg-background px-2 sm:px-4 pb-4 sm:pb-6">
         <div className="w-full max-w-3xl mx-auto">
           <div className="relative bg-muted/30 border border-border rounded-[28px] overflow-hidden focus-within:ring-2 focus-within:ring-sky-400 transition-all">
             <input

@@ -47,7 +47,7 @@ export default function ChatMessageList({
   return (
     <div className="flex-1 min-h-0 overflow-hidden relative">
       <ScrollArea className="h-full w-full">
-        <div className="w-full max-w-3xl mx-auto space-y-6 pb-6 p-3 sm:p-6 md:p-8">
+        <div className="w-full max-w-3xl mx-auto space-y-6 pb-6 p-3 sm:p-0 sm:py-6 md:py-8">
           {messages.map((message) => {
             const isUser = message.role === "user";
             const showModelHeader = message.role === "model";
