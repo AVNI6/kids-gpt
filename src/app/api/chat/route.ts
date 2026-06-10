@@ -351,45 +351,38 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Fetch user learning profile if authenticated
+    // Fetch user learning profile and session summary in parallel using a single Supabase client
     let learningProfile = null;
+    let sessionSummary: string | null = null;
+
     try {
       const supabase = await createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user?.id) {
-        learningProfile = await getStudentLearningProfile(user.id);
+      const [authResult, sessionResult] = await Promise.all([
+        supabase.auth.getUser(),
+        sessionId
+          ? supabase.from("chat_sessions").select("summary").eq("id", sessionId).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+
+      if (authResult.error) {
+        aiLogger.error("ChatAPI", "Failed to retrieve authenticated user in API route", {
+          error: authResult.error.message,
+        });
+      } else if (authResult.data?.user?.id) {
+        learningProfile = await getStudentLearningProfile(authResult.data.user.id);
+      }
+
+      if (sessionResult.error) {
+        aiLogger.error("ChatAPI", `Failed to retrieve session summary for session ${sessionId}`, {
+          error: sessionResult.error.message,
+        });
+      } else if (sessionResult.data) {
+        sessionSummary = sessionResult.data.summary;
       }
     } catch (err) {
-      aiLogger.error("ChatAPI", "Failed to retrieve student learning profile in API route", {
+      aiLogger.error("ChatAPI", "Error fetching user or session context in parallel", {
         error: err instanceof Error ? err.message : String(err),
       });
-    }
-
-    // Fetch session summary if sessionId is present
-    let sessionSummary: string | null = null;
-    if (sessionId) {
-      try {
-        const supabase = await createClient();
-        const { data: sessionData, error: sessionError } = await supabase
-          .from("chat_sessions")
-          .select("summary")
-          .eq("id", sessionId)
-          .maybeSingle();
-
-        if (sessionError) {
-          aiLogger.error("ChatAPI", `Failed to retrieve session summary for session ${sessionId}`, {
-            error: sessionError.message,
-          });
-        } else if (sessionData) {
-          sessionSummary = sessionData.summary;
-        }
-      } catch (err) {
-        aiLogger.error("ChatAPI", `Error fetching session summary for session ${sessionId}`, {
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
     }
 
     // Build optimized contents array using centralized context builder utility

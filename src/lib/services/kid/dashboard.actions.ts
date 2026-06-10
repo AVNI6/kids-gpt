@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { calculateActivityAnalytics } from "@/lib/utils/activity-analytics";
 
@@ -55,7 +56,7 @@ async function getSupabaseClient() {
   return createClient();
 }
 
-export async function verifyUserRole(allowedRole?: UserRole): Promise<VerifiedUser> {
+export const verifyUserRole = cache(async (allowedRole?: UserRole): Promise<VerifiedUser> => {
   const supabase = await getSupabaseClient();
   const {
     data: { user },
@@ -87,7 +88,7 @@ export async function verifyUserRole(allowedRole?: UserRole): Promise<VerifiedUs
     userId: user.id,
     profile,
   };
-}
+});
 
 export async function getKidStats(): Promise<KidDashboardStats> {
   const { profile } = await verifyUserRole("kid");

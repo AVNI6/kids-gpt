@@ -7,6 +7,12 @@
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "516bd2154eb843a8240e43d5b285229129853114ad7075a5e141e1c08e408c84"
     },
+    "redux-toolkit": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "redux-toolkit/SKILL.md",
+      "computedHash": "cceb1eb513c9e88802fd494d168d64029a690a5107d67b8f93ee2ff69faa061d"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",

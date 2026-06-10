@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState, useCallback, memo } from "react";
 import { Bot } from "lucide-react";
 import { ScrollArea } from "@/components/shared/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/shared/ui/avatar";
@@ -23,7 +23,7 @@ interface ChatMessageListProps {
   onLoadMore: () => Promise<void>;
 }
 
-export default function ChatMessageList({
+const ChatMessageList = memo(function ChatMessageList({
   messages,
   isLoading,
   pdfStates,
@@ -132,4 +132,8 @@ export default function ChatMessageList({
       </ScrollArea>
     </div>
   );
-}
+});
+
+ChatMessageList.displayName = "ChatMessageList";
+
+export default ChatMessageList;

@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getLocalDateString } from "@/lib/utils";
@@ -26,7 +27,7 @@ export type ScreenTimeAnalyticsData = {
 /**
  * Helper: Verifies authenticated user role and returns user ID and role.
  */
-async function getAuthenticatedUser() {
+const getAuthenticatedUser = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -49,7 +50,7 @@ async function getAuthenticatedUser() {
   }
 
   return { userId: user.id, role: profile.role };
-}
+});
 
 /**
  * Adds tracked active seconds atomically to the database using the Postgres RPC.

@@ -367,7 +367,12 @@ export async function getKidClassroomData(): Promise<{
           subject,
           grade,
           class_code,
-          teacher_user_id
+          teacher_user_id,
+          teacher:profile!classrooms_teacher_user_id_fkey (
+            first_name,
+            last_name,
+            avatar_url
+          )
         )
       `
       )
@@ -377,53 +382,49 @@ export async function getKidClassroomData(): Promise<{
       return { success: false, error: error.message, memberships: [] };
     }
 
-    // For each classroom, fetch the teacher profile to avoid complex FKEY naming issues in standard joins
-    const membershipsWithTeachersRaw = await Promise.all(
-      (data || []).map(async (member) => {
-        const classroomsRaw = member.classrooms;
-        const classroom = (Array.isArray(classroomsRaw) ? classroomsRaw[0] : classroomsRaw) as {
-          id: string;
-          name: string;
-          description: string | null;
-          subject: string | null;
-          grade: string | null;
-          class_code: string;
-          teacher_user_id: string;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        } | null;
+    const membershipsWithTeachersRaw = (data || []).map((member) => {
+      const classroomsRaw = member.classrooms;
+      const classroom = (Array.isArray(classroomsRaw) ? classroomsRaw[0] : classroomsRaw) as {
+        id: string;
+        name: string;
+        description: string | null;
+        subject: string | null;
+        grade: string | null;
+        class_code: string;
+        teacher_user_id: string;
+        is_active?: boolean;
+        created_at?: string;
+        updated_at?: string;
+        deleted_at?: string | null;
+        teacher: unknown;
+      } | null;
 
-        if (!classroom) return null;
+      if (!classroom) return null;
 
-        const { data: teacherProfile } = await supabase
-          .from("profile")
-          .select("first_name, last_name, avatar_url")
-          .eq("user_id", classroom.teacher_user_id)
-          .maybeSingle();
+      const teacherProfile = (
+        Array.isArray(classroom.teacher) ? classroom.teacher[0] || null : classroom.teacher || null
+      ) as KidClassroomMembership["classrooms"]["teacher"];
 
-        return {
-          id: member.id,
-          status: member.status as EnrollmentStatus,
-          classroom_id: member.classroom_id,
-          classrooms: {
-            id: classroom.id,
-            teacher_user_id: classroom.teacher_user_id,
-            name: classroom.name,
-            description: classroom.description,
-            subject: classroom.subject,
-            grade: classroom.grade,
-            class_code: classroom.class_code,
-            is_active: classroom.is_active ?? true,
-            created_at: classroom.created_at ?? "",
-            updated_at: classroom.updated_at ?? "",
-            deleted_at: classroom.deleted_at ?? null,
-            teacher: teacherProfile,
-          },
-        } as KidClassroomMembership;
-      })
-    );
+      return {
+        id: member.id,
+        status: member.status as EnrollmentStatus,
+        classroom_id: member.classroom_id,
+        classrooms: {
+          id: classroom.id,
+          teacher_user_id: classroom.teacher_user_id,
+          name: classroom.name,
+          description: classroom.description,
+          subject: classroom.subject,
+          grade: classroom.grade,
+          class_code: classroom.class_code,
+          is_active: classroom.is_active ?? true,
+          created_at: classroom.created_at ?? "",
+          updated_at: classroom.updated_at ?? "",
+          deleted_at: classroom.deleted_at ?? null,
+          teacher: teacherProfile,
+        },
+      } as KidClassroomMembership;
+    });
 
     const membershipsWithTeachers = membershipsWithTeachersRaw.filter(
       (m): m is KidClassroomMembership => m !== null
@@ -1106,7 +1107,7 @@ export async function getTeacherAssignmentOverview(assignmentId: string) {
  */
 export async function getStudentClassroomWorkspace(classroomId: string) {
   try {
-    const { userId } = await verifyUserRole("kid");
+    await verifyUserRole("kid");
     const supabase = await createClient();
 
     // 1. Fetch classroom metadata

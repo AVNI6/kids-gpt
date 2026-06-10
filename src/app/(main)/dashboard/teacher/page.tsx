@@ -68,8 +68,18 @@ function ClassroomsSkeleton() {
   );
 }
 
-function getOneDayAgo(): string {
-  return new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+interface TeacherDashboardAnalyticsResponse {
+  published_assignments_count: number;
+  pending_grading_count: number;
+  resources_uploaded_count: number;
+  announcements_posted_count: number;
+  assignments_classroom_ids: string[];
+  resources_classroom_ids: string[];
+  announcements_classroom_ids: string[];
+  active_students_today_count: number;
+  assignments_submitted_today_count: number;
+  assignments_graded_today_count: number;
+  announcements_posted_today_count: number;
 }
 
 async function TeacherDashboardContent() {
@@ -78,92 +88,37 @@ async function TeacherDashboardContent() {
   const { classrooms, students, pendingRequests } = await getTeacherDashboardData();
   const supabase = await createClient();
 
-  // 1. Fetch overall counts and groupings
-  const [
-    { count: publishedAssignmentsCount },
-    { count: pendingGradingCount },
-    { count: resourcesUploadedCount },
-    { count: announcementsPostedCount },
-    { data: assignmentsCountsData },
-    { data: resourcesCountsData },
-    { data: announcementsCountsData },
-  ] = await Promise.all([
-    supabase
-      .from("assignments")
-      .select("id", { count: "exact", head: true })
-      .eq("teacher_user_id", profile.user_id)
-      .eq("status", "PUBLISHED")
-      .is("deleted_at", null),
-    supabase
-      .from("assignment_submissions")
-      .select("id, assignments!inner(teacher_user_id)", { count: "exact", head: true })
-      .eq("assignments.teacher_user_id", profile.user_id)
-      .is("score", null)
-      .is("deleted_at", null)
-      .is("assignments.deleted_at", null),
-    supabase
-      .from("classroom_resources")
-      .select("id", { count: "exact", head: true })
-      .eq("teacher_user_id", profile.user_id)
-      .is("deleted_at", null),
-    supabase
-      .from("announcements")
-      .select("id", { count: "exact", head: true })
-      .eq("teacher_user_id", profile.user_id)
-      .is("deleted_at", null),
-    supabase
-      .from("assignments")
-      .select("classroom_id")
-      .eq("teacher_user_id", profile.user_id)
-      .eq("status", "PUBLISHED")
-      .is("deleted_at", null),
-    supabase
-      .from("classroom_resources")
-      .select("classroom_id")
-      .eq("teacher_user_id", profile.user_id)
-      .is("deleted_at", null),
-    supabase
-      .from("announcements")
-      .select("classroom_id")
-      .eq("teacher_user_id", profile.user_id)
-      .is("deleted_at", null),
-  ]);
+  // Call the consolidated database analytics RPC
+  const { data: analytics, error: analyticsError } = (await supabase.rpc(
+    "get_teacher_dashboard_analytics"
+  )) as { data: TeacherDashboardAnalyticsResponse | null; error: { message: string } | null };
 
-  // 2. Today's Snapshot metrics (last 24 hours)
-  const oneDayAgo = getOneDayAgo();
+  if (analyticsError || !analytics) {
+    throw new Error(
+      "Failed to load teacher dashboard analytics: " + (analyticsError?.message || "No data")
+    );
+  }
 
-  const [
-    { data: activeStudentsTodayData },
-    { count: assignmentsSubmittedTodayCount },
-    { count: assignmentsGradedTodayCount },
-    { count: announcementsPostedTodayCount },
-  ] = await Promise.all([
-    supabase
-      .from("activity_events")
-      .select("actor_user_id")
-      .eq("actor_role", "kid")
-      .gte("created_at", oneDayAgo),
-    supabase
-      .from("assignment_submissions")
-      .select("id, assignments!inner(teacher_user_id)", { count: "exact", head: true })
-      .eq("assignments.teacher_user_id", profile.user_id)
-      .gte("submitted_at", oneDayAgo)
-      .is("deleted_at", null)
-      .is("assignments.deleted_at", null),
-    supabase
-      .from("assignment_submissions")
-      .select("id, assignments!inner(teacher_user_id)", { count: "exact", head: true })
-      .eq("assignments.teacher_user_id", profile.user_id)
-      .gte("graded_at", oneDayAgo)
-      .is("deleted_at", null)
-      .is("assignments.deleted_at", null),
-    supabase
-      .from("announcements")
-      .select("id", { count: "exact", head: true })
-      .eq("teacher_user_id", profile.user_id)
-      .gte("created_at", oneDayAgo)
-      .is("deleted_at", null),
-  ]);
+  const publishedAssignmentsCount = analytics.published_assignments_count;
+  const pendingGradingCount = analytics.pending_grading_count;
+  const resourcesUploadedCount = analytics.resources_uploaded_count;
+  const announcementsPostedCount = analytics.announcements_posted_count;
+
+  // Format groupings to match the structure expected by the downstream map-building loop
+  const assignmentsCountsData = (analytics.assignments_classroom_ids || []).map((id: string) => ({
+    classroom_id: id,
+  }));
+  const resourcesCountsData = (analytics.resources_classroom_ids || []).map((id: string) => ({
+    classroom_id: id,
+  }));
+  const announcementsCountsData = (analytics.announcements_classroom_ids || []).map(
+    (id: string) => ({ classroom_id: id })
+  );
+
+  const activeStudentsTodayCount = analytics.active_students_today_count;
+  const assignmentsSubmittedTodayCount = analytics.assignments_submitted_today_count;
+  const assignmentsGradedTodayCount = analytics.assignments_graded_today_count;
+  const announcementsPostedTodayCount = analytics.announcements_posted_today_count;
 
   // Map groupings to maps
   const studentsCountMap = new Map<string, Set<string>>();
@@ -198,11 +153,6 @@ async function TeacherDashboardContent() {
   }));
 
   const teacherStudentIds = new Set(students.map((s) => s.user_id));
-  const activeStudentsTodayCount = new Set(
-    (activeStudentsTodayData || [])
-      .map((e) => e.actor_user_id)
-      .filter((id) => teacherStudentIds.has(id))
-  ).size;
 
   // Aggregate stats
   const metrics = {

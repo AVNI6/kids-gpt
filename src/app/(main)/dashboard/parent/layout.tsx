@@ -1,21 +1,11 @@
 import { Suspense } from "react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
-import type {
-  CacheData,
-  ParentActivityItem,
-  SearchHistoryItem,
-  LinkedChildProfile,
-} from "@/types/parent";
+import type { CacheData, LinkedChildProfile } from "@/types/parent";
 import {
-  getChildAiInsights,
-  getChildDetails,
-  getChildSafetyAndUsage,
+  getChildComprehensiveData,
   getCurrentDashboardProfile,
   getLinkedChildren,
-  getParentActivities,
-  getParentSearchHistory,
 } from "@/lib/services/parent/parent-dashboard.actions";
-import { getDailyScreenTime } from "@/lib/services/shared/screentime.actions";
 import { DashboardProvider } from "@/context/parent-dashboard/DashboardContext";
 import DashboardShell from "@/components/shared/dashboard/DashboardShell";
 
@@ -45,75 +35,8 @@ export default async function ParentDashboardLayout({ children }: { children: Re
         linkedChildren.map(async (child: LinkedChildProfile) => {
           const childId = child.user_id;
           try {
-            const [detailsData, safetyData, historyData, activitiesData, screenTimeData] =
-              await Promise.all([
-                getChildDetails(childId),
-                getChildSafetyAndUsage(childId),
-                getParentSearchHistory(childId),
-                getParentActivities(childId),
-                getDailyScreenTime(childId).catch(() => ({
-                  success: false,
-                  screenTimeSeconds: 0,
-                  dailyLimitMinutes: 60,
-                  isLimitEnabled: false,
-                })),
-              ]);
-
-            const formattedHistory: SearchHistoryItem[] = (historyData || []).map(
-              (h: {
-                id?: string | number | null;
-                title?: string | null;
-                created_at?: string | null;
-              }) => ({
-                id: String(h.id ?? ""),
-                title: h.title ? String(h.title) : null,
-                created_at: h.created_at ? String(h.created_at) : null,
-              })
-            );
-
-            const formattedActivities: ParentActivityItem[] = (activitiesData || []).map(
-              (act: {
-                id?: string | number | null;
-                rewards_amount?: number | null;
-                description?: string | null;
-                created_at?: string | null;
-                source_type?: string | null;
-                score?: number | null;
-                activity_settings?: ParentActivityItem["activity_settings"];
-              }) => ({
-                id: String(act.id ?? ""),
-                rewards_amount: act.rewards_amount ?? 0,
-                description: act.description ?? null,
-                created_at: act.created_at ?? null,
-                source_type: act.source_type ?? "",
-                score: act.score ?? null,
-                activity_settings: act.activity_settings ?? null,
-              })
-            );
-
-            const cachedScreenTime = screenTimeData.success
-              ? {
-                  screenTimeSeconds: screenTimeData.screenTimeSeconds,
-                  dailyLimitMinutes: screenTimeData.dailyLimitMinutes,
-                  isLimitEnabled: screenTimeData.isLimitEnabled,
-                }
-              : null;
-
-            let aiInsightsData = null;
-            try {
-              aiInsightsData = await getChildAiInsights(childId, detailsData);
-            } catch {
-              aiInsightsData = null;
-            }
-
-            initialCache[childId] = {
-              details: detailsData,
-              safety: safetyData,
-              history: formattedHistory,
-              activities: formattedActivities,
-              screenTime: cachedScreenTime,
-              aiInsights: aiInsightsData,
-            };
+            const childData = await getChildComprehensiveData(childId);
+            initialCache[childId] = childData;
           } catch (childErr) {
             console.warn(`Failed to prefetch details for child ${childId}:`, childErr);
           }

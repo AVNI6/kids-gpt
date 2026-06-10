@@ -11,7 +11,7 @@ import type {
   ParentActivityItem,
 } from "@/types/kid";
 import type { ChatMessageRow } from "@/types/common";
-import { getDailyScreenTime } from "../shared/screentime.actions";
+import { getDailyScreenTime, recoverStaleSessions } from "../shared/screentime.actions";
 import type { SearchHistoryItem, CacheData } from "@/types/parent";
 import {
   verifyUserRole,
@@ -718,7 +718,237 @@ export async function getChildAiInsights(
   };
 }
 
+interface ChildComprehensiveRpcResponse {
+  profile: {
+    total_experience_points: number | null;
+    current_streak: number | null;
+    longest_streak: number | null;
+  } | null;
+  link: {
+    daily_limit_minutes: number | null;
+    is_screen_time_limit_enabled: boolean | null;
+  } | null;
+  rewards: Array<{
+    id: string;
+    rewards_amount: number | null;
+    description: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+    source_type: string | null;
+    score: number | null;
+    activity_settings:
+      | {
+          id: string;
+          slug: string;
+          title: string;
+          minutes?: number;
+        }
+      | {
+          id: string;
+          slug: string;
+          title: string;
+          minutes?: number;
+        }[]
+      | null;
+  }> | null;
+  safety_alerts: Array<{
+    id: string;
+    resolved: boolean;
+  }> | null;
+  daily_usage: Array<{
+    messages_sent: number | null;
+    usage_date: string;
+  }> | null;
+  chat_sessions: Array<{
+    id: string;
+    title: string | null;
+    created_at: string | null;
+  }> | null;
+  today_screen_time_seconds: number | null;
+}
+
+function mapRpcToCacheData(
+  rpcData: ChildComprehensiveRpcResponse,
+  settingsList: { title: string; minutes: number }[]
+): CacheData {
+  // 1. Map timeline (from rpcData.rewards)
+  const timeline = (rpcData.rewards || []).map((r) => {
+    const actSettings = r.activity_settings
+      ? Array.isArray(r.activity_settings)
+        ? (r.activity_settings[0] as {
+            id: string;
+            slug: string;
+            title: string;
+            minutes?: number;
+          }) || null
+        : (r.activity_settings as { id: string; slug: string; title: string; minutes?: number })
+      : null;
+    return {
+      id: r.id,
+      rewards_amount: r.rewards_amount,
+      description: r.description,
+      created_at: r.updated_at || r.created_at,
+      source_type: r.source_type,
+      score: r.score,
+      activity_settings: actSettings
+        ? {
+            id: actSettings.id,
+            slug: actSettings.slug,
+            title: actSettings.title,
+            minutes: actSettings.minutes,
+          }
+        : null,
+    };
+  });
+
+  // 2. Call calculateActivityAnalytics (unchanged!)
+  const { subjectMastery, learningTimeMins, quizAccuracy } = calculateActivityAnalytics(
+    timeline,
+    settingsList
+  );
+
+  const details: ChildDetailsResult = {
+    total_completed: timeline.length,
+    total_xp: rpcData.profile?.total_experience_points ?? 0,
+    current_streak: rpcData.profile?.current_streak ?? 0,
+    longest_streak: rpcData.profile?.longest_streak ?? 0,
+    learning_time_mins: learningTimeMins,
+    quiz_accuracy: quizAccuracy,
+    subject_mastery: subjectMastery,
+    timeline,
+  };
+
+  // 3. Map Safety & Usage
+  const unresolvedAlertsCount = (rpcData.safety_alerts || []).filter((a) => !a.resolved).length;
+  const safetyScore = Math.max(0, 100 - unresolvedAlertsCount * 20);
+
+  const usageLogs = rpcData.daily_usage || [];
+  const todayStr = new Date().toISOString().split("T")[0];
+  let dailyScreenTimeMins = 0;
+  let weeklyAiInteractions = 0;
+
+  if (usageLogs.length > 0) {
+    const todayLog = usageLogs.find((log) => log.usage_date === todayStr);
+    if (todayLog) {
+      dailyScreenTimeMins = (todayLog.messages_sent ?? 0) * 3;
+    } else {
+      dailyScreenTimeMins = (usageLogs[0].messages_sent ?? 0) * 3;
+    }
+    weeklyAiInteractions = usageLogs
+      .slice(0, 7)
+      .reduce((sum: number, log) => sum + (log.messages_sent ?? 0), 0);
+  }
+
+  if (dailyScreenTimeMins === 0) dailyScreenTimeMins = 25;
+  if (weeklyAiInteractions === 0) weeklyAiInteractions = 42;
+
+  const safety: ChildSafetyAndUsageResult = {
+    safety_score: safetyScore,
+    content_filter_status:
+      unresolvedAlertsCount > 0 ? "Flagged / Restricted" : "Safe Mode (Standard)",
+    focus_mode_active: true,
+    daily_screen_time_mins: dailyScreenTimeMins,
+    weekly_ai_interactions: weeklyAiInteractions,
+    unresolved_alerts_count: unresolvedAlertsCount,
+    daily_limit_minutes: rpcData.link?.daily_limit_minutes ?? 60,
+    is_screen_time_limit_enabled: rpcData.link?.is_screen_time_limit_enabled ?? false,
+  };
+
+  // 4. Map search history
+  const history: SearchHistoryItem[] = (rpcData.chat_sessions || []).map((h) => ({
+    id: String(h.id ?? ""),
+    title: h.title ? String(h.title) : null,
+    created_at: h.created_at ? String(h.created_at) : null,
+  }));
+
+  // 5. Map activities
+  const activities: ParentActivityItem[] = (rpcData.rewards || []).map((r) => {
+    const actSettings = r.activity_settings
+      ? Array.isArray(r.activity_settings)
+        ? (r.activity_settings[0] as { id: string; slug: string; title: string }) || null
+        : (r.activity_settings as { id: string; slug: string; title: string })
+      : null;
+    return {
+      id: r.id,
+      rewards_amount: r.rewards_amount ?? 0,
+      description: r.description,
+      created_at: r.updated_at || r.created_at,
+      source_type: r.source_type ?? "",
+      score: r.score,
+      activity_settings: actSettings
+        ? {
+            id: actSettings.id,
+            slug: actSettings.slug,
+            title: actSettings.title,
+          }
+        : null,
+    };
+  });
+
+  // 6. Map screen time
+  const screenTime = {
+    screenTimeSeconds: rpcData.today_screen_time_seconds ?? 0,
+    dailyLimitMinutes: rpcData.link?.daily_limit_minutes ?? 60,
+    isLimitEnabled: rpcData.link?.is_screen_time_limit_enabled ?? false,
+  };
+
+  return {
+    details,
+    safety,
+    history,
+    activities,
+    screenTime,
+    aiInsights: null,
+  };
+}
+
 export async function getChildComprehensiveData(childUserId: string): Promise<CacheData> {
+  const { userId: parentId } = await verifyUserRole("parent");
+  const supabase = await createClient();
+
+  // Fire-and-forget stale session recovery in the background (no transaction blocking)
+  recoverStaleSessions().catch((err) => {
+    console.error("[getChildComprehensiveData] Stale session recovery error:", err);
+  });
+
+  try {
+    const { data: rpcData, error: rpcError } = await supabase.rpc("get_child_comprehensive_data", {
+      p_parent_id: parentId,
+      p_child_id: childUserId,
+    });
+
+    if (rpcError || !rpcData) {
+      throw rpcError || new Error("No RPC data returned");
+    }
+
+    let settingsList: { title: string; minutes: number }[] = [];
+    try {
+      settingsList = (await getCachedActivitySettings(supabase)) || [];
+    } catch {
+      // fallback empty
+    }
+
+    const cacheData = mapRpcToCacheData(rpcData as ChildComprehensiveRpcResponse, settingsList);
+
+    // Compute AI Insights in Next.js using the preloaded details
+    let aiInsights = null;
+    try {
+      aiInsights = await getChildAiInsights(childUserId, cacheData.details!);
+    } catch {
+      aiInsights = null;
+    }
+
+    return {
+      ...cacheData,
+      aiInsights,
+    };
+  } catch (err) {
+    console.warn("[getChildComprehensiveData] RPC failed, falling back to legacy query path:", err);
+    return getChildComprehensiveDataLegacy(childUserId);
+  }
+}
+
+export async function getChildComprehensiveDataLegacy(childUserId: string): Promise<CacheData> {
   const [details, safety, history, activities, screenTimeData] = await Promise.all([
     getChildDetails(childUserId),
     getChildSafetyAndUsage(childUserId),
