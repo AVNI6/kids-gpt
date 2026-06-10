@@ -272,6 +272,7 @@ export function useChatSender({
               history: chatHistory,
               role: userRole || "kid",
               age: age,
+              sessionId: sessionId || undefined,
             };
 
         const apiStartTime = Date.now();

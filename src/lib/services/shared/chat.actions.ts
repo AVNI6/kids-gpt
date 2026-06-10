@@ -119,6 +119,48 @@ export async function saveChatMessage(
     .from("chat_sessions")
     .update({ updated_at: new Date().toISOString() })
     .eq("id", sessionId);
+
+  // Check if we need to mark summary as pending
+  try {
+    const { count, error: countError } = await supabase
+      .from("chat_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId)
+      .is("deleted_at", null);
+
+    if (countError) {
+      console.error("Error counting messages in saveChatMessage:", countError);
+    } else if (count !== null) {
+      const { data: sessionData, error: sessionError } = await supabase
+        .from("chat_sessions")
+        .select("last_summarized_message_count, summary_pending")
+        .eq("id", sessionId)
+        .single();
+
+      if (sessionError) {
+        console.error("Error fetching session metadata in saveChatMessage:", sessionError);
+      } else if (sessionData) {
+        const lastCount = sessionData.last_summarized_message_count ?? 0;
+        const isPending = sessionData.summary_pending ?? false;
+
+        if (count >= 20 && count - lastCount >= 10 && !isPending) {
+          const { error: updateSessionError } = await supabase
+            .from("chat_sessions")
+            .update({ summary_pending: true })
+            .eq("id", sessionId);
+
+          if (updateSessionError) {
+            console.error(
+              "Error updating session summary_pending in saveChatMessage:",
+              updateSessionError
+            );
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Failed to run summary check in saveChatMessage:", err);
+  }
 }
 
 export async function updateChatMessageAttachment(messageId: string, attachmentUrl: string) {

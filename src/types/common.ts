@@ -44,6 +44,10 @@ export interface ChatSessionRow {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  summary?: string | null;
+  summary_updated_at?: string | null;
+  last_summarized_message_count?: number;
+  summary_pending?: boolean;
 }
 
 export interface ChatMessageRow {
@@ -107,6 +111,7 @@ export interface ChatRequestBody {
   age?: number;
   learnerContext?: LearnerContext;
   activityContext?: ActivityContext;
+  sessionId?: string;
 }
 
 export interface GeminiPart {

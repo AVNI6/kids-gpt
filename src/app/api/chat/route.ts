@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
       age,
       learnerContext,
       activityContext,
+      sessionId,
     }: ChatRequestBody = await req.json();
 
     if (isImageGenerationRequest(message || "")) {
@@ -366,13 +367,38 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Fetch session summary if sessionId is present
+    let sessionSummary: string | null = null;
+    if (sessionId) {
+      try {
+        const supabase = await createClient();
+        const { data: sessionData, error: sessionError } = await supabase
+          .from("chat_sessions")
+          .select("summary")
+          .eq("id", sessionId)
+          .maybeSingle();
+
+        if (sessionError) {
+          aiLogger.error("ChatAPI", `Failed to retrieve session summary for session ${sessionId}`, {
+            error: sessionError.message,
+          });
+        } else if (sessionData) {
+          sessionSummary = sessionData.summary;
+        }
+      } catch (err) {
+        aiLogger.error("ChatAPI", `Error fetching session summary for session ${sessionId}`, {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
     // Build optimized contents array using centralized context builder utility
-    const { contents, telemetry } = await buildConversationContext({
+    const { contents, systemContexts, telemetry } = await buildConversationContext({
       recentMessages: history || [],
       currentMessage: message || "",
       image: image,
       memory: {
-        sessionSummary: null,
+        sessionSummary: sessionSummary,
         learningProfile: learningProfile,
         retrievedMemories: [],
       },
@@ -387,7 +413,12 @@ export async function POST(req: NextRequest) {
       weaknessesCount: telemetry.weaknessesCount,
       interestsCount: telemetry.interestsCount,
       profileContextTokens: telemetry.profileContextTokens,
+      sessionSummaryUsed: telemetry.sessionSummaryUsed,
+      sessionSummaryTokens: telemetry.sessionSummaryTokens,
     });
+
+    // Assemble final system prompt by combining active prompt and injected system contexts
+    const finalSystemPrompt = [activePrompt, ...systemContexts].filter(Boolean).join("\n\n");
 
     // Get generation config from orchestrator
     const generationConfig = getGenerationConfig(mode);
@@ -396,7 +427,7 @@ export async function POST(req: NextRequest) {
       // Delegate to the model fallback orchestrator for structured JSON
       const response = await generateAIResponse({
         contents,
-        systemPrompt: activePrompt,
+        systemPrompt: finalSystemPrompt,
         generationConfig,
         signal: req.signal,
       });
@@ -489,7 +520,7 @@ export async function POST(req: NextRequest) {
     try {
       const stream = await generateAIResponseStream({
         contents,
-        systemPrompt: activePrompt,
+        systemPrompt: finalSystemPrompt,
         generationConfig,
         signal: req.signal,
       });
@@ -512,7 +543,7 @@ export async function POST(req: NextRequest) {
 
       const response = await generateAIResponse({
         contents,
-        systemPrompt: activePrompt,
+        systemPrompt: finalSystemPrompt,
         generationConfig,
         signal: req.signal,
       });

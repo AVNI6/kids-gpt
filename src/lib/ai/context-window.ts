@@ -28,6 +28,7 @@ export interface BuildConversationContextArgs {
 
 export interface BuildConversationContextResult {
   contents: GeminiContent[];
+  systemContexts: string[];
   telemetry: {
     historyMessagesUsed: number;
     estimatedTokens: number;
@@ -37,6 +38,8 @@ export interface BuildConversationContextResult {
     weaknessesCount: number;
     interestsCount: number;
     profileContextTokens: number;
+    sessionSummaryUsed: boolean;
+    sessionSummaryTokens: number;
   };
 }
 
@@ -194,21 +197,20 @@ export async function buildConversationContext({
   const weaknessesCount = profile?.weaknesses?.length || 0;
   const interestsCount = profile?.interests?.length || 0;
 
-  // Telemetry metadata placeholders
-  if (memory.sessionSummary) {
-    aiLogger.debug("ContextWindow", "Memory placeholder: sessionSummary present");
-  }
-  if (memory.retrievedMemories && memory.retrievedMemories.length > 0) {
-    aiLogger.debug(
-      "ContextWindow",
-      `Memory placeholder: retrievedMemories present (${memory.retrievedMemories.length} items)`
-    );
-  }
-
   const contents: GeminiContent[] = [];
+  const systemContexts: string[] = [];
   let profileContextTokens = 0;
+  let sessionSummaryTokens = 0;
+  const sessionSummaryUsed = !!memory.sessionSummary;
 
-  // 1. Inject Student Learning Profile and tutor instructions inside a dedicated system context block if present
+  // 1. Inject Session Summary if present
+  if (memory.sessionSummary) {
+    const summaryStr = `[SYSTEM CONTEXT: CONVERSATION SUMMARY]\n\n${memory.sessionSummary}\n\n[END OF SYSTEM CONTEXT]`;
+    sessionSummaryTokens = Math.round(summaryStr.length / CHARS_PER_TOKEN);
+    systemContexts.push(summaryStr);
+  }
+
+  // 2. Inject Student Learning Profile and tutor instructions inside a dedicated system context block if present
   if (profile) {
     let profileStr = "Student Learning Profile\n\n";
 
@@ -257,21 +259,7 @@ export async function buildConversationContext({
 
     const systemContextBlock = `[SYSTEM CONTEXT]\n${profileStr}[END OF SYSTEM CONTEXT]`;
     profileContextTokens = Math.round(systemContextBlock.length / CHARS_PER_TOKEN);
-
-    // Prepend the system context block as a simulated User turn followed by a simulated Model acknowledgment
-    contents.push({
-      role: "user",
-      parts: [{ text: systemContextBlock }],
-    });
-
-    contents.push({
-      role: "model",
-      parts: [
-        {
-          text: "[System Acknowledgment: Student learning profile loaded. I will customize all future tutoring interactions accordingly, utilizing strengths, addressing weaknesses, applying interests, and matching the preferred learning style while strictly adhering to safety rules.]",
-        },
-      ],
-    });
+    systemContexts.push(systemContextBlock);
   }
 
   const originalCount = recentMessages.length;
@@ -334,10 +322,12 @@ export async function buildConversationContext({
   // Calculate estimated tokens (approximation based on CHARS_PER_TOKEN)
   const totalChars =
     trimmedHistory.reduce((sum, m) => sum + m.content.length, 0) + currentMessage.length;
-  const estimatedTokens = Math.round(totalChars / CHARS_PER_TOKEN) + profileContextTokens;
+  const estimatedTokens =
+    Math.round(totalChars / CHARS_PER_TOKEN) + profileContextTokens + sessionSummaryTokens;
 
   return {
     contents,
+    systemContexts,
     telemetry: {
       historyMessagesUsed: trimmedHistory.length,
       estimatedTokens,
@@ -347,6 +337,8 @@ export async function buildConversationContext({
       weaknessesCount,
       interestsCount,
       profileContextTokens,
+      sessionSummaryUsed,
+      sessionSummaryTokens,
     },
   };
 }
