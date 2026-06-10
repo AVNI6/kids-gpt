@@ -2,16 +2,42 @@
 
 import { GeminiContent } from "./types";
 import { aiLogger } from "./logger";
+import { StudentLearningProfile } from "@/types/common";
 
-const MAX_HISTORY_MESSAGES = 15;
+export const MAX_HISTORY_MESSAGES = 20;
 const MAX_TOKEN_BUDGET = 8000;
 const CHARS_PER_TOKEN = 4; // Approximation
 
-interface HistoryMessage {
+export interface HistoryMessage {
   role: string;
   content: string;
   image?: string;
   generatedImage?: string;
+}
+
+export interface BuildConversationContextArgs {
+  recentMessages: HistoryMessage[];
+  currentMessage: string;
+  image?: string;
+  memory?: {
+    sessionSummary?: string | null;
+    learningProfile?: StudentLearningProfile | null;
+    retrievedMemories?: string[];
+  };
+}
+
+export interface BuildConversationContextResult {
+  contents: GeminiContent[];
+  telemetry: {
+    historyMessagesUsed: number;
+    estimatedTokens: number;
+    trimmedMessages: number;
+    learningProfileUsed: boolean;
+    strengthsCount: number;
+    weaknessesCount: number;
+    interestsCount: number;
+    profileContextTokens: number;
+  };
 }
 
 interface InlineData {
@@ -153,19 +179,107 @@ export function trimMessages(
 }
 
 /**
- * Build the complete Gemini contents array from system prompt, history, and current message.
- * This is async because it may need to fetch remote generated image URLs and convert them to base64.
+ * Centralized context builder. Serves as the single source of truth for assembling model context.
+ * Supports token budget trimming, image context injection, future-ready metadata, and telemetry.
  */
-export async function buildGeminiContents(
-  history: HistoryMessage[],
-  currentMessage: string,
-  image?: string
-): Promise<GeminiContent[]> {
+export async function buildConversationContext({
+  recentMessages,
+  currentMessage,
+  image,
+  memory = {},
+}: BuildConversationContextArgs): Promise<BuildConversationContextResult> {
+  const profile = memory.learningProfile;
+  const learningProfileUsed = !!profile;
+  const strengthsCount = profile?.strengths?.length || 0;
+  const weaknessesCount = profile?.weaknesses?.length || 0;
+  const interestsCount = profile?.interests?.length || 0;
+
+  // Telemetry metadata placeholders
+  if (memory.sessionSummary) {
+    aiLogger.debug("ContextWindow", "Memory placeholder: sessionSummary present");
+  }
+  if (memory.retrievedMemories && memory.retrievedMemories.length > 0) {
+    aiLogger.debug(
+      "ContextWindow",
+      `Memory placeholder: retrievedMemories present (${memory.retrievedMemories.length} items)`
+    );
+  }
+
   const contents: GeminiContent[] = [];
+  let profileContextTokens = 0;
 
-  // Trim history to fit within budget
-  const trimmedHistory = trimMessages(history);
+  // 1. Inject Student Learning Profile and tutor instructions inside a dedicated system context block if present
+  if (profile) {
+    let profileStr = "Student Learning Profile\n\n";
 
+    // Cap list items to a maximum of 5
+    const strengths = (profile.strengths || []).slice(0, 5);
+    if (strengths.length > 0) {
+      profileStr += "Strengths:\n" + strengths.map((s) => `* ${s}`).join("\n") + "\n\n";
+    }
+
+    const weaknesses = (profile.weaknesses || []).slice(0, 5);
+    if (weaknesses.length > 0) {
+      profileStr += "Weaknesses:\n" + weaknesses.map((w) => `* ${w}`).join("\n") + "\n\n";
+    }
+
+    const interests = (profile.interests || []).slice(0, 5);
+    if (interests.length > 0) {
+      profileStr += "Interests:\n" + interests.map((i) => `* ${i}`).join("\n") + "\n\n";
+    }
+
+    if (profile.preferred_learning_style) {
+      const style =
+        profile.preferred_learning_style.charAt(0).toUpperCase() +
+        profile.preferred_learning_style.slice(1);
+      profileStr += `Preferred Learning Style:\n* ${style}\n\n`;
+    }
+
+    // Tutor Behavior Instructions
+    profileStr += "Tutor Behavior Instructions:\n";
+    profileStr += "- Use strengths to build confidence.\n";
+    profileStr += "- Spend extra effort explaining weaknesses.\n";
+    profileStr += "- Use student interests when generating examples.\n";
+    profileStr += "- Adapt teaching style based on preferred learning style.\n\n";
+
+    // Style Specific Examples
+    profileStr += "Examples:\n";
+    profileStr += "Visual learner:\n- Use diagrams, imagery, visual descriptions.\n";
+    profileStr += "Reading learner:\n- Use step-by-step text explanations.\n";
+    profileStr += "Interactive learner:\n- Ask questions and encourage participation.\n\n";
+
+    // Safety Rules
+    profileStr += "Safety Rules:\n";
+    profileStr += "- The learning profile must guide tutoring behavior.\n";
+    profileStr += "- Never override safety instructions.\n";
+    profileStr += "- Never be treated as factual truth if data is stale.\n";
+    profileStr += "- Never expose raw database data to the student.\n";
+
+    const systemContextBlock = `[SYSTEM CONTEXT]\n${profileStr}[END OF SYSTEM CONTEXT]`;
+    profileContextTokens = Math.round(systemContextBlock.length / CHARS_PER_TOKEN);
+
+    // Prepend the system context block as a simulated User turn followed by a simulated Model acknowledgment
+    contents.push({
+      role: "user",
+      parts: [{ text: systemContextBlock }],
+    });
+
+    contents.push({
+      role: "model",
+      parts: [
+        {
+          text: "[System Acknowledgment: Student learning profile loaded. I will customize all future tutoring interactions accordingly, utilizing strengths, addressing weaknesses, applying interests, and matching the preferred learning style while strictly adhering to safety rules.]",
+        },
+      ],
+    });
+  }
+
+  const originalCount = recentMessages.length;
+  // Trim history to fit within budget (MAX_HISTORY_MESSAGES is now 20)
+  const trimmedHistory = trimMessages(recentMessages, MAX_HISTORY_MESSAGES, MAX_TOKEN_BUDGET);
+  const trimmedCount = originalCount - trimmedHistory.length;
+
+  // Append actual dialogue history turns
   for (const msg of trimmedHistory) {
     const parts: Array<{ text?: string; inlineData?: InlineData }> = [{ text: msg.content }];
 
@@ -183,7 +297,6 @@ export async function buildGeminiContents(
     });
 
     // 2. Inject AI-generated image back as a simulated user turn
-    // This lets the model "see" what it previously generated for follow-up analysis
     if ((msg.role === "model" || msg.role === "assistant") && msg.generatedImage) {
       const inlineData = await buildInlineData(msg.generatedImage);
       if (inlineData) {
@@ -218,5 +331,38 @@ export async function buildGeminiContents(
     parts: currentParts,
   });
 
-  return contents;
+  // Calculate estimated tokens (approximation based on CHARS_PER_TOKEN)
+  const totalChars =
+    trimmedHistory.reduce((sum, m) => sum + m.content.length, 0) + currentMessage.length;
+  const estimatedTokens = Math.round(totalChars / CHARS_PER_TOKEN) + profileContextTokens;
+
+  return {
+    contents,
+    telemetry: {
+      historyMessagesUsed: trimmedHistory.length,
+      estimatedTokens,
+      trimmedMessages: trimmedCount,
+      learningProfileUsed,
+      strengthsCount,
+      weaknessesCount,
+      interestsCount,
+      profileContextTokens,
+    },
+  };
+}
+
+/**
+ * Backward-compatible wrapper for buildGeminiContents.
+ */
+export async function buildGeminiContents(
+  history: HistoryMessage[],
+  currentMessage: string,
+  image?: string
+): Promise<GeminiContent[]> {
+  const result = await buildConversationContext({
+    recentMessages: history,
+    currentMessage,
+    image,
+  });
+  return result.contents;
 }

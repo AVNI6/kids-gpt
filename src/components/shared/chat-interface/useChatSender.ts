@@ -162,7 +162,7 @@ export function useChatSender({
       dispatch(addMessage(userMessage));
 
       // Prepare history for API including image context persistence
-      const chatHistory = messages.slice(-10).map((m) => ({
+      const chatHistory = messages.slice(-20).map((m) => ({
         role: m.role === "user" ? "user" : "model",
         content: m.content,
         image: m.role === "user" ? m.uploadedImage : undefined,

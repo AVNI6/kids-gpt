@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { ChatRequestBody } from "@/types/common";
 import { generateAIResponse, generateAIResponseStream } from "@/lib/ai/model-orchestrator";
 import { buildSystemPrompt, ChatMode } from "@/lib/ai/prompts";
-import { buildGeminiContents } from "@/lib/ai/context-window";
+import { buildConversationContext } from "@/lib/ai/context-window";
 import { aiLogger } from "@/lib/ai/logger";
 import { JsonObject } from "@/types/json";
+import { createClient } from "@/lib/supabase/server";
+import { getStudentLearningProfile } from "@/lib/services/shared/learning-profile.actions";
 
 import {
   isStopCommand,
@@ -135,8 +137,44 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Build optimized contents array using context window memory management
-    const contents = await buildGeminiContents(history || [], message, image);
+    // Fetch user learning profile if authenticated
+    let learningProfile = null;
+    try {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user?.id) {
+        learningProfile = await getStudentLearningProfile(user.id);
+      }
+    } catch (err) {
+      aiLogger.error("ChatAPI", "Failed to retrieve student learning profile in API route", {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    // Build optimized contents array using centralized context builder utility
+    const { contents, telemetry } = await buildConversationContext({
+      recentMessages: history || [],
+      currentMessage: message || "",
+      image: image,
+      memory: {
+        sessionSummary: null,
+        learningProfile: learningProfile,
+        retrievedMemories: [],
+      },
+    });
+
+    aiLogger.info("ChatAPI", "Context Assembly Telemetry", {
+      historyMessagesUsed: telemetry.historyMessagesUsed,
+      estimatedTokens: telemetry.estimatedTokens,
+      trimmedMessages: telemetry.trimmedMessages,
+      learningProfileUsed: telemetry.learningProfileUsed,
+      strengthsCount: telemetry.strengthsCount,
+      weaknessesCount: telemetry.weaknessesCount,
+      interestsCount: telemetry.interestsCount,
+      profileContextTokens: telemetry.profileContextTokens,
+    });
 
     // Get generation config from orchestrator
     const generationConfig = getGenerationConfig(mode);

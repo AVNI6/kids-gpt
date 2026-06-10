@@ -121,3 +121,14 @@ export interface GeminiContent {
   role: string;
   parts: GeminiPart[];
 }
+
+export interface StudentLearningProfile {
+  student_id: string;
+  strengths: string[];
+  weaknesses: string[];
+  interests: string[];
+  preferred_learning_style: string;
+  last_calculated_at: string;
+  created_at: string;
+  updated_at: string;
+}
