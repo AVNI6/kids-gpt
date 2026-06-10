@@ -11,10 +11,22 @@ interface GeminiStreamRequestBody {
 }
 
 // Gemini models in priority order (free-tier compatible)
-const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+const GEMINI_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-3.5-flash",
+  "gemini-flash-latest",
+  "gemini-3.1-flash-lite",
+];
 
 // Groq fallback models
-const GROQ_MODELS = ["llama-3.3-70b-versatile", "mixtral-8x7b-32768", "llama-3.1-8b-instant"];
+const GROQ_MODELS = [
+  "llama-3.3-70b-versatile",
+  "mixtral-8x7b-32768",
+  "llama-3.1-8b-instant",
+  "whisper-large-v3-turbo",
+  "whisper-large-v3",
+];
 
 // ===== KEY ROTATION =====
 

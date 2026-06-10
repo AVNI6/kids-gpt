@@ -8,6 +8,7 @@ import { JsonObject } from "@/types/json";
 import { createClient } from "@/lib/supabase/server";
 import { getStudentLearningProfile } from "@/lib/services/shared/learning-profile.actions";
 
+import { GoogleGenAI } from "@google/genai";
 import {
   isStopCommand,
   deriveChatMode,
@@ -19,25 +20,37 @@ import { PdfResponseSchema } from "@/lib/ai/schemas/pdf-response.schema";
 
 function isImageGenerationRequest(message: string): boolean {
   if (!message) return false;
-  const query = extractUserQuery(message);
-  const hasCreationVerb =
-    /(draw|create|generate|make|show me|paint|sketch|produce|design|illustrate|visualize|render)/i.test(
-      query
+  const queryLower = extractUserQuery(message).trim().toLowerCase();
+
+  const hasAnalysisIntent =
+    /(explain|describe|what\s+is|tell\s+me|analyze|analyse|discuss|identify|who|why|how|where|when|detail|in\s+(the\s+)?(image|photo|picture|drawing|illustration)|about\s+(the\s+)?(image|photo|picture|drawing|illustration)|previous\s+(image|photo|picture|drawing|illustration)|above\s+(image|photo|picture|drawing|illustration))/i.test(
+      queryLower
+    );
+  if (hasAnalysisIntent) return false;
+
+  const hasDirectCreation =
+    /(draw|paint|sketch|illustrate|render|visualize)\s+(a|an|the|some)?\s*[a-z0-9]/i.test(
+      queryLower
+    );
+
+  const hasRequestVerb =
+    /(draw|create|generate|make|show|paint|sketch|produce|design|illustrate|visualize|render|want|wanted|need|display|give\s+me|fetch)/i.test(
+      queryLower
     );
   const hasVisualNoun =
     /(image|picture|drawing|painting|photo|illustration|artwork|graphic|visual|portrait|scene|diagram)/i.test(
-      query
+      queryLower
     );
-  const hasAnalysisIntent =
-    /(explain|describe|what is|tell me about|analyze|analyse|discuss|identify|who is|who's|character|detail|details\s+of|generated|created|made|drawn|painted|sketched|illustrated|visualized|rendered|in\s+(the\s+)?(image|photo|picture|drawing|illustration)|of\s+(the\s+)?(image|photo|picture|drawing|illustration)|from\s+(the\s+)?(image|photo|picture|drawing|illustration)|about\s+(the\s+)?(image|photo|picture|drawing|illustration)|above\s+(image|photo|picture|drawing|illustration)|previous\s+(image|photo|picture|drawing|illustration)|that\s+(image|photo|picture|drawing|illustration)|this\s+(image|photo|picture|drawing|illustration))/i.test(
-      query
+  const hasVerbAndNoun = hasRequestVerb && hasVisualNoun;
+
+  const hasOfPattern =
+    /(image|picture|photo|illustration|drawing|painting|sketch|graphic|portrait|diagram)\s+of/i.test(
+      queryLower
     );
 
-  return (
-    hasCreationVerb &&
-    (hasVisualNoun || query.toLowerCase().includes("draw ")) &&
-    !hasAnalysisIntent
-  );
+  const isShortVisualNoun = hasVisualNoun && queryLower.length < 40;
+
+  return hasDirectCreation || hasVerbAndNoun || hasOfPattern || isShortVisualNoun;
 }
 
 export async function POST(req: NextRequest) {
@@ -56,25 +69,225 @@ export async function POST(req: NextRequest) {
 
     if (isImageGenerationRequest(message || "")) {
       // SAFE: Only strips leading trigger phrases
-      const cleanedPrompt =
-        (message || "")
-          .replace(
-            /^(please\s+)?(generate|create|draw|make|show\s+me)\s+(an?\s+)?(image|picture|photo|illustration|drawing)(\s+of)?\s*/i,
-            ""
-          )
-          .trim() || "educational illustration";
-
-      // URL-encode for external API safety
-      const encodedPrompt = encodeURIComponent(cleanedPrompt);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true`;
+      let cleanedPrompt = (message || "").trim();
+      // 1. Remove leading request phrasing: "generate an image of", "wanted image of", "draw a", "want to see a"
+      cleanedPrompt = cleanedPrompt.replace(
+        /^(please\s+)?(generate|create|draw|make|show\s+me|want|wanted|need|give\s+me|fetch|show|display)\s+(an?\s+)?(image|picture|photo|illustration|drawing|painting|artwork|sketch|graphic)?(\s+of)?\s*/i,
+        ""
+      );
+      // 2. Remove leading visual nouns followed by "of"
+      cleanedPrompt = cleanedPrompt.replace(
+        /^(an?\s+)?(image|picture|photo|illustration|drawing|painting|artwork|sketch|graphic)\s+of\s+/i,
+        ""
+      );
+      // 3. Remove trailing visual nouns
+      cleanedPrompt = cleanedPrompt.replace(
+        /\s+(image|picture|photo|illustration|drawing|painting|artwork|sketch|graphic)$/i,
+        ""
+      );
+      cleanedPrompt = cleanedPrompt.trim() || "educational illustration";
 
       try {
-        // RESTORE SUPABASE UPLOAD LOGIC HERE (If applicable to your pipeline)
-        // await uploadToSupabase(imageUrl);
+        const keys: string[] = [];
+        if (process.env.GOOGLE_GEMINI_API_KEY) keys.push(process.env.GOOGLE_GEMINI_API_KEY);
+        if (process.env.GOOGLE_GEMINI_API_KEY2) keys.push(process.env.GOOGLE_GEMINI_API_KEY2);
+        if (process.env.GOOGLE_GEMINI_API_KEY3) keys.push(process.env.GOOGLE_GEMINI_API_KEY3);
+
+        const encodedPrompt = encodeURIComponent(cleanedPrompt);
+        let finalImageUrl = "";
+
+        // Try Google GenAI models first (supported on the free tier)
+        const models = [
+          "imagen-3.0-generate-002",
+          "gemini-3.1-flash-image",
+          "gemini-3-pro-image",
+          "gemini-2.5-flash-image",
+        ];
+
+        for (const modelName of models) {
+          if (finalImageUrl.startsWith("data:image/")) break;
+          for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+            const apiKey = keys[keyIndex];
+            try {
+              const ai = new GoogleGenAI({ apiKey });
+              let resultImageBase64: string | null = null;
+
+              if (modelName.startsWith("imagen-")) {
+                const response = await ai.models.generateImages({
+                  model: modelName,
+                  prompt: cleanedPrompt,
+                  config: {
+                    numberOfImages: 1,
+                    outputMimeType: "image/jpeg",
+                    aspectRatio: "1:1",
+                  },
+                });
+                resultImageBase64 = response?.generatedImages?.[0]?.image?.imageBytes ?? null;
+              } else {
+                const response = await ai.models.generateContent({
+                  model: modelName,
+                  contents: [{ text: cleanedPrompt }],
+                  config: {
+                    responseModalities: ["TEXT", "IMAGE"],
+                  },
+                });
+                if (response.candidates?.[0]?.content?.parts) {
+                  for (const part of response.candidates[0].content.parts) {
+                    if (part.inlineData) {
+                      resultImageBase64 = part.inlineData.data ?? null;
+                    }
+                  }
+                }
+              }
+
+              if (resultImageBase64) {
+                finalImageUrl = `data:image/jpeg;base64,${resultImageBase64}`;
+                break;
+              }
+            } catch (error) {
+              aiLogger.warn(
+                "ChatAPI",
+                `Google GenAI ${modelName} failed for Key index ${keyIndex}`,
+                {
+                  error: error instanceof Error ? error.message : String(error),
+                }
+              );
+            }
+          }
+        }
+
+        // Try Hercai first (an AI image generator that returns JSON)
+        if (!finalImageUrl.startsWith("data:image/")) {
+          try {
+            const hercaiRes = await fetch(
+              `https://hercai.onrender.com/v3/text2image?prompt=${encodedPrompt}`,
+              {
+                signal: AbortSignal.timeout(25000),
+              }
+            );
+            if (hercaiRes.ok) {
+              const hercaiData = await hercaiRes.json();
+              if (hercaiData && hercaiData.url) {
+                const imgRes = await fetch(hercaiData.url, { signal: AbortSignal.timeout(15000) });
+                const contentType = imgRes.headers.get("content-type") || "";
+                if (imgRes.ok && contentType.startsWith("image/")) {
+                  const arrayBuffer = await imgRes.arrayBuffer();
+                  const base64 = Buffer.from(arrayBuffer).toString("base64");
+                  finalImageUrl = `data:image/jpeg;base64,${base64}`;
+                }
+              }
+            }
+          } catch (e) {
+            aiLogger.warn("ChatAPI", "Hercai fallback failed", {
+              error: e instanceof Error ? e.message : String(e),
+            });
+          }
+        }
+
+        // Try Unsplash Search if Hercai failed
+        if (!finalImageUrl.startsWith("data:image/") && process.env.UNPLASH_ACCESS_KEY) {
+          try {
+            const unsplashRes = await fetch(
+              `https://api.unsplash.com/photos/random?query=${encodeURIComponent(cleanedPrompt)}&client_id=${process.env.UNPLASH_ACCESS_KEY}`,
+              { signal: AbortSignal.timeout(8000) }
+            );
+            if (unsplashRes.ok) {
+              const data = await unsplashRes.json();
+              const imageUrl = data?.urls?.regular;
+              if (imageUrl) {
+                const imgRes = await fetch(imageUrl, { signal: AbortSignal.timeout(10000) });
+                const contentType = imgRes.headers.get("content-type") || "";
+                if (imgRes.ok && contentType.startsWith("image/")) {
+                  const arrayBuffer = await imgRes.arrayBuffer();
+                  const base64 = Buffer.from(arrayBuffer).toString("base64");
+                  finalImageUrl = `data:image/jpeg;base64,${base64}`;
+                }
+              }
+            }
+          } catch (e) {
+            aiLogger.warn("ChatAPI", "Unsplash fallback failed", {
+              error: e instanceof Error ? e.message : String(e),
+            });
+          }
+        }
+
+        // Try other endpoints if Unsplash / Hercai failed
+        if (!finalImageUrl.startsWith("data:image/")) {
+          const tags = cleanedPrompt
+            .toLowerCase()
+            .split(/\s+/)
+            .filter(
+              (w) =>
+                ![
+                  "in",
+                  "the",
+                  "a",
+                  "an",
+                  "on",
+                  "of",
+                  "with",
+                  "and",
+                  "or",
+                  "to",
+                  "for",
+                  "at",
+                  "by",
+                  "from",
+                ].includes(w) && w.length > 1
+            )
+            .join(",");
+          const loremFlickrUrl = `https://loremflickr.com/800/600/${encodeURIComponent(tags || cleanedPrompt)}`;
+
+          const fallbacks = [
+            `https://api.airforce/v1/imagen?prompt=${encodedPrompt}&model=dall-e-3`,
+            `https://api.airforce/v1/imagen?prompt=${encodedPrompt}&model=flux`,
+            loremFlickrUrl,
+            `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`,
+          ];
+
+          for (const url of fallbacks) {
+            try {
+              const res = await fetch(url, {
+                signal: AbortSignal.timeout(10000),
+                headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+              });
+              const contentType = res.headers.get("content-type") || "";
+              if (res.ok && contentType.startsWith("image/")) {
+                const arrayBuffer = await res.arrayBuffer();
+                if (arrayBuffer) {
+                  const base64 = Buffer.from(arrayBuffer).toString("base64");
+                  finalImageUrl = `data:image/jpeg;base64,${base64}`;
+                  break;
+                }
+              }
+            } catch (e) {
+              aiLogger.warn("ChatAPI", `Fallback failed for ${url}`, {
+                error: e instanceof Error ? e.message : String(e),
+              });
+            }
+          }
+        }
+
+        // Guaranteed base64 fallback (loremflickr) if everything else fails
+        if (!finalImageUrl.startsWith("data:image/")) {
+          try {
+            const res = await fetch(`https://loremflickr.com/800/600/education,illustration`, {
+              signal: AbortSignal.timeout(8000),
+            });
+            if (res.ok) {
+              const arrayBuffer = await res.arrayBuffer();
+              const base64 = Buffer.from(arrayBuffer).toString("base64");
+              finalImageUrl = `data:image/jpeg;base64,${base64}`;
+            }
+          } catch {
+            finalImageUrl =
+              "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+          }
+        }
 
         // Return standard SSE stream so the frontend can render the image
         return new Response(
-          `data: ${JSON.stringify({ imageUrl, text: "I've generated that image for you!" })}\n\ndata: [DONE]\n\n`,
+          `data: ${JSON.stringify({ imageUrl: finalImageUrl, text: "I've generated that image for you!" })}\n\ndata: [DONE]\n\n`,
           {
             headers: {
               "Content-Type": "text/event-stream; charset=utf-8",

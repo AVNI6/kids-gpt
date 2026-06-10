@@ -1,8 +1,9 @@
 "use client";
 
 import { Card, CardContent } from "@/components/shared/ui/card";
-import { Sparkles, CheckCircle2, ClipboardCheck, MessageSquare } from "lucide-react";
-
+import { ClipboardCheck, MessageSquare } from "lucide-react";
+import { PiStudentBold } from "react-icons/pi";
+import { MdOutlineGrade } from "react-icons/md";
 type Snapshot = {
   activeStudentsToday: number;
   assignmentsSubmittedToday: number;
@@ -19,7 +20,7 @@ export default function TodaySnapshot({ snapshot }: Props) {
     {
       label: "Active Students Today",
       value: snapshot.activeStudentsToday,
-      icon: Sparkles,
+      icon: PiStudentBold,
       color: "text-amber-500",
       bgColor: "bg-amber-500/10",
     },
@@ -33,7 +34,7 @@ export default function TodaySnapshot({ snapshot }: Props) {
     {
       label: "Assignments Graded Today",
       value: snapshot.assignmentsGradedToday,
-      icon: CheckCircle2,
+      icon: MdOutlineGrade,
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
     },

@@ -177,7 +177,6 @@ export async function saveGeneratedMaterial(
   }
   if (!finalUserId) throw new Error("Unauthorized");
 
-  // We use a try-catch for metadata in case the column is missing in older schemas
   const payload: import("@/types/json").JsonObject = {
     user_id: finalUserId,
     chat_session_id: sessionId,
@@ -186,22 +185,11 @@ export async function saveGeneratedMaterial(
     file_url: fileUrl,
   };
 
-  // Only add metadata if we're sure about it, or wrap in a way that doesn't break the whole insert
-  if (metadata) {
-    payload.metadata = metadata;
-  }
-
   const { error } = await supabase.from("generated_materials").insert(payload);
 
   if (error) {
-    console.warn("Error saving generated material:", error.message);
-    // If metadata column is missing, try saving without it as fallback
-    if (error.message.includes("metadata")) {
-      delete payload.metadata;
-      await supabase.from("generated_materials").insert(payload);
-    } else {
-      throw error;
-    }
+    console.error("Error saving generated material:", error.message);
+    throw error;
   }
 }
 

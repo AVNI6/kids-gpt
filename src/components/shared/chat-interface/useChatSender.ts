@@ -227,24 +227,41 @@ export function useChatSender({
 
       try {
         // Detect explicit image creation requests.
-        const hasCreationVerb =
-          /(draw|create|generate|make|show me|paint|sketch|produce|design|illustrate|visualize|render)/i.test(
-            currentInput
+        const queryLower = currentInput.trim().toLowerCase();
+
+        const hasAnalysisIntent =
+          /(explain|describe|what\s+is|tell\s+me|analyze|analyse|discuss|identify|who|why|how|where|when|detail|in\s+(the\s+)?(image|photo|picture|drawing|illustration)|about\s+(the\s+)?(image|photo|picture|drawing|illustration)|previous\s+(image|photo|picture|drawing|illustration)|above\s+(image|photo|picture|drawing|illustration))/i.test(
+            queryLower
+          );
+
+        const hasDirectCreation =
+          /(draw|paint|sketch|illustrate|render|visualize)\s+(a|an|the|some)?\s*[a-z0-9]/i.test(
+            queryLower
+          );
+
+        const hasRequestVerb =
+          /(draw|create|generate|make|show|paint|sketch|produce|design|illustrate|visualize|render|want|wanted|need|display|give\s+me|fetch)/i.test(
+            queryLower
           );
         const hasVisualNoun =
           /(image|picture|drawing|painting|photo|illustration|artwork|graphic|visual|portrait|scene|diagram)/i.test(
-            currentInput
+            queryLower
           );
-        const hasAnalysisIntent =
-          /(explain|describe|what is|tell me about|analyze|analyse|discuss|identify|who is|who's|character|detail|details\s+of|generated|created|made|drawn|painted|sketched|illustrated|visualized|rendered|in\s+(the\s+)?(image|photo|picture|drawing|illustration)|of\s+(the\s+)?(image|photo|picture|drawing|illustration)|from\s+(the\s+)?(image|photo|picture|drawing|illustration)|about\s+(the\s+)?(image|photo|picture|drawing|illustration)|above\s+(image|photo|picture|drawing|illustration)|previous\s+(image|photo|picture|drawing|illustration)|that\s+(image|photo|picture|drawing|illustration)|this\s+(image|photo|picture|drawing|illustration))/i.test(
-            currentInput
+
+        const hasOfPattern =
+          /(image|picture|photo|illustration|drawing|painting|sketch|graphic|portrait|diagram)\s+of/i.test(
+            queryLower
           );
+
+        const isShortVisualNoun = hasVisualNoun && queryLower.length < 40;
 
         const isImageRequest =
           !currentImage &&
-          hasCreationVerb &&
-          (hasVisualNoun || currentInput.toLowerCase().includes("draw ")) &&
-          !hasAnalysisIntent;
+          !hasAnalysisIntent &&
+          (hasDirectCreation ||
+            (hasRequestVerb && hasVisualNoun) ||
+            hasOfPattern ||
+            isShortVisualNoun);
 
         const apiUrl = isImageRequest ? "/api/generate-image" : "/api/chat";
         const bodyPayload = isImageRequest
@@ -385,24 +402,29 @@ export function useChatSender({
               try {
                 const isImage =
                   aiResponseContent.startsWith("https://image.pollinations.ai/") ||
-                  aiResponseContent.startsWith("https://pollinations.ai/");
+                  aiResponseContent.startsWith("https://pollinations.ai/") ||
+                  aiResponseContent.startsWith("data:image/");
 
                 if (isImage) {
                   try {
-                    const imgRes = await fetch(aiResponseContent);
-                    const imgBlob = await imgRes.blob();
-                    if (!user?.id) throw new Error("Missing user id for image upload");
-                    const storageFileName = getUniqueStoragePath(
-                      user.id,
-                      sessionId,
-                      "jpg",
-                      "image"
-                    );
-                    const imgAttachmentUrl = await uploadFileToStorage(
-                      imgBlob,
-                      storageFileName,
-                      user.id
-                    );
+                    let imgAttachmentUrl = aiResponseContent;
+
+                    if (aiResponseContent.startsWith("data:image/")) {
+                      const imgRes = await fetch(aiResponseContent);
+                      const imgBlob = await imgRes.blob();
+                      if (!user?.id) throw new Error("Missing user id for image upload");
+                      const storageFileName = getUniqueStoragePath(
+                        user.id,
+                        sessionId,
+                        "jpg",
+                        "image"
+                      );
+                      imgAttachmentUrl = await uploadFileToStorage(
+                        imgBlob,
+                        storageFileName,
+                        user.id
+                      );
+                    }
 
                     // Update Redux state and cache with the permanent URL so the local client has it
                     dispatch(
@@ -502,8 +524,24 @@ export function useChatSender({
                   }
 
                   if (prompt) {
-                    aiResponseContent = `https://pollinations.ai/p/${encodeURIComponent(prompt)}`;
-                    isImageResponse = true;
+                    try {
+                      const imageRes = await fetch("/api/generate-image", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ prompt }),
+                      });
+                      if (imageRes.ok) {
+                        const imageData = await imageRes.json();
+                        if (imageData && imageData.image) {
+                          aiResponseContent = imageData.image;
+                          isImageResponse = true;
+                        }
+                      }
+                    } catch (e) {
+                      console.error("Failed to generate image from tool call:", e);
+                      aiResponseContent = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologo=true`;
+                      isImageResponse = true;
+                    }
                   }
                 }
               }
@@ -559,20 +597,24 @@ export function useChatSender({
                 if (isImageResponse) {
                   (async () => {
                     try {
-                      const imgRes = await fetch(aiResponseContent);
-                      const imgBlob = await imgRes.blob();
-                      if (!user?.id) throw new Error("Missing user id for image upload");
-                      const storageFileName = getUniqueStoragePath(
-                        user.id,
-                        sessionId,
-                        "jpg",
-                        "image"
-                      );
-                      const imgAttachmentUrl = await uploadFileToStorage(
-                        imgBlob,
-                        storageFileName,
-                        user.id
-                      );
+                      let imgAttachmentUrl = aiResponseContent;
+
+                      if (aiResponseContent.startsWith("data:image/")) {
+                        const imgRes = await fetch(aiResponseContent);
+                        const imgBlob = await imgRes.blob();
+                        if (!user?.id) throw new Error("Missing user id for image upload");
+                        const storageFileName = getUniqueStoragePath(
+                          user.id,
+                          sessionId,
+                          "jpg",
+                          "image"
+                        );
+                        imgAttachmentUrl = await uploadFileToStorage(
+                          imgBlob,
+                          storageFileName,
+                          user.id
+                        );
+                      }
 
                       // Update Redux state and cache with the permanent URL so the local client has it
                       dispatch(
