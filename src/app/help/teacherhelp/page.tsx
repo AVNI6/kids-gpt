@@ -123,25 +123,6 @@ export default function TeacherHelpPage() {
             </AccordionItem>
           </Accordion>
         </section>
-        {/* 
-        <Card className="bg-gradient-to-r from-sky-600 to-sky-700 text-white border-0 rounded-3xl overflow-hidden shadow-xl shadow-sky-500/20">
-          <CardContent className="py-10 px-8 text-center space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-3xl font-black">Still have questions?</h3>
-              <p className="text-sky-50 text-lg font-medium">
-                Our support team is available to help your classroom succeed.
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <Button
-                variant="secondary"
-                className="rounded-full px-8 h-12 text-sky-700 font-bold hover:bg-white transition-colors"
-              >
-                Email Support
-              </Button>
-            </div>
-          </CardContent>
-        </Card> */}
       </div>
     </main>
   );

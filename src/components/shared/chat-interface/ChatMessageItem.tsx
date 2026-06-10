@@ -35,6 +35,26 @@ const ChatMessageItem = React.memo(
     isUserLoggedIn,
     userProfile,
   }: ChatMessageItemProps) {
+    const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
+    const [previewImageUrl, setPreviewImageUrl] = React.useState("");
+
+    const handleDownloadImage = React.useCallback(async (url: string) => {
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = `illustration_${Date.now()}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      } catch (error) {
+        console.error("Failed to download image:", error);
+      }
+    }, []);
+
     return (
       <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
         <div
@@ -67,14 +87,20 @@ const ChatMessageItem = React.memo(
             className={`flex flex-col gap-2 overflow-x-auto ${isUser ? "items-end" : "items-start"}`}
           >
             {message.uploadedImage && (
-              <Image
-                src={message.uploadedImage}
-                alt="Uploaded"
-                width={128}
-                height={128}
-                className="w-32 h-32 object-cover rounded-2xl shadow-sm border border-border"
-                unoptimized
-              />
+              <div className="relative group cursor-pointer overflow-hidden rounded-2xl">
+                <Image
+                  src={message.uploadedImage}
+                  alt="Uploaded"
+                  width={128}
+                  height={128}
+                  className="w-32 h-32 object-cover rounded-2xl shadow-sm border border-border transition-transform duration-300 group-hover:scale-[1.02]"
+                  unoptimized
+                  onClick={() => {
+                    setPreviewImageUrl(message.uploadedImage!);
+                    setIsPreviewOpen(true);
+                  }}
+                />
+              </div>
             )}
 
             {(message.content || message.isImage || message.role === "model") && (
@@ -86,40 +112,39 @@ const ChatMessageItem = React.memo(
                 }`}
               >
                 {showModelHeader && (
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-1.5 text-sky-600 font-bold text-sm">
-                      <Bot className="w-4 h-4" /> AI Buddy
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(message.id, message.content)}
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      title="Copy response"
-                    >
-                      {isCopied ? (
-                        <>
-                          <Check className="w-3.5 h-3.5" /> Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" /> Copy
-                        </>
-                      )}
-                    </button>
+                  <div className="flex items-center gap-1.5 text-sky-600 font-bold text-sm mb-2">
+                    <Bot className="w-4 h-4" /> AI Buddy
                   </div>
                 )}
 
                 {!isUser ? (
                   <div className="w-full text-foreground space-y-1 overflow-hidden font-medium">
                     {message.isImage ? (
-                      <Image
-                        src={message.content}
-                        alt="Generated Illustration"
-                        width={400}
-                        height={400}
-                        className="rounded-xl max-w-full md:max-w-xs shadow-sm"
-                        unoptimized
-                      />
+                      <div className="flex flex-col gap-2">
+                        <div className="relative group cursor-pointer overflow-hidden rounded-xl">
+                          <Image
+                            src={message.content}
+                            alt="Generated Illustration"
+                            width={400}
+                            height={400}
+                            className="rounded-xl max-w-full md:max-w-xs shadow-sm transition-transform duration-300 group-hover:scale-[1.02]"
+                            unoptimized
+                            onClick={() => {
+                              setPreviewImageUrl(message.content);
+                              setIsPreviewOpen(true);
+                            }}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => handleDownloadImage(message.content)}
+                          variant="secondary"
+                          size="sm"
+                          className="flex items-center gap-1.5 w-fit rounded-lg text-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 mt-1"
+                        >
+                          <Download className="w-3.5 h-3.5" /> Download Image
+                        </Button>
+                      </div>
                     ) : (
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
@@ -274,9 +299,9 @@ const ChatMessageItem = React.memo(
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {message.content && <p>{message.content}</p>}
+                    {message.content && <p className="m-0 leading-relaxed">{message.content}</p>}
                     {message.fileName && (
-                      <div className="flex items-center gap-2 p-2 bg-white/20 rounded-xl text-xs font-bold w-fit">
+                      <div className="flex items-center gap-2 p-2 bg-white/20 rounded-xl text-xs font-bold w-fit mt-1">
                         <FileText className="w-3 h-3" /> {message.fileName}
                       </div>
                     )}
@@ -284,8 +309,85 @@ const ChatMessageItem = React.memo(
                 )}
               </div>
             )}
+
+            {/* Actions Row BELOW the Bubble */}
+            {message.content && !message.isImage && (
+              <div
+                className={`flex items-center gap-2 px-1.5 text-slate-400 dark:text-slate-500 mt-0.5 ${
+                  isUser ? "justify-end" : "justify-start"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleCopy(message.id, message.content)}
+                  className="flex items-center justify-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-150"
+                  title={isCopied ? "Copied!" : "Copy message"}
+                >
+                  {isCopied ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
+        {isPreviewOpen && (
+          <div
+            className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm p-4 cursor-zoom-out"
+            onClick={() => setIsPreviewOpen(false)}
+          >
+            <div
+              className="relative max-w-4xl max-h-[90vh] flex flex-col items-center cursor-default"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={() => setIsPreviewOpen(false)}
+                className="absolute -top-12 right-0 bg-white/10 hover:bg-white/20 hover:scale-105 active:scale-95 text-white rounded-full p-2.5 transition-all duration-200"
+                aria-label="Close preview"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              {/* Preview image */}
+              <img
+                src={previewImageUrl}
+                alt="Image Preview"
+                className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+              />
+
+              {/* Action buttons inside preview */}
+              <div className="mt-4 flex gap-3">
+                <Button
+                  onClick={() => handleDownloadImage(previewImageUrl)}
+                  className="bg-sky-500 hover:bg-sky-600 text-white rounded-xl px-4 py-2 font-semibold flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" /> Download
+                </Button>
+                <Button
+                  onClick={() => setIsPreviewOpen(false)}
+                  variant="secondary"
+                  className="rounded-xl px-4 py-2 font-semibold"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   },
