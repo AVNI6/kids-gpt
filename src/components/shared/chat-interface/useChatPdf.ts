@@ -63,7 +63,13 @@ export function useChatPdf({
         setPdfStates((prev) => ({ ...prev, [messageId]: "downloading" }));
         const toastId = toast.loading("Downloading PDF...");
         try {
-          await downloadPdfFromUrl(message.attachmentUrl, downloadFileName);
+          let targetUrl = message.attachmentUrl;
+          if (targetUrl.includes("/object/public/materials/")) {
+            const relativePath = targetUrl.split("/object/public/materials/")[1];
+            const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
+            targetUrl = await getSignedResourceUrl(relativePath);
+          }
+          await downloadPdfFromUrl(targetUrl, downloadFileName);
           setPdfStates((prev) => ({ ...prev, [messageId]: "success" }));
           toast.success("PDF downloaded successfully! 🚀", { id: toastId });
           setTimeout(() => {
@@ -71,7 +77,18 @@ export function useChatPdf({
           }, 3000);
         } catch (err) {
           console.error("Direct download failed, opening in new tab:", err);
-          window.open(message.attachmentUrl, "_blank");
+          let targetUrl = message.attachmentUrl;
+          if (targetUrl.includes("/object/public/materials/")) {
+            try {
+              const relativePath = targetUrl.split("/object/public/materials/")[1];
+              const { getSignedResourceUrl } =
+                await import("@/lib/services/shared/storage.actions");
+              targetUrl = await getSignedResourceUrl(relativePath);
+            } catch {
+              // fallback to original if signed request fails
+            }
+          }
+          window.open(targetUrl, "_blank");
           setPdfStates((prev) => ({ ...prev, [messageId]: "success" }));
           toast.success("Opening PDF in a new tab...", { id: toastId });
           setTimeout(() => {

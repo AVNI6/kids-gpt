@@ -404,6 +404,32 @@ export async function notifyParentLimitReached(
   try {
     const supabase = await createClient();
 
+    // 1. Retrieve the authenticated user session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // 2. Verify caller identity / parent relationship
+    if (user.id !== childId) {
+      const { data: link } = await supabase
+        .from("parent_child_link")
+        .select("id")
+        .eq("parent_user_id", user.id)
+        .eq("child_user_id", childId)
+        .eq("is_approved", true)
+        .eq("is_active", true)
+        .is("deleted_at", null)
+        .maybeSingle();
+
+      if (!link) {
+        return { success: false, error: "Unauthorized screen time limit request." };
+      }
+    }
+
     // Step 1 — Calculate Start of Current Day in local server time
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
@@ -608,6 +634,19 @@ export async function startScreenSession(
       .single();
 
     if (insertError) {
+      // Gracefully handle concurrent starts by returning the existing active session
+      if (insertError.code === "23505") {
+        const { data: existingSession, error: checkError } = await supabase
+          .from("screen_time_sessions")
+          .select("id")
+          .eq("child_id", childId)
+          .eq("status", "ACTIVE")
+          .maybeSingle();
+
+        if (!checkError && existingSession) {
+          return { success: true, sessionId: existingSession.id };
+        }
+      }
       console.error("[startScreenSession] Insert session error:", insertError);
       return { success: false, error: insertError.message };
     }

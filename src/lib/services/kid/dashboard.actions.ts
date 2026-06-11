@@ -462,6 +462,33 @@ export async function createParentNotification(
   metadata: Record<string, unknown> = {}
 ) {
   const supabase = await getSupabaseClient();
+
+  // 1. Retrieve the authenticated user session
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  // 2. Verify caller identity / parent relationship
+  if (user.id !== childUserId) {
+    const { data: link } = await supabase
+      .from("parent_child_link")
+      .select("id")
+      .eq("parent_user_id", user.id)
+      .eq("child_user_id", childUserId)
+      .eq("is_approved", true)
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (!link) {
+      return { success: false, error: "Unauthorized notification trigger" };
+    }
+  }
+
   const { data: links, error: linkError } = await supabase
     .from("parent_child_link")
     .select("parent_user_id")

@@ -144,6 +144,20 @@ export default function KidClassroomWorkspaceClient({
     return `Mr/Ms. ${teacher.first_name || ""} ${teacher.last_name || ""}`.trim();
   };
 
+  const handleAccessResource = async (res: ClassroomResource) => {
+    if (res.storage_path) {
+      try {
+        const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
+        const url = await getSignedResourceUrl(res.storage_path);
+        window.open(url, "_blank");
+      } catch (err) {
+        toast.error("Failed to generate secure download link.");
+      }
+    } else {
+      window.open(res.resource_url, "_blank");
+    }
+  };
+
   // Overview Tab Calculations
   const completedCount = assignments.filter(
     (a) => a.submission_id && a.submitted_at !== null
@@ -761,10 +775,8 @@ export default function KidClassroomWorkspaceClient({
                         </p>
                       )}
 
-                      <a
-                        href={res.resource_url}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        onClick={() => handleAccessResource(res)}
                         className={cn(
                           buttonVariants({ variant: "outline", size: "sm" }),
                           "rounded-xl w-full border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 font-bold text-xs h-9 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
@@ -772,7 +784,7 @@ export default function KidClassroomWorkspaceClient({
                       >
                         <span>Access File</span>
                         <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
+                      </button>
                     </CardContent>
                   </Card>
                 );

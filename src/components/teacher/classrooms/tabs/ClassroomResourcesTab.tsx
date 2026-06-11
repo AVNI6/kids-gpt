@@ -203,6 +203,20 @@ export default function ClassroomResourcesTab({
     }
   };
 
+  const handleAccessResource = async (res: ClassroomResource) => {
+    if (res.storage_path) {
+      try {
+        const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
+        const url = await getSignedResourceUrl(res.storage_path);
+        window.open(url, "_blank");
+      } catch (err) {
+        toast.error("Failed to generate secure download link.");
+      }
+    } else {
+      window.open(res.resource_url, "_blank");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -498,18 +512,16 @@ export default function ClassroomResourcesTab({
                     </p>
                   )}
 
-                  <a
-                    href={res.resource_url}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    onClick={() => handleAccessResource(res)}
                     className={cn(
                       buttonVariants({ variant: "outline", size: "sm" }),
-                      "rounded-xl w-full border-slate-200 dark:border-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs h-9 shadow-xs flex items-center justify-center gap-1.5"
+                      "rounded-xl w-full border-slate-200 dark:border-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs h-9 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
                     )}
                   >
                     <span>Access Resource</span>
                     <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+                  </button>
                 </CardContent>
               </Card>
             );
