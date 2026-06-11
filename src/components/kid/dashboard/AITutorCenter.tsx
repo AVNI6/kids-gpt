@@ -1,7 +1,7 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Skeleton } from "@/components/shared/ui/skeleton";
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Sparkles, Send, Mic, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 

@@ -6,11 +6,15 @@ interface PageProps {
   params: Promise<{
     id: string;
   }>;
+  searchParams: Promise<{
+    assignment_id?: string;
+  }>;
 }
 
-export default async function ScienceActivityPage({ params }: PageProps) {
+export default async function ScienceActivityPage({ params, searchParams }: PageProps) {
   // Await params as required by Next.js 15/16 rules
   const { id } = await params;
+  const { assignment_id } = await searchParams;
 
   if (!id) {
     notFound();
@@ -60,5 +64,11 @@ export default async function ScienceActivityPage({ params }: PageProps) {
   // Define a nice dynamic science lab title
   const scienceTitle = "Dynamic Science Lab 🔬🧪";
 
-  return <ScienceLabPage labTitle={scienceTitle} experiments={content.experiments} />;
+  return (
+    <ScienceLabPage
+      labTitle={scienceTitle}
+      experiments={content.experiments}
+      assignmentId={assignment_id}
+    />
+  );
 }

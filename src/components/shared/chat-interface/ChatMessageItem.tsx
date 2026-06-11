@@ -2,9 +2,9 @@
 
 import React from "react";
 import { Bot, Check, Copy, Download, FileText } from "lucide-react";
-import { Button } from "@/components/shared/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
-import { Spinner } from "@/components/shared/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Spinner } from "@/components/ui/spinner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";

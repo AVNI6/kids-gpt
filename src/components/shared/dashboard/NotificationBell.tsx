@@ -19,7 +19,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/shared/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import { getRelativeTime } from "@/hooks/shared/timeUtils";
 import { cn } from "@/lib/utils";
 

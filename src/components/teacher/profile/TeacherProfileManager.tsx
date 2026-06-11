@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Link2, PencilLine, Upload } from "lucide-react";
 
 import { linkByEmail, updateTeacherProfile } from "@/lib/services/kid/dashboard.actions";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
-import { AvatarUpload } from "@/components/shared/ui/avatar-upload";
-import { Button } from "@/components/shared/ui/button";
-import { Card } from "@/components/shared/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -16,9 +16,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shared/ui/dialog";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { DashboardUserProfile } from "@/types/kid";
 
 type Props = {

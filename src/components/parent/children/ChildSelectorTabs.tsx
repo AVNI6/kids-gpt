@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronDown, GraduationCap, Check } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/parent";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
@@ -12,7 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/shared/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 
 type ChildSelectorTabsProps = {
   linkedChildren: LinkedChildProfile[];

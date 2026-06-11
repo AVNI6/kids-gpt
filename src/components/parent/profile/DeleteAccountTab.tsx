@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { softDeleteChildConnection } from "@/lib/services/parent/parent.actions";
-import { Button } from "@/components/shared/ui/button";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/kid";

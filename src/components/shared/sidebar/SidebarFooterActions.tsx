@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { Settings, Sparkles, HelpCircle, Sun, Moon, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/shared/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
-import { SidebarFooter } from "@/components/shared/ui/sidebar";
+import { buttonVariants } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SidebarFooter } from "@/components/ui/sidebar";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Profile from "./Profile";
 

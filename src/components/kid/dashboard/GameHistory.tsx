@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Skeleton } from "@/components/shared/ui/skeleton";
-import { ScrollArea } from "@/components/shared/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trophy, Clock, Gamepad2, Activity } from "lucide-react";
 
 type GameHistoryItem = {

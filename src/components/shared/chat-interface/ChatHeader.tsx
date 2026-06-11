@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import ShareLink from "./ShareLink";
-import Navbar from "../ui/Navbar";
+import Navbar from "@/components/ui/Navbar";
 import Logo from "@/components/shared/logo/Logo";
 
 interface ChatHeaderProps {

@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import TeacherClassrooms from "@/components/teacher/classrooms/TeacherClassrooms";
 import NeedsAttention from "@/components/teacher/home/NeedsAttention";
 import TeacherActivityFeed from "@/components/teacher/home/TeacherActivityFeed";
-import { Skeleton } from "@/components/shared/ui/skeleton";
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 
 function ClassroomsSkeleton() {
   return (

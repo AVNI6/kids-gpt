@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { PlusCircle, Megaphone, Trash2 } from "lucide-react";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shared/ui/dialog";
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { createAnnouncement } from "@/lib/services/kid/classroom.actions";
 import type { ClassroomAnnouncement } from "@/types/classroom.types";

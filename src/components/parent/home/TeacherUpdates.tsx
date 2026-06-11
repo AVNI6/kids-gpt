@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Avatar, AvatarFallback } from "@/components/shared/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MessageSquare } from "lucide-react";
 
 export default async function TeacherUpdates() {

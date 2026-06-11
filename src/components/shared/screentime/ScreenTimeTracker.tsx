@@ -7,7 +7,7 @@ import {
   notifyParentLimitReached,
 } from "@/lib/services/shared/screentime.actions";
 import { Clock, Sun, Sparkles, Moon, EyeOff } from "lucide-react";
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { getLocalDateString } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 

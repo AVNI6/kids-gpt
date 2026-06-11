@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import { Puzzle, Star, Brain, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/shared/ui/button";
-import { Progress } from "@/components/shared/ui/progress";
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/common";
-import { saveKidActivityProgress } from "@/lib/services/kid/dashboard.actions";
-import { triggerConfettiSideCannons } from "@/components/shared/ui/confetti-side-cannons";
-import { toast } from "sonner";
+import VictoryModal from "@/components/shared/VictoryModal";
 
 interface OptionItem {
   label: string;
@@ -26,6 +25,7 @@ interface PuzzleItem {
 interface LogicPuzzlesPageProps {
   puzzleTitle?: string;
   puzzles?: PuzzleItem[];
+  assignmentId?: string;
 }
 
 const defaultPuzzles: PuzzleItem[] = [
@@ -61,12 +61,14 @@ const defaultPuzzles: PuzzleItem[] = [
 export default function LogicPuzzlesPage({
   puzzleTitle = "Logic Puzzles",
   puzzles = defaultPuzzles,
+  assignmentId,
 }: LogicPuzzlesPageProps) {
+  const router = useRouter();
   const [currentPuzzle, setCurrentPuzzle] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [xpReward, setXpReward] = useState<number>(150);
-  const hasClaimed = useRef(false);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
 
   useEffect(() => {
     getActivityXp("logic-puzzles").then(setXpReward);
@@ -87,39 +89,6 @@ export default function LogicPuzzlesPage({
 
   const progress = ((currentPuzzle + 1) / safePuzzles.length) * 100;
 
-  // Background Auto-Claiming Logic
-  useEffect(() => {
-    const isCompleted = selected !== null && currentPuzzle === safePuzzles.length - 1;
-    if (isCompleted && !hasClaimed.current) {
-      hasClaimed.current = true;
-      const autoClaim = async () => {
-        const scoreStr = `${Math.round((correctCount / safePuzzles.length) * 100)}%`;
-        try {
-          const slug = puzzleTitle
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)/g, "");
-
-          const res = await saveKidActivityProgress(
-            slug || "logic-puzzles",
-            xpReward,
-            puzzleTitle,
-            scoreStr
-          );
-          if (res.success) {
-            triggerConfettiSideCannons();
-            toast.success("Mission Completed! 🎉", {
-              description: `+${xpReward} XP automatically awarded!`,
-            });
-          }
-        } catch (err) {
-          console.error("Auto-claim error:", err);
-        }
-      };
-      autoClaim();
-    }
-  }, [selected, currentPuzzle, safePuzzles.length, correctCount, puzzleTitle, xpReward]);
-
   const handleNext = () => {
     if (currentPuzzle < safePuzzles.length - 1) {
       setCurrentPuzzle((prev) => prev + 1);
@@ -128,7 +97,22 @@ export default function LogicPuzzlesPage({
   };
 
   const handleFinish = () => {
-    window.location.href = APP_ROUTES.Activities;
+    setChallengeCompleted(true);
+  };
+
+  const handleFinishMission = () => {
+    if (assignmentId) {
+      router.push("/dashboard/kid");
+    } else {
+      router.push(APP_ROUTES.Activities);
+    }
+  };
+
+  const handleRestart = () => {
+    setCurrentPuzzle(0);
+    setSelected(null);
+    setCorrectCount(0);
+    setChallengeCompleted(false);
   };
 
   return (
@@ -237,6 +221,19 @@ export default function LogicPuzzlesPage({
           )}
         </div>
       </main>
+
+      <VictoryModal
+        isOpen={challengeCompleted}
+        onReplay={handleRestart}
+        onContinue={handleFinishMission}
+        xpEarned={Math.round((xpReward * correctCount) / (safePuzzles.length || 1))}
+        activitySlug="logic-puzzles"
+        activityTitle="Logic Puzzle"
+        score={`${Math.round((correctCount / (safePuzzles.length || 1)) * 100)}%`}
+        scoreDescription={`Super brain logic! You completed "${puzzleTitle}".`}
+        rewardsDescription={`${correctCount}/${safePuzzles.length} Correct Answers`}
+        assignmentId={assignmentId}
+      />
     </div>
   );
 }

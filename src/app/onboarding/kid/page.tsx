@@ -11,10 +11,10 @@ import {
   submitKidOnboarding,
   type KidOnboardingState,
 } from "@/lib/services/shared/profile.actions";
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
-import { AvatarUpload } from "@/components/shared/ui/avatar-upload";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { OnboardingLayout } from "@/components/shared/onboarding/onboarding-layout";
 
 const initialKidState: KidOnboardingState = { error: null };

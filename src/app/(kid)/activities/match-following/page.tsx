@@ -2,10 +2,10 @@
 
 import { useMatchGame } from "./hooks/useMatchGame";
 import { MatchBoard } from "./components/MatchBoard";
-import { ScoreCard } from "./components/ScoreCard";
+import VictoryModal from "@/components/shared/VictoryModal";
 import { MatchItem } from "./types";
-import { Button } from "@/components/shared/ui/button";
-import { Progress } from "@/components/shared/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, RotateCcw, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { APP_ROUTES } from "@/lib/constants/common";
@@ -28,22 +28,6 @@ export default function MatchFollowingPage({
   pairs = defaultPairs,
 }: MatchFollowingPageProps) {
   const game = useMatchGame({ pairs, matchTitle });
-
-  if (game.showScorecard) {
-    return (
-      <ScoreCard
-        pairs={pairs}
-        rightOrder={game.rightOrder}
-        connections={game.connections}
-        correctCount={game.correctCount}
-        scaledXpEarned={game.scaledXpEarned}
-        showAnswers={game.showAnswers}
-        toggleShowAnswers={game.toggleShowAnswers}
-        handleFinishMission={game.handleFinishMission}
-        resetGame={game.resetGame}
-      />
-    );
-  }
 
   return (
     <div className="h-full bg-background overflow-hidden flex flex-col relative min-h-screen">
@@ -147,6 +131,74 @@ export default function MatchFollowingPage({
           </div>
         </div>
       </main>
+
+      <VictoryModal
+        isOpen={game.showScorecard}
+        onReplay={game.resetGame}
+        onContinue={game.handleFinishMission}
+        xpEarned={game.scaledXpEarned}
+        activitySlug="match-following"
+        activityTitle="Match Following"
+        score={`${Math.round((game.correctCount / pairs.length) * 100)}%`}
+        scoreDescription={
+          game.correctCount === pairs.length
+            ? "Super connection wizard! You matched all pairs correctly and linked everything perfectly!"
+            : "You've successfully finished pairing! Let's check your results and grab your rewards."
+        }
+        rewardsDescription={`${game.correctCount}/${pairs.length} Correct Connections`}
+      >
+        <Button
+          onClick={game.toggleShowAnswers}
+          variant="ghost"
+          className="mt-2 text-orange-600 hover:bg-orange-500/10 font-black rounded-xl text-xs py-2 h-fit"
+        >
+          {game.showAnswers ? "Hide Answers 🙈" : "See Answers 🔍"}
+        </Button>
+
+        {game.showAnswers && (
+          <div className="mt-4 w-full text-left bg-orange-500/[0.02] dark:bg-orange-500/[0.01] rounded-[24px] p-4 border-2 border-dashed border-orange-500/20 animate-in slide-in-from-top-4 duration-300 max-h-[250px] overflow-y-auto pr-1">
+            <h3 className="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 select-none text-center">
+              Correct Pairings & Your Results 🧩
+            </h3>
+            <div className="space-y-3">
+              {pairs.map((item) => {
+                const matchedRightId = game.connections[item.id];
+                const userMatchedRightItem = game.rightOrder.find((r) => r.id === matchedRightId);
+                const isUserCorrect = matchedRightId === item.id;
+
+                return (
+                  <div
+                    key={`ans-${item.id}`}
+                    className="bg-card rounded-xl p-3 border-2 border-border/80 flex flex-col gap-2 shadow-sm"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                      <span className="font-extrabold text-xs text-foreground/90 whitespace-normal break-words leading-relaxed">
+                        {item.leftText}
+                      </span>
+                      <span className="hidden sm:inline text-muted-foreground/60 text-xs">➔</span>
+                      <span className="font-black text-xs text-emerald-600 whitespace-normal break-words leading-relaxed sm:text-right">
+                        {item.rightText}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-border/40 pt-1.5 text-[10px] font-bold">
+                      <span className="text-muted-foreground/75">Your Choice:</span>
+                      {isUserCorrect ? (
+                        <span className="text-emerald-600 flex items-center gap-1">
+                          Perfect Match! ✓
+                        </span>
+                      ) : (
+                        <span className="text-rose-500 flex items-center gap-1 whitespace-normal break-words text-right max-w-[200px]">
+                          {userMatchedRightItem ? userMatchedRightItem.rightText : "None"} ❌
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </VictoryModal>
     </div>
   );
 }

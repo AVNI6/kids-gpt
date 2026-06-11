@@ -18,13 +18,13 @@ import {
   School,
   Trophy,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Button, buttonVariants } from "@/components/shared/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/shared/ui/badge";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { submitAssignment } from "@/lib/services/kid/classroom.actions";
 import { toast } from "sonner";
 import {
@@ -35,7 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shared/ui/dialog";
+} from "@/components/ui/dialog";
 
 import type {
   StudentAssignment,

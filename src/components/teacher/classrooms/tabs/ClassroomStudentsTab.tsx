@@ -1,9 +1,9 @@
 "use client";
 
 import { Users } from "lucide-react";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Badge } from "@/components/shared/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { WorkspaceStudent } from "@/types/classroom.types";
 
 type Props = {

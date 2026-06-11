@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
-import { useSidebar } from "@/components/shared/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import NotificationBell, { type NotificationItem } from "./NotificationBell";
 import MobileNavDrawer from "./MobileNavDrawer";

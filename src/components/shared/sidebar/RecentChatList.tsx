@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { ScrollArea } from "@/components/shared/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatSessionRow } from "@/types/common";
 import RecentChatItem from "./RecentChatItem";
 

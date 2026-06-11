@@ -8,7 +8,7 @@ import { UserRole } from "@/types/common";
  */
 export async function generatePdfBlob(content: string, role: UserRole): Promise<Blob> {
   const { pdf } = await import("@react-pdf/renderer");
-  const { PdfDocument } = await import("@/components/shared/ui/PdfDocument");
+  const { PdfDocument } = await import("@/components/ui/PdfDocument");
 
   // Renders the PdfDocument component to PDF format
   const element = React.createElement(PdfDocument, {

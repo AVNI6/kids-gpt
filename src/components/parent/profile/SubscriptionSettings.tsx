@@ -8,10 +8,10 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
-import { Switch } from "@/components/shared/ui/switch";
-import { Badge } from "@/components/shared/ui/badge";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { CreditCard, ShieldCheck, AlertCircle, CheckCircle, Crown } from "lucide-react";
 
 export default function SubscriptionSettings() {

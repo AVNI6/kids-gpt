@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ChatSuggestionsProps {
   suggestions: string[];

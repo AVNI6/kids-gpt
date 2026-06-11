@@ -5,9 +5,9 @@ import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Star, Timer } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
-import { Badge } from "@/components/shared/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { kidActivities, activityColorStyles, activityButtonStyles } from "@/lib/kid-activities";
 import { APP_ROUTES } from "@/lib/constants/common";
 import ActivityTopicModal from "@/components/kid/activities/ActivityTopicModal";

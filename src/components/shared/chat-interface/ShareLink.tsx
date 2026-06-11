@@ -2,8 +2,8 @@
 
 import { Share2, Copy, Check } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shared/ui/dialog";
+} from "@/components/ui/dialog";
 
 interface ShareLinkProps {
   sessionId: string;

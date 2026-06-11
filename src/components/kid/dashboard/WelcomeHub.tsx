@@ -1,11 +1,11 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Skeleton } from "@/components/shared/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
-import { Button } from "@/components/shared/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Star, Sparkles, PlayCircle, Target } from "lucide-react";
 import Link from "next/link";
-import { Progress } from "@/components/shared/ui/progress";
-import StreakDisplay from "@/components/shared/ui/StreakDisplay";
+import { Progress } from "@/components/ui/progress";
+import StreakDisplay from "@/components/ui/StreakDisplay";
 
 type WelcomeHubProfile = {
   first_name?: string | null;

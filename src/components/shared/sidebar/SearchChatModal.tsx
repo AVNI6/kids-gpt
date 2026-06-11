@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { DialogPortal, DialogOverlay, DialogTitle } from "@/components/shared/ui/dialog";
+import { DialogPortal, DialogOverlay, DialogTitle } from "@/components/ui/dialog";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { Input } from "@/components/shared/ui/input";
+import { Input } from "@/components/ui/input";
 import { Search, MessageSquare } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
 import { useRouter } from "next/navigation";

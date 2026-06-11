@@ -10,8 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shared/ui/dialog";
-import { Button } from "@/components/shared/ui/button";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface DeleteSessionDialogProps {
   sessionId: string;

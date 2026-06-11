@@ -3,21 +3,23 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Star, Timer, Zap, ArrowLeft } from "lucide-react";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
-import { Badge } from "@/components/shared/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { kidActivities, activityButtonStyles, activityColorStyles } from "@/lib/kid-activities";
-import { useSidebar } from "@/components/shared/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import {
   getActivitySettings,
   type ActivityDbSettings,
 } from "@/lib/services/kid/activities/activity.actions";
 import { type ActivitySlug } from "@/types/activities.type";
 import ActivityTopicModal from "@/components/kid/activities/ActivityTopicModal";
+import QuickChallengeModal from "@/components/quick-challenge/QuickChallengeModal";
 
 export default function ActivitiesPage() {
   const router = useRouter();
   const [showTopicModal, setShowTopicModal] = useState(false);
+  const [showQuickChallenge, setShowQuickChallenge] = useState(false);
   const [activeActivitySlug, setActiveActivitySlug] = useState<ActivitySlug | null>(null);
   const [activitySettings, setActivitySettings] = useState<Record<string, ActivityDbSettings>>({});
   const { state, isMobile } = useSidebar();
@@ -192,16 +194,22 @@ export default function ActivitiesPage() {
 
       <div className="fixed bottom-8 right-8 group z-50">
         <Button
+          onClick={() => setShowQuickChallenge(true)}
           size="icon"
-          className="w-16 h-16 rounded-full bg-sky-600 hover:bg-sky-700 shadow-2xl"
+          className="w-16 h-16 rounded-full bg-sky-600 hover:bg-sky-700 shadow-2xl cursor-pointer"
         >
           <Zap className="w-8 h-8 group-hover:rotate-12 transition-transform" />
         </Button>
 
-        <div className="absolute right-20 top-3 bg-sky-600 text-white px-4 py-2 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute right-20 top-3 bg-sky-600 text-white px-4 py-2 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           Quick Challenge!
         </div>
       </div>
+
+      <QuickChallengeModal
+        isOpen={showQuickChallenge}
+        onClose={() => setShowQuickChallenge(false)}
+      />
     </main>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, AlertCircle, ArrowLeft, Brain } from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 
 // Import actions

@@ -1,7 +1,7 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Skeleton } from "@/components/shared/ui/skeleton";
-import { Badge } from "@/components/shared/ui/badge";
-import { Progress } from "@/components/shared/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Trophy, Star, Medal, Lock, Zap } from "lucide-react";
 
 export function AchievementsRewardsSkeleton() {

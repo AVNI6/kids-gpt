@@ -3,7 +3,7 @@
 import React from "react";
 import { MoreVertical, Edit2, Share2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChatSessionRow } from "@/types/common";
 
 interface RecentChatItemProps {

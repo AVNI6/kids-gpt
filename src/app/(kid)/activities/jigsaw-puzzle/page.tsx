@@ -19,9 +19,9 @@ import PuzzleBoard from "./components/PuzzleBoard";
 import PuzzleTile from "./components/PuzzleTile";
 import DifficultyControls from "./components/DifficultyControls";
 import HintOverlay from "./components/HintOverlay";
-import VictoryModal from "./components/VictoryModal";
+import VictoryModal from "@/components/shared/VictoryModal";
 import ThemeSelector from "./components/ThemeSelector";
-import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { JIGSAW_THEMES } from "@/lib/constants/JigsawThemes";
 
@@ -462,10 +462,15 @@ export default function JigsawPuzzlePage() {
       <VictoryModal
         isOpen={isSolved}
         onReplay={handleReset}
+        onContinue={handleBackToSetup}
         xpEarned={xpEarned}
-        activityId={JIGSAW_THEMES.find((p) => p.url === imageUrl)?.id || "custom-upload"}
-        gridSize={difficulty}
-        isClaimed={isClaimed}
+        activitySlug="jigsaw-puzzle"
+        activityTitle="Jigsaw Puzzle"
+        score="100%"
+        scoreDescription="You matched all the pieces perfectly and solved the puzzle!"
+        rewardsDescription={`${difficulty}x${difficulty} Grid Completion`}
+        jigsawGridSize={difficulty}
+        jigsawThemeName={JIGSAW_THEMES.find((p) => p.url === imageUrl)?.id || "custom-upload"}
         onClaimSuccess={() => setIsClaimed(true)}
       />
     </main>

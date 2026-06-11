@@ -4,7 +4,7 @@ import { ReactNode, useState } from "react";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/shared/sidebar/Sidebar";
-import { SidebarProvider, SidebarInset } from "@/components/shared/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import ScreenTimeTracker from "@/components/shared/screentime/ScreenTimeTracker";
 import DashboardNavbar from "@/components/shared/dashboard/DashboardNavbar";

@@ -1,12 +1,12 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
-import { Badge } from "@/components/shared/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/kid";
 import { displayAge } from "@/lib/utils/kid/childAge";
 import { displayGrade } from "@/lib/utils/kid/childGrade";
 import { getSafeXP } from "@/hooks/kid/useChildXP";
-import StreakDisplay from "@/components/shared/ui/StreakDisplay";
+import StreakDisplay from "@/components/ui/StreakDisplay";
 
 // --- Helpers ---
 const getInitials = (child: LinkedChildProfile) =>

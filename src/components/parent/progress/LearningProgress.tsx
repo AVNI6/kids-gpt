@@ -1,11 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/ui/card";
-import { Progress } from "@/components/shared/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { BrainCircuit, Target, Clock, CheckCircle2, Sparkles } from "lucide-react";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
 import { useParentAnalytics } from "@/hooks/parent/useParentAnalytics";
-import StreakDisplay from "@/components/shared/ui/StreakDisplay";
+import StreakDisplay from "@/components/ui/StreakDisplay";
 
 interface Recommendation {
   subject: string;

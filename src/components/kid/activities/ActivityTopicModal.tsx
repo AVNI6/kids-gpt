@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { X, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Badge } from "@/components/shared/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { ACTIVITY_TOPICS_PRESETS, ACTIVITY_UI_CONFIGS } from "@/lib/config/activity-topics";
 import {
   generateFlashcards,

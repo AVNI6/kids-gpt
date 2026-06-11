@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Lightbulb } from "lucide-react";
 
 export default async function SubjectProficiency() {

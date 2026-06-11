@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Skeleton } from "@/components/shared/ui/skeleton";
-import { Progress } from "@/components/shared/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 
 type SubjectMastery = {
   math?: number;

@@ -1,22 +1,21 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Beaker, CheckCircle2, FlaskConical, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/shared/ui/button";
-import { Progress } from "@/components/shared/ui/progress";
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/common";
-import { saveKidActivityProgress } from "@/lib/services/kid/dashboard.actions";
-import { triggerConfettiSideCannons } from "@/components/shared/ui/confetti-side-cannons";
-import { toast } from "sonner";
 import { type ScienceLabItem } from "@/types/activities.type";
+import VictoryModal from "@/components/shared/VictoryModal";
 
 interface ScienceLabPageProps {
   labTitle?: string;
   experiments?: ScienceLabItem[];
+  assignmentId?: string;
 }
 
 const defaultExperiments: ScienceLabItem[] = [
@@ -44,6 +43,7 @@ const defaultExperiments: ScienceLabItem[] = [
 export default function ScienceLabPage({
   labTitle = "Science Lab",
   experiments = defaultExperiments,
+  assignmentId,
 }: ScienceLabPageProps) {
   const router = useRouter();
   const [currentExp, setCurrentExp] = useState(0);
@@ -51,46 +51,12 @@ export default function ScienceLabPage({
   const [correctCount, setCorrectCount] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(160);
-  const hasClaimed = useRef(false);
 
   useEffect(() => {
     getActivityXp("science-lab").then(setXpReward);
   }, []);
 
   const safeExperiments = experiments.length > 0 ? experiments : defaultExperiments;
-
-  // Background Auto-Claiming Logic
-  useEffect(() => {
-    if (challengeCompleted && !hasClaimed.current) {
-      hasClaimed.current = true;
-      const autoClaim = async () => {
-        const scorePct = Math.round((correctCount / safeExperiments.length) * 100);
-        const scoreStr = `${scorePct}%`;
-        try {
-          const slug = labTitle
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)/g, "");
-
-          const res = await saveKidActivityProgress(
-            slug || "science-lab",
-            xpReward,
-            labTitle,
-            scoreStr
-          );
-          if (res.success) {
-            triggerConfettiSideCannons();
-            toast.success("Lab Mission Completed! 🎉", {
-              description: `+${xpReward} XP earned!`,
-            });
-          }
-        } catch (err) {
-          console.error("Auto-claim error:", err);
-        }
-      };
-      autoClaim();
-    }
-  }, [challengeCompleted, correctCount, safeExperiments.length, labTitle, xpReward]);
 
   const rawExp = safeExperiments[currentExp] || safeExperiments[0];
 
@@ -113,8 +79,12 @@ export default function ScienceLabPage({
     }
   };
 
-  const handleFinish = () => {
-    router.push(APP_ROUTES.Activities);
+  const handleFinishMission = () => {
+    if (assignmentId) {
+      router.push("/dashboard/kid");
+    } else {
+      router.push(APP_ROUTES.Activities);
+    }
   };
 
   const handleReset = () => {
@@ -122,78 +92,9 @@ export default function ScienceLabPage({
     setSelected(null);
     setCorrectCount(0);
     setChallengeCompleted(false);
-    hasClaimed.current = false;
   };
 
-  if (challengeCompleted) {
-    const scorePct = Math.round((correctCount / safeExperiments.length) * 100);
-    const scoreStr = `${scorePct}%`;
-
-    return (
-      <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4 py-8 relative">
-        <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-20 right-10 h-80 w-80 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
-
-        <Card className="border-4 border-emerald-500/30 shadow-2xl rounded-[2.5rem] bg-card text-card-foreground max-w-lg w-full overflow-hidden animate-in zoom-in duration-300 relative z-10">
-          <div className="bg-emerald-500/10 p-8 flex justify-center border-b-4 border-emerald-500/10">
-            <div className="bg-emerald-500 p-6 rounded-full shadow-lg relative animate-bounce">
-              <Beaker className="h-16 w-16 text-white" />
-            </div>
-          </div>
-          <CardContent className="p-8 text-center space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-black text-foreground tracking-tight">
-                Lab Mission Completed! 🔬🧪
-              </h2>
-              <p className="text-muted-foreground font-semibold text-sm">
-                You completed the science lab:{" "}
-                <span className="text-emerald-600 font-bold">&ldquo;{labTitle}&rdquo;</span>
-              </p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 bg-emerald-500/5 p-5 rounded-[2rem] border-2 border-emerald-500/10">
-              <div className="text-center space-y-1">
-                <span className="text-xs text-muted-foreground font-black uppercase tracking-wider">
-                  Solved
-                </span>
-                <p className="text-xl font-extrabold text-foreground">
-                  {correctCount} / {safeExperiments.length}
-                </p>
-              </div>
-              <div className="text-center space-y-1 border-x border-emerald-500/10 border-dashed">
-                <span className="text-xs text-muted-foreground font-black uppercase tracking-wider">
-                  Accuracy
-                </span>
-                <p className="text-xl font-extrabold text-emerald-600">{scoreStr}</p>
-              </div>
-              <div className="text-center space-y-1">
-                <span className="text-xs text-muted-foreground font-black uppercase tracking-wider">
-                  XP Reward
-                </span>
-                <p className="text-xl font-extrabold text-purple-600">+{xpReward} XP</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Button
-                onClick={handleReset}
-                variant="outline"
-                className="flex-1 h-14 rounded-2xl border-4 border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/5 font-extrabold text-base transition-all"
-              >
-                Study Again 🔄
-              </Button>
-              <Button
-                onClick={handleFinish}
-                className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-base shadow-[0_6px_0px_0px_#047857] active:translate-y-1 active:shadow-none transition-all"
-              >
-                Continue 🎉
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Render normal game view; VictoryModal handles completion celebrate state
 
   return (
     <div className="h-full bg-background overflow-hidden flex flex-col">
@@ -291,6 +192,19 @@ export default function ScienceLabPage({
           </div>
         </div>
       </main>
+
+      <VictoryModal
+        isOpen={challengeCompleted}
+        onReplay={handleReset}
+        onContinue={handleFinishMission}
+        xpEarned={Math.round((xpReward * correctCount) / (safeExperiments.length || 1))}
+        activitySlug="science-lab"
+        activityTitle="Science Lab"
+        score={`${Math.round((correctCount / (safeExperiments.length || 1)) * 100)}%`}
+        scoreDescription={`Super lab experiment! You completed "${labTitle}".`}
+        rewardsDescription={`${correctCount}/${safeExperiments.length} Correct Experiments`}
+        assignmentId={assignmentId}
+      />
     </div>
   );
 }

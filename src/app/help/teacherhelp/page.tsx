@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { ArrowLeft, School, WandSparkles, LineChart, FileDown } from "lucide-react";
 import { APP_ROUTES } from "@/lib/constants/common";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/shared/ui/accordion";
+} from "@/components/ui/accordion";
 
 export default function TeacherHelpPage() {
   return (

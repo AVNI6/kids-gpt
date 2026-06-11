@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Sparkles, PanelLeftClose, Copy, Check, PanelRightClose } from "lucide-react";
-import { Button, buttonVariants } from "@/components/shared/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   setSessions,
@@ -26,9 +26,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/shared/ui/dialog";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getSessionManager } from "@/lib/ai/session-manager";
@@ -37,7 +37,7 @@ import {
   SidebarContent,
   SidebarHeader,
   useSidebar,
-} from "@/components/shared/ui/sidebar";
+} from "@/components/ui/sidebar";
 import SearchChatModal from "./SearchChatModal";
 
 // Sub-components

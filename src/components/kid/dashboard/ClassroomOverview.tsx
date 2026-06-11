@@ -15,14 +15,14 @@ import {
   Sparkles,
   HelpCircle,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { joinClassroomByCode, leaveClassroom } from "@/lib/services/kid/classroom.actions";
-import { Badge } from "@/components/shared/ui/badge";
-import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import type { KidClassroomMembership } from "@/types/classroom.types";
 
