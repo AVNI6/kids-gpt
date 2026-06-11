@@ -19,19 +19,21 @@ export default function FactFusion({
   showResult,
 }: FactFusionProps) {
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
+    <div className="flex flex-col gap-5 sm:gap-6 w-full">
+      <div className="flex flex-col items-center text-center gap-1.5 sm:gap-2">
         <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 mb-1">
           <GitMerge className="w-6 h-6 animate-pulse" />
         </div>
-        <h3 className="text-xl font-black text-foreground">Fact Fusion ⚛️</h3>
-        <p className="text-xs text-muted-foreground">
+        <h3 className="text-lg sm:text-xl font-black text-foreground">Fact Fusion ⚛️</h3>
+        <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
           Combine the two clues to identify the subject!
         </p>
       </div>
 
-      <div className="bg-emerald-500/[0.03] dark:bg-emerald-500/[0.01] border-2 border-dashed border-emerald-500/20 rounded-2xl p-6 text-center shadow-xs">
-        <p className="text-base font-black text-foreground leading-relaxed">{data.clue}</p>
+      <div className="bg-emerald-500/[0.03] dark:bg-emerald-500/[0.01] border-2 border-dashed border-emerald-500/20 rounded-2xl p-4 sm:p-6 text-center shadow-xs w-full flex flex-col justify-center items-center">
+        <p className="text-sm sm:text-base font-black text-foreground leading-relaxed">
+          {data.clue}
+        </p>
       </div>
 
       <div className="flex flex-col gap-3 w-full">
