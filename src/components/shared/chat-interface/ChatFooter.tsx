@@ -1,40 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Send, Plus, X, FileText, BrainCircuit, Camera, Mic } from "lucide-react";
+import { Send, Plus, X, FileText, BrainCircuit, Camera } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-
-interface SpeechRecognitionEventLocal {
-  readonly resultIndex: number;
-  readonly results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionErrorEventLocal {
-  readonly error: string;
-  readonly message?: string;
-}
-
-interface SpeechRecognitionLocal extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onresult: ((ev: SpeechRecognitionEventLocal) => void) | null;
-  onerror: ((ev: SpeechRecognitionErrorEventLocal) => void) | null;
-  onend: (() => void) | null;
-  start(): void;
-  stop(): void;
-  abort(): void;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => SpeechRecognitionLocal;
-    webkitSpeechRecognition?: new () => SpeechRecognitionLocal;
-  }
-}
+import VoiceInput, { VoiceInputRef } from "./mic/VoiceInput";
 
 type Props = {
   onSend: (
@@ -67,59 +39,8 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
-
-  const [isListening, setIsListening] = useState(false);
-  const [isVoiceSupported, setIsVoiceSupported] = useState(false);
-  const recognitionRef = useRef<SpeechRecognitionLocal | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Initialize Speech Recognition
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognitionClass) {
-      setIsVoiceSupported(true);
-      const rec = new SpeechRecognitionClass();
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.lang = "en-US";
-
-      rec.onresult = (event: SpeechRecognitionEventLocal) => {
-        let interimTranscript = "";
-        let finalTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const result = event.results[i];
-          if (result.isFinal) {
-            finalTranscript += result[0].transcript;
-          } else {
-            interimTranscript += result[0].transcript;
-          }
-        }
-        if (finalTranscript) {
-          setInput((prev) => prev + (prev ? " " : "") + finalTranscript);
-        }
-      };
-
-      rec.onerror = (e: SpeechRecognitionErrorEventLocal) => {
-        console.error("Speech recognition error:", e);
-      };
-
-      rec.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = rec;
-    }
-  }, []);
-
-  // Stop voice recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
+  const voiceInputRef = useRef<VoiceInputRef>(null);
 
   // Auto-grow height of textarea based on content
   useEffect(() => {
@@ -140,16 +61,6 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
     },
   }));
 
-  const toggleVoiceInput = () => {
-    if (!recognitionRef.current) return;
-    if (isListening) {
-      recognitionRef.current.stop();
-    } else {
-      setIsListening(true);
-      recognitionRef.current.start();
-    }
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
@@ -163,9 +74,7 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
     setImage(null);
     setFileContent(null);
     setFileName(null);
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
+    voiceInputRef.current?.stop();
   }, [currentSessionId]);
 
   // Sync native file inputs when image/fileName state is cleared
@@ -242,9 +151,7 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
     if ((!input.trim() && !image && !fileName) || isLoading || isParsing || isAuthLoading) {
       return;
     }
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
+    voiceInputRef.current?.stop();
     onSend(input, image, fileContent, fileName);
     setInput("");
     setImage(null);
@@ -458,24 +365,12 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
               />
 
               <div className="flex items-center gap-1.5 mb-1 shrink-0">
-                {isVoiceSupported && (
-                  <Button
-                    type="button"
-                    onClick={toggleVoiceInput}
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "h-10 w-10 rounded-full transition-all shrink-0 active:scale-95",
-                      isListening
-                        ? "bg-red-500 text-white hover:bg-red-600 animate-pulse shadow-md"
-                        : "hover:bg-muted text-muted-foreground"
-                    )}
-                    suppressHydrationWarning={true}
-                    title={isListening ? "Stop listening" : "Start voice typing"}
-                  >
-                    <Mic className="w-4.5 h-4.5" />
-                  </Button>
-                )}
+                <VoiceInput
+                  ref={voiceInputRef}
+                  onTranscript={(text) => setInput((prev) => prev + (prev ? " " : "") + text)}
+                  currentSessionId={currentSessionId}
+                  disabled={isAuthLoading || isLoading || isParsing}
+                />
 
                 <Button
                   onClick={handleSend}
