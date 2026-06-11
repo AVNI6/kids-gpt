@@ -2,10 +2,10 @@
 
 import React from "react";
 import Link from "next/link";
-import { Menu } from "lucide-react";
 import ShareLink from "./ShareLink";
 import Navbar from "@/components/ui/Navbar";
 import Logo from "@/components/shared/logo/Logo";
+import { Menu } from "lucide-react";
 
 interface ChatHeaderProps {
   openMobile: boolean;
@@ -21,9 +21,9 @@ export default function ChatHeader({ currentSessionId, toggleSidebar }: ChatHead
           onClick={toggleSidebar}
           title="Open Chat Sidebar"
           suppressHydrationWarning
-          className="lg:hidden h-10 w-10 rounded-xl text-white flex items-center justify-center shrink-0 shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer border-none bg-sky-500 hover:bg-sky-600 shadow-sky-500/20"
+          className="lg:hidden h-7 w-7 rounded-lg text-white flex items-center justify-center shrink-0 shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer border-none bg-sky-500 hover:bg-sky-600 shadow-sky-500/20"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-4 h-4" />
         </button>
         <Link href="/" prefetch={false} className="flex items-center gap-2 shrink-0">
           <Logo size="sm" iconType="none" text="ChatGPT Kids" />

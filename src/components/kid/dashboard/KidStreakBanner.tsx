@@ -16,15 +16,15 @@ export default async function KidStreakBanner() {
   const greetingName = stats.first_name ?? "there";
 
   return (
-    <Card className="overflow-hidden rounded-[32px] border-amber-200/70 bg-linear-to-br from-amber-50 via-yellow-50 to-white shadow-sm dark:border-slate-800 dark:bg-linear-to-br dark:from-slate-900 dark:to-slate-950">
+    <Card className="overflow-hidden rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm">
       <CardContent className="flex flex-col gap-6 p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between min-w-0">
         <div className="flex items-center gap-4 min-w-0 flex-1">
           <Avatar
             size="lg"
-            className="h-16 w-16 rounded-3xl border-2 border-white shadow-lg shadow-amber-200/60 dark:border-slate-800 dark:shadow-none shrink-0"
+            className="h-16 w-16 rounded-3xl border-2 border-white shadow-md dark:border-slate-800 dark:shadow-none shrink-0"
           >
             <AvatarImage src={stats.avatar_url ?? undefined} />
-            <AvatarFallback className="rounded-3xl bg-linear-to-br from-amber-400 to-yellow-500 text-white font-black">
+            <AvatarFallback className="rounded-3xl bg-slate-200 text-slate-800 font-black dark:bg-slate-800 dark:text-slate-200">
               {getInitials(stats.first_name, stats.last_name)}
             </AvatarFallback>
           </Avatar>
@@ -41,18 +41,15 @@ export default async function KidStreakBanner() {
         <div className="grid gap-3 grid-cols-2 lg:w-[340px] shrink-0">
           <StreakDisplay streak={stats.current_streak} variant="kid-card" />
 
-          <div className="rounded-[28px] border border-amber-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
-            <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+          <div className="rounded-[28px] border border-slate-200/60 bg-white/90 p-4 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/40">
+            <div className="text-xs font-bold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-400">
               Experience points
             </div>
             <div className="mt-3 text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
               {getSafeXP(stats.total_experience_points)}
             </div>
-            <div className="mt-3 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-              <Badge
-                variant="secondary"
-                className="rounded-full px-2.5 py-1 dark:bg-slate-850 dark:text-slate-300"
-              >
+            <div className="mt-3 flex items-center gap-2 text-sm">
+              <Badge className="rounded-full px-2.5 py-1 bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/30 border-none">
                 Longest: {getSafeStreak(stats.longest_streak)} days
               </Badge>
             </div>

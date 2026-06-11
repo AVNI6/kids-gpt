@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { BrainTeaserData } from "./types";
-import { Sparkles, Brain, Lightbulb } from "lucide-react";
+import { Brain, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface BrainTeaserProps {
@@ -21,19 +21,21 @@ export default function BrainTeaser({
   const [showHint, setShowHint] = useState(false);
 
   return (
-    <div className="flex flex-col gap-5 sm:gap-6 w-full">
+    <div className="flex flex-col gap-3.5 sm:gap-4.5 w-full">
       <div className="flex flex-col items-center text-center gap-1.5 sm:gap-2">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 mb-1">
-          <Brain className="w-6 h-6 animate-pulse" />
+        <div className="inline-flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 mb-0.5">
+          <Brain className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
         </div>
-        <h3 className="text-lg sm:text-xl font-black text-foreground">Brain Teaser 🧠</h3>
-        <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
+        <h3 className="text-[clamp(1.125rem,4vw,1.375rem)] font-black text-foreground">
+          Brain Teaser 🧠
+        </h3>
+        <p className="text-[clamp(0.6875rem,2.5vw,0.8125rem)] text-muted-foreground leading-relaxed max-w-[280px] sm:max-w-none">
           Think outside the box to solve this tricky riddle!
         </p>
       </div>
 
-      <div className="bg-purple-500/[0.03] dark:bg-purple-500/[0.01] border-2 border-dashed border-purple-500/20 rounded-2xl p-4 sm:p-6 text-center shadow-xs w-full flex flex-col items-center gap-3">
-        <p className="text-base sm:text-lg font-black text-foreground leading-relaxed">
+      <div className="bg-purple-500/[0.03] dark:bg-purple-500/[0.01] border-2 border-dashed border-purple-500/20 rounded-2xl p-3.5 sm:p-4.5 text-center shadow-xs w-full flex flex-col items-center gap-3">
+        <p className="text-[clamp(0.95rem,3vw,1.125rem)] font-black text-foreground leading-relaxed">
           &ldquo;{data.question}&rdquo;
         </p>
 
@@ -47,22 +49,22 @@ export default function BrainTeaser({
               <Lightbulb className="w-3.5 h-3.5" /> Need a Clue?
             </button>
           ) : (
-            <div className="bg-purple-500/10 text-purple-600 rounded-xl px-4 py-2 text-xs font-bold border border-purple-500/20 max-w-xs animate-in zoom-in-95">
+            <div className="bg-purple-500/10 text-purple-600 rounded-xl px-4 py-2 text-xs font-bold border border-purple-500/20 max-w-[280px] sm:max-w-xs animate-in zoom-in-95">
               💡 Hint: {data.hint}
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 w-full">
+      <div className="flex flex-col gap-2 w-full">
         {data.options.map((option) => {
           const isSelected = selectedAnswer === option;
           const isCorrect = option === data.answer;
           const buttonStyle = showResult
             ? isCorrect
-              ? "bg-green-500 hover:bg-green-500 text-white border-green-600 scale-[1.01]"
+              ? "!bg-green-600 dark:!bg-green-600 !text-white !border-green-600 dark:!border-green-700 scale-[1.01]"
               : isSelected
-                ? "bg-red-500 hover:bg-red-500 text-white border-red-600 opacity-80"
+                ? "!bg-red-650 dark:!bg-red-650 !text-white !border-red-600 dark:!border-red-700 opacity-90"
                 : "opacity-40 border-border"
             : isSelected
               ? "border-purple-500 bg-purple-500/10 text-purple-600"
@@ -72,13 +74,11 @@ export default function BrainTeaser({
             <Button
               key={option}
               variant="outline"
-              disabled={showResult}
               onClick={() => onSelectAnswer(option)}
-              className={`min-h-[3.5rem] h-auto w-full rounded-2xl border-2 font-bold transition-all ${buttonStyle} cursor-pointer flex items-center justify-start text-left px-5 py-3.5 whitespace-normal text-sm sm:text-base leading-relaxed gap-3`}
+              className={`min-h-[3rem] sm:min-h-[3.25rem] h-auto w-full rounded-2xl border-2 font-bold transition-all ${buttonStyle} cursor-pointer flex items-center justify-start text-left px-4 sm:px-5 py-2.5 sm:py-3 whitespace-normal text-[clamp(0.8125rem,3vw,0.9375rem)] leading-relaxed gap-2.5 ${
+                showResult ? "pointer-events-none" : ""
+              }`}
             >
-              {showResult && isCorrect && (
-                <Sparkles className="h-5 w-5 fill-white text-white shrink-0" />
-              )}
               <span className="flex-1">{option}</span>
             </Button>
           );

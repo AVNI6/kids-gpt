@@ -33,11 +33,16 @@ export async function processActivityCompletion({
   jigsawThemeName,
   memoryMatchWorldId,
   memoryMatchStepNumber,
-}: CompletionOptions): Promise<{ success: boolean; error?: string; message?: string }> {
+}: CompletionOptions): Promise<{
+  success: boolean;
+  error?: string;
+  message?: string;
+  xpEarned?: number;
+}> {
   try {
     const supabase = await createClient();
 
-    function isSuccessfulRpcResult(data: unknown): data is { success: true } {
+    function isSuccessfulRpcResult(data: unknown): data is { success: true; xp_earned?: number } {
       return (
         typeof data === "object" &&
         data !== null &&
@@ -194,7 +199,7 @@ export async function processActivityCompletion({
 
       revalidatePath("/dashboard/kid");
       revalidatePath("/dashboard/parent");
-      return { success: true };
+      return { success: true, xpEarned: actualXp };
     }
 
     // =========================================================================
@@ -330,7 +335,7 @@ export async function processActivityCompletion({
 
       revalidatePath("/dashboard/kid");
       revalidatePath("/dashboard/parent");
-      return { success: true };
+      return { success: true, xpEarned: actualXp };
     }
 
     // =========================================================================
@@ -375,7 +380,11 @@ export async function processActivityCompletion({
 
       revalidatePath("/dashboard/kid");
       revalidatePath("/dashboard/parent");
-      return { success: true };
+      const xpEarned =
+        rpcData && typeof rpcData === "object" && "xp_earned" in rpcData
+          ? (rpcData as { xp_earned?: number }).xp_earned
+          : undefined;
+      return { success: true, xpEarned };
     }
 
     if (rpcError) {
@@ -527,7 +536,7 @@ export async function processActivityCompletion({
     revalidatePath("/dashboard/kid");
     revalidatePath("/dashboard/parent");
 
-    return { success: true };
+    return { success: true, xpEarned: actualXp };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : "An unexpected error occurred.";
     return { success: false, error: errorMsg };

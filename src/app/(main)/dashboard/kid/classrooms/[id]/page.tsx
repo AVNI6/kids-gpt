@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getStudentClassroomWorkspace } from "@/lib/services/kid/classroom.actions";
-import type { StudentWorkspaceData } from "@/types/classroom.types";
 import KidClassroomWorkspaceClient from "@/components/kid/dashboard/KidClassroomWorkspaceClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -88,7 +87,7 @@ export default async function KidClassroomDetailsPage({
   const classroomId = resolvedParams.id;
 
   return (
-    <main className="min-h-full bg-linear-to-br from-sky-50 via-white to-emerald-50 px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-50">
+    <main className="min-h-full bg-background px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8 dark:text-slate-50">
       <Suspense fallback={<WorkspaceSkeleton />}>
         <StudentWorkspaceLoader classroomId={classroomId} />
       </Suspense>

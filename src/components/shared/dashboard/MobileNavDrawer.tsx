@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,15 @@ export default function MobileNavDrawer({
   isLinkActive,
   dueCount = 0,
 }: MobileNavDrawerProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Auto-dismiss drawer on window scroll
   useEffect(() => {
     if (!isOpen) return;
@@ -33,7 +43,7 @@ export default function MobileNavDrawer({
     return () => window.removeEventListener("scroll", handleDismiss);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const brandTitle =
     role === "teacher" ? "Teacher Hub" : role === "parent" ? "Parent Hub" : "Explorer Hub";
@@ -50,7 +60,7 @@ export default function MobileNavDrawer({
         ? "Parent Mode Enforced"
         : "Student Mode";
 
-  return (
+  return createPortal(
     <div className="lg:hidden fixed inset-0 z-[9999] flex">
       {/* Backdrop */}
       <div
@@ -109,6 +119,7 @@ export default function MobileNavDrawer({
           </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
