@@ -14,25 +14,25 @@ interface WhoAmIProps {
 
 export default function WhoAmI({ data, selectedAnswer, onSelectAnswer, showResult }: WhoAmIProps) {
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
+    <div className="flex flex-col gap-5 sm:gap-6 w-full">
+      <div className="flex flex-col items-center text-center gap-1.5 sm:gap-2">
         <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 mb-1">
           <HelpCircle className="w-6 h-6 animate-pulse" />
         </div>
-        <h3 className="text-xl font-black text-foreground">Who Am I? 🎭</h3>
-        <p className="text-xs text-muted-foreground">
+        <h3 className="text-lg sm:text-xl font-black text-foreground">Who Am I? 🎭</h3>
+        <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
           Read the clues carefully and guess the correct identity!
         </p>
       </div>
 
-      <div className="bg-amber-500/[0.03] dark:bg-amber-500/[0.01] border-2 border-dashed border-amber-500/20 rounded-2xl p-5 space-y-3">
+      <div className="bg-amber-500/[0.03] dark:bg-amber-500/[0.01] border-2 border-dashed border-amber-500/20 rounded-2xl p-3.5 sm:p-5 flex flex-col gap-2.5 sm:gap-3 w-full">
         {data.clues.map((clue, idx) => (
           <div
             key={idx}
-            className="flex items-start gap-2.5 text-sm font-semibold text-foreground/95 bg-card border border-border p-3 rounded-xl shadow-xs"
+            className="flex items-start gap-2 text-xs sm:text-sm font-semibold text-foreground/95 bg-card border border-border p-2.5 sm:p-3 rounded-xl shadow-xs"
           >
             <span className="text-amber-500 font-black shrink-0 select-none">Clue {idx + 1}:</span>
-            <p className="leading-relaxed">{clue}</p>
+            <p className="leading-relaxed flex-1">{clue}</p>
           </div>
         ))}
       </div>

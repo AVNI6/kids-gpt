@@ -21,24 +21,24 @@ export default function BrainTeaser({
   const [showHint, setShowHint] = useState(false);
 
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
+    <div className="flex flex-col gap-5 sm:gap-6 w-full">
+      <div className="flex flex-col items-center text-center gap-1.5 sm:gap-2">
         <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 mb-1">
           <Brain className="w-6 h-6 animate-pulse" />
         </div>
-        <h3 className="text-xl font-black text-foreground">Brain Teaser 🧠</h3>
-        <p className="text-xs text-muted-foreground">
+        <h3 className="text-lg sm:text-xl font-black text-foreground">Brain Teaser 🧠</h3>
+        <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
           Think outside the box to solve this tricky riddle!
         </p>
       </div>
 
-      <div className="bg-purple-500/[0.03] dark:bg-purple-500/[0.01] border-2 border-dashed border-purple-500/20 rounded-2xl p-6 text-center shadow-xs">
-        <p className="text-lg font-black text-foreground leading-relaxed">
+      <div className="bg-purple-500/[0.03] dark:bg-purple-500/[0.01] border-2 border-dashed border-purple-500/20 rounded-2xl p-4 sm:p-6 text-center shadow-xs w-full flex flex-col items-center gap-3">
+        <p className="text-base sm:text-lg font-black text-foreground leading-relaxed">
           &ldquo;{data.question}&rdquo;
         </p>
 
         {/* Hint Section */}
-        <div className="mt-4 flex flex-col items-center">
+        <div className="flex flex-col items-center gap-2">
           {!showHint ? (
             <button
               onClick={() => setShowHint(true)}

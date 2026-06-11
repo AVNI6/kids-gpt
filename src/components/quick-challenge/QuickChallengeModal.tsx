@@ -455,7 +455,7 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
         if (!open) handleClose();
       }}
     >
-      <DialogContent className="max-w-md p-6 overflow-hidden rounded-3xl border-2 border-sky-200 bg-white dark:bg-slate-900 shadow-2xl z-50">
+      <DialogContent className="w-[95vw] sm:w-full max-w-md p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-3xl border-2 border-sky-200 bg-white dark:bg-slate-900 shadow-2xl z-50">
         <DialogHeader className="relative pb-2">
           <DialogTitle className="sr-only">Quick Challenge</DialogTitle>
           <DialogDescription className="sr-only">
@@ -463,7 +463,7 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="flex flex-col gap-5 sm:gap-6 w-full">
           {/* Game Views */}
           {gameType === "WhoAmI" && activeChallenge && (
             <WhoAmI
@@ -503,18 +503,7 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
 
           {/* Claiming & Continue Actions */}
           {showResult && (
-            <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
-              {isCorrect && (
-                <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 text-center">
-                  <p className="text-sm font-black text-green-600">Correct! +35 XP claimed! 🎉</p>
-                  {isClaiming && (
-                    <div className="text-[10px] text-green-600 font-semibold flex items-center justify-center gap-1 mt-1">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Saving reward...
-                    </div>
-                  )}
-                </div>
-              )}
-
+            <div className="flex flex-col gap-3 w-full animate-in fade-in slide-in-from-bottom-2">
               <Button
                 onClick={loadNextChallenge}
                 disabled={isClaiming}
