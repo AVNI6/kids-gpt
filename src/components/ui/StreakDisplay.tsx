@@ -49,10 +49,10 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
       // Golden themed block inside kid dash (KidStreakBanner.tsx)
       return (
         <div
-          className={`rounded-[28px] border border-amber-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none ${className}`}
+          className={`rounded-[28px] border border-slate-200/60 bg-white/90 p-4 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/40 dark:shadow-none ${className}`}
         >
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-amber-600 dark:text-amber-400">
-            <Flame className="h-4 w-4 fill-amber-500 text-amber-500 animate-pulse" />
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-400">
+            <Flame className="h-4 w-4 text-sky-700 dark:text-sky-400 animate-pulse" />
             Learning streak
           </div>
           <div className="mt-3 flex items-end gap-2">
@@ -64,7 +64,7 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
             </span>
           </div>
           <div className="mt-3 flex items-center gap-2">
-            <span className="inline-block rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700 dark:bg-amber-100 dark:text-amber-700 dark:bg-amber-950/60 dark:text-amber-400">
+            <span className="inline-block rounded-full bg-sky-100 px-2.5 py-1 text-xs font-bold text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
               Today&apos;s streak
             </span>
           </div>

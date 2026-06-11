@@ -1,13 +1,3 @@
--- Migration: Unify save_kid_activity_progress and drop legacy overloaded functions
--- Date: 2026-06-01
-
-BEGIN;
-
--- 1. Drop ALL legacy overloaded versions of save_kid_activity_progress to eliminate conflicts
-DROP FUNCTION IF EXISTS public.save_kid_activity_progress(uuid, varchar, varchar, varchar);
-DROP FUNCTION IF EXISTS public.save_kid_activity_progress(uuid, varchar, varchar, varchar, varchar);
-
--- 3. Create the unified, timezone-aware, relational save_kid_activity_progress RPC
 CREATE OR REPLACE FUNCTION public.save_kid_activity_progress(
   p_user_id uuid,
   p_activity_slug varchar,
@@ -22,15 +12,37 @@ DECLARE
   v_actual_xp int;
   v_score int;
   v_current_xp int;
-  v_current_streak int;
   v_longest_streak int;
-  v_last_activity_date date;
+  v_new_streak int;
   v_today date;
-  v_diff_days int;
   v_description varchar;
   v_response json;
+  v_tz varchar;
 BEGIN
-  -- 1. Get base XP reward, ID, and Title from activity_settings dynamically
+  -- 1. Validate and fallback timezone to prevent runtime database exceptions
+  v_tz := p_timezone;
+  IF v_tz IS NULL OR NOT EXISTS (SELECT 1 FROM pg_timezone_names WHERE name = v_tz) THEN
+    v_tz := 'Asia/Kolkata';
+  END IF;
+
+  -- Convert UTC now() to user local date
+  v_today := (timezone(v_tz, now()))::date;
+
+  -- 2. Row lock the profile row immediately to eliminate lost update race conditions
+  SELECT total_experience_points, longest_streak 
+  INTO v_current_xp, v_longest_streak
+  FROM public.profile
+  WHERE user_id = p_user_id
+  FOR UPDATE;
+
+  IF v_current_xp IS NULL THEN
+    v_current_xp := 0;
+  END IF;
+  IF v_longest_streak IS NULL THEN
+    v_longest_streak := 0;
+  END IF;
+
+  -- 3. Resolve the activity settings record
   SELECT id, xp_reward, title INTO v_activity_id, v_xp_reward, v_activity_title 
   FROM public.activity_settings 
   WHERE slug = p_activity_slug
@@ -49,7 +61,7 @@ BEGIN
      )
   ORDER BY (slug = p_activity_slug) DESC, id ASC
   LIMIT 1;
-  
+
   IF v_xp_reward IS NULL THEN
     v_xp_reward := 100; -- Default fallback
   END IF;
@@ -58,7 +70,22 @@ BEGIN
     v_activity_title := coalesce(p_activity_title, p_activity_slug);
   END IF;
 
-  -- 2. Parse score percentage from the string (e.g. "80%" -> 80)
+  -- 4. Idempotency Check: Ignore duplicate completions submitted within 5 seconds
+  IF v_activity_id IS NOT NULL AND EXISTS (
+    SELECT 1 FROM public.rewards
+    WHERE user_id = p_user_id
+      AND source_id = v_activity_id
+      AND created_at >= now() - INTERVAL '5 seconds'
+  ) THEN
+    RETURN json_build_object(
+      'success', true,
+      'xp_earned', 0,
+      'score', v_score,
+      'message', 'Duplicate completion ignored'
+    );
+  END IF;
+
+  -- 5. Parse the completion score
   IF p_score_str IS NOT NULL THEN
     BEGIN
       v_score := substring(p_score_str from '([0-9]+)')::integer;
@@ -67,7 +94,7 @@ BEGIN
     END;
   END IF;
 
-  -- 3. Calculate score-based XP reward
+  -- 6. Calculate score-based XP rewards
   IF v_score IS NOT NULL THEN
     IF v_score = 100 THEN
       v_actual_xp := v_xp_reward;
@@ -78,57 +105,9 @@ BEGIN
     v_actual_xp := v_xp_reward;
   END IF;
 
-  -- Ensure XP is non-negative
   v_actual_xp := greatest(0, v_actual_xp);
 
-  -- 4. Get profile details
-  SELECT total_experience_points, current_streak, longest_streak 
-  INTO v_current_xp, v_current_streak, v_longest_streak
-  FROM public.profile
-  WHERE user_id = p_user_id;
-
-  IF v_current_xp IS NULL THEN
-    v_current_xp := 0;
-  END IF;
-  IF v_current_streak IS NULL THEN
-    v_current_streak := 0;
-  END IF;
-  IF v_longest_streak IS NULL THEN
-    v_longest_streak := 0;
-  END IF;
-
-  -- 5. Calculate streak logic (timezone-aware)
-  v_today := (timezone(p_timezone, now()))::date;
-  
-  SELECT (timezone(p_timezone, created_at))::date INTO v_last_activity_date
-  FROM public.rewards
-  WHERE user_id = p_user_id AND source_id IS NOT NULL
-  ORDER BY created_at DESC
-  LIMIT 1;
-
-  IF v_last_activity_date IS NOT NULL THEN
-    IF v_last_activity_date = v_today THEN
-      -- Activity completed today, maintain streak
-      IF v_current_streak = 0 THEN
-        v_current_streak := 1;
-      END IF;
-    ELSE
-      v_diff_days := (v_today - v_last_activity_date);
-      IF v_diff_days = 1 THEN
-        v_current_streak := v_current_streak + 1;
-      ELSE
-        v_current_streak := 1;
-      END IF;
-    END IF;
-  ELSE
-    v_current_streak := 1;
-  END IF;
-
-  IF v_current_streak > v_longest_streak THEN
-    v_longest_streak := v_current_streak;
-  END IF;
-
-  -- 6. Insert reward record
+  -- 7. Insert the activity reward record
   v_description := 'Completed ' || p_activity_title;
   IF p_score_str IS NOT NULL THEN
     v_description := v_description || ' (Score: ' || p_score_str || ')';
@@ -150,10 +129,42 @@ BEGIN
     v_score
   );
 
-  -- 7. Update profile
+  -- 8. Compute local timezone-aware learning streak dynamically from history
+  -- The recursive CTE starts counting consecutive days backwards ending on today/yesterday.
+  WITH RECURSIVE active_dates AS (
+    SELECT DISTINCT (timezone(v_tz, created_at))::date AS active_date
+    FROM public.rewards
+    WHERE user_id = p_user_id AND source_id IS NOT NULL
+  ),
+  anchor_date AS (
+    SELECT active_date
+    FROM active_dates
+    WHERE active_date = v_today OR active_date = v_today - 1
+    ORDER BY active_date DESC
+    LIMIT 1
+  ),
+  streak_calc AS (
+    SELECT active_date, 1 AS run_length
+    FROM anchor_date
+
+    UNION ALL
+
+    SELECT d.active_date, s.run_length + 1
+    FROM streak_calc s
+    JOIN active_dates d ON d.active_date = s.active_date - 1
+  )
+  SELECT coalesce(MAX(run_length), 0) INTO v_new_streak
+  FROM streak_calc;
+
+  -- Enforce longest streak preservation
+  IF v_new_streak > v_longest_streak THEN
+    v_longest_streak := v_new_streak;
+  END IF;
+
+  -- 9. Update profile values
   UPDATE public.profile SET
     total_experience_points = v_current_xp + v_actual_xp,
-    current_streak = v_current_streak,
+    current_streak = v_new_streak,
     longest_streak = v_longest_streak,
     updated_at = now()
   WHERE user_id = p_user_id;
@@ -162,11 +173,12 @@ BEGIN
     'success', true,
     'xp_earned', v_actual_xp,
     'score', v_score,
-    'current_streak', v_current_streak,
+    'current_streak', v_new_streak,
     'longest_streak', v_longest_streak
   );
   
   RETURN v_response;
+
 EXCEPTION WHEN OTHERS THEN
   RETURN json_build_object(
     'success', false,
@@ -174,5 +186,3 @@ EXCEPTION WHEN OTHERS THEN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
-COMMIT;

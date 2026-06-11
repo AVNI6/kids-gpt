@@ -30,11 +30,6 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const isKid = mounted && isUserLoggedIn && userProfile?.role === "kid";
   const showKidNav = isKid;
 
-  const isKidPath =
-    pathname.startsWith("/dashboard/kid") ||
-    pathname.startsWith("/activities") ||
-    pathname.startsWith("/chat/kid");
-
   const layoutContent = (
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
       <div className="w-full h-screen flex bg-background text-foreground overflow-hidden">

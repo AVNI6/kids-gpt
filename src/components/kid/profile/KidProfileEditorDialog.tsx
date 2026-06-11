@@ -106,7 +106,7 @@ export default function KidProfileEditorDialog({ profile }: Props) {
             </p>
           ) : null}
 
-          <DialogFooter className="border-t bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
+          <DialogFooter className="px-6 py-4 bg-white dark:border-slate-800 dark:bg-slate-900">
             <Button type="submit" className="rounded-full px-6">
               <Upload className="mr-2 h-4 w-4" />
               Save changes

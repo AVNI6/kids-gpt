@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +18,7 @@ import BrainTeaser from "./BrainTeaser";
 import FactFusion from "./FactFusion";
 import Riddle from "./Riddle";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface QuickChallengeModalProps {
   isOpen: boolean;
@@ -413,7 +413,11 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
     setIsCorrect(correct);
 
     if (correct) {
-      await handleClaimReward();
+      // Trigger confetti instantly on correct answer for zero-delay response
+      cleanupConfettiRef.current = triggerConfettiSideCannons();
+
+      // Call reward integration in background
+      handleClaimReward();
     } else {
       toast.error("Oops! That's not correct. Try again next time!");
     }
@@ -432,9 +436,9 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
       });
 
       if (result.success) {
-        cleanupConfettiRef.current = triggerConfettiSideCannons();
+        const xp = result.xpEarned ?? 20;
         toast.success("Correct Answer! 🎉", {
-          description: "+35 XP awarded directly to your profile!",
+          description: `+${xp} XP awarded directly to your profile!`,
         });
       } else {
         toast.error("Could not claim XP reward.", {
@@ -455,69 +459,65 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
         if (!open) handleClose();
       }}
     >
-      <DialogContent className="w-[95vw] sm:w-full max-w-md p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-3xl border-2 border-sky-200 bg-white dark:bg-slate-900 shadow-2xl z-50">
-        <DialogHeader className="relative pb-2">
-          <DialogTitle className="sr-only">Quick Challenge</DialogTitle>
-          <DialogDescription className="sr-only">
-            A rapid-fire daily brain boost game to earn XP.
-          </DialogDescription>
+      <DialogContent className="w-[95vw] sm:w-full max-w-md p-0 overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl z-50 flex flex-col max-h-[85vh] sm:max-h-[80vh]">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Quick Challenge</DialogTitle>
+          <DialogDescription>A rapid-fire daily brain boost game to earn XP.</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-5 sm:gap-6 w-full">
-          {/* Game Views */}
-          {gameType === "WhoAmI" && activeChallenge && (
-            <WhoAmI
-              data={activeChallenge as WhoAmIData}
-              selectedAnswer={selectedString}
-              onSelectAnswer={handleSelectString}
-              showResult={showResult}
-            />
-          )}
+        <ScrollArea className="flex-1 w-full">
+          <div className="p-4.5 sm:p-6 flex flex-col gap-3.5 sm:gap-4.5 w-full">
+            {/* Game Views */}
+            {gameType === "WhoAmI" && activeChallenge && (
+              <WhoAmI
+                data={activeChallenge as WhoAmIData}
+                selectedAnswer={selectedString}
+                onSelectAnswer={handleSelectString}
+                showResult={showResult}
+              />
+            )}
 
-          {gameType === "BrainTeaser" && activeChallenge && (
-            <BrainTeaser
-              data={activeChallenge as BrainTeaserData}
-              selectedAnswer={selectedString}
-              onSelectAnswer={handleSelectString}
-              showResult={showResult}
-            />
-          )}
+            {gameType === "BrainTeaser" && activeChallenge && (
+              <BrainTeaser
+                data={activeChallenge as BrainTeaserData}
+                selectedAnswer={selectedString}
+                onSelectAnswer={handleSelectString}
+                showResult={showResult}
+              />
+            )}
 
-          {gameType === "FactFusion" && activeChallenge && (
-            <FactFusion
-              data={activeChallenge as FactFusionData}
-              selectedAnswer={selectedString}
-              onSelectAnswer={handleSelectString}
-              showResult={showResult}
-            />
-          )}
+            {gameType === "FactFusion" && activeChallenge && (
+              <FactFusion
+                data={activeChallenge as FactFusionData}
+                selectedAnswer={selectedString}
+                onSelectAnswer={handleSelectString}
+                showResult={showResult}
+              />
+            )}
 
-          {gameType === "Riddle" && activeChallenge && (
-            <Riddle
-              data={activeChallenge as RiddleData}
-              selectedAnswer={selectedString}
-              onSelectAnswer={handleSelectString}
-              showResult={showResult}
-            />
-          )}
+            {gameType === "Riddle" && activeChallenge && (
+              <Riddle
+                data={activeChallenge as RiddleData}
+                selectedAnswer={selectedString}
+                onSelectAnswer={handleSelectString}
+                showResult={showResult}
+              />
+            )}
 
-          {/* Claiming & Continue Actions */}
-          {showResult && (
-            <div className="flex flex-col gap-3 w-full animate-in fade-in slide-in-from-bottom-2">
-              <Button
-                onClick={loadNextChallenge}
-                disabled={isClaiming}
-                className={`w-full h-12 rounded-2xl font-bold transition-all ${
-                  isCorrect
-                    ? "bg-green-600 hover:bg-green-700 text-white cursor-pointer"
-                    : "bg-slate-600 hover:bg-slate-700 text-white cursor-pointer"
-                }`}
-              >
-                Continue
-              </Button>
-            </div>
-          )}
-        </div>
+            {/* Claiming & Continue Actions */}
+            {showResult && (
+              <div className="flex flex-col gap-3 w-full animate-in fade-in slide-in-from-bottom-2 mt-auto shrink-0 pb-1">
+                <Button
+                  onClick={loadNextChallenge}
+                  disabled={isClaiming}
+                  className="w-full h-12 rounded-2xl font-bold transition-all bg-green-600 hover:bg-green-700 text-white cursor-pointer"
+                >
+                  Continue
+                </Button>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

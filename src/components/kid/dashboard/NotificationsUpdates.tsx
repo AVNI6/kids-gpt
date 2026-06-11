@@ -18,7 +18,7 @@ import { getRelativeTime } from "@/hooks/shared/timeUtils";
 
 export function NotificationsUpdatesSkeleton() {
   return (
-    <Card className="rounded-[36px] border-sky-100 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-sm h-full">
+    <Card className="rounded-[36px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm h-full">
       <CardContent className="p-6 space-y-4">
         <Skeleton className="h-8 w-32 bg-slate-100 dark:bg-slate-800" />
         <div className="space-y-3">
@@ -77,7 +77,7 @@ export default function NotificationsUpdates() {
   }
 
   return (
-    <Card className="rounded-[36px] border-sky-100 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-sm h-full flex flex-col overflow-hidden relative min-h-[280px]">
+    <Card className="rounded-[36px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm h-full flex flex-col overflow-hidden relative min-h-[280px]">
       <div className="absolute top-0 right-0 p-8 opacity-[0.06]">
         <BellRing className="w-32 h-32 text-slate-900 dark:text-slate-100" />
       </div>

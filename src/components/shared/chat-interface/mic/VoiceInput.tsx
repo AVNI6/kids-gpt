@@ -76,14 +76,11 @@ export default forwardRef<VoiceInputRef, VoiceInputProps>(function VoiceInput(
       };
 
       rec.onresult = (event: SpeechRecognitionEventLocal) => {
-        let interimTranscript = "";
         let finalTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const result = event.results[i];
           if (result.isFinal) {
             finalTranscript += result[0].transcript;
-          } else {
-            interimTranscript += result[0].transcript;
           }
         }
         if (finalTranscript) {
@@ -117,7 +114,7 @@ export default forwardRef<VoiceInputRef, VoiceInputProps>(function VoiceInput(
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
-        } catch (err) {
+        } catch {
           // ignore
         }
       }
@@ -132,7 +129,7 @@ export default forwardRef<VoiceInputRef, VoiceInputProps>(function VoiceInput(
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
-        } catch (err) {
+        } catch {
           // ignore
         }
         setIsListening(false);
@@ -146,7 +143,7 @@ export default forwardRef<VoiceInputRef, VoiceInputProps>(function VoiceInput(
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
-        } catch (err) {
+        } catch {
           // ignore
         }
         setIsListening(false);

@@ -39,12 +39,12 @@ export default async function KidProfileManager() {
   const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(" ").trim();
 
   return (
-    <Card className="rounded-[28px] border-sky-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm">
       <CardContent className="space-y-5 p-5">
         <div className="flex items-start gap-4">
           <Avatar
             size="lg"
-            className="h-20 w-20 rounded-3xl border-2 border-sky-100 shadow-sm shrink-0 dark:border-slate-800"
+            className="h-20 w-20 rounded-3xl border-2 border-slate-200/60 shadow-sm shrink-0 dark:border-slate-800"
           >
             <AvatarImage src={profile.avatar_url ?? undefined} />
             <AvatarFallback className="rounded-3xl bg-sky-100 text-sky-700 font-black text-2xl dark:bg-sky-950/60 dark:text-sky-400">
@@ -53,7 +53,7 @@ export default async function KidProfileManager() {
           </Avatar>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-sky-600 dark:text-sky-400">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-400">
               <UserRound className="h-4 w-4" />
               Profile summary
             </div>

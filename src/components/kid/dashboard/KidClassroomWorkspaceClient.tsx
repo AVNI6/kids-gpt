@@ -420,8 +420,9 @@ export default function KidClassroomWorkspaceClient({
                   stripeStyle = "bg-emerald-500";
                 } else if (isInProgress) {
                   statusLabel = "In Progress";
-                  statusBadgeStyle = "border-sky-100 bg-sky-50 text-sky-700";
-                  stripeStyle = "bg-sky-500";
+                  statusBadgeStyle =
+                    "border-blue-100 bg-blue-50 text-blue-700 dark:border-blue-900/30 dark:bg-blue-950/40 dark:text-blue-300";
+                  stripeStyle = "bg-blue-500";
                 } else if (isOverdue) {
                   statusLabel = "Overdue";
                   statusBadgeStyle = "border-rose-100 bg-rose-50 text-rose-700";
@@ -745,12 +746,12 @@ export default function KidClassroomWorkspaceClient({
                         <div
                           className={`h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 ${
                             isPdf
-                              ? "bg-rose-50 text-rose-600"
+                              ? "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400"
                               : isVideo
-                                ? "bg-amber-50 text-amber-600"
+                                ? "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
                                 : isLink
-                                  ? "bg-sky-50 text-sky-600"
-                                  : "bg-indigo-50 text-indigo-600"
+                                  ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+                                  : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400"
                           }`}
                         >
                           {isPdf && <FileText className="h-5 w-5" />}

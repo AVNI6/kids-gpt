@@ -114,11 +114,11 @@ export default function ClassroomOverview({ memberships }: Props) {
     <div className="space-y-8 w-full">
       {/* 1. Learning Community Hero Section */}
       <Card className="rounded-[32px] overflow-hidden border-0 relative shadow-md bg-white dark:bg-slate-900 transition-colors duration-300">
-        {/* Sky-Blue / Purple Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-sky-100/40 via-violet-50/20 to-sky-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pointer-events-none" />
+        {/* Slate / Purple Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-100/40 via-violet-50/20 to-slate-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pointer-events-none" />
 
         {/* Decorative Spheres */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-sky-400/10 dark:bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-slate-200/10 dark:bg-slate-800/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-400/10 dark:bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <CardContent className="p-8 md:p-10 relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
@@ -200,14 +200,14 @@ export default function ClassroomOverview({ memberships }: Props) {
                       className="block group"
                     >
                       <Card className="h-full rounded-[32px] border-slate-200/50 dark:border-slate-800/50 bg-white dark:bg-slate-900/40 shadow-sm hover:shadow-md hover:border-indigo-150 transition-all duration-300 relative overflow-hidden flex flex-col justify-between cursor-pointer">
-                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sky-500 to-indigo-500" />
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500" />
 
                         <CardContent className="p-6 pt-8 space-y-4">
                           <div className="flex items-start justify-between gap-3">
                             <div className="space-y-1.5">
                               <div className="flex gap-1.5 flex-wrap">
                                 {cls.grade && (
-                                  <Badge className="bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-none font-bold text-[9px] uppercase px-2 py-0.5 rounded-md">
+                                  <Badge className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-none font-bold text-[9px] uppercase px-2 py-0.5 rounded-md">
                                     {cls.grade}
                                   </Badge>
                                 )}
@@ -284,7 +284,7 @@ export default function ClassroomOverview({ memberships }: Props) {
                   return (
                     <Card
                       key={member.id}
-                      className="rounded-[32px] border-amber-200/50 bg-amber-50/10 dark:border-amber-950/20 dark:bg-amber-950/5 relative overflow-hidden"
+                      className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 relative overflow-hidden shadow-sm"
                     >
                       <CardContent className="p-5 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
@@ -320,7 +320,7 @@ export default function ClassroomOverview({ memberships }: Props) {
 
             <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
               {[
-                { name: "Assignments", icon: BookOpen, color: "from-sky-500 to-indigo-500" },
+                { name: "Assignments", icon: BookOpen, color: "from-indigo-500 to-purple-500" },
                 { name: "Resources", icon: FolderOpen, color: "from-emerald-500 to-teal-500" },
                 { name: "Tests", icon: FileSpreadsheet, color: "from-amber-500 to-orange-500" },
                 { name: "Announcements", icon: Megaphone, color: "from-rose-500 to-pink-500" },
@@ -414,28 +414,28 @@ export default function ClassroomOverview({ memberships }: Props) {
 export function ClassroomOverviewSkeleton() {
   return (
     <div className="space-y-8 w-full animate-pulse">
-      <Card className="rounded-[32px] border-0 bg-slate-100/50 p-8 shadow-sm">
+      <Card className="rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-8 shadow-sm">
         <CardContent className="p-0 flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-3 flex-1">
-            <Skeleton className="h-6 w-48 bg-slate-200" />
-            <Skeleton className="h-8 w-96 bg-slate-200" />
-            <Skeleton className="h-4 w-64 bg-slate-200" />
+            <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800" />
+            <Skeleton className="h-8 w-96 bg-slate-200 dark:bg-slate-800" />
+            <Skeleton className="h-4 w-64 bg-slate-200 dark:bg-slate-800" />
           </div>
-          <Skeleton className="h-20 w-64 rounded-[28px] bg-slate-200" />
+          <Skeleton className="h-20 w-64 rounded-[28px] bg-slate-200 dark:bg-slate-800" />
         </CardContent>
       </Card>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <Skeleton className="h-6 w-48 bg-slate-200" />
+          <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800" />
           <div className="grid gap-6 sm:grid-cols-2">
-            <Skeleton className="h-32 rounded-[32px] bg-slate-100" />
-            <Skeleton className="h-32 rounded-[32px] bg-slate-100" />
+            <Skeleton className="h-32 rounded-[32px] bg-slate-100 dark:bg-slate-800" />
+            <Skeleton className="h-32 rounded-[32px] bg-slate-100 dark:bg-slate-800" />
           </div>
         </div>
         <div>
-          <Skeleton className="h-6 w-48 bg-slate-200" />
-          <Skeleton className="h-64 rounded-[32px] bg-slate-100 mt-4" />
+          <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800" />
+          <Skeleton className="h-64 rounded-[32px] bg-slate-100 dark:bg-slate-800 mt-4" />
         </div>
       </div>
     </div>
