@@ -68,6 +68,34 @@ export async function POST(req: NextRequest) {
       sessionId,
     }: ChatRequestBody = await req.json();
 
+    const supabase = await createClient();
+
+    // 1. Retrieve the authenticated user session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 2. Perform usage boundary enforcement for kid role
+    if (role === "kid") {
+      const { data: usage } = await supabase
+        .from("whole_usage_tracking")
+        .select("limit_reached")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      // Reject if token tracking indicates limits are reached
+      if (usage?.limit_reached) {
+        return NextResponse.json(
+          { error: "Token quota limit reached. Please upgrade your subscription plan." },
+          { status: 403 }
+        );
+      }
+    }
+
     if (isImageGenerationRequest(message || "")) {
       // SAFE: Only strips leading trigger phrases
       let cleanedPrompt = (message || "").trim();

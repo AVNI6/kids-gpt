@@ -490,19 +490,21 @@ export async function processActivityCompletion({
     const insertedReward =
       insertedRewards && insertedRewards.length > 0 ? insertedRewards[0] : null;
 
-    // Update profile
-    const newXp = (profile.total_experience_points ?? 0) + actualXp;
-    const { error: updateError } = await supabase
-      .from("profile")
-      .update({
-        total_experience_points: newXp,
-        current_streak: currentStreak,
-        longest_streak: longestStreak,
-      })
-      .eq("user_id", userId);
+    // Update profile atomically using the increment_profile_xp RPC
+    const { data: xpRpcData, error: updateError } = await supabase.rpc("increment_profile_xp", {
+      p_user_id: userId,
+      p_xp_delta: actualXp,
+      p_current_streak: currentStreak,
+      p_longest_streak: longestStreak,
+    });
 
     if (updateError) {
       return { success: false, error: updateError.message };
+    }
+
+    const rpcResult = xpRpcData as { success: boolean; error?: string } | null;
+    if (!rpcResult || !rpcResult.success) {
+      return { success: false, error: rpcResult?.error || "Failed to update profile XP via RPC" };
     }
 
     try {
