@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, Users, School } from "lucide-react";
 
 type Props = {

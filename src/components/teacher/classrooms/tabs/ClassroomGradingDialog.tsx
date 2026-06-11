@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { CheckCircle, Clock, AlertCircle, ExternalLink, HelpCircle, Send } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
-import { Badge } from "@/components/shared/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/shared/ui/dialog";
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   gradeAssignment,
@@ -113,8 +113,6 @@ export default function ClassroomGradingDialog({
               <div className="space-y-2.5">
                 {assignmentOverview.submissions.map((sub: SubmissionDetails) => {
                   const name = `${sub.first_name || ""} ${sub.last_name || ""}`.trim() || "Student";
-                  // Auto-graded assignments: score is set by the system on activity completion.
-                  // A submission with submitted_at set is already system-graded.
                   const isAutoGraded = !!selectedAssignment?.activity_type;
                   const isGraded = isAutoGraded
                     ? sub.score !== null || sub.submitted_at !== null

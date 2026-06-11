@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
 import { Send, Plus, X, FileText, BrainCircuit, Camera } from "lucide-react";
 import Image from "next/image";
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 type Props = {

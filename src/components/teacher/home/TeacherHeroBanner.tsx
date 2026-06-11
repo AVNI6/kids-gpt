@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Award } from "lucide-react";
 import type { DashboardUserProfile } from "@/types/kid";
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import type { Classroom } from "@/types/classroom.types";
 import { School, ArrowRight } from "lucide-react";
 

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Logo from "@/components/shared/logo/Logo";

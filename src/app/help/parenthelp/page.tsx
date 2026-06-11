@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { ArrowLeft, Shield, BarChart3, CreditCard, Lock } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/shared/ui/accordion";
+} from "@/components/ui/accordion";
 import { APP_ROUTES } from "@/lib/constants/common";
 
 export default function ParentHelpPage() {

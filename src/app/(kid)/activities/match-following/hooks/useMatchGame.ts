@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { saveKidActivityProgress } from "@/lib/services/kid/dashboard.actions";
-import { triggerConfettiSideCannons } from "@/components/shared/ui/confetti-side-cannons";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { MatchItem, ConnectionState, SelectedDot, DrawingState } from "../types";
+import { toast } from "sonner";
 
 interface UseMatchGameProps {
   pairs: MatchItem[];
@@ -32,7 +30,6 @@ export function useMatchGame({ pairs, matchTitle }: UseMatchGameProps) {
   const [showAnswers, setShowAnswers] = useState(false);
   const [incorrectItems, setIncorrectItems] = useState<string[]>([]);
   const [xpReward, setXpReward] = useState<number>(90);
-  const hasClaimed = useRef(false);
 
   const playSound = useCallback(
     (type: "pop" | "connect" | "disconnect" | "success" | "error" | "complete") => {
@@ -119,40 +116,6 @@ export function useMatchGame({ pairs, matchTitle }: UseMatchGameProps) {
     getActivityXp("match-following").then(setXpReward).catch(console.error);
   }, []);
 
-  useEffect(() => {
-    if (showScorecard && !hasClaimed.current) {
-      hasClaimed.current = true;
-      const autoClaim = async () => {
-        const entries = Object.entries(connections);
-        const correctCount = entries.filter(([lId, rId]) => lId === rId).length;
-        const accuracy = Math.round((correctCount / pairs.length) * 100);
-        const scoreStr = `${accuracy}% Accuracy`;
-        const scaledXp = Math.round((correctCount / pairs.length) * xpReward);
-        try {
-          const slug = matchTitle
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)/g, "");
-          const res = await saveKidActivityProgress(
-            slug || "match-following",
-            scaledXp,
-            matchTitle,
-            scoreStr
-          );
-          if (res.success) {
-            triggerConfettiSideCannons();
-            toast.success("Progress Saved! 🎉", {
-              description: `+${scaledXp} XP automatically earned!`,
-            });
-          }
-        } catch (err) {
-          console.error("Auto-claim error:", err);
-        }
-      };
-      autoClaim();
-    }
-  }, [showScorecard, connections, pairs.length, xpReward, matchTitle]);
-
   // Compute dot positions relative to the board container — same as original
   const recalculateCoords = useCallback(
     (boardEl: HTMLDivElement | null) => {
@@ -217,12 +180,6 @@ export function useMatchGame({ pairs, matchTitle }: UseMatchGameProps) {
     setShowScorecard(false);
     setShowAnswers(false);
     setIncorrectItems([]);
-    hasClaimed.current = false;
-  }, [pairs]);
-
-  // Reset hasClaimed whenever pairs changes (writing a ref inside an effect is allowed).
-  useEffect(() => {
-    hasClaimed.current = false;
   }, [pairs]);
 
   // Tap / click fallback — identical to original

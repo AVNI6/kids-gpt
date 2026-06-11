@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { ArrowRight, RotateCcw, Sparkles, Timer } from "lucide-react";
 
-import { Button } from "@/components/shared/ui/button";
-import { Progress } from "@/components/shared/ui/progress";
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
 
 export type ActivityStep = {
   title: string;

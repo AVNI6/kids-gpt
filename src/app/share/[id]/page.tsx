@@ -1,7 +1,7 @@
 import { Message, ChatMessageRow } from "@/types/common";
 import { Bot, Sparkles } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/shared/ui/avatar";
-import { ScrollArea } from "@/components/shared/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
 import Link from "next/link";

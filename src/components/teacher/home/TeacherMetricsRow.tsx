@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Users, ClipboardList, AlertCircle, FileUp, Megaphone } from "lucide-react";
 
 type Metrics = {

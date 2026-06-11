@@ -2,12 +2,12 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/shared/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
-import { Skeleton } from "@/components/shared/ui/skeleton";
-import { Button } from "@/components/shared/ui/button";
-import { Badge } from "@/components/shared/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Award, Clock, BookOpen, Search, School, ShieldCheck, Mail } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/parent";
 import { usePagination } from "@/hooks/shared/use-pagination";

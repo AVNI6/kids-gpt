@@ -1,10 +1,10 @@
 "use client";
 
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Skeleton } from "@/components/shared/ui/skeleton";
-import { Button } from "@/components/shared/ui/button";
-import { Progress } from "@/components/shared/ui/progress";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/shared/ui/carousel";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { BookOpen, FlaskConical, Blocks, RotateCcw, Play, PlayCircle } from "lucide-react";
 
 export function ContinueLearningSkeleton() {

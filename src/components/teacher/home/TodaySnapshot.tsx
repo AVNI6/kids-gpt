@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/shared/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ClipboardCheck, MessageSquare } from "lucide-react";
 import { PiStudentBold } from "react-icons/pi";
 import { MdOutlineGrade } from "react-icons/md";

@@ -2,10 +2,10 @@ import { CalendarDays, Crown, UserRound } from "lucide-react";
 
 import { getKidStats } from "@/lib/services/kid/dashboard.actions";
 import { getSafeXP } from "@/hooks/kid/useChildXP";
-import StreakDisplay from "@/components/shared/ui/StreakDisplay";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
-import { Badge } from "@/components/shared/ui/badge";
-import { Card, CardContent, CardFooter } from "@/components/shared/ui/card";
+import StreakDisplay from "@/components/ui/StreakDisplay";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 import KidProfileEditorDialog from "./KidProfileEditorDialog";
 

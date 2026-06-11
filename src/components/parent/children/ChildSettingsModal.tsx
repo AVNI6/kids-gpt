@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/shared/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { User, Clock, Trash2, Settings, ShieldAlert } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/kid";
 import EditProfileTab from "@/components/parent/profile/EditProfileTab";

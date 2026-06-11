@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Users, Award } from "lucide-react";
 import { GiProgression } from "react-icons/gi";
 import { getSafeXP } from "@/hooks/kid/useChildXP";
 import type { DashboardUserProfile, LinkedChildProfile, ChildDetailsResult } from "@/types/kid";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
 
 export default function WelcomeBanner({

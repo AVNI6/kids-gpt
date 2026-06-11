@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/shared/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { APP_ROUTES } from "@/lib/constants/common";
 
 interface AuthPromptPopoverContentProps {

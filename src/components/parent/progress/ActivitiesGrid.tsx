@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
-import { Badge } from "@/components/shared/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { BookOpen, Puzzle, FileQuestion, Calendar } from "lucide-react";
 import { usePagination } from "@/hooks/shared/use-pagination";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";

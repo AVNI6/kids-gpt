@@ -5,9 +5,9 @@ import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getStudentClassroomWorkspace } from "@/lib/services/kid/classroom.actions";
 import type { StudentWorkspaceData } from "@/types/classroom.types";
 import KidClassroomWorkspaceClient from "@/components/kid/dashboard/KidClassroomWorkspaceClient";
-import { Skeleton } from "@/components/shared/ui/skeleton";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { buttonVariants } from "@/components/shared/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 function WorkspaceSkeleton() {

@@ -1,15 +1,16 @@
 "use client";
 import confetti from "canvas-confetti";
-import { Button } from "@/components/shared/ui/button";
+import { Button } from "@/components/ui/button";
 
 /**
  * Standalone client-side function to trigger side confetti cannons for 3 seconds.
  */
 export function triggerConfettiSideCannons() {
-  const end = Date.now() + 3 * 1000; // 3 seconds
   const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+  let cancelled = false;
+
   const frame = () => {
-    if (Date.now() > end) return;
+    if (cancelled) return;
     confetti({
       particleCount: 2,
       angle: 60,
@@ -29,6 +30,11 @@ export function triggerConfettiSideCannons() {
     requestAnimationFrame(frame);
   };
   frame();
+
+  return () => {
+    cancelled = true;
+    confetti.reset();
+  };
 }
 
 export function ConfettiSideCannons() {

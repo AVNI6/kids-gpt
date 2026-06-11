@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { Suspense } from "react";
-import { Checkbox } from "@/components/shared/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 import { createClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "@/components/shared/forms/GoogleSignInButton";
 import { Mail, Lock, CheckCircle, BookOpen, Brain } from "lucide-react";

@@ -12,12 +12,12 @@ import {
 } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/kid";
 import { getScreenTimeAnalytics, updateDailyLimit } from "@/lib/services/shared/screentime.actions";
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
-import { Switch } from "@/components/shared/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) {
   const [dailySeconds, setDailySeconds] = useState(0);

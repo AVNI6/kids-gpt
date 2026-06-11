@@ -1,16 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
-import { Switch } from "@/components/shared/ui/switch";
-import { Badge } from "@/components/shared/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Rocket, Star, Users, School, CheckCircle2, X, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { fetchSubscriptionPlans } from "@/lib/services/shared/chat.actions";

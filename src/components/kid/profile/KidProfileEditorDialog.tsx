@@ -4,8 +4,8 @@ import { useState } from "react";
 import { PencilLine, Upload } from "lucide-react";
 
 import { updateKidProfile } from "@/lib/services/kid/dashboard.actions";
-import { AvatarUpload } from "@/components/shared/ui/avatar-upload";
-import { Button } from "@/components/shared/ui/button";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,9 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shared/ui/dialog";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { KidDashboardStats } from "@/types/kid";
 
 type Props = {

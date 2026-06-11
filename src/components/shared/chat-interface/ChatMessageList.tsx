@@ -2,9 +2,9 @@
 
 import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { Bot } from "lucide-react";
-import { ScrollArea } from "@/components/shared/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/shared/ui/avatar";
-import { Spinner } from "@/components/shared/ui/spinner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Spinner } from "@/components/ui/spinner";
 import { Message } from "@/types/common";
 import { useAuth } from "@/context/AuthContext";
 import ChatMessageItem from "./ChatMessageItem";

@@ -15,17 +15,16 @@ import {
   Trophy,
 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/shared/ui/button";
-import { Progress } from "@/components/shared/ui/progress";
-import { Card } from "@/components/shared/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/common";
 import {
   getActivityXp,
   getMemoryMatchProgress,
-  saveMemoryCampaignProgress,
 } from "@/lib/services/kid/activities/activity.actions";
 import { toast } from "sonner";
-import { triggerConfettiSideCannons } from "@/components/shared/ui/confetti-side-cannons";
+import VictoryModal from "@/components/shared/VictoryModal";
 import { memoryCampaignLevels, MemoryLevel, MemoryStep } from "@/lib/constants/kid";
 
 interface MemoryCard {
@@ -54,7 +53,6 @@ export default function MemoryMatchPage() {
   const [matches, setMatches] = useState(0);
   const [flipsCount, setFlipsCount] = useState(0);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const hasClaimed = useRef(false);
 
   // Countdown Timer State
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -93,43 +91,6 @@ export default function MemoryMatchPage() {
       }
     }
   };
-
-  useEffect(() => {
-    if (gameCompleted && activeStep && !hasClaimed.current) {
-      hasClaimed.current = true;
-
-      const autoClaim = async () => {
-        const accuracy = Math.max(
-          20,
-          Math.min(100, Math.round((activeStep.step.pairCount / flipsCount) * 100))
-        );
-        const scoreStr = `${accuracy}% Accuracy`;
-
-        try {
-          const res = await saveMemoryCampaignProgress(
-            activeStep.level.id,
-            activeStep.step.stepNumber,
-            xpReward,
-            scoreStr
-          );
-
-          if (res.success) {
-            triggerConfettiSideCannons();
-            toast.success("Stage Cleared! 🎉", {
-              description: `+${xpReward} XP earned! Next step unlocked!`,
-            });
-            await fetchProgress(false);
-          } else {
-            console.error("Memory match auto-claim returned failure status:", res.error);
-          }
-        } catch (err) {
-          console.error("Memory match auto-claim exception:", err);
-        }
-      };
-
-      autoClaim();
-    }
-  }, [gameCompleted, activeStep, flipsCount, xpReward]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -229,7 +190,6 @@ export default function MemoryMatchPage() {
     setGameCompleted(false);
     setTimeLeft(step.timeLimit);
     setGameFailed(false);
-    hasClaimed.current = false;
 
     // Trigger the initial 5s memory preview sneak peek
     setIsRevealedPreview(true);
@@ -435,92 +395,6 @@ export default function MemoryMatchPage() {
       );
     }
 
-    // VICTORY SCREEN
-    if (gameCompleted) {
-      return (
-        <div className="h-screen bg-background overflow-hidden flex flex-col relative min-h-0">
-          <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-pink-500/5 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-20 right-10 h-80 w-80 rounded-full bg-purple-500/5 blur-3xl pointer-events-none" />
-
-          <main className="relative z-10 flex-1 px-4 py-6 md:px-8 md:py-8 overflow-hidden flex flex-col justify-center items-center">
-            <div className="max-w-xl w-full flex flex-col justify-between gap-4 min-h-0">
-              <div className="flex items-center justify-between shrink-0 mb-2">
-                <Button
-                  onClick={() => {
-                    setActiveStep(null);
-                    setGameCompleted(false);
-                  }}
-                  variant="ghost"
-                  className="inline-flex items-center gap-2 text-pink-600 font-bold hover:text-pink-800 bg-card px-4 py-1.5 rounded-full shadow-sm border border-border text-sm"
-                >
-                  <ArrowLeft className="h-4 w-4" /> Exit Mission
-                </Button>
-
-                <div className="rounded-full bg-card px-4 py-1.5 shadow-sm border border-border text-xs font-bold text-pink-600 animate-pulse">
-                  Step Cleared!
-                </div>
-              </div>
-
-              <Card className="border-4 border-pink-500/30 shadow-2xl rounded-[32px] bg-card p-6 text-center flex flex-col justify-center items-center gap-4 animate-in zoom-in duration-300 relative overflow-hidden">
-                <div className="absolute -top-12 -left-12 h-36 w-36 rounded-full bg-pink-500/10 blur-2xl pointer-events-none" />
-                <div className="absolute -bottom-12 -right-12 h-36 w-36 rounded-full bg-purple-500/10 blur-2xl pointer-events-none" />
-
-                <div className="flex h-20 w-20 items-center justify-center rounded-[24px] bg-pink-500/10 border-4 border-dashed border-pink-500 animate-bounce">
-                  <Award className="h-10 w-10 text-pink-600" />
-                </div>
-
-                <h2 className="text-3xl font-black text-foreground tracking-tight leading-none">
-                  Stage Cleared! 🎉🧠
-                </h2>
-
-                <p className="text-muted-foreground text-sm max-w-sm">
-                  Awesome! You conquered World {level.id} - Step {step.stepNumber} and expanded your
-                  mind!
-                </p>
-
-                <div className="grid grid-cols-3 gap-3 w-full max-w-md mt-4">
-                  <div className="bg-pink-500/10 rounded-2xl p-3 border border-pink-500/20 flex flex-col justify-center items-center">
-                    <h4 className="text-[10px] font-black uppercase text-pink-600 tracking-wider">
-                      Flips
-                    </h4>
-                    <p className="text-xl font-black text-pink-600 mt-1">{flipsCount}</p>
-                  </div>
-                  <div className="bg-purple-500/10 rounded-2xl p-3 border border-purple-500/20 flex flex-col justify-center items-center">
-                    <h4 className="text-[10px] font-black uppercase text-purple-600 tracking-wider">
-                      Accuracy
-                    </h4>
-                    <p className="text-xl font-black text-purple-600 mt-1">{accuracy}%</p>
-                  </div>
-                  <div className="bg-green-500/10 rounded-2xl p-3 border border-green-500/20 flex flex-col justify-center items-center">
-                    <h4 className="text-[10px] font-black uppercase text-green-600 tracking-wider">
-                      Reward
-                    </h4>
-                    <p className="text-xl font-black text-green-600 mt-1">+{xpReward} XP</p>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full max-w-md relative z-10">
-                  <Button
-                    onClick={handleFinishMission}
-                    className="flex-1 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold py-6 shadow-md transform hover:-translate-y-0.5 active:translate-y-px text-sm"
-                  >
-                    Continue 🎉
-                  </Button>
-                  <Button
-                    onClick={() => initializeGame(level, step)}
-                    variant="outline"
-                    className="flex-1 border-2 border-border hover:bg-muted text-foreground rounded-2xl font-bold py-6 shadow-sm text-sm"
-                  >
-                    <RotateCcw className="mr-2 h-4 w-4" /> Retry Stage
-                  </Button>
-                </div>
-              </Card>
-            </div>
-          </main>
-        </div>
-      );
-    }
-
     const cardStyles = getCardStyleClasses();
     const rows = Math.ceil((step.pairCount * 2) / step.gridCols);
 
@@ -637,6 +511,23 @@ export default function MemoryMatchPage() {
             </div>
           </div>
         </main>
+
+        <VictoryModal
+          isOpen={gameCompleted}
+          onReplay={() => initializeGame(level, step)}
+          onContinue={handleFinishMission}
+          xpEarned={xpReward}
+          activitySlug="memory-match"
+          activityTitle="Memory Match"
+          score={`${accuracy}% Accuracy`}
+          scoreDescription={`Awesome! You conquered World ${level.id} - Step ${step.stepNumber} and expanded your mind!`}
+          rewardsDescription={`World ${level.id} - Step ${step.stepNumber} Completion`}
+          memoryMatchWorldId={level.id}
+          memoryMatchStepNumber={step.stepNumber}
+          onClaimSuccess={async () => {
+            await fetchProgress(false);
+          }}
+        />
       </div>
     );
   }

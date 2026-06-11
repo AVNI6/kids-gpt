@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, MonitorSmartphone, Brain, Search, AlertTriangle } from "lucide-react";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Bell, Check } from "lucide-react";
 import { getRelativeTime } from "@/hooks/shared/timeUtils";
 import type { ClassroomNotification } from "@/types/classroom.types";

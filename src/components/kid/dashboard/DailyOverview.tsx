@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Clock, Target, ActivitySquare } from "lucide-react";
 import { getSafeStreak } from "@/hooks/kid/useChildStreak";
 

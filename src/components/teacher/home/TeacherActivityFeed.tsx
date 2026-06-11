@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Activity, Send, Award, FileUp, Megaphone, PlusCircle, HelpCircle } from "lucide-react";
 import { getRelativeTime } from "@/hooks/shared/timeUtils";
 

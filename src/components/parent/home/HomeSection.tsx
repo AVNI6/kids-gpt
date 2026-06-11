@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Badge } from "@/components/shared/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
-import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MdFamilyRestroom } from "react-icons/md";
 import { Trophy, Clock, Activity, Users, CheckCircle2 } from "lucide-react";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";

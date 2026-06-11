@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/shared/ui/button";
+import { Button } from "@/components/ui/button";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";

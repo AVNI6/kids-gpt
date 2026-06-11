@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { PlusCircle, Search, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/shared/ui/sidebar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import AuthPromptPopoverContent from "./AuthPromptPopoverContent";
 
 interface SidebarNavigationProps {

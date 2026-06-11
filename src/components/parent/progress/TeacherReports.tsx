@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
-import { Button } from "@/components/shared/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { MessageCircle, FileText, Calendar, CheckCircle2, Clock } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/kid";
 

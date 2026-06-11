@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, School, User, Mail, Lock, Rocket } from "lucide-react";
-import { Button } from "@/components/shared/ui/button";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Input } from "@/components/shared/ui/input";
-import { Checkbox } from "@/components/shared/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useState } from "react";

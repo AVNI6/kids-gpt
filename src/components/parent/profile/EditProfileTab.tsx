@@ -2,10 +2,10 @@
 
 import { useState, useRef, useTransition, useEffect, useMemo } from "react";
 import { updateChildProfile, uploadChildAvatar } from "@/lib/services/parent/parent.actions";
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Loader2, Camera } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/kid";

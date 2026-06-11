@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { PencilLine, Upload } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
-import { AvatarUpload } from "@/components/shared/ui/avatar-upload";
-import { Button } from "@/components/shared/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,10 +13,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shared/ui/dialog";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
-import { Badge } from "@/components/shared/ui/badge";
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import type { DashboardUserProfile } from "@/types/kid";
 import { updateTeacherProfile } from "@/lib/services/kid/dashboard.actions";
 import { toast } from "sonner";
@@ -150,7 +150,7 @@ export default function TeacherProfileWidget({ profile }: Props) {
                   htmlFor="organizationName"
                   className="text-xs font-bold text-slate-700 dark:text-slate-350 ml-1"
                 >
-                  Organization / School
+                  School
                 </Label>
                 <Input
                   id="organizationName"

@@ -5,11 +5,11 @@ import Link from "next/link";
 import { School, Trash2, Plus, CopyIcon, CheckIcon } from "lucide-react";
 import { toast } from "sonner";
 import { createClassroom, deleteClassroom } from "@/lib/services/kid/classroom.actions";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
-import { Badge } from "@/components/shared/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shared/ui/dialog";
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -27,7 +27,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/shared/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import type { Classroom } from "@/types/classroom.types";
 
 export interface EnrichedClassroom extends Classroom {

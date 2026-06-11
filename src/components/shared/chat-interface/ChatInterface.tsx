@@ -13,7 +13,7 @@ import { useChatSender } from "./useChatSender";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setCurrentSessionId } from "@/store/slices/chatSlice";
 import { useAuth } from "@/context/AuthContext";
-import { useSidebar } from "@/components/shared/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import { getSessionManager } from "@/lib/ai/session-manager";
 import { useSearchParams } from "next/navigation";
 

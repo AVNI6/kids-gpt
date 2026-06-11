@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Skeleton } from "@/components/shared/ui/skeleton";
-import { Button } from "@/components/shared/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { Gamepad2, Brain, Puzzle, Calculator, Play, Star } from "lucide-react";
 import Link from "next/link";
 

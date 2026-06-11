@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { Card, CardContent } from "@/components/shared/ui/card";
-import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getCurrentDashboardProfile } from "@/lib/services/kid/dashboard.actions";
 import { getTeacherDashboardData } from "@/lib/services/kid/classroom.actions";
