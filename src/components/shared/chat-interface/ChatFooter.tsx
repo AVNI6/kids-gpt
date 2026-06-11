@@ -1,12 +1,40 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Send, Plus, X, FileText, BrainCircuit, Camera } from "lucide-react";
+import { Send, Plus, X, FileText, BrainCircuit, Camera, Mic } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+
+interface SpeechRecognitionEventLocal {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEventLocal {
+  readonly error: string;
+  readonly message?: string;
+}
+
+interface SpeechRecognitionLocal extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((ev: SpeechRecognitionEventLocal) => void) | null;
+  onerror: ((ev: SpeechRecognitionErrorEventLocal) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognitionLocal;
+    webkitSpeechRecognition?: new () => SpeechRecognitionLocal;
+  }
+}
 
 type Props = {
   onSend: (
@@ -40,12 +68,94 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
 
+  const [isListening, setIsListening] = useState(false);
+  const [isVoiceSupported, setIsVoiceSupported] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionLocal | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognitionClass) {
+      setIsVoiceSupported(true);
+      const rec = new SpeechRecognitionClass();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = "en-US";
+
+      rec.onresult = (event: SpeechRecognitionEventLocal) => {
+        let interimTranscript = "";
+        let finalTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalTranscript += result[0].transcript;
+          } else {
+            interimTranscript += result[0].transcript;
+          }
+        }
+        if (finalTranscript) {
+          setInput((prev) => prev + (prev ? " " : "") + finalTranscript);
+        }
+      };
+
+      rec.onerror = (e: SpeechRecognitionErrorEventLocal) => {
+        console.error("Speech recognition error:", e);
+      };
+
+      rec.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = rec;
+    }
+  }, []);
+
+  // Stop voice recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  // Auto-grow height of textarea based on content
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+  }, [input]);
+
   // Expose imperative handle to set input externally (e.g. from suggestions click)
   useImperativeHandle(ref, () => ({
     setInputText: (text: string) => {
       setInput(text);
+      // Auto focus textarea after selection
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 0);
     },
   }));
+
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) return;
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      setIsListening(true);
+      recognitionRef.current.start();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   // Sync inputs when session changes to prevent leaking data across sessions
   useEffect(() => {
@@ -53,6 +163,9 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
     setImage(null);
     setFileContent(null);
     setFileName(null);
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
   }, [currentSessionId]);
 
   // Sync native file inputs when image/fileName state is cleared
@@ -128,6 +241,9 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
   const handleSend = () => {
     if ((!input.trim() && !image && !fileName) || isLoading || isParsing || isAuthLoading) {
       return;
+    }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
     }
     onSend(input, image, fileContent, fileName);
     setInput("");
@@ -266,88 +382,121 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
               </div>
             )}
 
-            <div className="flex items-center">
-              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                <PopoverTrigger
-                  type="button"
-                  suppressHydrationWarning={true}
-                  className={cn(
-                    "ml-2 h-10 w-10 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-muted shrink-0",
-                    isPopoverOpen && "bg-muted"
-                  )}
-                >
-                  <Plus
-                    className={cn("w-5 h-5 transition-transform", isPopoverOpen && "rotate-45")}
-                  />
-                </PopoverTrigger>
-                <PopoverContent
-                  side="top"
-                  align="start"
-                  sideOffset={16}
-                  className="w-48 p-1 rounded-2xl shadow-xl border-border bg-popover z-50"
-                >
-                  <button
-                    onClick={() => {
-                      mediaInputRef.current?.click();
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
+            <div className="flex items-end px-2 py-2 min-h-[56px]">
+              <div className="mb-1 shrink-0">
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger
+                    type="button"
+                    suppressHydrationWarning={true}
+                    className={cn(
+                      "h-10 w-10 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-muted",
+                      isPopoverOpen && "bg-muted"
+                    )}
                   >
-                    <div className="p-2 rounded-lg shrink-0 transition-colors text-pink-500 group-hover:bg-white">
-                      <Camera className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm font-semibold text-foreground/80">Add Media</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      fileInputRef.current?.click();
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
+                    <Plus
+                      className={cn("w-5 h-5 transition-transform", isPopoverOpen && "rotate-45")}
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="top"
+                    align="start"
+                    sideOffset={16}
+                    className="w-48 p-1 rounded-2xl shadow-xl border-border bg-popover z-50 animate-in fade-in-50 zoom-in-95 duration-100"
                   >
-                    <div className="p-2 rounded-lg shrink-0 transition-colors text-blue-500 group-hover:bg-white">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm font-semibold text-foreground/80">Upload Files</span>
-                  </button>
+                    <button
+                      onClick={() => {
+                        mediaInputRef.current?.click();
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
+                    >
+                      <div className="p-2 rounded-lg shrink-0 transition-colors text-pink-500 group-hover:bg-white">
+                        <Camera className="w-5 h-5" />
+                      </div>
+                      <span className="text-sm font-semibold text-foreground/80">Add Media</span>
+                    </button>
 
-                  <button
-                    onClick={() => {
-                      setInput(
-                        "Start Quiz: ask me one question at a time, wait for my answer, tell me if I'm right, then automatically ask the next question. Stop if I say stop, exit, quit, or end quiz."
-                      );
-                      setIsPopoverOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
-                  >
-                    <div className="p-2 rounded-lg shrink-0 transition-colors text-amber-500 group-hover:bg-white">
-                      <BrainCircuit className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm font-semibold text-foreground/80">Start Quiz</span>
-                  </button>
-                </PopoverContent>
-              </Popover>
+                    <button
+                      onClick={() => {
+                        fileInputRef.current?.click();
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
+                    >
+                      <div className="p-2 rounded-lg shrink-0 transition-colors text-blue-500 group-hover:bg-white">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <span className="text-sm font-semibold text-foreground/80">Upload Files</span>
+                    </button>
 
-              <Input
+                    <button
+                      onClick={() => {
+                        setInput(
+                          "Start Quiz: ask me one question at a time, wait for my answer, tell me if I'm right, then automatically ask the next question. Stop if I say stop, exit, quit, or end quiz."
+                        );
+                        setIsPopoverOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
+                    >
+                      <div className="p-2 rounded-lg shrink-0 transition-colors text-amber-500 group-hover:bg-white">
+                        <BrainCircuit className="w-5 h-5" />
+                      </div>
+                      <span className="text-sm font-semibold text-foreground/80">Start Quiz</span>
+                    </button>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <textarea
+                ref={textareaRef}
+                rows={1}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder={isAuthLoading ? "Loading chat session..." : "Ask anything"}
-                onKeyDown={(e) => e.key === "Enter" && !isAuthLoading && handleSend()}
                 disabled={isAuthLoading || isLoading || isParsing}
-                className="border-0 shadow-none focus-visible:ring-0 h-14 text-base"
+                className="flex-1 resize-none bg-transparent py-3 px-3 text-base border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 min-h-[40px] max-h-[180px] overflow-y-auto scrollbar-none text-foreground placeholder:text-muted-foreground/60 align-bottom leading-relaxed"
                 suppressHydrationWarning={true}
               />
 
-              <Button
-                onClick={handleSend}
-                size="icon"
-                disabled={
-                  (!input.trim() && !image && !fileName) || isLoading || isParsing || isAuthLoading
-                }
-                className="mr-2 rounded-full bg-sky-500 hover:bg-sky-600 active:scale-95 shrink-0"
-                suppressHydrationWarning={true}
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-1.5 mb-1 shrink-0">
+                {isVoiceSupported && (
+                  <Button
+                    type="button"
+                    onClick={toggleVoiceInput}
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-10 w-10 rounded-full transition-all shrink-0 active:scale-95",
+                      isListening
+                        ? "bg-red-500 text-white hover:bg-red-600 animate-pulse shadow-md"
+                        : "hover:bg-muted text-muted-foreground"
+                    )}
+                    suppressHydrationWarning={true}
+                    title={isListening ? "Stop listening" : "Start voice typing"}
+                  >
+                    <Mic className="w-4.5 h-4.5" />
+                  </Button>
+                )}
+
+                <Button
+                  onClick={handleSend}
+                  size="icon"
+                  disabled={
+                    (!input.trim() && !image && !fileName) ||
+                    isLoading ||
+                    isParsing ||
+                    isAuthLoading
+                  }
+                  className={cn(
+                    "h-10 w-10 rounded-full transition-all shrink-0 active:scale-95",
+                    input.trim() || image || fileName
+                      ? "bg-sky-500 hover:bg-sky-600 text-white shadow-md hover:shadow-lg"
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                  )}
+                  suppressHydrationWarning={true}
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
           <div className="text-center mt-3 text-[10px] sm:text-xs text-muted-foreground opacity-60">
