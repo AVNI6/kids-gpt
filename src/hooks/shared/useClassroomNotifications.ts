@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { ClassroomNotification } from "@/types/classroom.types";
 
-export function useTeacherNotifications(limit?: number) {
+export function useClassroomNotifications(role: "kid" | "teacher", limit?: number) {
   const [notifications, setNotifications] = useState<ClassroomNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,7 +14,7 @@ export function useTeacherNotifications(limit?: number) {
       let query = supabase
         .from("notifications")
         .select("*")
-        .eq("recipient_role", "teacher")
+        .eq("recipient_role", role)
         .order("created_at", { ascending: false });
 
       if (limit) {
@@ -28,12 +28,27 @@ export function useTeacherNotifications(limit?: number) {
         setNotifications(typed);
         setUnreadCount(typed.filter((n) => !n.is_read).length);
       }
+
+      // Auto-purge read notifications older than 7 days
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      supabase
+        .from("notifications")
+        .delete()
+        .eq("recipient_role", role)
+        .eq("is_read", true)
+        .lt("created_at", sevenDaysAgo.toISOString())
+        .then((res: { error: unknown }) => {
+          if (res.error) {
+            console.error("Failed to auto-purge old read classroom notifications:", res.error);
+          }
+        });
     } catch (err) {
-      console.error("Failed to fetch notifications:", err);
+      console.error(`Failed to fetch notifications for ${role}:`, err);
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, limit]);
+  }, [supabase, role, limit]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -62,12 +77,47 @@ export function useTeacherNotifications(limit?: number) {
     }
   };
 
+  const deleteNotification = useCallback(
+    async (id: string) => {
+      try {
+        setNotifications((prev) => {
+          const deletedNotif = prev.find((n) => n.id === id);
+          if (deletedNotif && !deletedNotif.is_read) {
+            setUnreadCount((count) => Math.max(0, count - 1));
+          }
+          return prev.filter((n) => n.id !== id);
+        });
+
+        const { error } = await supabase.from("notifications").delete().eq("id", id);
+        if (error) throw error;
+      } catch (err) {
+        console.error("Failed to delete notification:", err);
+        fetchNotifications();
+      }
+    },
+    [supabase, fetchNotifications]
+  );
+
+  const deleteAllNotifications = useCallback(async () => {
+    try {
+      setNotifications([]);
+      setUnreadCount(0);
+      const { error } = await supabase.from("notifications").delete().eq("recipient_role", role);
+      if (error) throw error;
+    } catch (err) {
+      console.error("Failed to delete all notifications:", err);
+      fetchNotifications();
+    }
+  }, [supabase, role, fetchNotifications]);
+
   return {
     notifications,
     unreadCount,
     isLoading,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
+    deleteAllNotifications,
     fetchNotifications,
   };
 }

@@ -59,7 +59,6 @@ export async function POST(req: NextRequest) {
       message,
       image,
       history,
-      role = "kid",
       customTask,
       responseStyle,
       age,
@@ -70,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient();
 
-    // 1. Retrieve the authenticated user session
+    // 1. Retrieve the authenticated user session securely
     const {
       data: { user },
       error: authError,
@@ -79,8 +78,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // 🛠️ Security Verification: Fetch actual user role from server profile DB, ignoring client parameter
+    const { data: profile, error: profileError } = await supabase
+      .from("profile")
+      .select("role")
+      .eq("user_id", user.id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (profileError || !profile || !profile.role) {
+      return NextResponse.json({ error: "Profile Not Found or Invalid Role" }, { status: 403 });
+    }
+
+    const secureRole = profile.role as "kid" | "parent" | "teacher";
+
     // 2. Perform usage boundary enforcement for kid role
-    if (role === "kid") {
+    if (secureRole === "kid") {
       const { data: usage } = await supabase
         .from("whole_usage_tracking")
         .select("limit_reached")
@@ -338,12 +351,12 @@ export async function POST(req: NextRequest) {
 
     aiLogger.info(
       "ChatAPI",
-      `Received request. Role: ${role}, Mode: ${mode}, Style: ${responseStyle}`
+      `Received request. Role: ${secureRole}, Mode: ${mode}, Style: ${responseStyle}`
     );
 
     // Layer-compose the modular system prompt dynamically
     const activePrompt = buildSystemPrompt({
-      role,
+      role: secureRole,
       mode,
       customTask,
       responseStyle,
@@ -355,7 +368,7 @@ export async function POST(req: NextRequest) {
     // Log structured prompt metrics
     aiLogger.info("ChatAPI", "Prompt Metrics Log", {
       mode,
-      role,
+      role: secureRole,
       responseStyle: responseStyle || "default",
       customTask: customTask || "none",
       promptLength: activePrompt.length,
@@ -364,9 +377,9 @@ export async function POST(req: NextRequest) {
 
     if (mode === "quiz" && isStopCommand(message || "")) {
       const stopMessage =
-        role === "teacher"
+        secureRole === "teacher"
           ? "Quiz stopped. You can start a new quiz anytime."
-          : role === "parent"
+          : secureRole === "parent"
             ? "Quiz stopped. You can start again whenever you're ready."
             : 'Quiz stopped. Say "Start Quiz" whenever you want to play again.';
 
@@ -478,7 +491,7 @@ export async function POST(req: NextRequest) {
             pdfContent: (parsedRaw?.pdfContent as string) || response.content,
             pdfTheme:
               (parsedRaw?.pdfTheme as string) ||
-              (role === "kid" ? "kid" : role === "teacher" ? "teacher" : "clean"),
+              (secureRole === "kid" ? "kid" : secureRole === "teacher" ? "teacher" : "clean"),
             suggestedTitle: (parsedRaw?.suggestedTitle as string) || "Learning Material",
           };
         }
@@ -489,9 +502,9 @@ export async function POST(req: NextRequest) {
           validatedData.pdfTheme === "clean" ||
           validatedData.pdfTheme === "teacher"
             ? validatedData.pdfTheme
-            : role === "kid"
+            : secureRole === "kid"
               ? "kid"
-              : role === "teacher"
+              : secureRole === "teacher"
                 ? "teacher"
                 : "clean";
 
@@ -522,7 +535,7 @@ export async function POST(req: NextRequest) {
           type: "text",
           message: "Here is your PDF overview.",
           pdfContent: response.content,
-          pdfTheme: role === "kid" ? "kid" : role === "teacher" ? "teacher" : "clean",
+          pdfTheme: secureRole === "kid" ? "kid" : secureRole === "teacher" ? "teacher" : "clean",
           suggestedTitle: "Learning Material",
           isPdfRequest: true,
           usage: {

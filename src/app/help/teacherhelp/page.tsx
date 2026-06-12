@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, School, WandSparkles, LineChart, FileDown } from "lucide-react";
 import { APP_ROUTES } from "@/lib/constants/common";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
@@ -32,56 +32,66 @@ export default function TeacherHelpPage() {
         </section>
 
         <section className="grid md:grid-cols-2 gap-6">
-          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                <School className="h-6 w-6 text-sky-600" />
+          <Card className="p-6 md:p-8 bg-card border-2 border-border/50 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="p-0 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center">
+                <School className="w-8 h-8 text-sky-600" />
               </div>
-              <CardTitle className="text-xl font-bold text-foreground">Classroom Setup</CardTitle>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  Classroom Setup
+                </CardTitle>
+                <p className="text-muted-foreground font-medium">
+                  Create classes, share codes, and manage student permissions quickly.
+                </p>
+              </div>
             </CardHeader>
-            <CardContent className="text-muted-foreground font-medium">
-              Create classes, share codes, and manage student permissions quickly.
-            </CardContent>
           </Card>
-          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                <WandSparkles className="h-6 w-6 text-sky-600" />
+          <Card className="p-6 md:p-8 bg-card border-2 border-border/50 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="p-0 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center">
+                <WandSparkles className="w-8 h-8 text-sky-600" />
               </div>
-              <CardTitle className="text-xl font-bold text-foreground">
-                AI Worksheet Generator
-              </CardTitle>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  AI Worksheet Generator
+                </CardTitle>
+                <p className="text-muted-foreground font-medium">
+                  Generate custom quizzes, puzzles, and worksheets by topic and level.
+                </p>
+              </div>
             </CardHeader>
-            <CardContent className="text-muted-foreground font-medium">
-              Generate custom quizzes, puzzles, and worksheets by topic and level.
-            </CardContent>
           </Card>
         </section>
 
         <section className="grid md:grid-cols-2 gap-6">
-          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                <LineChart className="h-6 w-6 text-sky-600" />
+          <Card className="p-6 md:p-8 bg-card border-2 border-border/50 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="p-0 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center">
+                <LineChart className="w-8 h-8 text-sky-600" />
               </div>
-              <CardTitle className="text-xl font-bold text-foreground">
-                Tracking Performance
-              </CardTitle>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  Tracking Performance
+                </CardTitle>
+                <p className="text-muted-foreground font-medium">
+                  Monitor class averages, topic mastery, and student engagement trends.
+                </p>
+              </div>
             </CardHeader>
-            <CardContent className="text-muted-foreground font-medium">
-              Monitor class averages, topic mastery, and student engagement trends.
-            </CardContent>
           </Card>
-          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                <FileDown className="h-6 w-6 text-sky-600" />
+          <Card className="p-6 md:p-8 bg-card border-2 border-border/50 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="p-0 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center">
+                <FileDown className="w-8 h-8 text-sky-600" />
               </div>
-              <CardTitle className="text-xl font-bold text-foreground">Export Reports</CardTitle>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-bold text-foreground">Export Reports</CardTitle>
+                <p className="text-muted-foreground font-medium">
+                  Export student reports in CSV or PDF for parent-teacher meetings.
+                </p>
+              </div>
             </CardHeader>
-            <CardContent className="text-muted-foreground font-medium">
-              Export student reports in CSV or PDF for parent-teacher meetings.
-            </CardContent>
           </Card>
         </section>
 

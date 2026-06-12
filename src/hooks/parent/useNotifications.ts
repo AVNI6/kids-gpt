@@ -1,8 +1,15 @@
 import { useDashboard } from "@/context/parent-dashboard/DashboardContext";
 
 export function useNotifications() {
-  const { notifications, unreadCount, isLoadingNotifications, markAsRead, markAllAsRead } =
-    useDashboard();
+  const {
+    notifications,
+    unreadCount,
+    isLoadingNotifications,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    deleteAllNotifications,
+  } = useDashboard();
 
   return {
     notifications,
@@ -10,5 +17,7 @@ export function useNotifications() {
     isLoadingNotifications,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
+    deleteAllNotifications,
   };
 }

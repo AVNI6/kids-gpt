@@ -63,7 +63,7 @@ export default function DashboardNavbarBase({
   const sidebarBtnBg = "bg-sky-500 hover:bg-sky-600 shadow-sky-500/20";
 
   return (
-    <nav>
+    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-md">
       <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 w-full">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Left Section: Mobile Sidebar Hamburger & Brand */}

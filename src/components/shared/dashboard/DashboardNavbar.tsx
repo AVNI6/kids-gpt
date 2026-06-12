@@ -2,9 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useKidNotifications } from "@/hooks/kid/useKidNotifications";
 import { useNotifications } from "@/hooks/parent/useNotifications";
-import { useTeacherNotifications } from "@/hooks/teacher/useTeacherNotifications";
+import { useClassroomNotifications } from "@/hooks/shared/useClassroomNotifications";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
 import { getKidPendingAssignmentsCount } from "@/lib/services/kid/classroom.actions";
 import { APP_ROUTES } from "@/lib/constants/common";
@@ -25,7 +24,7 @@ interface DashboardNavbarProps {
 function KidNavbarWrapper({ pathname }: { pathname: string }) {
   const [dueCount, setDueCount] = useState(0);
   const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } =
-    useKidNotifications(10);
+    useClassroomNotifications("kid", 10);
 
   useEffect(() => {
     getKidPendingAssignmentsCount().then(setDueCount);
@@ -96,7 +95,7 @@ function ParentNavbarWrapper({ pathname }: { pathname: string }) {
 
 function TeacherNavbarWrapper({ pathname }: { pathname: string }) {
   const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } =
-    useTeacherNotifications(10);
+    useClassroomNotifications("teacher", 10);
 
   const isLinkActive = (item: NavItemConfig) => {
     if (item.exact) return pathname === item.href;

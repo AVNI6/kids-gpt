@@ -34,40 +34,46 @@ export default function StudentHelpPage() {
         </section>
 
         <section className="grid md:grid-cols-3 gap-6">
-          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                <MessageSquare className="h-6 w-6 text-sky-600" />
+          <Card className="p-6 md:p-8 bg-card border-2 border-border/50 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="p-0 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center">
+                <MessageSquare className="w-8 h-8 text-sky-600" />
               </div>
-              <CardTitle className="text-xl font-bold text-foreground">Chat with AI</CardTitle>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-bold text-foreground">Chat with AI</CardTitle>
+                <p className="text-muted-foreground font-medium">
+                  Ask questions about math, science, stories, or homework.
+                </p>
+              </div>
             </CardHeader>
-            <CardContent className="text-muted-foreground font-medium">
-              Ask questions about math, science, stories, or homework.
-            </CardContent>
           </Card>
 
-          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                <Users className="h-6 w-6 text-sky-600" />
+          <Card className="p-6 md:p-8 bg-card border-2 border-border/50 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="p-0 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center">
+                <Users className="w-8 h-8 text-sky-600" />
               </div>
-              <CardTitle className="text-xl font-bold text-foreground">Join a Class</CardTitle>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-bold text-foreground">Join a Class</CardTitle>
+                <p className="text-muted-foreground font-medium">
+                  Use your class code from teacher to unlock tasks and activities.
+                </p>
+              </div>
             </CardHeader>
-            <CardContent className="text-muted-foreground font-medium">
-              Use your class code from teacher to unlock tasks and activities.
-            </CardContent>
           </Card>
 
-          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                <Trophy className="h-6 w-6 text-sky-600" />
+          <Card className="p-6 md:p-8 bg-card border-2 border-border/50 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="p-0 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center">
+                <Trophy className="w-8 h-8 text-sky-600" />
               </div>
-              <CardTitle className="text-xl font-bold text-foreground">Earn Badges</CardTitle>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-bold text-foreground">Earn Badges</CardTitle>
+                <p className="text-muted-foreground font-medium">
+                  Complete lessons and quizzes to collect achievement badges.
+                </p>
+              </div>
             </CardHeader>
-            <CardContent className="text-muted-foreground font-medium">
-              Complete lessons and quizzes to collect achievement badges.
-            </CardContent>
           </Card>
         </section>
 
@@ -110,8 +116,8 @@ export default function StudentHelpPage() {
           </Accordion>
         </section>
 
-        <Card className="bg-gradient-to-r from-sky-600 to-sky-700 text-white border-0 rounded-3xl overflow-hidden shadow-xl shadow-sky-500/20">
-          <CardContent className="py-10 px-8 flex flex-col md:flex-row items-center justify-between gap-8">
+        <Card className="p-8 md:p-10 bg-gradient-to-r from-sky-600 to-sky-700 text-white border-0 rounded-3xl overflow-hidden shadow-xl shadow-sky-500/20">
+          <CardContent className="p-0 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="space-y-2 text-center md:text-left">
               <h3 className="text-3xl font-black">Need more help?</h3>
               <p className="text-sky-50 text-lg font-medium">

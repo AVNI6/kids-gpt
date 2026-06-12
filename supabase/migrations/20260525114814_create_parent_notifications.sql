@@ -65,3 +65,16 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Enable DELETE for public.notifications
+DROP POLICY IF EXISTS notifications_delete ON public.notifications;
+CREATE POLICY notifications_delete ON public.notifications
+  FOR DELETE TO authenticated
+  USING (recipient_user_id = (SELECT auth.uid()));
+
+-- Enable DELETE for public.parent_notifications
+DROP POLICY IF EXISTS parent_notifications_delete ON public.parent_notifications;
+CREATE POLICY parent_notifications_delete ON public.parent_notifications
+  FOR DELETE TO authenticated
+  USING (parent_id = (SELECT auth.uid()));

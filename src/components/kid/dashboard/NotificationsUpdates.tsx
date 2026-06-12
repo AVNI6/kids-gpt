@@ -13,7 +13,7 @@ import {
   Bell,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useKidNotifications } from "@/hooks/kid/useKidNotifications";
+import { useClassroomNotifications } from "@/hooks/shared/useClassroomNotifications";
 import { getRelativeTime } from "@/hooks/shared/timeUtils";
 
 export function NotificationsUpdatesSkeleton() {
@@ -32,7 +32,7 @@ export function NotificationsUpdatesSkeleton() {
 }
 
 export default function NotificationsUpdates() {
-  const { notifications, isLoading } = useKidNotifications(10);
+  const { notifications, isLoading } = useClassroomNotifications("kid", 10);
 
   const getNotifIcon = (type: string) => {
     switch (type) {
