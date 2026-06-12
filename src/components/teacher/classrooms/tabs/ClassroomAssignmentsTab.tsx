@@ -25,7 +25,7 @@ type Props = {
   assignments: ClassroomAssignment[];
   setAssignments: React.Dispatch<React.SetStateAction<ClassroomAssignment[]>>;
   handlePublishAssignment: (id: string) => Promise<void>;
-  handleDeleteAssignment: (id: string, title: string) => Promise<void>;
+  handleDeleteAssignment: (id: string, title: string) => void;
   handleOpenGrading: (assignment: ClassroomAssignment) => Promise<void>;
 };
 

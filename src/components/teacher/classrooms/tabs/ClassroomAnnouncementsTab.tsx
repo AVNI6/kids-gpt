@@ -23,7 +23,7 @@ type Props = {
   classroomId: string;
   announcements: ClassroomAnnouncement[];
   setAnnouncements: React.Dispatch<React.SetStateAction<ClassroomAnnouncement[]>>;
-  handleDeleteAnnouncement: (id: string) => Promise<void>;
+  handleDeleteAnnouncement: (id: string) => void;
 };
 
 export default function ClassroomAnnouncementsTab({

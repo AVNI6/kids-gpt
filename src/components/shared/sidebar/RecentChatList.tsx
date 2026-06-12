@@ -60,7 +60,7 @@ export default function RecentChatList({
         Recent Chats
       </h3>
       <ScrollArea onScroll={handleScroll} className="w-full flex-1 min-h-0">
-        <div className="space-y-1 w-full pl-4 pr-3 py-1">
+        <div className="space-y-1 w-full pl-1 pr-3 py-1">
           {sessions.length > 0 ? (
             sessions.map((session) => (
               <RecentChatItem
