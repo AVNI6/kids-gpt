@@ -38,7 +38,11 @@ export default function ChatGPTKidSignupPage() {
     password: string;
   };
 
-  const { register, handleSubmit } = useForm<FormValue>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValue>();
   const [agreed, setAgreed] = useState(false);
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
@@ -165,7 +169,18 @@ export default function ChatGPTKidSignupPage() {
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                   <Input
-                    {...register("password", { required: true })}
+                    {...register("password", {
+                      required: "Password is required",
+                      validate: {
+                        minLength: (v) =>
+                          v.length >= 8 || "Password must be at least 8 characters long",
+                        hasUppercase: (v) =>
+                          /[A-Z]/.test(v) || "Password must contain at least 1 uppercase letter",
+                        hasSpecial: (v) =>
+                          /[^A-Za-z0-9]/.test(v) ||
+                          "Password must contain at least 1 special symbol",
+                      },
+                    })}
                     type={showPassword ? "text" : "password"}
                     className="pl-12 pr-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
                     placeholder="••••••••"
@@ -178,6 +193,11 @@ export default function ChatGPTKidSignupPage() {
                     {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                   </button>
                 </div>
+                {errors.password && (
+                  <p className="mt-2 px-1 text-xs text-red-500 font-bold animate-in fade-in slide-in-from-top-1">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center gap-3">

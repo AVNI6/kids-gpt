@@ -65,19 +65,6 @@ export async function uploadAvatar(formData: FormData) {
   return { avatarUrl };
 }
 
-export async function setProfileAvatar(
-  _previousState: AvatarUploadState,
-  formData: FormData
-): Promise<AvatarUploadState> {
-  try {
-    const { avatarUrl } = await uploadAvatar(formData);
-    return { avatarUrl, error: null };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Avatar upload failed.";
-    return { avatarUrl: null, error: message };
-  }
-}
-
 export async function submitKidOnboarding(
   _previousState: KidOnboardingState,
   formData: FormData

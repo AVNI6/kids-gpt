@@ -46,8 +46,6 @@ const logicPuzzleSchema = z.object({
     ),
 });
 
-export type LogicPuzzleActivityContent = z.infer<typeof logicPuzzleSchema>;
-
 /**
  * Server Action to dynamically generate 3 logic pattern puzzles
  * on a given topic for a kid user using the Vercel AI SDK and Gemini model, and save it in Supabase.

@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { processActivityCompletion } from "@/lib/services/kid/rewards.actions";
 
 /**
  * Server Action to retrieve the highest unlocked World and Step for the Memory Match campaign
@@ -88,27 +87,4 @@ export async function getMemoryMatchProgress() {
       completedSlugs: [] as string[],
     };
   }
-}
-
-/**
- * Server Action to save progress for the Memory Match campaign.
- * Restricts persistence to exactly 1 row per World in the rewards table.
- * Delegates progression calculations, streaks, XP, parent notifications, and cache revalidation
- * to the centralized `processActivityCompletion` action.
- */
-export async function saveMemoryCampaignProgress(
-  worldId: number,
-  stepNumber: number,
-  xpEarned: number,
-  scoreStr: string,
-  timezone: string = "Asia/Kolkata"
-): Promise<{ success: boolean; error?: string; message?: string }> {
-  return processActivityCompletion({
-    activitySlug: "memory-match",
-    activityTitle: "Memory Match",
-    score: scoreStr,
-    timezone,
-    memoryMatchWorldId: worldId,
-    memoryMatchStepNumber: stepNumber,
-  });
 }

@@ -48,8 +48,6 @@ const scienceLabSchema = z.object({
     .describe("An array containing exactly 3 fun, safe, and exciting kid-friendly experiments."),
 });
 
-export type ScienceLabActivityContent = z.infer<typeof scienceLabSchema>;
-
 /**
  * Server Action to dynamically generate 3 safe, fun, kid-friendly science experiments
  * on a given topic for a kid user using the Vercel AI SDK and Gemini model, and save it in Supabase.

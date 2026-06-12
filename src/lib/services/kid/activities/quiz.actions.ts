@@ -37,8 +37,6 @@ const quizSchema = z.object({
     .describe("An array containing fun educational quiz questions."),
 });
 
-export type QuizActivityContent = z.infer<typeof quizSchema>;
-
 /**
  * Server Action to dynamically generate a parameterized multiple-choice educational quiz
  * on a given topic for a kid user using the Vercel AI SDK and Gemini model, and save it in Supabase.

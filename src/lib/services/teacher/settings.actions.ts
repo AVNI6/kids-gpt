@@ -72,30 +72,3 @@ export async function changeTeacherPassword(password: string): Promise<ActionRes
     };
   }
 }
-
-export async function unlinkStudentFromTeacher(studentUserId: string): Promise<ActionResponse> {
-  try {
-    const { userId } = await verifyUserRole("teacher");
-    const supabase = await createClient();
-
-    const { error } = await supabase
-      .from("teacher_student_links")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("teacher_user_id", userId)
-      .eq("student_user_id", studentUserId)
-      .is("deleted_at", null);
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    revalidatePath("/dashboard/teacher/settings");
-    revalidatePath("/dashboard/teacher");
-    return { success: true, message: "Student unlinked successfully!" };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Failed to unlink student.",
-    };
-  }
-}

@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Logo from "@/components/shared/logo/Logo";
 
 const supabase = createClient();
@@ -25,12 +25,25 @@ function LoginPageContent() {
   const fromRole = searchParams?.get("role");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [keepSignedIn, setKeepSignedIn] = useState(false);
+
   type FormValue = {
     email: string;
     password: string;
   };
 
-  const { register, handleSubmit } = useForm<FormValue>();
+  const { register, handleSubmit, setValue } = useForm<FormValue>();
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    const savedPassword = localStorage.getItem("rememberedPassword");
+    if (savedEmail && savedPassword) {
+      setValue("email", savedEmail);
+      setValue("password", savedPassword);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setKeepSignedIn(true);
+    }
+  }, [setValue]);
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     setIsSubmitting(true);
@@ -44,6 +57,15 @@ function LoginPageContent() {
       return;
     }
     if (data) {
+      // Save or clear credentials in localStorage based on Keep Signed In checkbox
+      if (keepSignedIn) {
+        localStorage.setItem("rememberedEmail", e.email);
+        localStorage.setItem("rememberedPassword", e.password);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+        localStorage.removeItem("rememberedPassword");
+      }
+
       // Attempt to read profile and route first-time users to onboarding.
       try {
         const userId = data.user?.id;
@@ -194,8 +216,17 @@ function LoginPageContent() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Checkbox />
-              <span className="text-sm text-muted-foreground">Keep me logged in</span>
+              <Checkbox
+                id="keep-signed-in"
+                checked={keepSignedIn}
+                onCheckedChange={(checked) => setKeepSignedIn(checked === true)}
+              />
+              <label
+                htmlFor="keep-signed-in"
+                className="text-sm text-muted-foreground cursor-pointer select-none"
+              >
+                Keep me logged in
+              </label>
             </div>
 
             <button

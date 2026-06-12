@@ -17,8 +17,6 @@ const flashcardSchema = z.object({
   flashcards: z.array(flashcardItemSchema).describe("An array containing kid-friendly flashcards."),
 });
 
-export type FlashcardActivityContent = z.infer<typeof flashcardSchema>;
-
 /**
  * Server Action to dynamically generate educational flashcards on a given topic
  * for a kid user using the Vercel AI SDK and Gemini model, and save it in Supabase.

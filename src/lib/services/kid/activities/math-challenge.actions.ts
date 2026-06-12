@@ -27,8 +27,6 @@ const mathChallengeSchema = z.object({
     ),
 });
 
-export type MathChallengeContent = z.infer<typeof mathChallengeSchema>;
-
 /**
  * Server Action to dynamically generate a parameterized math challenge
  * on a given topic/theme for a kid user using the Vercel SDK and Gemini model, and save it in Supabase.

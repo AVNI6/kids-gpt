@@ -24,28 +24,6 @@ export async function getActivityXp(slug: string): Promise<number> {
   }
 }
 
-/**
- * Fetch all dynamic XP settings for educational activity slug structures.
- * If dynamic records are missing in the database, returns an empty map.
- */
-export async function getActivityXpSettings(): Promise<Record<string, number>> {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.from("activity_settings").select("slug, xp_reward");
-
-    if (error || !data) {
-      return {};
-    }
-    const result: Record<string, number> = {};
-    for (const item of data) {
-      result[item.slug] = item.xp_reward;
-    }
-    return result;
-  } catch {
-    return {};
-  }
-}
-
 export interface ActivityDbSettings {
   xp_reward: number;
   minutes: number;

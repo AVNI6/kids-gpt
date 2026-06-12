@@ -23,15 +23,6 @@ const aiWordScrambleSchema = z.object({
     .describe("An array containing dynamic fun educational scrambled words."),
 });
 
-// The final schema structure that matches what database/frontend expects
-export type WordScrambleActivityContent = {
-  words: {
-    answer: string;
-    scrambled: string;
-    hint: string;
-  }[];
-};
-
 /**
  * Helper to validate if a word fits the selected difficulty length constraints.
  * - easy: 3–5 letters
