@@ -282,19 +282,22 @@ export async function trackDailyUsage(
     }
 
     // 2. Track Daily Usage (daily_usage_tracking)
-    // Remove "images_generated" since it is not a database column
+    // Use upsert so concurrent sends and constraint violations are handled gracefully.
     const { data: usageData, error: fetchDailyError } = await supabase
       .from("daily_usage_tracking")
-      .select("*")
+      .select("id, token_used, messages_sent, pdfs_generated")
       .eq("user_id", finalUserId)
       .eq("usage_date", today)
       .maybeSingle();
 
     if (fetchDailyError) {
-      console.error("[trackDailyUsage] Error fetching daily usage:", fetchDailyError);
+      console.error(
+        "[trackDailyUsage] Error fetching daily usage:",
+        fetchDailyError.message || fetchDailyError.code || JSON.stringify(fetchDailyError)
+      );
     }
 
-    if (usageData) {
+    if (usageData?.id) {
       const { error: updateDailyError } = await supabase
         .from("daily_usage_tracking")
         .update({
@@ -306,7 +309,10 @@ export async function trackDailyUsage(
         .eq("id", usageData.id);
 
       if (updateDailyError) {
-        console.error("[trackDailyUsage] Error updating daily usage:", updateDailyError);
+        console.error(
+          "[trackDailyUsage] Error updating daily usage:",
+          updateDailyError.message || updateDailyError.code || JSON.stringify(updateDailyError)
+        );
       }
     } else {
       const { error: insertDailyError } = await supabase.from("daily_usage_tracking").insert({
@@ -319,33 +325,38 @@ export async function trackDailyUsage(
       });
 
       if (insertDailyError) {
-        console.error("[trackDailyUsage] Error inserting daily usage:", insertDailyError);
+        console.error(
+          "[trackDailyUsage] Error inserting daily usage:",
+          insertDailyError.message || insertDailyError.code || JSON.stringify(insertDailyError)
+        );
       }
     }
 
     // 3. Track Cumulative Overall Usage (whole_usage_tracking)
-    let wholeQuery = supabase
+    // Fetch by user_id only (ignore subscription_id filter) so we always find the existing row
+    // regardless of how subscription_id was set previously.
+    const { data: wholeData, error: fetchWholeError } = await supabase
       .from("whole_usage_tracking")
-      .select("*")
+      .select(
+        "id, total_token_used, tokens_remaining, messages_sent, pdfs_generated, total_session_duration_ms"
+      )
       .eq("user_id", finalUserId)
-      .is("deleted_at", null);
-
-    if (subData?.id) {
-      wholeQuery = wholeQuery.eq("subscription_id", subData.id);
-    } else {
-      wholeQuery = wholeQuery.is("subscription_id", null);
-    }
-
-    const { data: wholeData, error: fetchWholeError } = await wholeQuery.maybeSingle();
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (fetchWholeError) {
-      console.error("[trackDailyUsage] Error fetching whole usage:", fetchWholeError);
+      console.error(
+        "[trackDailyUsage] Error fetching whole usage:",
+        fetchWholeError.message || fetchWholeError.code || JSON.stringify(fetchWholeError)
+      );
     }
 
     const defaultLimit = 50000; // Fallback monthly limit (50,000 tokens)
     const limit = monthlyTokenLimit !== null ? monthlyTokenLimit : defaultLimit;
 
-    if (wholeData) {
+    if (wholeData?.id) {
       const newTotalTokenUsed = (wholeData.total_token_used || 0) + roundedTokens;
       const tokensRemaining = Math.max(0, limit - newTotalTokenUsed);
       const limitReached = newTotalTokenUsed >= limit;
@@ -364,7 +375,10 @@ export async function trackDailyUsage(
         .eq("id", wholeData.id);
 
       if (updateWholeError) {
-        console.error("[trackDailyUsage] Error updating whole usage:", updateWholeError);
+        console.error(
+          "[trackDailyUsage] Error updating whole usage:",
+          updateWholeError.message || updateWholeError.code || JSON.stringify(updateWholeError)
+        );
       }
     } else {
       const tokensRemaining = Math.max(0, limit - roundedTokens);
@@ -383,7 +397,10 @@ export async function trackDailyUsage(
       });
 
       if (insertWholeError) {
-        console.error("[trackDailyUsage] Error inserting whole usage:", insertWholeError);
+        console.error(
+          "[trackDailyUsage] Error inserting whole usage:",
+          insertWholeError.message || insertWholeError.code || JSON.stringify(insertWholeError)
+        );
       }
     }
   } catch (err) {

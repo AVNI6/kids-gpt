@@ -1,6 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, FolderOpen, Megaphone, Users } from "lucide-react";
@@ -70,6 +80,27 @@ export default function TeacherClassroomWorkspaceClient({
   );
   const [gradingOpen, setGradingOpen] = useState(false);
 
+  // Shared confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => Promise<void>;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    onConfirm: async () => {},
+  });
+
+  const openConfirm = (title: string, description: string, onConfirm: () => Promise<void>) => {
+    setConfirmDialog({ open: true, title, description, onConfirm });
+  };
+
+  const closeConfirm = () => {
+    setConfirmDialog((prev) => ({ ...prev, open: false }));
+  };
+
   // -------------------------------------------------------------------------
   // Shared Handlers
   // -------------------------------------------------------------------------
@@ -92,20 +123,24 @@ export default function TeacherClassroomWorkspaceClient({
     }
   };
 
-  const handleDeleteAssignment = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete assignment "${title}"?`)) return;
-
-    try {
-      const result = await deleteAssignment(id);
-      if (result.success) {
-        toast.success("Assignment deleted.");
-        setAssignments(assignments.filter((a) => a.id !== id));
-      } else {
-        toast.error(result.error || "Failed to delete assignment.");
+  const handleDeleteAssignment = (id: string, title: string) => {
+    openConfirm(
+      "Delete Assignment",
+      `Are you sure you want to delete assignment "${title}"? This action cannot be undone.`,
+      async () => {
+        try {
+          const result = await deleteAssignment(id);
+          if (result.success) {
+            toast.success("Assignment deleted.");
+            setAssignments(assignments.filter((a) => a.id !== id));
+          } else {
+            toast.error(result.error || "Failed to delete assignment.");
+          }
+        } catch {
+          toast.error("Failed to delete assignment.");
+        }
       }
-    } catch {
-      toast.error("Failed to delete assignment.");
-    }
+    );
   };
 
   const handleOpenGrading = async (assignment: ClassroomAssignment) => {
@@ -145,20 +180,24 @@ export default function TeacherClassroomWorkspaceClient({
     });
   };
 
-  const handleDeleteAnnouncement = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this announcement?")) return;
-
-    try {
-      const result = await deleteAnnouncement(id);
-      if (result.success) {
-        toast.success("Announcement deleted.");
-        setAnnouncements(announcements.filter((a) => a.id !== id));
-      } else {
-        toast.error(result.error || "Failed to delete announcement.");
+  const handleDeleteAnnouncement = (id: string) => {
+    openConfirm(
+      "Delete Announcement",
+      "Are you sure you want to delete this announcement? This action cannot be undone.",
+      async () => {
+        try {
+          const result = await deleteAnnouncement(id);
+          if (result.success) {
+            toast.success("Announcement deleted.");
+            setAnnouncements(announcements.filter((a) => a.id !== id));
+          } else {
+            toast.error(result.error || "Failed to delete announcement.");
+          }
+        } catch {
+          toast.error("Failed to delete announcement.");
+        }
       }
-    } catch {
-      toast.error("Failed to delete announcement.");
-    }
+    );
   };
 
   const getInitials = (first?: string | null, last?: string | null) => {
@@ -261,6 +300,27 @@ export default function TeacherClassroomWorkspaceClient({
         setAssignmentOverview={setAssignmentOverview}
         getInitials={getInitials}
       />
+
+      {/* 4. Shared Confirmation Dialog */}
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => !open && closeConfirm()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={closeConfirm}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                closeConfirm();
+                await confirmDialog.onConfirm();
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -408,6 +408,20 @@ export function useChatSender({
 
                 if (isImage) {
                   try {
+                    // INSERT the message row first so the subsequent UPDATE has a target
+                    await saveChatMessage(
+                      sessionId,
+                      "model",
+                      aiResponseContent,
+                      {
+                        id: aiMessageId,
+                        tokens: Math.round(100),
+                        model: "imagen",
+                        responseTime: responseTime,
+                      },
+                      user?.id
+                    );
+
                     let imgAttachmentUrl = aiResponseContent;
 
                     if (aiResponseContent.startsWith("data:image/")) {
@@ -459,12 +473,14 @@ export function useChatSender({
                   } catch (imgUploadErr) {
                     console.error("[ChatInterface] Background image upload failed:", imgUploadErr);
                   }
-                } else {
+                } else if (aiResponseContent.trim()) {
+                  // Only save non-empty text responses
                   await saveChatMessage(
                     sessionId,
                     "model",
                     aiResponseContent,
                     {
+                      id: aiMessageId,
                       tokens,
                       model: "gemini-2.5-flash",
                       responseTime: responseTime,
@@ -724,7 +740,10 @@ export function useChatSender({
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
-        console.error("Chat error:", error);
+        console.error(
+          "[useChatSender] Chat error:",
+          error instanceof Error ? error.message : String(error)
+        );
         const errResponse = "Sorry, something went wrong. Please try again.";
         const errMessage: Message = {
           id: crypto.randomUUID(),
