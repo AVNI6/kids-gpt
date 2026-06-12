@@ -2,29 +2,70 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { generateAIResponse } from "@/lib/ai/model-orchestrator";
 import { aiLogger } from "@/lib/ai/logger";
 
-export async function processPendingSummaries() {
+interface SessionSummaryTarget {
+  id: string;
+  summary: string | null;
+  last_summarized_message_count: number | null;
+  user_id: string;
+}
+
+export async function processPendingSummaries(options?: { sessionId?: string; force?: boolean }) {
   const supabase = createAdminClient();
+  let sessions: SessionSummaryTarget[] = [];
 
-  // 1. Select up to 5 sessions where summary_pending = true
-  const { data: sessions, error: fetchError } = await supabase
-    .from("chat_sessions")
-    .select("id, summary, last_summarized_message_count, user_id")
-    .eq("summary_pending", true)
-    .limit(5);
+  if (options?.sessionId) {
+    const { data: session, error: fetchError } = await supabase
+      .from("chat_sessions")
+      .select("id, summary, last_summarized_message_count, user_id")
+      .eq("id", options.sessionId)
+      .maybeSingle();
 
-  if (fetchError) {
-    aiLogger.error("SummaryService", "Failed to fetch pending sessions", {
-      error: fetchError.message,
-    });
-    throw fetchError;
+    if (fetchError) {
+      aiLogger.error("SummaryService", `Failed to fetch session ${options.sessionId}`, {
+        error: fetchError.message,
+      });
+      throw fetchError;
+    }
+    if (session) {
+      sessions = [session as SessionSummaryTarget];
+    }
+  } else if (options?.force) {
+    const { data, error: fetchError } = await supabase
+      .from("chat_sessions")
+      .select("id, summary, last_summarized_message_count, user_id")
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(5);
+
+    if (fetchError) {
+      aiLogger.error("SummaryService", "Failed to fetch sessions for force summary", {
+        error: fetchError.message,
+      });
+      throw fetchError;
+    }
+    sessions = (data || []) as SessionSummaryTarget[];
+  } else {
+    const { data, error: fetchError } = await supabase
+      .from("chat_sessions")
+      .select("id, summary, last_summarized_message_count, user_id")
+      .eq("summary_pending", true)
+      .limit(5);
+
+    if (fetchError) {
+      aiLogger.error("SummaryService", "Failed to fetch pending sessions", {
+        error: fetchError.message,
+      });
+      throw fetchError;
+    }
+    sessions = (data || []) as SessionSummaryTarget[];
   }
 
   if (!sessions || sessions.length === 0) {
-    aiLogger.info("SummaryService", "No pending summaries to process");
-    return { processedCount: 0 };
+    aiLogger.info("SummaryService", "No sessions to process");
+    return { processedCount: 0, sessions: [] };
   }
 
-  aiLogger.info("SummaryService", `Found ${sessions.length} sessions pending summarization`);
+  aiLogger.info("SummaryService", `Processing ${sessions.length} sessions`);
 
   let processedCount = 0;
 
@@ -164,5 +205,5 @@ Ensure the updated summary satisfies the following guidelines:
     }
   }
 
-  return { processedCount };
+  return { processedCount, sessionsProcessed: sessions.map((s) => s.id) };
 }

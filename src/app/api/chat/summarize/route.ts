@@ -14,11 +14,16 @@ async function handleRequest(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const result = await processPendingSummaries();
+    const { searchParams } = new URL(req.url);
+    const sessionId = searchParams.get("sessionId") || undefined;
+    const force = searchParams.get("force") === "true";
+
+    const result = await processPendingSummaries({ sessionId, force });
 
     return NextResponse.json({
       success: true,
       processedCount: result.processedCount,
+      sessions: result.sessionsProcessed,
     });
   } catch (error) {
     aiLogger.error("SummarizeRoute", "Error in summarize API endpoint", {
