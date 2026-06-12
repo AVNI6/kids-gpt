@@ -7,7 +7,7 @@ import {
   FileText,
   Video,
   LinkIcon,
-  Image,
+  Image as ImageIcon,
   FileArchive,
   ExternalLink,
   Trash2,
@@ -52,7 +52,7 @@ const getResourceIcon = (type: string) => {
     case "LINK":
       return <LinkIcon className="h-5 w-5" />;
     case "IMAGE":
-      return <Image className="h-5 w-5" />;
+      return <ImageIcon className="h-5 w-5" />;
     case "DOCUMENT":
     case "WORD":
       return <FileText className="h-5 w-5" />;
@@ -144,7 +144,7 @@ export default function ClassroomResourcesTab({
       } else {
         toast.error(uploadResult.error || "Failed to upload file.");
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to upload file to storage.");
     } finally {
       setIsUploadingFile(false);
@@ -209,7 +209,7 @@ export default function ClassroomResourcesTab({
         const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
         const url = await getSignedResourceUrl(res.storage_path);
         window.open(url, "_blank");
-      } catch (err) {
+      } catch {
         toast.error("Failed to generate secure download link.");
       }
     } else {

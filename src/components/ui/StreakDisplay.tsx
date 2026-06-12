@@ -63,11 +63,6 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
               days straight!
             </span>
           </div>
-          <div className="mt-3 flex items-center gap-2">
-            <span className="inline-block rounded-full bg-sky-100 px-2.5 py-1 text-xs font-bold text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
-              Today&apos;s streak
-            </span>
-          </div>
         </div>
       );
 

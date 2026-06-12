@@ -336,7 +336,6 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
   >(null);
   const [selectedString, setSelectedString] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
 
   const hasClaimedRef = useRef(false);
@@ -384,7 +383,6 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
     setActiveChallenge(selectedData);
     setSelectedString(null);
     setShowResult(false);
-    setIsCorrect(false);
     setIsClaiming(false);
     hasClaimedRef.current = false;
   };
@@ -410,7 +408,6 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
     setShowResult(true);
 
     const correct = ans === activeChallenge.answer;
-    setIsCorrect(correct);
 
     if (correct) {
       // Trigger confetti instantly on correct answer for zero-delay response

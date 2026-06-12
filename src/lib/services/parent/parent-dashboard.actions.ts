@@ -765,6 +765,14 @@ interface ChildComprehensiveRpcResponse {
     created_at: string | null;
   }> | null;
   today_screen_time_seconds: number | null;
+  classrooms: Array<{
+    classroom_id: string;
+    classroom_name: string;
+    subject: string | null;
+    grade_level: string | null;
+    pending_assignments_count: number | null;
+    completed_assignments_count: number | null;
+  }> | null;
 }
 
 function mapRpcToCacheData(
@@ -892,12 +900,23 @@ function mapRpcToCacheData(
     isLimitEnabled: rpcData.link?.is_screen_time_limit_enabled ?? false,
   };
 
+  // 7. Map classrooms
+  const classrooms = (rpcData.classrooms || []).map((c) => ({
+    classroom_id: c.classroom_id,
+    classroom_name: c.classroom_name,
+    subject: c.subject,
+    grade_level: c.grade_level,
+    pending_assignments_count: c.pending_assignments_count ?? 0,
+    completed_assignments_count: c.completed_assignments_count ?? 0,
+  }));
+
   return {
     details,
     safety,
     history,
     activities,
     screenTime,
+    classrooms,
     aiInsights: null,
   };
 }
@@ -1002,6 +1021,7 @@ export async function getChildComprehensiveDataLegacy(childUserId: string): Prom
     history: formattedHistory,
     activities: formattedActivities,
     screenTime: cachedScreenTime,
+    classrooms: [],
     aiInsights,
   };
 }

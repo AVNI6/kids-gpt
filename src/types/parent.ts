@@ -115,6 +115,15 @@ export interface NotificationItem {
   created_at: string | null;
 }
 
+export type ChildClassroomSummary = {
+  classroom_id: string;
+  classroom_name: string;
+  subject: string | null;
+  grade_level: string | null;
+  pending_assignments_count: number;
+  completed_assignments_count: number;
+};
+
 export type CacheData = {
   details: ChildDetailsResult | null;
   safety: ChildSafetyAndUsageResult | null;
@@ -126,4 +135,5 @@ export type CacheData = {
     isLimitEnabled: boolean;
   } | null;
   aiInsights: AiInsightsResult | null;
+  classrooms: ChildClassroomSummary[];
 };

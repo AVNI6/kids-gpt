@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, FolderOpen, Megaphone, Users } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -48,7 +48,6 @@ export default function TeacherClassroomWorkspaceClient({
   initialStudents,
 }: Props) {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   // Tab is driven directly by URL query parameter (href) or defaults to assignments
   const activeTab = (searchParams?.get("tab") || "assignments") as
@@ -167,7 +166,7 @@ export default function TeacherClassroomWorkspaceClient({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link
-            href="/dashboard/teacher"
+            href="/dashboard/teacher/classrooms"
             className={cn(
               buttonVariants({ variant: "outline" }),
               "rounded-full h-10 w-10 p-0 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 flex items-center justify-center"

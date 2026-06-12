@@ -2,7 +2,6 @@
 
 import { ReactNode, useState } from "react";
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
 import Sidebar from "@/components/shared/sidebar/Sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
@@ -10,7 +9,6 @@ import ScreenTimeTracker from "@/components/shared/screentime/ScreenTimeTracker"
 import DashboardNavbar from "@/components/shared/dashboard/DashboardNavbar";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname() || "";
   const { userProfile, isUserLoggedIn } = useAuth();
 
   const [mounted, setMounted] = useState(false);

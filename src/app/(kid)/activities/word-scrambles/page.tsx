@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Type, Sparkles, CheckCircle2, ArrowLeft, Award, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Type, Sparkles, CheckCircle2, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
@@ -50,7 +50,11 @@ export default function WordScramblesPage({
   const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [scrambleCompleted, setScrambleCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(140);
-  const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
+  const completedClassroomId = null;
+
+  useEffect(() => {
+    getActivityXp("word-scrambles").then(setXpReward);
+  }, []);
 
   const safeWords = words || defaultWords;
   const word = safeWords[currentWord] || safeWords[0];

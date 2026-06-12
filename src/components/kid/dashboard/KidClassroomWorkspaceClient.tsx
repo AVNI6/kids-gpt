@@ -150,7 +150,7 @@ export default function KidClassroomWorkspaceClient({
         const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
         const url = await getSignedResourceUrl(res.storage_path);
         window.open(url, "_blank");
-      } catch (err) {
+      } catch {
         toast.error("Failed to generate secure download link.");
       }
     } else {

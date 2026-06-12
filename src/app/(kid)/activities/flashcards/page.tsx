@@ -1,15 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  RefreshCcw,
-  CheckCircle2,
-  RotateCcw,
-  Sparkles,
-  Rocket,
-  ArrowLeft,
-  Star,
-} from "lucide-react";
+import { RefreshCcw, CheckCircle2, RotateCcw, Sparkles, Rocket, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -76,7 +68,7 @@ export default function FlashcardsPage({
   const [reviewIds, setReviewIds] = useSessionStorageState<number[]>(`${storageKey}-review`, []);
   const [deckCompleted, setDeckCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(100);
-  const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
+  const completedClassroomId = null;
 
   useEffect(() => {
     getActivityXp("flashcards").then(setXpReward);

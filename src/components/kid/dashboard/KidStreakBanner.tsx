@@ -1,9 +1,7 @@
 import { getKidStats } from "@/lib/services/kid/dashboard.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSafeXP } from "@/hooks/kid/useChildXP";
-import { getSafeStreak } from "@/hooks/kid/useChildStreak";
 import StreakDisplay from "@/components/ui/StreakDisplay";
 
 function getInitials(firstName: string | null, lastName: string | null) {
@@ -47,11 +45,6 @@ export default async function KidStreakBanner() {
             </div>
             <div className="mt-3 text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
               {getSafeXP(stats.total_experience_points)}
-            </div>
-            <div className="mt-3 flex items-center gap-2 text-sm">
-              <Badge className="rounded-full px-2.5 py-1 bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/30 border-none">
-                Longest: {getSafeStreak(stats.longest_streak)} days
-              </Badge>
             </div>
           </div>
         </div>

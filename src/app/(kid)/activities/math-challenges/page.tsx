@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Trophy, ArrowLeft, Award, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Trophy, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
@@ -11,9 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/common";
-import { toast } from "sonner";
-import { saveKidActivityProgress } from "@/lib/services/kid/dashboard.actions";
-import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
+
 import { type MathChallengeItem } from "@/types/activities.type";
 import VictoryModal from "@/components/shared/VictoryModal";
 
@@ -55,7 +53,11 @@ export default function MathChallengesPage({
   const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(130);
-  const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
+  const completedClassroomId = null;
+
+  useEffect(() => {
+    getActivityXp("math-challenges").then(setXpReward);
+  }, []);
   const safeEquations = equations.length > 0 ? equations : defaultEquations;
 
   const eq = safeEquations[currentIndex] || safeEquations[0];

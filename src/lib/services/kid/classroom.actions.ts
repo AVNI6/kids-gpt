@@ -463,6 +463,19 @@ export async function createAssignment(
       return { success: false, error: "Assignment title is required." };
     }
 
+    // Verify classroom ownership
+    const { data: classroom, error: classErr } = await supabase
+      .from("classrooms")
+      .select("id")
+      .eq("id", classroomId)
+      .eq("teacher_user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (classErr || !classroom) {
+      return { success: false, error: "Unauthorized: Classroom not found or not owned by you." };
+    }
+
     const { data, error } = await supabase
       .from("assignments")
       .insert({
@@ -491,6 +504,105 @@ export async function createAssignment(
     return {
       success: false,
       error: err instanceof Error ? err.message : "Failed to create assignment.",
+    };
+  }
+}
+
+/**
+ * Update/Edit an existing assignment (Teacher only)
+ */
+export async function updateAssignment(
+  assignmentId: string,
+  title: string,
+  description: string | null = null,
+  subject: string | null = null,
+  totalPoints: number = 100,
+  dueDate: string | null = null,
+  activityType: string | null = null,
+  topic: string | null = null,
+  difficulty: string | null = null,
+  questionCount: number | null = null
+) {
+  try {
+    const { userId } = await verifyUserRole("teacher");
+    const supabase = await createClient();
+
+    if (!title.trim()) {
+      return { success: false, error: "Assignment title is required." };
+    }
+
+    // Fetch current assignment details to check status and owner
+    const { data: assignment, error: fetchErr } = await supabase
+      .from("assignments")
+      .select("classroom_id, teacher_user_id, status, total_points, activity_type")
+      .eq("id", assignmentId)
+      .is("deleted_at", null)
+      .single();
+
+    if (fetchErr || !assignment) {
+      return { success: false, error: "Assignment not found." };
+    }
+
+    if (assignment.teacher_user_id !== userId) {
+      return { success: false, error: "Unauthorized: You do not own this assignment." };
+    }
+
+    // Prepare update payload
+    type AssignmentUpdatePayload = {
+      title: string;
+      description: string | null;
+      subject: string | null;
+      due_date: string | null;
+      updated_at: string;
+      total_points?: number;
+      activity_type?: string | null;
+      topic?: string | null;
+      difficulty?: string | null;
+      question_count?: number;
+    };
+
+    const updatePayload: AssignmentUpdatePayload = {
+      title: title.trim(),
+      description: description?.trim() || null,
+      subject: subject?.trim() || null,
+      due_date: dueDate,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Restrict updates if the assignment is already published
+    if (assignment.status === "PUBLISHED" || assignment.status === "CLOSED") {
+      // Block changes to total_points and activity configuration to preserve grade safety
+      if (assignment.total_points !== totalPoints || assignment.activity_type !== activityType) {
+        return {
+          success: false,
+          error: "Cannot change points or activity type of a published or closed assignment.",
+        };
+      }
+    } else {
+      // DRAFT status allows complete modification
+      updatePayload.total_points = totalPoints;
+      updatePayload.activity_type = activityType;
+      updatePayload.topic = topic?.trim() || null;
+      updatePayload.difficulty = difficulty;
+      updatePayload.question_count = questionCount ?? 3;
+    }
+
+    const { data, error } = await supabase
+      .from("assignments")
+      .update(updatePayload)
+      .eq("id", assignmentId)
+      .select()
+      .single();
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath(`/dashboard/teacher/classrooms/${assignment.classroom_id}`);
+    revalidatePath(`/dashboard/kid/classrooms/${assignment.classroom_id}`);
+    return { success: true, assignment: data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to update assignment.",
     };
   }
 }
@@ -1082,59 +1194,7 @@ export async function submitAssignmentActivityCompletion(
     const { userId } = await verifyUserRole("kid");
     const supabase = await createClient();
 
-    // Import helper modules inside action to avoid Next.js circular dependencies
-    const { calculateUpdatedStreak } = await import("@/lib/utils/streak-helper");
-    const { createParentNotification } = await import("@/lib/services/kid/dashboard.actions");
-
-    // 1. Fetch assignment details
-    const { data: assignment, error: assignErr } = await supabase
-      .from("assignments")
-      .select(
-        "id, classroom_id, teacher_user_id, title, total_points, due_date, subject, status, activity_type"
-      )
-      .eq("id", assignmentId)
-      .is("deleted_at", null)
-      .single();
-
-    if (assignErr || !assignment) {
-      return { success: false, error: "Assignment not found." };
-    }
-
-    if (assignment.status !== "PUBLISHED") {
-      return { success: false, error: "Assignment is not open for completions." };
-    }
-
-    if (assignment.due_date && new Date(assignment.due_date) < new Date()) {
-      return { success: false, error: "This assignment is past its due date." };
-    }
-
-    // 2. Verify classroom membership
-    const { data: member } = await supabase
-      .from("classroom_members")
-      .select("id")
-      .eq("classroom_id", assignment.classroom_id)
-      .eq("student_user_id", userId)
-      .eq("status", "APPROVED")
-      .maybeSingle();
-
-    if (!member) {
-      return { success: false, error: "You are not an approved member of this classroom." };
-    }
-
-    // 3. Fetch existing submission to check if already completed
-    const { data: submission } = await supabase
-      .from("assignment_submissions")
-      .select("*")
-      .eq("assignment_id", assignmentId)
-      .eq("student_user_id", userId)
-      .is("deleted_at", null)
-      .maybeSingle();
-
-    if (submission && submission.score !== null && submission.submitted_at !== null) {
-      return { success: false, error: "This assignment has already been completed." };
-    }
-
-    // 4. Calculate graded score from gameplay accuracy percent (e.g. "80%")
+    // 1. Calculate graded score percentage from gameplay accuracy percent (e.g. "80%")
     let percentage = 100;
     if (scoreString) {
       const percentMatch = scoreString.match(/([0-9]+)/);
@@ -1142,177 +1202,30 @@ export async function submitAssignmentActivityCompletion(
         percentage = parseInt(percentMatch[1], 10);
       }
     }
-    const gradedScore = Math.round(assignment.total_points * (percentage / 100));
 
-    // 5. Update submission
-    let subId = submission?.id;
-    if (!submission) {
-      const { data: newSub, error: createSubErr } = await supabase
-        .from("assignment_submissions")
-        .insert({
-          assignment_id: assignmentId,
-          student_user_id: userId,
-          submission_type: "TEXT",
-          submission_text: "Completed activity",
-          score: gradedScore,
-          submitted_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (createSubErr) return { success: false, error: createSubErr.message };
-      subId = newSub.id;
-    } else {
-      const { error: updSubErr } = await supabase
-        .from("assignment_submissions")
-        .update({
-          score: gradedScore,
-          submitted_at: new Date().toISOString(),
-          submission_text: "Completed activity",
-        })
-        .eq("id", submission.id);
-
-      if (updSubErr) return { success: false, error: updSubErr.message };
-    }
-
-    // 6. Check for existing reward row to guarantee idempotency & avoid duplicate XP
-    const { data: existingReward } = await supabase
-      .from("rewards")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("source_type", "assignment")
-      .eq("assignment_id", assignmentId)
-      .is("deleted_at", null)
-      .maybeSingle();
-
-    if (existingReward) {
-      return { success: true, classroomId: assignment.classroom_id }; // Already logged rewards, aborting to prevent duplication
-    }
-
-    // Fetch corresponding activity setting to resolve default title
-    const { data: activitySetting } = await supabase
-      .from("activity_settings")
-      .select("id, title")
-      .eq("slug", assignment.activity_type)
-      .maybeSingle();
-
-    const desc = `Completed ${activitySetting?.title || "Activity"}
-for Assignment:
-${assignment.title}
-[[${assignment.subject || "General"}]]
-(Score: ${percentage}%)`;
-
-    // Fetch previous last reward date before inserting the new one to calculate streak correctly
-    const { data: lastRewards } = await supabase
-      .from("rewards")
-      .select("created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    const lastRewardDate = lastRewards && lastRewards.length > 0 ? lastRewards[0].created_at : null;
-
-    // 7. Insert reward record
-    const { error: insRewardErr } = await supabase.from("rewards").insert({
-      user_id: userId,
-      rewards_amount: gradedScore,
-      source_id: activitySetting?.id || null,
-      source_type: "assignment",
-      assignment_id: assignmentId,
-      description: desc,
-      score: percentage,
+    // 2. Call the single atomic transactional RPC function
+    const { data: rpcData, error: rpcError } = await supabase.rpc("submit_activity_assignment", {
+      p_student_id: userId,
+      p_assignment_id: assignmentId,
+      p_percentage: percentage,
+      p_timezone: "Asia/Kolkata",
     });
 
-    if (insRewardErr) {
-      if (
-        insRewardErr.code === "23505" ||
-        insRewardErr.message?.includes("uq_rewards_assignment_user")
-      ) {
-        return { success: true, classroomId: assignment.classroom_id };
-      }
-      return { success: false, error: insRewardErr.message };
+    if (rpcError) {
+      return { success: false, error: rpcError.message };
     }
 
-    // 8. Update kid profile XP and daily streak index
-    const { data: profile } = await supabase
-      .from("profile")
-      .select("total_experience_points, current_streak, longest_streak")
-      .eq("user_id", userId)
-      .single();
+    const result = rpcData as { success: boolean; error?: string; classroom_id?: string } | null;
+    if (!result || !result.success || !result.classroom_id) {
+      return { success: false, error: result?.error || "Failed to complete assignment activity." };
+    }
 
-    const newXp = (profile?.total_experience_points || 0) + gradedScore;
-
-    const { currentStreak, longestStreak } = calculateUpdatedStreak(
-      lastRewardDate,
-      profile?.current_streak ?? 0,
-      profile?.longest_streak ?? 0,
-      "Asia/Kolkata"
-    );
-
-    const { error: profUpdErr } = await supabase
-      .from("profile")
-      .update({
-        total_experience_points: newXp,
-        current_streak: currentStreak,
-        longest_streak: longestStreak,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
-
-    if (profUpdErr) return { success: false, error: profUpdErr.message };
-
-    // 9. Log event in activity_events
-    await supabase.from("activity_events").insert({
-      actor_user_id: userId,
-      actor_role: "kid",
-      target_user_id: assignment.teacher_user_id,
-      target_type: "classroom",
-      event_type: "ASSIGNMENT_SUBMITTED",
-      source_type: "assignment_submissions",
-      source_id: subId,
-      metadata: {
-        assignment_id: assignmentId,
-        title: assignment.title,
-        classroom_id: assignment.classroom_id,
-        score: gradedScore,
-      },
-    });
-
-    // 10. Notify teacher and parent
-    const { data: kidProfile } = await supabase
-      .from("profile")
-      .select("first_name, last_name")
-      .eq("user_id", userId)
-      .single();
-
-    const kidName =
-      `${kidProfile?.first_name || ""} ${kidProfile?.last_name || ""}`.trim() || "A student";
-
-    await supabase.from("notifications").insert({
-      recipient_user_id: assignment.teacher_user_id,
-      recipient_role: "teacher",
-      type: "ASSIGNMENT_COMPLETED",
-      title: "Assignment Completed",
-      message: `${kidName} completed assignment "${assignment.title}". Score: ${percentage}%`,
-      source_type: "assignments",
-      source_id: assignmentId,
-      metadata: { classroom_id: assignment.classroom_id },
-    });
-
-    await createParentNotification(
-      userId,
-      "quiz_completed",
-      "Assignment Completed",
-      `${kidName} completed Assignment: "${assignment.title}" (Score: ${percentage}%)`,
-      { assignment_id: assignmentId }
-    );
-
-    revalidatePath(`/dashboard/kid/classrooms/${assignment.classroom_id}`);
-    revalidatePath(`/dashboard/teacher/classrooms/${assignment.classroom_id}`);
+    revalidatePath(`/dashboard/kid/classrooms/${result.classroom_id}`);
+    revalidatePath(`/dashboard/teacher/classrooms/${result.classroom_id}`);
     revalidatePath("/dashboard/kid");
     revalidatePath("/dashboard/parent");
 
-    return { success: true, classroomId: assignment.classroom_id };
+    return { success: true, classroomId: result.classroom_id };
   } catch (err) {
     return {
       success: false,

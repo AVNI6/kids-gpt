@@ -27,7 +27,7 @@ export default function MatchFollowingPage({
   matchTitle = "Match Pairs",
   pairs = defaultPairs,
 }: MatchFollowingPageProps) {
-  const game = useMatchGame({ pairs, matchTitle });
+  const game = useMatchGame({ pairs });
 
   return (
     <div className="h-full bg-background overflow-hidden flex flex-col relative min-h-screen">
@@ -58,6 +58,10 @@ export default function MatchFollowingPage({
             >
               <ArrowLeft className="h-4 w-4" /> Back to Activities
             </Link>
+
+            <div className="rounded-full bg-card px-4 py-1.5 shadow-sm border border-border text-xs shrink-0 font-bold text-orange-600 max-w-[200px] truncate">
+              {matchTitle}
+            </div>
 
             <div className="rounded-full bg-card px-4 py-1.5 shadow-sm border border-border text-xs shrink-0 font-bold text-orange-600 flex items-center gap-1">
               <span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import { APP_ROUTES } from "@/lib/constants/common";
@@ -9,10 +9,9 @@ import { toast } from "sonner";
 
 interface UseMatchGameProps {
   pairs: MatchItem[];
-  matchTitle: string;
 }
 
-export function useMatchGame({ pairs, matchTitle }: UseMatchGameProps) {
+export function useMatchGame({ pairs }: UseMatchGameProps) {
   const router = useRouter();
 
   // Lazy initializer — shuffles once on first render. Next.js routing
