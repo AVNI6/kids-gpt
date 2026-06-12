@@ -50,7 +50,6 @@ export default function WordScramblesPage({
   const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [scrambleCompleted, setScrambleCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(140);
-  const completedClassroomId = null;
 
   useEffect(() => {
     getActivityXp("word-scrambles").then(setXpReward);

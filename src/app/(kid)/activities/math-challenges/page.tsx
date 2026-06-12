@@ -53,7 +53,6 @@ export default function MathChallengesPage({
   const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(130);
-  const completedClassroomId = null;
 
   useEffect(() => {
     getActivityXp("math-challenges").then(setXpReward);
