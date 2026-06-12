@@ -468,7 +468,6 @@ export default function JigsawPuzzlePage() {
         rewardsDescription={`${difficulty}x${difficulty} Grid Completion`}
         jigsawGridSize={difficulty}
         jigsawThemeName={JIGSAW_THEMES.find((p) => p.url === imageUrl)?.id || "custom-upload"}
-        onClaimSuccess={() => {}}
       />
     </main>
   );

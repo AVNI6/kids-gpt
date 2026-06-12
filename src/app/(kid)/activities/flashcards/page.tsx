@@ -68,7 +68,6 @@ export default function FlashcardsPage({
   const [reviewIds, setReviewIds] = useSessionStorageState<number[]>(`${storageKey}-review`, []);
   const [deckCompleted, setDeckCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(100);
-  const completedClassroomId = null;
 
   useEffect(() => {
     getActivityXp("flashcards").then(setXpReward);
@@ -116,9 +115,7 @@ export default function FlashcardsPage({
   };
 
   const handleFinish = () => {
-    if (assignmentId && completedClassroomId) {
-      router.push(`/dashboard/kid/classrooms/${completedClassroomId}`);
-    } else if (assignmentId) {
+    if (assignmentId) {
       router.push("/dashboard/kid");
     } else {
       router.push(APP_ROUTES.Activities);

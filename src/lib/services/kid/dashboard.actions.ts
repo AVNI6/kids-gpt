@@ -70,7 +70,7 @@ export const verifyUserRole = cache(async (allowedRole?: UserRole): Promise<Veri
   const { data: profile, error: profileError } = await supabase
     .from("profile")
     .select(
-      "user_id, email, first_name, last_name, username, avatar_url, role, standard, date_of_birth, total_experience_points, current_streak, longest_streak"
+      "user_id, email, first_name, last_name, username, avatar_url, role, standard, mobile_no, date_of_birth, total_experience_points, current_streak, longest_streak"
     )
     .eq("user_id", user.id)
     .is("deleted_at", null)
@@ -284,7 +284,7 @@ export async function updateKidProfile(formData: FormData) {
   const { data: profile, error: profileError } = await supabase
     .from("profile")
     .select(
-      "user_id, email, first_name, last_name, username, avatar_url, role, date_of_birth, total_experience_points, current_streak, longest_streak"
+      "user_id, email, first_name, last_name, username, avatar_url, role, standard, mobile_no, date_of_birth, total_experience_points, current_streak, longest_streak"
     )
     .eq("user_id", userId)
     .maybeSingle<DashboardUserProfile>();

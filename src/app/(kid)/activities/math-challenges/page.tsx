@@ -82,9 +82,7 @@ export default function MathChallengesPage({
   };
 
   const handleFinishMission = () => {
-    if (assignmentId && completedClassroomId) {
-      router.push(`/dashboard/kid/classrooms/${completedClassroomId}`);
-    } else if (assignmentId) {
+    if (assignmentId) {
       router.push("/dashboard/kid");
     } else {
       router.push(APP_ROUTES.Activities);

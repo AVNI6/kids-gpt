@@ -125,19 +125,24 @@ export default function TeacherClassroomWorkspaceClient({
   };
 
   const handleDeleteResource = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this resource?")) return;
-
-    try {
-      const result = await deleteResource(id);
-      if (result.success) {
-        toast.success("Resource deleted.");
-        setResources(resources.filter((r) => r.id !== id));
-      } else {
-        toast.error(result.error || "Failed to delete resource.");
-      }
-    } catch {
-      toast.error("Failed to delete resource.");
-    }
+    toast.warning("Are you sure you want to delete this resource?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const result = await deleteResource(id);
+            if (result.success) {
+              toast.success("Resource deleted.");
+              setResources((prev) => prev.filter((r) => r.id !== id));
+            } else {
+              toast.error(result.error || "Failed to delete resource.");
+            }
+          } catch {
+            toast.error("Failed to delete resource.");
+          }
+        },
+      },
+    });
   };
 
   const handleDeleteAnnouncement = async (id: string) => {

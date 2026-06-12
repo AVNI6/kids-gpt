@@ -84,7 +84,6 @@ export default function QuizzesPage({
   const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(120);
-  const completedClassroomId = null;
 
   useEffect(() => {
     getActivityXp("quizzes").then(setXpReward);
@@ -138,9 +137,7 @@ export default function QuizzesPage({
   };
 
   const handleFinishMission = () => {
-    if (assignmentId && completedClassroomId) {
-      router.push(`/dashboard/kid/classrooms/${completedClassroomId}`);
-    } else if (assignmentId) {
+    if (assignmentId) {
       router.push("/dashboard/kid");
     } else {
       router.push(APP_ROUTES.Activities);

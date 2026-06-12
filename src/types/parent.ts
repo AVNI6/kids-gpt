@@ -13,6 +13,7 @@ export type DashboardUserProfile = {
   current_streak: number | null;
   longest_streak: number | null;
   standard?: string | null;
+  mobile_no?: string | null;
 };
 
 export type LinkedChildProfile = {

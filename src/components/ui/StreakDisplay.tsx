@@ -46,7 +46,6 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
       );
 
     case "kid-card":
-      // Golden themed block inside kid dash (KidStreakBanner.tsx)
       return (
         <div
           className={`rounded-[28px] border border-slate-200/60 bg-white/90 p-4 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/40 dark:shadow-none ${className}`}
@@ -67,7 +66,6 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
       );
 
     case "parent-card":
-      // Stat grid item for parent child view (LearningProgress.tsx)
       return (
         <div
           className={`rounded-[28px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-6 shadow-sm hover:shadow-md transition-shadow ${className}`}
@@ -87,7 +85,6 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
       );
 
     case "profile-section":
-      // Gradient box inside kid profile (KidProfileManager.tsx)
       return (
         <div
           className={`rounded-3xl bg-linear-to-br from-sky-50 to-emerald-50 p-4 ring-1 ring-sky-100 dark:from-sky-950/20 dark:to-emerald-950/20 dark:ring-slate-800 ${className}`}
@@ -108,7 +105,6 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
       );
 
     case "overview-block":
-      // Micro-stats panel card inside parent children grid (ChildOverviewCard.tsx)
       return (
         <div
           className={`flex-1 md:flex-none flex flex-col items-center justify-center bg-white/60 dark:bg-slate-900/60 border border-orange-200/50 dark:border-orange-500/20 rounded-3xl p-5 md:px-8 shadow-sm backdrop-blur-md relative overflow-hidden group ${className}`}
@@ -129,7 +125,6 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
 
     case "simple-text":
     default:
-      // Simplified inline representation (ActiveStudentsList.tsx)
       return (
         <span className={`text-orange-500 dark:text-orange-400 font-bold ${className}`}>
           {activeStreak} days
