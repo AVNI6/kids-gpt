@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { CheckCircle2, Timer, ArrowLeft, Star, Award } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle2, Timer, ArrowLeft, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -10,7 +10,6 @@ import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "sonner";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import VictoryModal from "@/components/shared/VictoryModal";
@@ -85,7 +84,6 @@ export default function QuizzesPage({
   const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(120);
-  const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
 
   useEffect(() => {
     getActivityXp("quizzes").then(setXpReward);
@@ -139,9 +137,7 @@ export default function QuizzesPage({
   };
 
   const handleFinishMission = () => {
-    if (assignmentId && completedClassroomId) {
-      router.push(`/dashboard/kid/classrooms/${completedClassroomId}`);
-    } else if (assignmentId) {
+    if (assignmentId) {
       router.push("/dashboard/kid");
     } else {
       router.push(APP_ROUTES.Activities);

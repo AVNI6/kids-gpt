@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Type, Sparkles, CheckCircle2, ArrowLeft, Award, RotateCcw } from "lucide-react";
-import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
+import { useState } from "react";
+import { Type, Sparkles, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -49,8 +48,7 @@ export default function WordScramblesPage({
   const [showResult, setShowResult] = useSessionStorageState(`${storageKey}-showResult`, false);
   const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [scrambleCompleted, setScrambleCompleted] = useState(false);
-  const [xpReward, setXpReward] = useState<number>(140);
-  const [completedClassroomId, setCompletedClassroomId] = useState<string | null>(null);
+  const xpReward = 140;
 
   const safeWords = words || defaultWords;
   const word = safeWords[currentWord] || safeWords[0];
@@ -78,9 +76,7 @@ export default function WordScramblesPage({
   };
 
   const handleFinishMission = () => {
-    if (assignmentId && completedClassroomId) {
-      router.push(`/dashboard/kid/classrooms/${completedClassroomId}`);
-    } else if (assignmentId) {
+    if (assignmentId) {
       router.push("/dashboard/kid");
     } else {
       router.push(APP_ROUTES.Activities);

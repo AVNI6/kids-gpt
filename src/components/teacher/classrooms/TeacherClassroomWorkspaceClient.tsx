@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, FolderOpen, Megaphone, Users } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -48,7 +48,6 @@ export default function TeacherClassroomWorkspaceClient({
   initialStudents,
 }: Props) {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   // Tab is driven directly by URL query parameter (href) or defaults to assignments
   const activeTab = (searchParams?.get("tab") || "assignments") as
@@ -126,19 +125,24 @@ export default function TeacherClassroomWorkspaceClient({
   };
 
   const handleDeleteResource = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this resource?")) return;
-
-    try {
-      const result = await deleteResource(id);
-      if (result.success) {
-        toast.success("Resource deleted.");
-        setResources(resources.filter((r) => r.id !== id));
-      } else {
-        toast.error(result.error || "Failed to delete resource.");
-      }
-    } catch {
-      toast.error("Failed to delete resource.");
-    }
+    toast.warning("Are you sure you want to delete this resource?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const result = await deleteResource(id);
+            if (result.success) {
+              toast.success("Resource deleted.");
+              setResources((prev) => prev.filter((r) => r.id !== id));
+            } else {
+              toast.error(result.error || "Failed to delete resource.");
+            }
+          } catch {
+            toast.error("Failed to delete resource.");
+          }
+        },
+      },
+    });
   };
 
   const handleDeleteAnnouncement = async (id: string) => {

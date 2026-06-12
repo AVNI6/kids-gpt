@@ -362,7 +362,7 @@ const ChatMessageItem = React.memo(
                 </svg>
               </button>
 
-              {/* Preview image */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewImageUrl}
                 alt="Image Preview"

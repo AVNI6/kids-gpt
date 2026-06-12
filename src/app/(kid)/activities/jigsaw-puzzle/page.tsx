@@ -39,7 +39,6 @@ export default function JigsawPuzzlePage() {
   // Game Event States
   const [isSolved, setIsSolved] = useState(false);
   const [isHintOpen, setIsHintOpen] = useState(false);
-  const [isClaimed, setIsClaimed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Keep track of user-uploaded Object URLs to prevent memory leaks
@@ -88,7 +87,6 @@ export default function JigsawPuzzlePage() {
     const shuffled = generateAndShufflePieces(size);
     setPieces(shuffled);
     setIsSolved(false);
-    setIsClaimed(false);
   }, []);
 
   // Preloads images when swapping
@@ -186,7 +184,6 @@ export default function JigsawPuzzlePage() {
   const handleBackToSetup = () => {
     setGameState("setup");
     setIsSolved(false);
-    setIsClaimed(false);
   };
 
   const unplacedPieces = useMemo(() => {
@@ -471,7 +468,6 @@ export default function JigsawPuzzlePage() {
         rewardsDescription={`${difficulty}x${difficulty} Grid Completion`}
         jigsawGridSize={difficulty}
         jigsawThemeName={JIGSAW_THEMES.find((p) => p.url === imageUrl)?.id || "custom-upload"}
-        onClaimSuccess={() => setIsClaimed(true)}
       />
     </main>
   );
