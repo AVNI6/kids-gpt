@@ -10,7 +10,6 @@ import { Trophy, Clock, Activity, Users, CheckCircle2 } from "lucide-react";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
 import { getSafeXP, getLevel } from "@/hooks/kid/useChildXP";
 import type { ChildDetailsResult } from "@/types/parent";
-import ParentProfileManager from "@/components/parent/profile/ParentProfileManager";
 import WelcomeBanner from "@/components/parent/home/WelcomeBanner";
 
 interface FamilyTimelineItem {
@@ -99,19 +98,6 @@ export default function HomeSection() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 text-slate-900 dark:text-slate-100">
-      {/* Parent Account Details and Actions */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white dark:bg-black/30 p-6 md:p-8 rounded-[32px] border border-sky-100 dark:border-slate-800 shadow-sm backdrop-blur-md">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
-            <span>Parent Settings & Account Hub</span>
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 font-semibold text-sm">
-            Update your display profile, customize notifications, or link child accounts.
-          </p>
-        </div>
-        <ParentProfileManager profile={profile} />
-      </div>
-
       <WelcomeBanner
         profile={profile}
         linkedChildren={linkedChildren}
