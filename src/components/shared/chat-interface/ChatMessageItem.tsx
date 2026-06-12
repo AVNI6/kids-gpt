@@ -10,6 +10,7 @@ import remarkGfm from "remark-gfm";
 import Image from "next/image";
 import { Message } from "@/types/common";
 import type { UserProfile } from "@/types/user";
+import { getSignedResourceUrl } from "@/lib/services/shared/storage.actions";
 
 interface ChatMessageItemProps {
   message: Message;
@@ -37,6 +38,58 @@ const ChatMessageItem = React.memo(
   }: ChatMessageItemProps) {
     const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
     const [previewImageUrl, setPreviewImageUrl] = React.useState("");
+    const [resolvedImageUrl, setResolvedImageUrl] = React.useState<string | null>(null);
+    const [resolvedGeneratedImageUrl, setResolvedGeneratedImageUrl] = React.useState<string | null>(
+      null
+    );
+
+    React.useEffect(() => {
+      let active = true;
+      if (message.uploadedImage) {
+        if (message.uploadedImage.includes("/object/public/materials/")) {
+          const relativePath = message.uploadedImage.split("/object/public/materials/")[1];
+          getSignedResourceUrl(relativePath)
+            .then((url) => {
+              if (active) setResolvedImageUrl(url);
+            })
+            .catch((err) => {
+              console.error("Failed to sign user image:", err);
+              if (active) setResolvedImageUrl(message.uploadedImage!);
+            });
+        } else {
+          setResolvedImageUrl(message.uploadedImage);
+        }
+      } else {
+        setResolvedImageUrl(null);
+      }
+      return () => {
+        active = false;
+      };
+    }, [message.uploadedImage]);
+
+    React.useEffect(() => {
+      let active = true;
+      if (message.isImage && message.content) {
+        if (message.content.includes("/object/public/materials/")) {
+          const relativePath = message.content.split("/object/public/materials/")[1];
+          getSignedResourceUrl(relativePath)
+            .then((url) => {
+              if (active) setResolvedGeneratedImageUrl(url);
+            })
+            .catch((err) => {
+              console.error("Failed to sign generated image:", err);
+              if (active) setResolvedGeneratedImageUrl(message.content);
+            });
+        } else {
+          setResolvedGeneratedImageUrl(message.content);
+        }
+      } else {
+        setResolvedGeneratedImageUrl(null);
+      }
+      return () => {
+        active = false;
+      };
+    }, [message.isImage, message.content]);
 
     const handleDownloadImage = React.useCallback(async (url: string) => {
       try {
@@ -86,17 +139,17 @@ const ChatMessageItem = React.memo(
           <div
             className={`flex flex-col gap-2 overflow-x-auto ${isUser ? "items-end" : "items-start"}`}
           >
-            {message.uploadedImage && (
+            {resolvedImageUrl && (
               <div className="relative group cursor-pointer overflow-hidden rounded-2xl">
                 <Image
-                  src={message.uploadedImage}
+                  src={resolvedImageUrl}
                   alt="Uploaded"
                   width={128}
                   height={128}
                   className="w-32 h-32 object-cover rounded-2xl shadow-sm border border-border transition-transform duration-300 group-hover:scale-[1.02]"
                   unoptimized
                   onClick={() => {
-                    setPreviewImageUrl(message.uploadedImage!);
+                    setPreviewImageUrl(resolvedImageUrl);
                     setIsPreviewOpen(true);
                   }}
                 />
@@ -119,25 +172,25 @@ const ChatMessageItem = React.memo(
 
                 {!isUser ? (
                   <div className="w-full text-foreground space-y-1 overflow-hidden font-medium">
-                    {message.isImage ? (
+                    {message.isImage && resolvedGeneratedImageUrl ? (
                       <div className="flex flex-col gap-2">
                         <div className="relative group cursor-pointer overflow-hidden rounded-xl">
                           <Image
-                            src={message.content}
+                            src={resolvedGeneratedImageUrl}
                             alt="Generated Illustration"
                             width={400}
                             height={400}
                             className="rounded-xl max-w-full md:max-w-xs shadow-sm transition-transform duration-300 group-hover:scale-[1.02]"
                             unoptimized
                             onClick={() => {
-                              setPreviewImageUrl(message.content);
+                              setPreviewImageUrl(resolvedGeneratedImageUrl);
                               setIsPreviewOpen(true);
                             }}
                           />
                         </div>
                         <Button
                           type="button"
-                          onClick={() => handleDownloadImage(message.content)}
+                          onClick={() => handleDownloadImage(resolvedGeneratedImageUrl)}
                           variant="secondary"
                           size="sm"
                           className="flex items-center gap-1.5 w-fit rounded-lg text-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 mt-1"

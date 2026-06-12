@@ -2,16 +2,23 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, Trash2 } from "lucide-react";
 import { getRelativeTime } from "@/hooks/shared/timeUtils";
 import type { ClassroomNotification } from "@/types/classroom.types";
 import { usePagination } from "@/hooks/shared/use-pagination";
-import { useTeacherNotifications } from "@/hooks/teacher/useTeacherNotifications";
+import { useClassroomNotifications } from "@/hooks/shared/useClassroomNotifications";
 import { getNotifIcon, getNotifBg } from "@/utils/teacherNotificationHelpers";
 
 export default function TeacherNotificationsSection() {
   // Use the single custom hook definition for all data fetching and actions
-  const { notifications, isLoading, markAsRead, markAllAsRead } = useTeacherNotifications();
+  const {
+    notifications,
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    deleteAllNotifications,
+  } = useClassroomNotifications("teacher");
 
   const { currentItems, page, totalPages, nextPage, prevPage, hasNextPage, hasPrevPage } =
     usePagination(notifications);
@@ -27,19 +34,30 @@ export default function TeacherNotificationsSection() {
             Track student submissions, enrollment requests, and announcements in real-time.
           </p>
         </div>
-        {notifications.some((n) => !n.is_read) && (
-          <Button
-            variant="ghost"
-            onClick={markAllAsRead}
-            className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold cursor-pointer"
-          >
-            <Check className="w-4 h-4 mr-2" /> Mark all as read
-          </Button>
+        {notifications.length > 0 && (
+          <div className="flex gap-2">
+            {notifications.some((n) => !n.is_read) && (
+              <Button
+                variant="ghost"
+                onClick={markAllAsRead}
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold cursor-pointer"
+              >
+                <Check className="w-4 h-4 mr-2" /> Mark all as read
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              onClick={deleteAllNotifications}
+              className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20 font-bold cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4 mr-2" /> Clear all
+            </Button>
+          </div>
         )}
       </div>
 
       {isLoading ? (
-        <div className="space-y-4 max-w-4xl">
+        <div className="space-y-4 w-full">
           {[1, 2, 3].map((n) => (
             <Card
               key={n}
@@ -50,7 +68,7 @@ export default function TeacherNotificationsSection() {
           ))}
         </div>
       ) : (
-        <div className="space-y-4 max-w-4xl">
+        <div className="space-y-4 w-full">
           {notifications.length === 0 ? (
             <Card className="rounded-[28px] border-dashed border-2 border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/10 p-12 text-center">
               <CardContent className="p-0 flex flex-col items-center justify-center">
@@ -87,7 +105,7 @@ export default function TeacherNotificationsSection() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 mb-1">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-1">
                         <h3
                           className={`text-base font-black ${
                             !notif.is_read
@@ -97,12 +115,32 @@ export default function TeacherNotificationsSection() {
                         >
                           {notif.title}
                         </h3>
-                        <span
-                          suppressHydrationWarning
-                          className="text-xs font-bold text-slate-400 shrink-0"
-                        >
-                          {getRelativeTime(notif.created_at)}
-                        </span>
+                        <div className="flex items-center gap-3 shrink-0 self-end sm:self-start">
+                          <span
+                            suppressHydrationWarning
+                            className="text-xs font-bold text-slate-400"
+                          >
+                            {getRelativeTime(notif.created_at)}
+                          </span>
+                          <div className="flex items-center gap-1.5 border-l border-slate-100 dark:border-slate-800 pl-3">
+                            {!notif.is_read && (
+                              <button
+                                onClick={() => markAsRead(notif.id)}
+                                title="Mark as read"
+                                className="p-1 rounded-lg text-slate-400 hover:text-indigo-650 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-none bg-transparent"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => deleteNotification(notif.id)}
+                              title="Delete notification"
+                              className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-none bg-transparent"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                       <p
                         className={`text-sm leading-relaxed ${
@@ -113,18 +151,6 @@ export default function TeacherNotificationsSection() {
                       >
                         {notif.message}
                       </p>
-
-                      {!notif.is_read && (
-                        <div className="mt-4 flex gap-3">
-                          <Button
-                            size="sm"
-                            onClick={() => markAsRead(notif.id)}
-                            className="rounded-xl bg-indigo-650 hover:bg-indigo-700 text-white font-bold h-9 px-4 cursor-pointer border-none shadow-sm"
-                          >
-                            Mark as read
-                          </Button>
-                        </div>
-                      )}
                     </div>
 
                     {!notif.is_read && (

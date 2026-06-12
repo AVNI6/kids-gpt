@@ -37,6 +37,8 @@ interface DashboardContextType {
   isLoadingNotifications: boolean;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
+  deleteAllNotifications: () => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -305,6 +307,49 @@ export function DashboardProvider({
     }
   }, [initialProfile.user_id, updateNotifications]);
 
+  const deleteNotification = useCallback(
+    async (id: string) => {
+      const previous = notificationsRef.current;
+      // Optimistic Update
+      updateNotifications(previous.filter((n) => n.id !== id));
+
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("parent_notifications").delete().eq("id", id);
+
+        if (error) {
+          throw error;
+        }
+      } catch (err) {
+        console.error("Failed to delete notification:", err);
+        updateNotifications(previous);
+      }
+    },
+    [updateNotifications]
+  );
+
+  const deleteAllNotifications = useCallback(async () => {
+    if (!initialProfile.user_id) return;
+    const previous = notificationsRef.current;
+    // Optimistic Update
+    updateNotifications([]);
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("parent_notifications")
+        .delete()
+        .eq("parent_id", initialProfile.user_id);
+
+      if (error) {
+        throw error;
+      }
+    } catch (err) {
+      console.error("Failed to delete all notifications:", err);
+      updateNotifications(previous);
+    }
+  }, [initialProfile.user_id, updateNotifications]);
+
   // Notifications Realtime Subscription (Only connect on user interaction, not on initial load)
   useEffect(() => {
     // Skip on initial render to prevent auto-connecting
@@ -354,6 +399,27 @@ export function DashboardProvider({
     };
   }, [initialProfile.user_id]);
 
+  // Auto-purge read parent notifications older than 7 days
+  useEffect(() => {
+    if (!initialProfile.user_id) return;
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const supabase = createClient();
+    supabase
+      .from("parent_notifications")
+      .delete()
+      .eq("parent_id", initialProfile.user_id)
+      .eq("is_read", true)
+      .lt("created_at", sevenDaysAgo.toISOString())
+      .then((res: { error: unknown }) => {
+        if (res.error) {
+          console.error("Failed to auto-purge old parent notifications:", res.error);
+        }
+      });
+  }, [initialProfile.user_id]);
+
   const value = useMemo(
     () => ({
       profile: initialProfile,
@@ -372,6 +438,8 @@ export function DashboardProvider({
       isLoadingNotifications,
       markAsRead,
       markAllAsRead,
+      deleteNotification,
+      deleteAllNotifications,
     }),
     [
       initialProfile,
@@ -388,6 +456,8 @@ export function DashboardProvider({
       isLoadingNotifications,
       markAsRead,
       markAllAsRead,
+      deleteNotification,
+      deleteAllNotifications,
     ]
   );
 

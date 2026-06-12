@@ -127,9 +127,9 @@ export default function HelpPage() {
               return (
                 <Card
                   key={role.title}
-                  className="bg-card border-2 border-border/50 rounded-3xl overflow-hidden"
+                  className="p-6 md:p-8 bg-card border-2 border-border/50 rounded-3xl overflow-hidden flex flex-col gap-6"
                 >
-                  <CardHeader className="space-y-4">
+                  <CardHeader className="p-0 space-y-4">
                     <div className="w-16 h-16 rounded-2xl bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors">
                       <Icon className="w-8 h-8 text-sky-600" />
                     </div>
@@ -144,7 +144,7 @@ export default function HelpPage() {
                     </div>
                   </CardHeader>
 
-                  <CardContent>
+                  <CardContent className="p-0">
                     <Button
                       render={<Link href={role.href} />}
                       nativeButton={false}
@@ -169,8 +169,8 @@ export default function HelpPage() {
           <div className="grid md:grid-cols-4 gap-8">
             {steps.map((step, index) => (
               <div key={step} className="relative">
-                <Card className="border-2 border-border/50 shadow-sm hover:border-sky-500/30 transition-colors rounded-3xl flex flex-col items-center justify-center bg-card">
-                  <CardContent className="space-y-2 text-center p-6">
+                <Card className="p-6 border-2 border-border/50 shadow-sm hover:border-sky-500/30 transition-colors rounded-3xl flex flex-col items-center justify-center bg-card">
+                  <CardContent className="p-0 space-y-2 text-center">
                     <div className="w-16 h-16 rounded-2xl bg-sky-600 text-white flex items-center justify-center font-black text-2xl mx-auto shadow-lg shadow-sky-200">
                       {index + 1}
                     </div>
@@ -204,11 +204,11 @@ export default function HelpPage() {
             </TabsList>
 
             <TabsContent value="student" className="mt-6">
-              <Card>
-                <CardHeader>
+              <Card className="p-6">
+                <CardHeader className="p-0 pb-4">
                   <CardTitle>Student Help Guide</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 text-(--theme-text-secondary)">
+                <CardContent className="p-0 space-y-4 text-(--theme-text-secondary)">
                   <p>• How to chat with AI tutor</p>
                   <p>• Solve quizzes and flashcards</p>
                   <p>• Join teacher classroom</p>
@@ -218,11 +218,11 @@ export default function HelpPage() {
             </TabsContent>
 
             <TabsContent value="parent" className="mt-6">
-              <Card>
-                <CardHeader>
+              <Card className="p-6">
+                <CardHeader className="p-0 pb-4">
                   <CardTitle>Parent Help Guide</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 text-(--theme-text-secondary)">
+                <CardContent className="p-0 space-y-4 text-(--theme-text-secondary)">
                   <p>• Monitor child activity</p>
                   <p>• Safety controls</p>
                   <p>• Subscription management</p>
@@ -232,11 +232,11 @@ export default function HelpPage() {
             </TabsContent>
 
             <TabsContent value="teacher" className="mt-6">
-              <Card>
-                <CardHeader>
+              <Card className="p-6">
+                <CardHeader className="p-0 pb-4">
                   <CardTitle>Teacher Help Guide</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 text-(--theme-text-secondary)">
+                <CardContent className="p-0 space-y-4 text-(--theme-text-secondary)">
                   <p>• Create classroom</p>
                   <p>• Share class codes</p>
                   <p>• Create activities</p>
@@ -260,9 +260,9 @@ export default function HelpPage() {
               return (
                 <Card
                   key={topic.title}
-                  className="hover:shadow-lg hover:border-sky-500/30 transition-all cursor-pointer bg-card border-2 border-border/50 rounded-2xl group"
+                  className="p-6 hover:shadow-lg hover:border-sky-500/30 transition-all cursor-pointer bg-card border-2 border-border/50 rounded-2xl group"
                 >
-                  <CardContent className="pt-6 flex gap-5">
+                  <CardContent className="p-0 flex gap-5">
                     <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors">
                       <Icon className="w-6 h-6 text-sky-600" />
                     </div>
@@ -324,8 +324,8 @@ export default function HelpPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <Card className="group bg-card border-2 border-border/50 hover:border-sky-500/30 transition-all rounded-2xl overflow-hidden shadow-sm hover:shadow-md">
-              <CardContent className="pt-8 text-center space-y-5">
+            <Card className="p-6 md:p-8 group bg-card border-2 border-border/50 hover:border-sky-500/30 transition-all rounded-2xl overflow-hidden shadow-sm hover:shadow-md">
+              <CardContent className="p-0 text-center space-y-5">
                 <div className="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mx-auto group-hover:bg-sky-500/20 transition-colors">
                   <MessageSquare className="h-8 w-8 text-sky-600" />
                 </div>
@@ -336,8 +336,8 @@ export default function HelpPage() {
               </CardContent>
             </Card>
 
-            <Card className="group bg-card border-2 border-border/50 hover:border-sky-500/30 transition-all rounded-2xl overflow-hidden shadow-sm hover:shadow-md">
-              <CardContent className="pt-8 text-center space-y-5">
+            <Card className="p-6 md:p-8 group bg-card border-2 border-border/50 hover:border-sky-500/30 transition-all rounded-2xl overflow-hidden shadow-sm hover:shadow-md">
+              <CardContent className="p-0 text-center space-y-5">
                 <div className="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mx-auto group-hover:bg-sky-500/20 transition-colors">
                   <Mail className="h-8 w-8 text-sky-600" />
                 </div>
@@ -348,8 +348,8 @@ export default function HelpPage() {
               </CardContent>
             </Card>
 
-            <Card className="group bg-card border-2 border-border/50 hover:border-sky-500/30 transition-all rounded-2xl overflow-hidden shadow-sm hover:shadow-md">
-              <CardContent className="pt-8 text-center space-y-5">
+            <Card className="p-6 md:p-8 group bg-card border-2 border-border/50 hover:border-sky-500/30 transition-all rounded-2xl overflow-hidden shadow-sm hover:shadow-md">
+              <CardContent className="p-0 text-center space-y-5">
                 <div className="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mx-auto group-hover:bg-sky-500/20 transition-colors">
                   <Video className="h-8 w-8 text-sky-600" />
                 </div>

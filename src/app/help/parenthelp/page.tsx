@@ -35,32 +35,38 @@ export default function ParentHelpPage() {
         </section>
 
         <section className="grid md:grid-cols-2 gap-6">
-          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                <Shield className="h-6 w-6 text-sky-600" />
+          <Card className="p-6 md:p-8 bg-card border-2 border-border/50 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="p-0 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center">
+                <Shield className="w-8 h-8 text-sky-600" />
               </div>
-              <CardTitle className="text-xl font-bold text-foreground">Safety Settings</CardTitle>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  Safety Settings
+                </CardTitle>
+                <p className="text-muted-foreground font-medium">
+                  Control content filters, topic guardrails, and age-appropriate settings.
+                </p>
+              </div>
             </CardHeader>
-            <CardContent className="text-muted-foreground font-medium">
-              Control content filters, topic guardrails, and age-appropriate settings.
-            </CardContent>
           </Card>
-          <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                <BarChart3 className="h-6 w-6 text-sky-600" />
+          <Card className="p-6 md:p-8 bg-card border-2 border-border/50 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="p-0 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center">
+                <BarChart3 className="w-8 h-8 text-sky-600" />
               </div>
-              <CardTitle className="text-xl font-bold text-foreground">Child Progress</CardTitle>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-bold text-foreground">Child Progress</CardTitle>
+                <p className="text-muted-foreground font-medium">
+                  Review weekly growth, completed topics, and learning highlights.
+                </p>
+              </div>
             </CardHeader>
-            <CardContent className="text-muted-foreground font-medium">
-              Review weekly growth, completed topics, and learning highlights.
-            </CardContent>
           </Card>
         </section>
 
-        <Card className="bg-card border-2 border-border/50 rounded-2xl shadow-sm overflow-hidden">
-          <CardContent className="py-6 flex items-center justify-between gap-6 flex-wrap">
+        <Card className="p-6 bg-card border-2 border-border/50 rounded-2xl shadow-sm overflow-hidden">
+          <CardContent className="p-0 flex items-center justify-between gap-6 flex-wrap">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-sky-500/10 flex items-center justify-center">
                 <CreditCard className="h-6 w-6 text-sky-600" />
@@ -122,8 +128,8 @@ export default function ParentHelpPage() {
           </Accordion>
         </section>
 
-        <Card className="bg-gradient-to-r from-sky-600 to-sky-700 text-white border-0 rounded-3xl overflow-hidden shadow-xl shadow-sky-500/20">
-          <CardContent className="py-10 px-8 flex flex-col md:flex-row items-center justify-between gap-8">
+        <Card className="p-8 md:p-10 bg-gradient-to-r from-sky-600 to-sky-700 text-white border-0 rounded-3xl overflow-hidden shadow-xl shadow-sky-500/20">
+          <CardContent className="p-0 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="space-y-2 text-center md:text-left">
               <h3 className="text-3xl font-black">Your data is yours. Always.</h3>
               <p className="text-sky-50 text-lg font-medium">
