@@ -44,5 +44,5 @@ next-env.d.ts
 .vscode/*
 
 #agent-skills
-.agents/
+.agents/*
 skills-lock.json
