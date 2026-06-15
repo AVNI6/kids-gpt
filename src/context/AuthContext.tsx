@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { UserRole, UserProfile } from "@/types/user";
 import { AuthService } from "@/lib/services/auth.service";
@@ -110,6 +110,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Keep profile in sync using Supabase Realtime
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    // Subscribe to realtime database changes for the current user's profile
+    const channel = supabase
+      .channel(`profile-realtime-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "profile",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload: RealtimePostgresChangesPayload<UserProfile>) => {
+          console.log("Realtime profile change detected:", payload);
+          if (payload.new) {
+            const newProfile = payload.new as UserProfile;
+            setUserProfile(newProfile);
+            if (newProfile.role) {
+              setUserRole(newProfile.role as UserRole);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, supabase]);
+
   const refreshProfile = useCallback(async () => {
     try {
       AuthService.clearInitialAuthCache();

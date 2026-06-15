@@ -11,6 +11,7 @@ import Image from "next/image";
 import { Message } from "@/types/common";
 import type { UserProfile } from "@/types/user";
 import { getSignedResourceUrl } from "@/lib/services/shared/storage.actions";
+import { IoPersonCircleOutline } from "react-icons/io5";
 
 interface ChatMessageItemProps {
   message: Message;
@@ -124,9 +125,11 @@ const ChatMessageItem = React.memo(
                   />
                 ) : null}
                 <AvatarFallback className="bg-sky-500/10 text-sky-600 font-bold uppercase">
-                  {isUserLoggedIn && userProfile?.first_name
-                    ? userProfile.first_name.charAt(0)
-                    : "U"}
+                  {isUserLoggedIn && userProfile?.first_name ? (
+                    userProfile.first_name.charAt(0)
+                  ) : (
+                    <IoPersonCircleOutline />
+                  )}
                 </AvatarFallback>
               </>
             ) : (
