@@ -64,7 +64,7 @@ export default function ChatInterface() {
     userRole,
   });
 
-  const { isLoading, sendMessage } = useChatSender({
+  const { isLoading, sendMessage, stopGenerating } = useChatSender({
     messages,
     currentSessionId,
     isUserLoggedIn,
@@ -174,6 +174,7 @@ export default function ChatInterface() {
         <ChatFooter
           ref={chatFooterRef}
           onSend={handleSend}
+          onStop={stopGenerating}
           isLoading={isLoading}
           isAuthLoading={isLoadingAuth}
           currentSessionId={currentSessionId}

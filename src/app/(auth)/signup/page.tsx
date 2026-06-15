@@ -140,7 +140,7 @@ export default function ChatGPTKidSignupPage() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
-                <label className="font-semibold text-foreground">Full Name</label>
+                <label className="block mb-2 font-semibold text-foreground">Full Name</label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                   <Input
@@ -152,7 +152,7 @@ export default function ChatGPTKidSignupPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="font-semibold text-foreground">Email</label>
+                <label className="block mb-2 font-semibold text-foreground">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                   <Input
@@ -165,7 +165,7 @@ export default function ChatGPTKidSignupPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="font-semibold text-foreground">Password</label>
+                <label className="block mb-2 font-semibold text-foreground">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                   <Input

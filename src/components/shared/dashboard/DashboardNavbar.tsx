@@ -37,7 +37,7 @@ function KidNavbarWrapper({ pathname }: { pathname: string }) {
 
   const getNavItemHref = (item: NavItemConfig) => item.href;
 
-  const isDashboard = pathname.startsWith("/dashboard/kid") || pathname.startsWith("/activities");
+  const isDashboard = pathname.startsWith("/dashboard/kid");
   const navItems = isDashboard ? kidNavItems : [];
 
   return (

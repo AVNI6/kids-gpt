@@ -168,7 +168,7 @@ function LoginPageContent() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Parent’s Email</label>
+              <label className="block mb-2 text-sm font-semibold text-foreground">Email</label>
               <div className="relative">
                 <Mail
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50"
@@ -177,14 +177,14 @@ function LoginPageContent() {
                 <input
                   {...register("email", { required: true })}
                   type="email"
-                  placeholder="parent@example.com"
+                  placeholder="you@example.com"
                   className="w-full rounded-full border-2 border-border bg-muted/50 py-4 pl-12 pr-4 outline-none transition focus:border-sky-500 text-foreground"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mb-2">
                 <label className="text-sm font-semibold text-foreground">Password</label>
                 <Link
                   href={APP_ROUTES.ForgotPassword}

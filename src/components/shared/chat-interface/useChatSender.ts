@@ -322,6 +322,9 @@ export function useChatSender({
 
           try {
             while (true) {
+              if (signal.aborted) {
+                break;
+              }
               const { done, value } = await reader.read();
               if (done) break;
 
@@ -792,5 +795,11 @@ export function useChatSender({
     return () => clearTimeout(timer);
   }, [isLoadingAuth, sendMessage]);
 
-  return { isLoading, sendMessage };
+  const stopGenerating = useCallback(() => {
+    const sessionManager = getSessionManager();
+    sessionManager.abortActiveRequest();
+    setIsLoading(false);
+  }, []);
+
+  return { isLoading, sendMessage, stopGenerating };
 }

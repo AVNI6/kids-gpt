@@ -15,6 +15,7 @@ type Props = {
     fileText: string | null,
     fileMeta: string | null
   ) => void;
+  onStop?: () => void;
   isLoading: boolean;
   isAuthLoading?: boolean;
   currentSessionId: string | null;
@@ -25,7 +26,7 @@ export interface ChatFooterRef {
 }
 
 export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
-  { onSend, isLoading, isAuthLoading = false, currentSessionId },
+  { onSend, onStop, isLoading, isAuthLoading = false, currentSessionId },
   ref
 ) {
   const [input, setInput] = useState("");
@@ -372,25 +373,31 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                   disabled={isAuthLoading || isLoading || isParsing}
                 />
 
-                <Button
-                  onClick={handleSend}
-                  size="icon"
-                  disabled={
-                    (!input.trim() && !image && !fileName) ||
-                    isLoading ||
-                    isParsing ||
-                    isAuthLoading
-                  }
-                  className={cn(
-                    "h-10 w-10 rounded-full transition-all shrink-0 active:scale-95",
-                    input.trim() || image || fileName
-                      ? "bg-sky-500 hover:bg-sky-600 text-white shadow-md hover:shadow-lg"
-                      : "bg-muted text-muted-foreground cursor-not-allowed"
-                  )}
-                  suppressHydrationWarning={true}
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
+                {isLoading ? (
+                  <Button
+                    onClick={onStop}
+                    size="icon"
+                    className="h-10 w-10 rounded-full transition-all shrink-0 active:scale-95 bg-slate-900 hover:bg-slate-800 text-white shadow-md hover:shadow-lg dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-950 cursor-pointer"
+                    suppressHydrationWarning={true}
+                  >
+                    <span className="w-3 h-3 bg-current rounded-[2px]" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSend}
+                    size="icon"
+                    disabled={(!input.trim() && !image && !fileName) || isParsing || isAuthLoading}
+                    className={cn(
+                      "h-10 w-10 rounded-full transition-all shrink-0 active:scale-95",
+                      input.trim() || image || fileName
+                        ? "bg-sky-500 hover:bg-sky-600 text-white shadow-md hover:shadow-lg cursor-pointer"
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                    )}
+                    suppressHydrationWarning={true}
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>

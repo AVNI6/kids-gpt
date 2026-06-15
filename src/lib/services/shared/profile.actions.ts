@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { uploadUserAvatar } from "@/lib/storage";
+import { calculateAge, parseLocalDate } from "@/lib/utils/kid/childAge";
 
 export type KidOnboardingState = {
   error: string | null;
@@ -78,6 +79,28 @@ export async function submitKidOnboarding(
 
   if (!firstName) {
     return { error: "First name is required." };
+  }
+
+  if (!dateOfBirth) {
+    return { error: "Birthdate is required." };
+  }
+
+  const dob = parseLocalDate(dateOfBirth);
+  if (isNaN(dob.getTime())) {
+    return { error: "Invalid date format for birthdate." };
+  }
+
+  const today = new Date();
+  const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dobDateOnly = new Date(dob.getFullYear(), dob.getMonth(), dob.getDate());
+
+  if (dobDateOnly > todayDateOnly) {
+    return { error: "Birthdate cannot be in the future." };
+  }
+
+  const age = calculateAge(dob, todayDateOnly);
+  if (age === null || age < 5) {
+    return { error: "You must be at least 5 years old to sign up." };
   }
 
   const supabase = await createClient();

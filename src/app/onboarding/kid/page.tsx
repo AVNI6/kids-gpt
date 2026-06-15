@@ -1,11 +1,21 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Loader2, PartyPopper, UserRound, Rocket, ShieldCheck, Brain, Mail } from "lucide-react";
+import {
+  Loader2,
+  PartyPopper,
+  UserRound,
+  Rocket,
+  ShieldCheck,
+  Brain,
+  Mail,
+  Calendar as CalendarIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
+import { format } from "date-fns";
 
 import {
   submitKidOnboarding,
@@ -16,17 +26,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { OnboardingLayout } from "@/components/shared/onboarding/onboarding-layout";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { calculateAge, formatLocalDate } from "@/lib/utils/kid/childAge";
 
 const initialKidState: KidOnboardingState = { error: null };
 
-function KidSubmitButton() {
+function KidSubmitButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
 
   return (
     <Button
       type="submit"
-      disabled={pending}
-      className="h-14 w-full rounded-2xl bg-sky-600 text-base font-bold shadow-[0_16px_30px_rgba(2,132,199,0.3)] hover:bg-sky-700"
+      disabled={pending || disabled}
+      className="h-14 w-full rounded-2xl bg-sky-600 text-base font-bold shadow-[0_16px_30px_rgba(2,132,199,0.3)] hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {pending ? (
         <>
@@ -48,6 +61,37 @@ export default function KidOnboardingPage() {
   const { refreshProfile } = useAuth();
   const [kidState, kidAction] = useActionState(submitKidOnboarding, initialKidState);
   const toastShownRef = useRef(false);
+
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [localAgeError, setLocalAgeError] = useState<string | null>(null);
+
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    setDate(selectedDate);
+    if (!selectedDate) {
+      setLocalAgeError(null);
+      return;
+    }
+
+    const today = new Date();
+    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const selectedDateOnly = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate()
+    );
+
+    if (selectedDateOnly > todayDateOnly) {
+      setLocalAgeError("Birthdate cannot be in the future.");
+      return;
+    }
+
+    const age = calculateAge(selectedDateOnly, todayDateOnly);
+    if (age === null || age < 5) {
+      setLocalAgeError("You must be at least 5 years old to sign up.");
+    } else {
+      setLocalAgeError(null);
+    }
+  };
 
   useEffect(() => {
     if (kidState.success && !toastShownRef.current) {
@@ -119,13 +163,36 @@ export default function KidOnboardingPage() {
             <Label htmlFor="dateOfBirth" className="text-sm font-bold text-foreground ml-1">
               Birthdate<span className="text-red-500">*</span>
             </Label>
-            <Input
-              required
-              id="dateOfBirth"
-              name="dateOfBirth"
-              type="date"
-              className="h-12 rounded-2xl border-2 border-border px-4 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
-            />
+            <div className="relative">
+              <CalendarIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50 z-10" />
+              <Popover>
+                <PopoverTrigger
+                  type="button"
+                  className="w-full h-12 rounded-2xl border-2 border-border pl-11 justify-start text-left text-base font-medium bg-background text-foreground hover:bg-background hover:text-foreground focus:border-sky-500 focus:ring-0 flex items-center"
+                >
+                  {date ? (
+                    format(date, "PPP")
+                  ) : (
+                    <span className="text-muted-foreground/50">Pick your birthday</span>
+                  )}
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={handleDateChange}
+                    captionLayout="dropdown"
+                    startMonth={new Date(new Date().getFullYear() - 100, 0)}
+                    endMonth={new Date()}
+                    disabled={{ after: new Date() }}
+                  />
+                </PopoverContent>
+              </Popover>
+              <input type="hidden" name="dateOfBirth" value={date ? formatLocalDate(date) : ""} />
+            </div>
+            {localAgeError && (
+              <p className="text-xs font-bold text-rose-500 ml-1 mt-1">{localAgeError}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="parentEmail" className="text-sm font-bold text-foreground ml-1">
@@ -150,7 +217,7 @@ export default function KidOnboardingPage() {
           </div>
         )}
 
-        <KidSubmitButton />
+        <KidSubmitButton disabled={!date || !!localAgeError} />
       </form>
     </OnboardingLayout>
   );
