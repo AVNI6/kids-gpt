@@ -19,7 +19,6 @@ export const kidActivities: KidActivity[] = [
     icon: Grid3X3,
     color: "sky",
     duration: "10 Mins",
-    xp: "+150 XP",
     steps: [
       "Choose a custom topic",
       "Flip the card to reveal answers",
@@ -36,7 +35,6 @@ export const kidActivities: KidActivity[] = [
     icon: Sparkles,
     color: "green",
     duration: "5 Mins",
-    xp: "+150 XP",
     steps: [
       "Choose a custom topic",
       "Pick the best answer of four",
@@ -53,7 +51,6 @@ export const kidActivities: KidActivity[] = [
     icon: Puzzle,
     color: "sky",
     duration: "5 Mins",
-    xp: "+150 XP",
     steps: [
       "Choose a custom topic",
       "Find the missing item in the sequence",
@@ -70,7 +67,6 @@ export const kidActivities: KidActivity[] = [
     icon: SpellCheck,
     color: "green",
     duration: "8 Mins",
-    xp: "+150 XP",
     steps: [
       "Choose a custom topic",
       "Rearrange letters to spell words",
@@ -88,7 +84,6 @@ export const kidActivities: KidActivity[] = [
     icon: Calculator,
     color: "orange",
     duration: "5 Mins",
-    xp: "+150 XP",
     steps: [
       "Choose a custom theme",
       "Solve math problems or word stories",
@@ -105,7 +100,6 @@ export const kidActivities: KidActivity[] = [
     icon: FlaskConical,
     color: "purple",
     duration: "10 Mins",
-    xp: "+150 XP",
     steps: [
       "Choose a custom scientific topic",
       "Answer hypotheses of experiments",
@@ -124,7 +118,6 @@ export const kidActivities: KidActivity[] = [
     color: "orange",
     duration: "8 Mins",
     badge: "New Game",
-    xp: "+150 XP",
     steps: [
       "Choose a topic or scene",
       "Generate a custom puzzle layout",
@@ -142,7 +135,6 @@ export const kidActivities: KidActivity[] = [
     color: "pink",
     duration: "5 Mins",
     badge: "Playground",
-    xp: "+150 XP",
     steps: [
       "Flip over standard card tiles",
       "Match identical animal emojis",
@@ -160,7 +152,6 @@ export const kidActivities: KidActivity[] = [
     color: "orange",
     duration: "5 Mins",
     badge: "New Game",
-    xp: "+150 XP",
     steps: [
       "Read the left-hand emoji prompts",
       "Find correct matches in the right grid",
