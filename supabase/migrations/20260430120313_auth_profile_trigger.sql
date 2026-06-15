@@ -12,7 +12,7 @@ begin
     )
     values (
         new.id,
-        'parent'::public.user_role, -- FIXED: Changed to single quotes
+        'parent'::public.user_role, 
         0,
         0,
         0

@@ -82,11 +82,6 @@ export default function ChatInterface() {
     [sendMessage]
   );
 
-  // Keep Redux in sync with URL as the single source of truth.
-  //
-  // This effect's job is URL → Redux sync. It must only fire when the URL changes.
-  // Reading currentSessionId from a ref avoids re-running the effect when the local
-  // session state changes before router.replace() has committed the URL.
   useEffect(() => {
     // 1. If auth is loading, wait before syncing
     if (isLoadingAuth) return;
