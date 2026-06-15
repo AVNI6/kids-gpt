@@ -414,6 +414,9 @@ export async function fetchSessionMessages(
   cursorId?: string,
   limit: number = 30
 ): Promise<ChatMessageRow[]> {
+  // Ensure the client has restored its auth session from storage before running RLS queries
+  await supabase.auth.getSession();
+
   let query = supabase
     .from("chat_messages")
     .select("*")
