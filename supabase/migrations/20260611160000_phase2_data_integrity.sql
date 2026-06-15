@@ -10,12 +10,30 @@ ON public.screen_time_sessions(child_id)
 WHERE status = 'ACTIVE';
 
 -- Task 3: Subscription Data Integrity Constraint
-ALTER TABLE public.subscriptions 
-ADD CONSTRAINT uq_subscription_user_id UNIQUE (user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM pg_constraint 
+    WHERE conname = 'uq_subscription_user_id'
+  ) THEN
+    ALTER TABLE public.subscriptions 
+    ADD CONSTRAINT uq_subscription_user_id UNIQUE (user_id);
+  END IF;
+END $$;
 
 -- Task 4: Rewards Non-Negative Check Constraint
-ALTER TABLE public.rewards 
-ADD CONSTRAINT check_rewards_amount_non_negative CHECK (rewards_amount >= 0);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM pg_constraint 
+    WHERE conname = 'check_rewards_amount_non_negative'
+  ) THEN
+    ALTER TABLE public.rewards 
+    ADD CONSTRAINT check_rewards_amount_non_negative CHECK (rewards_amount >= 0);
+  END IF;
+END $$;
 
 -- Task 5: Teacher-Student Link Unique Constraint Index
 CREATE UNIQUE INDEX IF NOT EXISTS uq_teacher_student_links 

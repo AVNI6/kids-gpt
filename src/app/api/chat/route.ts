@@ -72,40 +72,40 @@ export async function POST(req: NextRequest) {
     // 1. Retrieve the authenticated user session securely
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
-    // 🛠️ Security Verification: Fetch actual user role from server profile DB, ignoring client parameter
-    const { data: profile, error: profileError } = await supabase
-      .from("profile")
-      .select("role")
-      .eq("user_id", user.id)
-      .is("deleted_at", null)
-      .maybeSingle();
+    let secureRole: "kid" | "parent" | "teacher" = "kid";
 
-    if (profileError || !profile || !profile.role) {
-      return NextResponse.json({ error: "Profile Not Found or Invalid Role" }, { status: 403 });
-    }
-
-    const secureRole = profile.role as "kid" | "parent" | "teacher";
-
-    // 2. Perform usage boundary enforcement for kid role
-    if (secureRole === "kid") {
-      const { data: usage } = await supabase
-        .from("whole_usage_tracking")
-        .select("limit_reached")
+    if (user) {
+      // 🛠️ Security Verification: Fetch actual user role from server profile DB, ignoring client parameter
+      const { data: profile, error: profileError } = await supabase
+        .from("profile")
+        .select("role")
         .eq("user_id", user.id)
+        .is("deleted_at", null)
         .maybeSingle();
 
-      // Reject if token tracking indicates limits are reached
-      if (usage?.limit_reached) {
-        return NextResponse.json(
-          { error: "Token quota limit reached. Please upgrade your subscription plan." },
-          { status: 403 }
-        );
+      if (profileError || !profile || !profile.role) {
+        return NextResponse.json({ error: "Profile Not Found or Invalid Role" }, { status: 403 });
+      }
+
+      secureRole = profile.role as "kid" | "parent" | "teacher";
+
+      // 2. Perform usage boundary enforcement for kid role
+      if (secureRole === "kid") {
+        const { data: usage } = await supabase
+          .from("whole_usage_tracking")
+          .select("limit_reached")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        // Reject if token tracking indicates limits are reached
+        if (usage?.limit_reached) {
+          return NextResponse.json(
+            { error: "Token quota limit reached. Please upgrade your subscription plan." },
+            { status: 403 }
+          );
+        }
       }
     }
 
@@ -399,8 +399,8 @@ export async function POST(req: NextRequest) {
     try {
       const supabase = await createClient();
       const [authResult, sessionResult] = await Promise.all([
-        supabase.auth.getUser(),
-        sessionId
+        user ? supabase.auth.getUser() : Promise.resolve({ data: { user: null }, error: null }),
+        sessionId && user
           ? supabase.from("chat_sessions").select("summary").eq("id", sessionId).maybeSingle()
           : Promise.resolve({ data: null, error: null }),
       ]);

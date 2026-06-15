@@ -117,6 +117,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 -- =========================================================================
 
 -- Task 2: Idempotent publish_assignment with parent alerts
+DROP FUNCTION IF EXISTS public.publish_assignment(uuid);
 CREATE OR REPLACE FUNCTION public.publish_assignment(
   p_teacher_id uuid,
   p_assignment_id uuid
@@ -214,7 +215,7 @@ BEGIN
       message,
       metadata
     )
-    SELECT parent_user_id, student_user_id, 'assignment_published', 'New Assignment Available', 
+    SELECT parent_user_id, child_user_id, 'assignment_published', 'New Assignment Available', 
            'A new classroom assignment "' || v_title || '" has been published for your child.',
            jsonb_build_object('classroom_id', v_classroom_id, 'assignment_id', p_assignment_id)
     FROM public.parent_child_link
@@ -232,6 +233,7 @@ $$;
 
 
 -- Task 5 & 6: Deduplicated and secure submit_student_assignment
+DROP FUNCTION IF EXISTS public.submit_student_assignment(uuid, numeric);
 CREATE OR REPLACE FUNCTION public.submit_student_assignment(
   p_student_id uuid,
   p_assignment_id uuid,
@@ -825,6 +827,7 @@ $$;
 
 
 -- Task 5: Timezone-aware get_teacher_dashboard_analytics RPC
+DROP FUNCTION IF EXISTS public.get_teacher_dashboard_analytics();
 CREATE OR REPLACE FUNCTION public.get_teacher_dashboard_analytics(p_timezone text DEFAULT 'Asia/Kolkata')
 RETURNS jsonb
 SECURITY DEFINER
