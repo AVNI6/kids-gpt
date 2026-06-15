@@ -22,7 +22,6 @@ function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams?.get("from");
-  const fromRole = searchParams?.get("role");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [keepSignedIn, setKeepSignedIn] = useState(false);
@@ -76,14 +75,11 @@ function LoginPageContent() {
             .eq("user_id", userId)
             .maybeSingle();
 
-          const role = profileData?.role ?? data.user?.user_metadata?.role;
           const isOnboarded = Boolean(profileData?.is_onboarded);
 
           if (!isOnboarded) {
-            // If role is already set, we can still go to that specific onboarding,
-            // but the root /onboarding will now handle role selection if needed.
-            const target = role ? `/onboarding/${role}` : "/onboarding";
-            router.push(target);
+            // Always redirect to the root onboarding role selection page if not onboarded yet
+            router.push("/onboarding");
             return;
           }
         }
@@ -157,8 +153,7 @@ function LoginPageContent() {
         <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl md:p-10">
           {from === "signup" && (
             <div className="mb-4 rounded-lg border border-sky-500/20 bg-sky-500/10 px-4 py-3 text-sm text-foreground">
-              Account created. Please sign in to continue to onboarding
-              {fromRole ? ` as ${fromRole}` : ""}.
+              Account created! Please check your email to verify your account before signing in.
             </div>
           )}
           <div className="mb-8">

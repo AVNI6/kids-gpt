@@ -15,6 +15,8 @@ import { AvatarUpload } from "@/components/ui/avatar-upload";
 import type { DashboardUserProfile } from "@/types/kid";
 import { updateKidProfileSettings, changeKidPassword } from "@/lib/services/kid/settings.actions";
 
+import { useAuth } from "@/context/AuthContext";
+
 interface KidSettingsContainerProps {
   profile: DashboardUserProfile;
 }
@@ -31,6 +33,7 @@ function formatDateInput(dateOfBirth: string | null) {
 }
 
 export default function KidSettingsContainer({ profile }: KidSettingsContainerProps) {
+  const { refreshProfile } = useAuth();
   // Tabs state
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -67,6 +70,7 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
 
       if (res.success) {
         toast.success(res.message || "Profile settings saved!");
+        await refreshProfile();
       } else {
         toast.error(res.error || "Failed to update settings.");
       }

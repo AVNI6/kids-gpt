@@ -19,6 +19,8 @@ import { APP_ROUTES } from "@/lib/constants/common";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { OnboardingLayout } from "@/components/shared/onboarding/onboarding-layout";
 
+import { AlreadyOnboardedView } from "@/components/shared/onboarding/already-onboarded-view";
+
 const initialParentState: ParentOnboardingState = { error: null };
 
 function ParentSubmitButton() {
@@ -47,9 +49,15 @@ function ParentSubmitButton() {
 
 export default function ParentOnboardingPage() {
   const router = useRouter();
-  const { refreshProfile } = useAuth();
+  const { user, userProfile, isLoading, refreshProfile } = useAuth();
   const [parentState, parentAction] = useActionState(submitParentOnboarding, initialParentState);
   const toastShownRef = useRef(false);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/signin");
+    }
+  }, [isLoading, user, router]);
 
   useEffect(() => {
     if (parentState.success && !toastShownRef.current) {
@@ -62,6 +70,23 @@ export default function ParentOnboardingPage() {
       toast.error(parentState.error);
     }
   }, [parentState, router, refreshProfile]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (userProfile?.is_onboarded) {
+    return <AlreadyOnboardedView />;
+  }
+
+  const fullName = user?.user_metadata?.fullname || user?.user_metadata?.full_name || "";
+  const parts = fullName.trim().split(/\s+/);
+  const defaultFirstName = parts[0] || "";
+  const defaultLastName = parts.slice(1).join(" ") || "";
 
   return (
     <OnboardingLayout
@@ -97,6 +122,7 @@ export default function ParentOnboardingPage() {
               <Input
                 id="firstName"
                 name="firstName"
+                defaultValue={defaultFirstName}
                 placeholder="e.g. John"
                 required
                 className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
@@ -113,6 +139,7 @@ export default function ParentOnboardingPage() {
                 required
                 id="lastName"
                 name="lastName"
+                defaultValue={defaultLastName}
                 placeholder="e.g. Smith"
                 className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
               />

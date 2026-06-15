@@ -19,11 +19,14 @@ import {
 } from "@/lib/services/teacher/settings.actions";
 import { uploadAvatar } from "@/lib/services/shared/profile.actions";
 
+import { useAuth } from "@/context/AuthContext";
+
 interface TeacherSettingsContainerProps {
   profile: DashboardUserProfile;
 }
 
 export default function TeacherSettingsContainer({ profile }: TeacherSettingsContainerProps) {
+  const { refreshProfile } = useAuth();
   // Tabs state
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -70,6 +73,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
         if (result && result.avatarUrl) {
           setAvatarUrl(result.avatarUrl);
           toast.success("Profile avatar uploaded successfully!");
+          await refreshProfile();
         } else {
           toast.error("Avatar upload failed");
         }
@@ -100,6 +104,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
 
       if (res.success) {
         toast.success(res.message || "Profile settings saved!");
+        await refreshProfile();
       } else {
         toast.error(res.error || "Failed to update settings.");
       }

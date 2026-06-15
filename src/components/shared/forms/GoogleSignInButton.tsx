@@ -26,7 +26,8 @@ export default function GoogleSignInButton({ className, next = "/" }: GoogleSign
 
       // Dynamically get the current origin on the client side
       const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin || "http://localhost:3000";
+      const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",

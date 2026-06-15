@@ -19,6 +19,7 @@ export interface UserProfile {
   last_name?: string;
   avatar_url?: string;
   date_of_birth?: string | null;
+  is_onboarded?: boolean;
   created_at?: string;
   updated_at?: string;
 }

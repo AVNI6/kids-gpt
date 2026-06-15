@@ -44,12 +44,8 @@ export async function GET(request: Request) {
             // Already onboarded: send them directly to their role-specific dashboard
             targetPath = profile.role ? `/dashboard/${profile.role}` : "/dashboard";
           } else {
-            // Not onboarded: direct them to onboarding flow
-            if (next && next !== "/onboarding") {
-              targetPath = next;
-            } else {
-              targetPath = profile?.role ? `/onboarding/${profile.role}` : "/onboarding";
-            }
+            // Not onboarded: always direct them to the root onboarding page for role selection
+            targetPath = "/onboarding";
           }
         } else {
           if (userError) {

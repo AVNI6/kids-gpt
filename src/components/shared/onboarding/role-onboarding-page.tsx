@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,6 +11,7 @@ import {
   Users,
   GraduationCap,
   Rocket,
+  Loader2,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -19,6 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Logo from "@/components/shared/logo/Logo";
 import { useAuth } from "@/hooks/useAuth";
+import { AlreadyOnboardedView } from "./already-onboarded-view";
 
 const supabase = createClient();
 
@@ -30,10 +32,28 @@ type Props = {
 
 export function RoleOnboardingPage({ role }: Props) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, userProfile, isLoading } = useAuth();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/signin");
+    }
+  }, [isLoading, user, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (userProfile?.is_onboarded) {
+    return <AlreadyOnboardedView />;
+  }
 
   const handleSelectRole = async (selected: Role) => {
     setIsSubmitting(true);

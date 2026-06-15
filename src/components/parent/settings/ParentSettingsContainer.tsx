@@ -18,11 +18,14 @@ import {
   changeParentPassword,
 } from "@/lib/services/parent/settings.actions";
 
+import { useAuth } from "@/context/AuthContext";
+
 interface ParentSettingsContainerProps {
   profile: DashboardUserProfile;
 }
 
 export default function ParentSettingsContainer({ profile }: ParentSettingsContainerProps) {
+  const { refreshProfile } = useAuth();
   // Tabs state
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -55,6 +58,7 @@ export default function ParentSettingsContainer({ profile }: ParentSettingsConta
 
       if (res.success) {
         toast.success(res.message || "Profile settings saved!");
+        await refreshProfile();
       } else {
         toast.error(res.error || "Failed to update settings.");
       }

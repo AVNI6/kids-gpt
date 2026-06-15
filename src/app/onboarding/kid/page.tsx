@@ -30,6 +30,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { calculateAge, formatLocalDate } from "@/lib/utils/kid/childAge";
 
+import { AlreadyOnboardedView } from "@/components/shared/onboarding/already-onboarded-view";
+
 const initialKidState: KidOnboardingState = { error: null };
 
 function KidSubmitButton({ disabled }: { disabled?: boolean }) {
@@ -58,7 +60,7 @@ function KidSubmitButton({ disabled }: { disabled?: boolean }) {
 
 export default function KidOnboardingPage() {
   const router = useRouter();
-  const { refreshProfile } = useAuth();
+  const { user, userProfile, isLoading, refreshProfile } = useAuth();
   const [kidState, kidAction] = useActionState(submitKidOnboarding, initialKidState);
   const toastShownRef = useRef(false);
 
@@ -94,6 +96,12 @@ export default function KidOnboardingPage() {
   };
 
   useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/signin");
+    }
+  }, [isLoading, user, router]);
+
+  useEffect(() => {
     if (kidState.success && !toastShownRef.current) {
       toastShownRef.current = true;
       toast.success(kidState.message || "Welcome explorer!");
@@ -104,6 +112,23 @@ export default function KidOnboardingPage() {
       toast.error(kidState.error);
     }
   }, [kidState, router, refreshProfile]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (userProfile?.is_onboarded) {
+    return <AlreadyOnboardedView />;
+  }
+
+  const fullName = user?.user_metadata?.fullname || user?.user_metadata?.full_name || "";
+  const parts = fullName.trim().split(/\s+/);
+  const defaultFirstName = parts[0] || "";
+  const defaultLastName = parts.slice(1).join(" ") || "";
 
   return (
     <OnboardingLayout
@@ -136,6 +161,7 @@ export default function KidOnboardingPage() {
               <Input
                 id="firstName"
                 name="firstName"
+                defaultValue={defaultFirstName}
                 placeholder="e.g. Alex"
                 required
                 className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
@@ -151,6 +177,7 @@ export default function KidOnboardingPage() {
               <Input
                 id="lastName"
                 name="lastName"
+                defaultValue={defaultLastName}
                 placeholder="e.g. Explorer"
                 className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
               />

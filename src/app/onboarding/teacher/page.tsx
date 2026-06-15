@@ -28,6 +28,8 @@ import { APP_ROUTES } from "@/lib/constants/common";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { OnboardingLayout } from "@/components/shared/onboarding/onboarding-layout";
 
+import { AlreadyOnboardedView } from "@/components/shared/onboarding/already-onboarded-view";
+
 const initialTeacherState: TeacherOnboardingState = { error: null };
 
 function TeacherSubmitButton() {
@@ -56,12 +58,18 @@ function TeacherSubmitButton() {
 
 export default function TeacherOnboardingPage() {
   const router = useRouter();
-  const { refreshProfile } = useAuth();
+  const { user, userProfile, isLoading, refreshProfile } = useAuth();
   const [teacherState, teacherAction] = useActionState(
     submitTeacherOnboarding,
     initialTeacherState
   );
   const toastShownRef = useRef(false);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/signin");
+    }
+  }, [isLoading, user, router]);
 
   useEffect(() => {
     if (teacherState.success && !toastShownRef.current) {
@@ -74,6 +82,23 @@ export default function TeacherOnboardingPage() {
       toast.error(teacherState.error);
     }
   }, [teacherState, router, refreshProfile]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (userProfile?.is_onboarded) {
+    return <AlreadyOnboardedView />;
+  }
+
+  const fullName = user?.user_metadata?.fullname || user?.user_metadata?.full_name || "";
+  const parts = fullName.trim().split(/\s+/);
+  const defaultFirstName = parts[0] || "";
+  const defaultLastName = parts.slice(1).join(" ") || "";
 
   return (
     <OnboardingLayout
@@ -109,6 +134,7 @@ export default function TeacherOnboardingPage() {
               <Input
                 id="firstName"
                 name="firstName"
+                defaultValue={defaultFirstName}
                 placeholder="e.g. Jordan"
                 required
                 className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
@@ -124,6 +150,7 @@ export default function TeacherOnboardingPage() {
               <Input
                 id="lastName"
                 name="lastName"
+                defaultValue={defaultLastName}
                 placeholder="e.g. Williams"
                 className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
               />
