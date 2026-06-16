@@ -45,7 +45,7 @@ export default function LinkChildDialog({ trigger, open, onOpenChange }: LinkChi
         setLinkEmail("");
       }
     } catch (error) {
-      setLinkMessage(error instanceof Error ? error.message : "Failed to create link request.");
+      setLinkMessage(error instanceof Error ? error.message : "Failed to link Child.");
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +76,7 @@ export default function LinkChildDialog({ trigger, open, onOpenChange }: LinkChi
         disabled={isLoading}
         className="w-full rounded-xl bg-sky-600 text-white hover:bg-sky-700 h-11 font-bold cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600"
       >
-        {isLoading ? "Sending..." : "Send Link Invite"}
+        {isLoading ? "Sending..." : "Link Child"}
       </Button>
 
       {linkMessage ? (
@@ -93,8 +93,7 @@ export default function LinkChildDialog({ trigger, open, onOpenChange }: LinkChi
         <Link2 className="h-5 w-5 text-sky-600" /> Link a Child
       </DialogTitle>
       <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
-        Invite a child by email. If they haven&apos;t signed up yet, we&apos;ll send a pending
-        invite.
+        Link a child by email. If they haven&apos;t signed up yet, Then create a account first.
       </DialogDescription>
     </DialogHeader>
   );
