@@ -75,7 +75,7 @@ export function AvatarUpload({
   };
 
   return (
-    <div className="flex items-center gap-6 w-full">
+    <div className="flex flex-col sm:flex-row items-center gap-6 w-full text-center sm:text-left">
       <div className="relative group flex-shrink-0">
         <label
           htmlFor="avatar-input"
@@ -130,12 +130,12 @@ export function AvatarUpload({
         <span className="text-sm font-bold text-foreground block ml-1">{label}</span>
         <p className="text-xs text-muted-foreground ml-1">{description}</p>
         {avatarUrl && !isPending && !error && (
-          <p className="text-xs font-bold text-emerald-500 flex items-center gap-1 animate-in fade-in slide-in-from-left-2 mt-2 ml-1">
+          <p className="text-xs font-bold text-emerald-500 flex items-center justify-center sm:justify-start gap-1 animate-in fade-in slide-in-from-left-2 mt-2 ml-1">
             <CheckCircle2 className="h-3.5 w-3.5" /> {successMessage}
           </p>
         )}
         {error && !isPending && (
-          <p className="text-xs font-bold text-rose-500 flex items-center gap-1 animate-in fade-in slide-in-from-left-2 mt-2 ml-1">
+          <p className="text-xs font-bold text-rose-500 flex items-center justify-center sm:justify-start gap-1 animate-in fade-in slide-in-from-left-2 mt-2 ml-1">
             {error}
           </p>
         )}

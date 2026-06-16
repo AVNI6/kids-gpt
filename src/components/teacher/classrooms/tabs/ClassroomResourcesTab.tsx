@@ -325,7 +325,7 @@ export default function ClassroomResourcesTab({
 
               {/* Dynamic Action Selector based on uploadMethod */}
               {uploadMethod === "FILE" ? (
-                <div className="space-y-2 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-950/20 relative">
+                <div className="space-y-2 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-950/20 relative">
                   {isUploadingFile ? (
                     <div className="flex flex-col items-center justify-center gap-2 py-2">
                       <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
@@ -453,7 +453,7 @@ export default function ClassroomResourcesTab({
       </div>
 
       {resources.length === 0 ? (
-        <Card className="rounded-[32px] border-dashed border-2 border-indigo-150 dark:border-slate-800 bg-indigo-50/5 p-12 text-center">
+        <Card className="rounded-[32px] border-2 border-indigo-150 dark:border-slate-800 bg-indigo-50/5 p-12 text-center">
           <CardContent className="space-y-4 p-0 max-w-sm mx-auto flex flex-col items-center">
             <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-indigo-500">
               <FolderOpen className="h-6 w-6" />

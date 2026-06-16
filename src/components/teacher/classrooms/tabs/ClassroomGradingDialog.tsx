@@ -99,7 +99,7 @@ export default function ClassroomGradingDialog({
             </span>
 
             {!assignmentOverview || assignmentOverview.submissions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-8 text-center rounded-2xl border-2 border-dashed border-slate-100 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-950/20">
+              <div className="flex flex-col items-center justify-center p-8 text-center rounded-2xl border-2 border-slate-100 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-950/20">
                 <AlertCircle className="w-8 h-8 text-slate-400 mb-2" />
                 <p className="text-xs text-slate-950 dark:text-white font-bold">
                   No submissions collected yet

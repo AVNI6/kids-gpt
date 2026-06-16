@@ -70,7 +70,7 @@ export default function TeacherNotificationsSection() {
       ) : (
         <div className="space-y-4 w-full">
           {notifications.length === 0 ? (
-            <Card className="rounded-[28px] border-dashed border-2 border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/10 p-12 text-center">
+            <Card className="rounded-[28px] border-2 border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/10 p-12 text-center">
               <CardContent className="p-0 flex flex-col items-center justify-center">
                 <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-4">
                   <Bell className="w-8 h-8 text-indigo-500" />

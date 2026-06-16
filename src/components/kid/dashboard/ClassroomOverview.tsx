@@ -197,7 +197,7 @@ export default function ClassroomOverview({ memberships }: Props) {
               </h3>
 
               {approvedClasses.length === 0 ? (
-                <Card className="rounded-[32px] border-dashed border-2 border-indigo-100 bg-indigo-50/10 dark:border-indigo-950/20 dark:bg-indigo-950/5 p-8 text-center relative overflow-hidden">
+                <Card className="rounded-[32px] border-2 border-indigo-100 bg-indigo-50/10 dark:border-indigo-950/20 dark:bg-indigo-950/5 p-8 text-center relative overflow-hidden">
                   <CardContent className="space-y-3 p-0 max-w-sm mx-auto flex flex-col items-center">
                     <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl flex items-center justify-center text-indigo-500 dark:text-indigo-400">
                       <GraduationCap className="w-6 h-6" />

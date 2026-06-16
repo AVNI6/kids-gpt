@@ -102,11 +102,11 @@ export default function RecentClassrooms({ classrooms }: Props) {
                 >
                   {getClassroomInitials(cls.name)}
                 </div>
-                <div className="text-left shrink-0">
-                  <p className="text-xs font-extrabold text-slate-900 dark:text-white leading-none">
+                <div className="text-left min-w-0 flex-1">
+                  <p className="text-xs font-extrabold text-slate-900 dark:text-white leading-none truncate">
                     {cls.name}
                   </p>
-                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5 block">
+                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5 block truncate">
                     {cls.grade || "No Grade"}
                   </span>
                 </div>

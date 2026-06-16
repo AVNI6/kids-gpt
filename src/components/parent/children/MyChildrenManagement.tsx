@@ -61,7 +61,7 @@ export default function MyChildrenManagement({
       {/* Children Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {linkedChildren.length === 0 ? (
-          <Card className="col-span-full rounded-[32px] border-dashed border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center">
+          <Card className="col-span-full rounded-[32px] border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center">
             <CardContent className="space-y-4">
               <div className="w-16 h-16 bg-sky-50 dark:bg-sky-950/40 rounded-2xl flex items-center justify-center mx-auto text-sky-500">
                 <Users className="w-8 h-8" />

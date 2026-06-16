@@ -153,7 +153,7 @@ export default function ClassroomAnnouncementsTab({
       </div>
 
       {announcements.length === 0 ? (
-        <Card className="rounded-[32px] border-dashed border-2 border-indigo-150 dark:border-slate-800 bg-indigo-50/5 p-12 text-center">
+        <Card className="rounded-[32px] border-2 border-indigo-150 dark:border-slate-800 bg-indigo-50/5 p-12 text-center">
           <CardContent className="space-y-4 p-0 max-w-sm mx-auto flex flex-col items-center">
             <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-indigo-500">
               <Megaphone className="h-6 w-6" />

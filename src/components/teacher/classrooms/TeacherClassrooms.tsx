@@ -109,7 +109,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Header and Creation Bar */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <School className="size-5 text-indigo-600 dark:text-indigo-400" />
@@ -125,7 +125,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger
             render={
-              <Button className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 px-5 shadow-sm text-xs">
+              <Button className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 px-5 shadow-sm text-xs shrink-0 self-start sm:self-auto">
                 <Plus className="mr-1 h-3.5 w-3.5" data-icon="inline-start" />
                 Create Class
               </Button>
@@ -287,7 +287,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
 
       {/* Grid of Classrooms */}
       {classrooms.length === 0 ? (
-        <Card className="rounded-[32px] border-dashed border-2 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10 p-8 md:p-12 text-center relative overflow-hidden">
+        <Card className="rounded-[32px] border-2 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10 p-8 md:p-12 text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
           <CardContent className="space-y-4 p-0 max-w-sm mx-auto flex flex-col items-center">
             <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl flex items-center justify-center text-indigo-500 dark:text-indigo-400">
@@ -312,7 +312,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {classrooms.map((cls) => {
             const studentCount = cls.students_count || 0;
             const assignmentCount = cls.assignments_count || 0;
@@ -427,12 +427,12 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
 
                   <div className="flex flex-col gap-3 pt-1">
                     {/* Share Code Utility */}
-                    <div className="flex items-center justify-between rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 p-3">
-                      <div className="space-y-0.5">
+                    <div className="flex items-center justify-between rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 p-3 gap-2">
+                      <div className="space-y-0.5 min-w-0">
                         <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                           Class Code
                         </span>
-                        <p className="text-md font-black text-slate-900 dark:text-white tracking-widest font-mono">
+                        <p className="text-md font-black text-slate-900 dark:text-white tracking-widest font-mono truncate">
                           {cls.class_code}
                         </p>
                       </div>
@@ -440,7 +440,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         size="sm"
                         variant="outline"
                         onClick={() => handleCopyCode(cls.class_code)}
-                        className="rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-bold text-[10px] h-8 px-2.5 shadow-xs"
+                        className="rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-bold text-[10px] h-8 px-2.5 shadow-xs shrink-0"
                       >
                         {copiedCode === cls.class_code ? (
                           <>

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { UserRound, KeyRound, Loader2, Mail, Lock, Shield } from "lucide-react";
+import { UserRound, KeyRound, Loader2, Mail, Lock, Shield, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,25 +12,17 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 import type { DashboardUserProfile } from "@/types/kid";
 import { updateKidProfileSettings, changeKidPassword } from "@/lib/services/kid/settings.actions";
+import { calculateAge, formatLocalDate, parseLocalDate } from "@/lib/utils/kid/childAge";
 
 import { useAuth } from "@/context/AuthContext";
 
 interface KidSettingsContainerProps {
   profile: DashboardUserProfile;
-}
-
-function formatDateInput(dateOfBirth: string | null) {
-  if (!dateOfBirth) {
-    return "";
-  }
-  const parsedDate = new Date(dateOfBirth);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return dateOfBirth;
-  }
-  return parsedDate.toISOString().slice(0, 10);
 }
 
 export default function KidSettingsContainer({ profile }: KidSettingsContainerProps) {
@@ -41,7 +34,11 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
   const [firstName, setFirstName] = useState(profile.first_name || "");
   const [lastName, setLastName] = useState(profile.last_name || "");
   const [username, setUsername] = useState(profile.username || "");
-  const [dateOfBirth, setDateOfBirth] = useState(formatDateInput(profile.date_of_birth));
+  
+  const initialDate = profile.date_of_birth ? parseLocalDate(profile.date_of_birth) : undefined;
+  const [date, setDate] = useState<Date | undefined>(initialDate);
+  const [localAgeError, setLocalAgeError] = useState<string | null>(null);
+
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
@@ -49,6 +46,34 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    setDate(selectedDate);
+    if (!selectedDate) {
+      setLocalAgeError("Birthdate is required.");
+      return;
+    }
+
+    const today = new Date();
+    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const selectedDateOnly = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate()
+    );
+
+    if (selectedDateOnly > todayDateOnly) {
+      setLocalAgeError("Birthdate cannot be in the future.");
+      return;
+    }
+
+    const age = calculateAge(selectedDateOnly, todayDateOnly);
+    if (age === null || age < 5) {
+      setLocalAgeError("You must be at least 5 years old.");
+    } else {
+      setLocalAgeError(null);
+    }
+  };
 
   // Handle Profile Update
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -58,12 +83,22 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
       return;
     }
 
+    if (!date) {
+      toast.error("Birthdate is required.");
+      return;
+    }
+
+    if (localAgeError) {
+      toast.error(localAgeError);
+      return;
+    }
+
     setIsSavingProfile(true);
     try {
       const res = await updateKidProfileSettings({
         firstName,
         lastName,
-        dateOfBirth,
+        dateOfBirth: formatLocalDate(date),
         username,
         avatarUrl,
       });
@@ -221,21 +256,44 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
                     <Label htmlFor="dateOfBirth" className="text-sm font-bold text-foreground ml-1">
                       Date of Birth
                     </Label>
-                    <Input
-                      id="dateOfBirth"
-                      type="date"
-                      value={dateOfBirth}
-                      onChange={(e) => setDateOfBirth(e.target.value)}
-                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
-                    />
+                    <div className="relative">
+                      <Popover>
+                        <PopoverTrigger
+                          type="button"
+                          id="dateOfBirth"
+                          className="w-full rounded-2xl border border-input bg-background focus:bg-card h-13 text-base font-medium px-4 text-left justify-start flex items-center gap-2 hover:bg-background/90"
+                        >
+                          <CalendarIcon className="h-5 w-5 text-muted-foreground/80 shrink-0" />
+                          {date ? (
+                            format(date, "PPP")
+                          ) : (
+                            <span className="text-muted-foreground/50">Pick your birthday</span>
+                          )}
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={handleDateChange}
+                            captionLayout="dropdown"
+                            startMonth={new Date(new Date().getFullYear() - 100, 0)}
+                            endMonth={new Date()}
+                            disabled={{ after: new Date() }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    {localAgeError && (
+                      <p className="text-xs font-bold text-rose-500 ml-1 mt-1">{localAgeError}</p>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex justify-end pt-6 border-t border-border">
                   <Button
                     type="submit"
-                    disabled={isSavingProfile}
-                    className="rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-sky-500 dark:hover:bg-sky-600 transition-all w-full sm:w-auto"
+                    disabled={isSavingProfile || !date || !!localAgeError}
+                    className="rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-sky-500 dark:hover:bg-sky-600 transition-all w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSavingProfile ? (
                       <>

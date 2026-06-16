@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { verifyUserRole } from "@/lib/services/kid/dashboard.actions";
+import { calculateAge } from "@/lib/utils/kid/childAge";
 
 export type ActionResponse = {
   success: boolean;
@@ -19,6 +20,16 @@ export async function updateKidProfileSettings(fields: {
 }): Promise<ActionResponse> {
   try {
     const { userId } = await verifyUserRole("kid");
+
+    if (fields.dateOfBirth) {
+      const age = calculateAge(fields.dateOfBirth);
+      if (age === null || age < 5) {
+        return { success: false, error: "You must be at least 5 years old." };
+      }
+    } else {
+      return { success: false, error: "Birthdate is required." };
+    }
+
     const supabase = await createClient();
 
     const updatePayload: Record<string, string | null> = {

@@ -149,47 +149,56 @@ export default function ParentSettingsContainer({ profile }: ParentSettingsConta
             </CardHeader>
             <CardContent className="p-5 sm:p-8 lg:p-10 flex flex-col gap-8">
               <form onSubmit={handleProfileSubmit} className="flex flex-col gap-8">
-                {/* Profile Picture Upload Container */}
-                <div className="flex flex-col gap-4">
-                  <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                    Profile Photo
-                  </Label>
-                  <div className="flex flex-col sm:flex-row items-center gap-6 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
-                    <AvatarUpload
-                      initialAvatarUrl={avatarUrl}
-                      onUploadSuccess={(url) => setAvatarUrl(url)}
-                      label="Pick a Profile Photo"
-                      description="Click the photo circle to upload or replace your image automatically."
-                    />
-                  </div>
-                </div>
-
-                {/* Profile Grid Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="firstName" className="text-sm font-bold text-foreground ml-1">
-                      First Name *
+                {/* Responsive grid for photo on the left, name fields on the right */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                  {/* Profile Picture Upload Container */}
+                  <div className="flex flex-col gap-4">
+                    <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                      Profile Photo
                     </Label>
-                    <Input
-                      id="firstName"
-                      placeholder="First Name"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
-                    />
+                    <div className="flex flex-col sm:flex-row items-center gap-6 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
+                      <AvatarUpload
+                        initialAvatarUrl={avatarUrl}
+                        onUploadSuccess={(url) => setAvatarUrl(url)}
+                        label="Pick a Profile Photo"
+                        description="Click the photo circle to upload or replace your image automatically."
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="lastName" className="text-sm font-bold text-foreground ml-1">
-                      Last Name
+                  {/* Profile Grid Fields */}
+                  <div className="flex flex-col gap-4">
+                    {/* Spacer label to align horizontally with the Profile Photo label on desktop */}
+                    <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1 lg:block">
+                      Personal Details
                     </Label>
-                    <Input
-                      id="lastName"
-                      placeholder="Last Name"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="firstName" className="text-sm font-bold text-foreground ml-1">
+                          First Name *
+                        </Label>
+                        <Input
+                          id="firstName"
+                          placeholder="First Name"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="lastName" className="text-sm font-bold text-foreground ml-1">
+                          Last Name
+                        </Label>
+                        <Input
+                          id="lastName"
+                          placeholder="Last Name"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 

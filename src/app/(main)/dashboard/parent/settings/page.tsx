@@ -57,12 +57,10 @@ async function SettingsContent() {
 
 export default async function ParentSettingsPage() {
   return (
-    <main className="min-h-full bg-background text-slate-900 dark:text-slate-50 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-      <div className="mx-25 flex w-full flex-col gap-6">
-        <Suspense fallback={<SettingsSkeleton />}>
-          <SettingsContent />
-        </Suspense>
-      </div>
+    <main className="min-h-full bg-background text-slate-900 dark:text-slate-50">
+      <Suspense fallback={<SettingsSkeleton />}>
+        <SettingsContent />
+      </Suspense>
     </main>
   );
 }
