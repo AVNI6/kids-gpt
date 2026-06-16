@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { MdFamilyRestroom } from "react-icons/md";
 import { Trophy, Clock, Activity, Users, CheckCircle2 } from "lucide-react";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
@@ -179,75 +180,79 @@ export default function HomeSection() {
               <Activity className="w-5 h-5 text-sky-600 animate-pulse" /> Recent Family Activity
             </h3>
           </div>
-          <CardContent className="p-6 md:p-8 pt-0 divide-y divide-slate-100 dark:divide-slate-800/40 max-h-[480px] overflow-y-auto pr-2">
-            {isLoadingChildData && familyTimeline.length === 0 ? (
-              <div className="space-y-6 py-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex gap-4 items-start py-5 first:pt-0 border-b last:border-0 border-slate-100 dark:border-slate-800/40 animate-pulse"
-                  >
-                    <Skeleton className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
-                    <div className="flex-1 space-y-2.5">
-                      <div className="flex justify-between items-center">
-                        <Skeleton className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                        <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
-                      </div>
-                      <Skeleton className="h-3 w-56 bg-slate-200 dark:bg-slate-800 rounded" />
-                    </div>
-                    <Skeleton className="h-5 w-14 bg-slate-200 dark:bg-slate-800 rounded-lg shrink-0" />
-                  </div>
-                ))}
-              </div>
-            ) : familyTimeline.length === 0 ? (
-              <div className="text-center py-16 text-slate-400 font-bold text-sm">
-                Your children haven&apos;t played any learning games yet!
-              </div>
-            ) : (
-              familyTimeline.map((item, idx) => (
-                <div
-                  key={item.id || idx}
-                  className="flex gap-4 items-start py-5 first:pt-0 last:pb-0"
-                >
-                  <Avatar className="w-10 h-10 border-2 border-white dark:border-slate-800 rounded-full shrink-0 shadow-sm ring-1 ring-slate-100 dark:ring-slate-800">
-                    <AvatarImage src={item.childAvatar ?? undefined} className="object-cover" />
-                    <AvatarFallback className="text-xs font-black bg-gradient-to-br from-sky-400 to-sky-600 text-white">
-                      {item.childName?.[0] || "C"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline mb-0.5">
-                      <span className="text-sm font-extrabold">{item.childName}</span>
-                      <span
-                        className="text-[10px] font-bold text-slate-400 shrink-0 ml-2"
-                        suppressHydrationWarning
+          <CardContent>
+            <ScrollArea className="max-h-[480px] pr-4 -mr-4">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800/40 pr-2">
+                {isLoadingChildData && familyTimeline.length === 0 ? (
+                  <div className="space-y-6 py-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex gap-4 items-start py-5 first:pt-0 border-b last:border-0 border-slate-100 dark:border-slate-800/40 animate-pulse"
                       >
-                        {item.created_at
-                          ? new Date(item.created_at).toLocaleString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: true,
-                            })
-                          : "Recently"}
-                      </span>
-                    </div>
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-350">
-                      {item.title}
-                    </p>
-                    {item.description && item.description !== item.title && (
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium leading-relaxed mt-0.5 animate-in fade-in">
-                        {item.description}
-                      </p>
-                    )}
+                        <Skeleton className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+                        <div className="flex-1 space-y-2.5">
+                          <div className="flex justify-between items-center">
+                            <Skeleton className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                            <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                          </div>
+                          <Skeleton className="h-3 w-56 bg-slate-200 dark:bg-slate-800 rounded" />
+                        </div>
+                        <Skeleton className="h-5 w-14 bg-slate-200 dark:bg-slate-800 rounded-lg shrink-0" />
+                      </div>
+                    ))}
                   </div>
-                  <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-lg text-[10px] shrink-0 border border-emerald-100 dark:border-emerald-900/30">
-                    +{item.rewards_amount || 20} XP
-                  </Badge>
-                </div>
-              ))
-            )}
+                ) : familyTimeline.length === 0 ? (
+                  <div className="text-center py-16 text-slate-400 font-bold text-sm">
+                    Your children haven&apos;t played any learning games yet!
+                  </div>
+                ) : (
+                  familyTimeline.map((item, idx) => (
+                    <div
+                      key={item.id || idx}
+                      className="flex gap-4 items-start py-5 first:pt-0 last:pb-0"
+                    >
+                      <Avatar className="w-10 h-10 border-2 border-white dark:border-slate-800 rounded-full shrink-0 shadow-sm ring-1 ring-slate-100 dark:ring-slate-800">
+                        <AvatarImage src={item.childAvatar ?? undefined} className="object-cover" />
+                        <AvatarFallback className="text-xs font-black bg-gradient-to-br from-sky-400 to-sky-600 text-white">
+                          {item.childName?.[0] || "C"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline mb-0.5">
+                          <span className="text-sm font-extrabold">{item.childName}</span>
+                          <span
+                            className="text-[10px] font-bold text-slate-400 shrink-0 ml-2"
+                            suppressHydrationWarning
+                          >
+                            {item.created_at
+                              ? new Date(item.created_at).toLocaleString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })
+                              : "Recently"}
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-slate-700 dark:text-slate-350">
+                          {item.title}
+                        </p>
+                        {item.description && item.description !== item.title && (
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium leading-relaxed mt-0.5 animate-in fade-in">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                      <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-lg text-[10px] shrink-0 border border-emerald-100 dark:border-emerald-900/30">
+                        +{item.rewards_amount || 20} XP
+                      </Badge>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
 

@@ -947,7 +947,7 @@ DECLARE
   v_daily_usage jsonb;
   v_chat_sessions jsonb;
   v_screen_time_seconds int;
-  v_today varchar;
+  v_today date;
   v_classrooms jsonb;
 BEGIN
   -- Security checks
@@ -1039,7 +1039,7 @@ BEGIN
   ) cs;
 
   -- 7. Fetch active screen time
-  v_today := timezone(p_timezone, now())::date::varchar;
+  v_today := timezone(p_timezone, now())::date;
   SELECT coalesce(total_seconds, 0) INTO v_screen_time_seconds
   FROM public.daily_screen_time_usage
   WHERE child_id = p_child_id AND usage_date = v_today;
@@ -1055,7 +1055,10 @@ BEGIN
       c.id as classroom_id,
       c.name as classroom_name,
       c.subject as subject,
-      c.grade_level as grade_level,
+      c.grade as grade_level,
+      tp.first_name as teacher_first_name,
+      tp.last_name as teacher_last_name,
+      tu.email as teacher_email,
       (
         SELECT count(*)::int 
         FROM public.assignments a
@@ -1076,6 +1079,8 @@ BEGIN
       ) as completed_assignments_count
     FROM public.classroom_members cm
     JOIN public.classrooms c ON cm.classroom_id = c.id
+    LEFT JOIN public.profile tp ON c.teacher_user_id = tp.user_id AND tp.deleted_at IS NULL
+    LEFT JOIN auth.users tu ON c.teacher_user_id = tu.id
     WHERE cm.student_user_id = p_child_id
       AND cm.status = 'APPROVED'
       AND c.deleted_at IS NULL

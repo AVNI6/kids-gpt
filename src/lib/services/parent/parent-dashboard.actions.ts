@@ -770,6 +770,9 @@ interface ChildComprehensiveRpcResponse {
     classroom_name: string;
     subject: string | null;
     grade_level: string | null;
+    teacher_first_name?: string | null;
+    teacher_last_name?: string | null;
+    teacher_email?: string | null;
     pending_assignments_count: number | null;
     completed_assignments_count: number | null;
   }> | null;
@@ -906,6 +909,9 @@ function mapRpcToCacheData(
     classroom_name: c.classroom_name,
     subject: c.subject,
     grade_level: c.grade_level,
+    teacher_first_name: c.teacher_first_name,
+    teacher_last_name: c.teacher_last_name,
+    teacher_email: c.teacher_email,
     pending_assignments_count: c.pending_assignments_count ?? 0,
     completed_assignments_count: c.completed_assignments_count ?? 0,
   }));

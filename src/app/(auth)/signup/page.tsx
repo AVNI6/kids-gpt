@@ -252,7 +252,7 @@ export default function ChatGPTKidSignupPage() {
                   href={APP_ROUTES.Signin}
                   className="font-semibold text-sky-500 hover:underline"
                 >
-                  Log in here
+                  Sign in here
                 </Link>
               </p>
             </form>

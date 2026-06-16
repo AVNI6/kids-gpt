@@ -22,26 +22,27 @@ export default function LearningProgress() {
 
   if (!activeChild) {
     return (
-      <Card className="rounded-[32px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center max-w-2xl mx-auto mt-8">
-        <CardContent className="space-y-4 pt-6">
-          <BrainCircuit className="w-12 h-12 text-slate-400 mx-auto animate-pulse" />
-          <h3 className="text-xl font-black text-slate-900 dark:text-white">
-            No Learning Progress
-          </h3>
-          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 leading-relaxed">
-            You haven&apos;t linked any children accounts to your parent profile yet. Go to the{" "}
-            <Link
-              href="/dashboard/parent/children"
-              className="text-sky-500 hover:underline font-bold"
-            >
-              {" "}
-              My Children
-            </Link>
-            {"  "}page to link your child&apos;s account and view their learning metrics, subject
-            mastery, and AI recommendations.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center min-h-[70vh] w-full">
+        <Card className="rounded-[32px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center w-full">
+          <CardContent className="space-y-4 pt-6">
+            <BrainCircuit className="w-12 h-12 text-slate-400 mx-auto animate-pulse" />
+            <h3 className="text-xl font-black text-slate-900 dark:text-white">
+              No Learning Progress
+            </h3>
+            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
+              You haven&apos;t linked any children accounts to your parent profile yet. Go to the{" "}
+              <Link
+                href="/dashboard/parent/children"
+                className="text-sky-500 hover:underline font-bold"
+              >
+                My Children
+              </Link>{" "}
+              page to link your child&apos;s account and view their learning metrics, subject
+              mastery, and AI recommendations.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 

@@ -7,7 +7,7 @@ import GoogleSignInButton from "@/components/shared/forms/GoogleSignInButton";
 import { Mail, Lock, CheckCircle, BookOpen, Brain } from "lucide-react";
 import Link from "next/link";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -19,7 +19,6 @@ import Logo from "@/components/shared/logo/Logo";
 const supabase = createClient();
 
 function LoginPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams?.get("from");
   const [showPassword, setShowPassword] = useState(false);
@@ -71,7 +70,7 @@ function LoginPageContent() {
         if (userId) {
           const { data: profileData } = await supabase
             .from("profile")
-            .select("role, is_onboarded")
+            .select("is_onboarded")
             .eq("user_id", userId)
             .maybeSingle();
 
@@ -79,7 +78,7 @@ function LoginPageContent() {
 
           if (!isOnboarded) {
             // Always redirect to the root onboarding role selection page if not onboarded yet
-            router.push("/onboarding");
+            window.location.assign("/onboarding");
             return;
           }
         }
@@ -87,7 +86,7 @@ function LoginPageContent() {
         console.error("Error checking profile after sign-in:", err);
       }
 
-      router.push("/");
+      window.location.assign("/");
       toast.success("Welcome!", {
         description: "Login successful!",
       });

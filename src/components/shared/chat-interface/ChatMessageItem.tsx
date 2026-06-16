@@ -128,7 +128,7 @@ const ChatMessageItem = React.memo(
                   {isUserLoggedIn && userProfile?.first_name ? (
                     userProfile.first_name.charAt(0)
                   ) : (
-                    <IoPersonCircleOutline />
+                    <IoPersonCircleOutline size={20} />
                   )}
                 </AvatarFallback>
               </>
