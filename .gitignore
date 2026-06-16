@@ -46,3 +46,7 @@ next-env.d.ts
 #agent-skills
 .agents/*
 skills-lock.json
+
+.husky/*
+.vscode/*
+supabase/.temp/*

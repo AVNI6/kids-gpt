@@ -20,6 +20,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { getRelativeTime } from "@/hooks/shared/timeUtils";
 import { cn } from "@/lib/utils";
 
@@ -174,74 +175,76 @@ export default function NotificationBell({
         </div>
 
         {/* Dropdown Content */}
-        <div className="max-h-[320px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/40">
-          {isLoading ? (
-            <div className="p-8 text-center text-sm font-medium text-slate-400 dark:text-slate-500">
-              Loading notifications...
-            </div>
-          ) : notifications.length === 0 ? (
-            <div className="p-8 text-center text-sm font-medium text-slate-400 dark:text-slate-500">
-              <GraduationCap className="size-8 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
-              All caught up!
-            </div>
-          ) : (
-            notifications.slice(0, 10).map((notif) => {
-              const { icon, bg } = getNotificationStyle(notif.type);
-              return (
-                <div
-                  key={notif.id}
-                  onClick={() => markAsRead(notif.id)}
-                  className={cn(
-                    "flex items-start gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors cursor-pointer",
-                    !notif.is_read ? unreadItemBg : ""
-                  )}
-                >
+        <ScrollArea className="h-[320px]">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/40">
+            {isLoading ? (
+              <div className="p-8 text-center text-sm font-medium text-slate-400 dark:text-slate-500">
+                Loading notifications...
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="p-8 text-center text-sm font-medium text-slate-400 dark:text-slate-500">
+                <GraduationCap className="size-8 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
+                All caught up!
+              </div>
+            ) : (
+              notifications.slice(0, 10).map((notif) => {
+                const { icon, bg } = getNotificationStyle(notif.type);
+                return (
                   <div
+                    key={notif.id}
+                    onClick={() => markAsRead(notif.id)}
                     className={cn(
-                      "size-8 rounded-full flex items-center justify-center shrink-0",
-                      bg
+                      "flex items-start gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors cursor-pointer",
+                      !notif.is_read ? unreadItemBg : ""
                     )}
                   >
-                    {icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline mb-0.5">
-                      <span
-                        className={cn(
-                          "text-xs font-extrabold truncate",
-                          !notif.is_read
-                            ? "text-slate-900 dark:text-white"
-                            : "text-slate-700 dark:text-slate-300"
-                        )}
-                      >
-                        {notif.title}
-                      </span>
-                      <span
-                        suppressHydrationWarning
-                        className="text-[9px] font-bold text-slate-400 shrink-0 ml-2"
-                      >
-                        {getRelativeTime(notif.created_at)}
-                      </span>
-                    </div>
-                    <p
+                    <div
                       className={cn(
-                        "text-xs leading-relaxed truncate",
-                        !notif.is_read
-                          ? "text-slate-600 dark:text-slate-300 font-semibold"
-                          : "text-slate-500 dark:text-slate-400"
+                        "size-8 rounded-full flex items-center justify-center shrink-0",
+                        bg
                       )}
                     >
-                      {notif.message}
-                    </p>
+                      {icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline mb-0.5">
+                        <span
+                          className={cn(
+                            "text-xs font-extrabold truncate",
+                            !notif.is_read
+                              ? "text-slate-900 dark:text-white"
+                              : "text-slate-700 dark:text-slate-300"
+                          )}
+                        >
+                          {notif.title}
+                        </span>
+                        <span
+                          suppressHydrationWarning
+                          className="text-[9px] font-bold text-slate-400 shrink-0 ml-2"
+                        >
+                          {getRelativeTime(notif.created_at)}
+                        </span>
+                      </div>
+                      <p
+                        className={cn(
+                          "text-xs leading-relaxed truncate",
+                          !notif.is_read
+                            ? "text-slate-600 dark:text-slate-300 font-semibold"
+                            : "text-slate-500 dark:text-slate-400"
+                        )}
+                      >
+                        {notif.message}
+                      </p>
+                    </div>
+                    {!notif.is_read && (
+                      <div className={cn("size-2 rounded-full shrink-0 self-center", readDotBg)} />
+                    )}
                   </div>
-                  {!notif.is_read && (
-                    <div className={cn("size-2 rounded-full shrink-0 self-center", readDotBg)} />
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
+                );
+              })
+            )}
+          </div>
+        </ScrollArea>
 
         {/* Dropdown Footer (View All link if provided) */}
         {viewAllHref && (
