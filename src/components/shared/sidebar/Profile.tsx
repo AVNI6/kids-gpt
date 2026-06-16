@@ -102,14 +102,14 @@ export default function Profile({ isCollapsed }: ProfileProps) {
           sideOffset={12}
         >
           <div className="space-y-1">
-            <Link
+            {/* <Link
               href={APP_ROUTES.Subscription}
               onClick={() => setOpenPath(null)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sky-500 hover:bg-sky-50 transition-colors text-sm font-bold"
             >
               <Sparkles className="h-4 w-4" />
               <span>Try Premium</span>
-            </Link>
+            </Link> */}
 
             <Link
               href={`/dashboard/${dashboardRole}`}
@@ -189,11 +189,10 @@ export default function Profile({ isCollapsed }: ProfileProps) {
               Log Out?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground pt-2">
-              Are you sure you want to log out of your session? You will need to sign in again to
-              access your learning adventure.
+              Are you sure you want to log out of your session? You will need to sign in again to access your learning adventure.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 pt-4">
+          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
             <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
             <Button
               variant="destructive"

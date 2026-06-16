@@ -56,7 +56,7 @@ const RecentChatItem = React.memo(
           <div
             onClick={(e) => onSelectSession(session.id, e)}
             className={cn(
-              "w-full flex items-center justify-between rounded-xl pl-1 py-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors cursor-pointer group/chat",
+              "w-full flex items-center justify-between rounded-xl pl-1 py-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors cursor-pointer group/chat",
               isActive ? "bg-sidebar-accent text-sky-500" : "text-sidebar-foreground"
             )}
           >

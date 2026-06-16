@@ -7,6 +7,7 @@ import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
 import { getInitials } from "@/lib/utils/parent/dashboard.utils";
 import { displayAge } from "@/lib/utils/kid/childAge";
 import { displayGrade } from "@/lib/utils/kid/childGrade";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,48 +66,50 @@ export default function ChildSelectorTabs({ linkedChildren }: ChildSelectorTabsP
             <GraduationCap className="w-3.5 h-3.5 text-sky-500" /> Switch Explorer
           </div>
 
-          <div className="space-y-1 max-h-[220px] overflow-y-auto pr-1">
-            {linkedChildren.map((child) => {
-              const isSelected = child.user_id === activeChildId;
-              return (
-                <DropdownMenuItem
-                  key={child.user_id}
-                  className="p-0 bg-transparent hover:bg-transparent focus:bg-transparent"
-                >
-                  <button
-                    onClick={() => handleSelect(child.user_id)}
-                    className={`w-full flex items-center justify-between gap-3 p-2.5 rounded-xl transition-all cursor-pointer text-left focus:outline-none ${
-                      isSelected
-                        ? "bg-sky-50/50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-400 border border-sky-100/30 dark:border-sky-900/15"
-                        : "bg-transparent text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900/60 dark:hover:text-slate-200 border border-transparent"
-                    }`}
+          <ScrollArea className="h-[220px] pr-2">
+            <div className="space-y-1 pr-1">
+              {linkedChildren.map((child) => {
+                const isSelected = child.user_id === activeChildId;
+                return (
+                  <DropdownMenuItem
+                    key={child.user_id}
+                    className="p-0 bg-transparent hover:bg-transparent focus:bg-transparent"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <Avatar className="h-7 w-7 border border-slate-100 dark:border-slate-800 shadow-sm shrink-0">
-                        <AvatarImage src={child.avatar_url ?? undefined} className="object-cover" />
-                        <AvatarFallback className="text-[10px] font-extrabold bg-gradient-to-br from-sky-400 to-sky-600 text-white">
-                          {getInitials(child.first_name, child.last_name)}
-                        </AvatarFallback>
-                      </Avatar>
+                    <button
+                      onClick={() => handleSelect(child.user_id)}
+                      className={`w-full flex items-center justify-between gap-3 p-2.5 rounded-xl transition-all cursor-pointer text-left focus:outline-none ${
+                        isSelected
+                          ? "bg-sky-50/50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-400 border border-sky-100/30 dark:border-sky-900/15"
+                          : "bg-transparent text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900/60 dark:hover:text-slate-200 border border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Avatar className="h-7 w-7 border border-slate-100 dark:border-slate-800 shadow-sm shrink-0">
+                          <AvatarImage src={child.avatar_url ?? undefined} className="object-cover" />
+                          <AvatarFallback className="text-[10px] font-extrabold bg-gradient-to-br from-sky-400 to-sky-600 text-white">
+                            {getInitials(child.first_name, child.last_name)}
+                          </AvatarFallback>
+                        </Avatar>
 
-                      <div className="min-w-0 flex flex-col justify-center leading-none">
-                        <span className="text-xs font-black truncate text-slate-900 dark:text-white">
-                          {child.first_name} {child.last_name}
-                        </span>
-                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">
-                          {displayGrade(child.standard)} • {displayAge(child.date_of_birth)}
-                        </span>
+                        <div className="min-w-0 flex flex-col justify-center leading-none">
+                          <span className="text-xs font-black truncate text-slate-900 dark:text-white">
+                            {child.first_name} {child.last_name}
+                          </span>
+                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">
+                            {displayGrade(child.standard)} • {displayAge(child.date_of_birth)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    {isSelected && (
-                      <Check className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
-                    )}
-                  </button>
-                </DropdownMenuItem>
-              );
-            })}
-          </div>
+                      {isSelected && (
+                        <Check className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                      )}
+                    </button>
+                  </DropdownMenuItem>
+                );
+              })}
+            </div>
+          </ScrollArea>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

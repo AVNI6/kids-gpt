@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import Logo from "@/components/shared/logo/Logo";
+import { validatePassword } from "@/lib/utils";
 
 const supabase = createClient();
 
@@ -172,15 +173,7 @@ export default function ChatGPTKidSignupPage() {
                   <Input
                     {...register("password", {
                       required: "Password is required",
-                      validate: {
-                        minLength: (v) =>
-                          v.length >= 8 || "Password must be at least 8 characters long",
-                        hasUppercase: (v) =>
-                          /[A-Z]/.test(v) || "Password must contain at least 1 uppercase letter",
-                        hasSpecial: (v) =>
-                          /[^A-Za-z0-9]/.test(v) ||
-                          "Password must contain at least 1 special symbol",
-                      },
+                      validate: validatePassword,
                     })}
                     type={showPassword ? "text" : "password"}
                     className="pl-12 pr-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"

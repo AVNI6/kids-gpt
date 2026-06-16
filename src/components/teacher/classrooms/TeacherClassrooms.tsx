@@ -250,7 +250,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
               </AlertDialogTitle>
               <AlertDialogDescription className="text-sm text-slate-500 dark:text-slate-400 pt-2 font-medium">
                 Are you sure you want to delete classroom &ldquo;{deleteClassroomTarget?.name}
-                &rdquo;? This will soft-delete the class.
+                &rdquo;?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-2 pt-4">

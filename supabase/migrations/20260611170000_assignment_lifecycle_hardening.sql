@@ -1062,6 +1062,7 @@ BEGIN
       tp.first_name as teacher_first_name,
       tp.last_name as teacher_last_name,
       tu.email as teacher_email,
+      tp.mobile_no as teacher_mobile_no,
       (
         SELECT count(*)::int 
         FROM public.assignments a

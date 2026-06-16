@@ -5,6 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export { validatePassword } from "./password-validation";
+
 export function getLocalDateString(dateObj: Date, timezone: string = "Asia/Kolkata") {
   try {
     const formatter = new Intl.DateTimeFormat("en-CA", {

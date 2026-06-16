@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Award, Clock, BookOpen, Search, School, Mail } from "lucide-react";
+import { ArrowLeft, Award, Clock, BookOpen, Search, School, Mail, Phone } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/parent";
 import { usePagination } from "@/hooks/shared/use-pagination";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
@@ -98,8 +98,8 @@ export default function ChildDetailPanel({
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-300">
       {/* Back Arrow & Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800/60 pb-6">
-        <div className="space-y-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 border-b border-slate-200/60 dark:border-slate-800/60 pb-6 w-full">
+        <div className="space-y-3 w-full min-w-0">
           <button
             onClick={() => handleSelectChild(null)}
             className="group flex items-center gap-2 text-sm font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors cursor-pointer"
@@ -107,36 +107,36 @@ export default function ChildDetailPanel({
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             <span>Back to My Children</span>
           </button>
-          <div className="flex items-center gap-4.5">
-            <Avatar className="w-16 h-16 border-4 border-white dark:border-slate-800 shadow-md ring-2 ring-sky-100 dark:ring-sky-950/20 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4.5 w-full min-w-0">
+            <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 sm:border-4 border-white dark:border-slate-800 shadow-md ring-2 ring-sky-100 dark:ring-sky-950/20 shrink-0">
               <AvatarImage src={selectedChild.avatar_url ?? undefined} className="object-cover" />
-              <AvatarFallback className="text-xl font-black bg-gradient-to-br from-sky-400 to-sky-600 text-white">
+              <AvatarFallback className="text-lg sm:text-xl font-black bg-gradient-to-br from-sky-400 to-sky-600 text-white">
                 {selectedChild.first_name?.[0] || "C"}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-4xl font-black text-slate-900 dark:text-white leading-none tracking-tight">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl xs:text-3xl sm:text-4xl font-black text-slate-900 dark:text-white leading-tight tracking-tight truncate">
                   {selectedChild.first_name} {selectedChild.last_name}
                 </h1>
-                <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 font-extrabold px-3.5 py-1.5 rounded-full text-sm shrink-0 border border-sky-100 dark:border-sky-900/30">
+                <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 font-extrabold px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-xs sm:text-sm shrink-0 border border-sky-100 dark:border-sky-900/30">
                   Level {getLevel(selectedChild.total_experience_points ?? 0)}
                 </Badge>
               </div>
-              <p className="text-lg font-bold text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-3">
+              <p className="text-sm sm:text-lg font-bold text-slate-500 dark:text-slate-400 mt-1 sm:mt-2 flex items-center gap-2 sm:gap-3">
                 <span className="text-sky-600 dark:text-sky-400 font-black">{gradeStr}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
                 <span>{ageStr}</span>
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3.5 bg-white dark:bg-black/30 p-3.5 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 shrink-0">
-          <Award className="w-6 h-6 text-amber-500" />
+        <div className="flex items-center gap-3 bg-white dark:bg-black/30 p-3 sm:p-3.5 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 w-full sm:w-auto justify-center sm:justify-start shrink-0">
+          <Award className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-amber-500 shrink-0" />
           <div className="text-left leading-none">
-            <span className="text-lg sm:text-xl font-black block">{totalXP}</span>
-            <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wide">
+            <span className="text-base sm:text-xl font-black block">{totalXP}</span>
+            <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-400 uppercase tracking-wide">
               Total XP
             </span>
           </div>
@@ -163,7 +163,7 @@ export default function ChildDetailPanel({
               <h3 className="text-slate-400 dark:text-slate-500 font-bold text-xs sm:text-sm uppercase tracking-wider">
                 Time Spent Today
               </h3>
-              <p className="text-4xl font-black text-slate-900 dark:text-white leading-none whitespace-nowrap">
+              <p className="text-3xl xs:text-4xl font-black text-slate-900 dark:text-white leading-none whitespace-nowrap">
                 {isLoadingChildData ? "..." : dailyTimeStr}
               </p>
             </div>
@@ -212,7 +212,7 @@ export default function ChildDetailPanel({
               <h3 className="text-slate-400 dark:text-slate-500 font-bold text-xs sm:text-sm uppercase tracking-wider">
                 Weekly Spent Time
               </h3>
-              <p className="text-4xl font-black text-slate-900 dark:text-white leading-none whitespace-nowrap">
+              <p className="text-3xl xs:text-4xl font-black text-slate-900 dark:text-white leading-none whitespace-nowrap">
                 {isLoadingChildData ? "..." : weeklyTimeStr}
               </p>
             </div>
@@ -237,7 +237,7 @@ export default function ChildDetailPanel({
               <h3 className="text-slate-400 dark:text-slate-500 font-bold text-xs sm:text-sm uppercase tracking-wider">
                 Completed Activities
               </h3>
-              <p className="text-4xl font-black text-slate-900 dark:text-white leading-none whitespace-nowrap">
+              <p className="text-3xl xs:text-4xl font-black text-slate-900 dark:text-white leading-none whitespace-nowrap">
                 {isLoadingChildData ? "..." : totalCompleted}
               </p>
             </div>
@@ -252,12 +252,12 @@ export default function ChildDetailPanel({
           if (val && typeof val === "string")
             handleSubTabChange(val as "history" | "activities" | "progress");
         }}
-        className="w-full"
+        className="w-full gap-0"
       >
-        <TabsList className="flex flex-row flex-nowrap overflow-x-auto no-scrollbar justify-start sm:justify-center gap-2 sm:gap-1.5 py-1.5 sm:py-4 px-1.5 bg-slate-100 dark:bg-black/40 rounded-full border border-slate-200/30 dark:border-slate-800/60 max-w-2xl mx-auto w-full! h-auto! group-data-horizontal/tabs:h-auto!">
+        <TabsList className="flex !h-auto p-1 bg-slate-100 dark:bg-black/40 rounded-full w-full border border-slate-200/30 dark:border-slate-800/60">
           <TabsTrigger
             value="history"
-            className="shrink-0 sm:flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer border-none bg-transparent data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap"
+            className="flex-1 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-6 cursor-pointer py-2.5 sm:py-3 data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap shrink-0"
           >
             <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span className="hidden sm:inline">AI Search History</span>
@@ -265,7 +265,7 @@ export default function ChildDetailPanel({
           </TabsTrigger>
           <TabsTrigger
             value="activities"
-            className="shrink-0 sm:flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer border-none bg-transparent data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap"
+            className="flex-1 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-6 cursor-pointer py-2.5 sm:py-3 data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap shrink-0"
           >
             <BookOpen className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span className="hidden sm:inline">Completed Activities & Rewards</span>
@@ -273,7 +273,7 @@ export default function ChildDetailPanel({
           </TabsTrigger>
           <TabsTrigger
             value="progress"
-            className="shrink-0 sm:flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer border-none bg-transparent data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap"
+            className="flex-1 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-6 cursor-pointer py-2.5 sm:py-3 data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap shrink-0"
           >
             <School className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span className="hidden sm:inline">Classroom & Progress</span>
@@ -285,7 +285,7 @@ export default function ChildDetailPanel({
         {isLoadingChildData && !activeChildCachedData ? (
           <>
             {activeSubTab === "history" && (
-              <div className="space-y-6 bg-white dark:bg-black/30 p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 animate-pulse mt-6">
+              <div className="space-y-6 bg-white dark:bg-black/30 p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 animate-pulse mt-3">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4">
                   <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
                   <Skeleton className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
@@ -311,7 +311,7 @@ export default function ChildDetailPanel({
             )}
 
             {activeSubTab === "activities" && (
-              <div className="space-y-6 bg-white dark:bg-black/30 p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 animate-pulse mt-6">
+              <div className="space-y-6 bg-white dark:bg-black/30 p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 animate-pulse mt-3">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4">
                   <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
                   <Skeleton className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
@@ -342,7 +342,7 @@ export default function ChildDetailPanel({
             )}
 
             {activeSubTab === "progress" && (
-              <div className="space-y-6 bg-white dark:bg-black/30 p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 animate-pulse mt-6">
+              <div className="space-y-6 bg-white dark:bg-black/30 p-8 rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 animate-pulse mt-3">
                 <div className="bg-slate-50/50 dark:bg-black/40 rounded-[28px] border border-slate-100 dark:border-slate-800 p-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
                   <div className="flex items-center gap-4.5 flex-1">
                     <Skeleton className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-2xl shrink-0" />
@@ -360,7 +360,7 @@ export default function ChildDetailPanel({
         ) : (
           <>
             {/* SUB TAB 1: AI Search History */}
-            <TabsContent value="history" className="mt-6">
+            <TabsContent value="history" className="mt-3">
               <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-4 sm:p-8 shadow-sm">
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-4">
@@ -458,13 +458,12 @@ export default function ChildDetailPanel({
             </TabsContent>
 
             {/* SUB TAB 2: Completed Activities & Rewards */}
-            <TabsContent value="activities" className="mt-6">
+            <TabsContent value="activities" className="mt-3">
               <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-8 shadow-sm">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4">
                     <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                      <BookOpen className="w-5.5 h-5.5 text-emerald-500" /> Dynamic Completed
-                      Activities
+                      <BookOpen className="w-5.5 h-5.5 text-emerald-500" />Completed Activities
                     </h3>
                     <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 font-extrabold px-3 py-1 rounded-full text-xs shrink-0 border border-emerald-100/30">
                       {activities.length} Completed
@@ -618,90 +617,103 @@ export default function ChildDetailPanel({
                   )}
                 </div>
               </Card>
-            </TabsContent>
+            </TabsContent>            {/* SUB TAB 3: Progress & Classroom */}
+            <TabsContent value="progress" className="mt-3">
+              <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-6 sm:p-8 shadow-sm">
+                <h4 className="text-sm font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-6">
+                  <School className="w-4 h-4 text-sky-500" /> Active School Enrollment
+                </h4>
 
-            {/* SUB TAB 3: Progress & Classroom */}
-            <TabsContent value="progress" className="mt-6">
-              <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-8 shadow-sm">
-                <div className="space-y-8">
-                  {/* Classroom & Teacher Section */}
-                  <div className="bg-slate-50/50 dark:bg-black/40 rounded-[28px] border border-slate-100 dark:border-slate-800 p-6">
-                    <h4 className="text-sm font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-4">
-                      <School className="w-4 h-4 text-sky-500" /> Active School Enrollment
-                    </h4>
-
-                    {!activeChildCachedData?.classrooms ||
-                    activeChildCachedData.classrooms.length === 0 ? (
-                      <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-                        <p className="text-sm font-semibold">
-                          No active classroom enrollments found.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-slate-100 dark:divide-slate-850 space-y-6">
-                        {activeChildCachedData.classrooms.map((c, index) => {
-                          const teacherName =
-                            c.teacher_first_name || c.teacher_last_name
-                              ? `${c.teacher_first_name ?? ""} ${c.teacher_last_name ?? ""}`.trim()
-                              : "Unknown Teacher";
-                          const contactName = c.teacher_last_name
-                            ? `Mr./Ms. ${c.teacher_last_name}`
-                            : "Teacher";
-
-                          return (
-                            <div
-                              key={c.classroom_id}
-                              className={`flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 ${
-                                index > 0 ? "pt-6" : ""
-                              }`}
-                            >
-                              <div className="flex items-center gap-4.5 text-left w-full">
-                                <div className="w-12 h-12 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                                  <School className="w-6 h-6 text-slate-500" />
-                                </div>
-                                <div className="text-left">
-                                  <h5 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight">
-                                    {c.classroom_name}
-                                    {c.subject && (
-                                      <span className="ml-2 text-xs font-bold text-slate-400 dark:text-slate-500">
-                                        • {c.subject}
-                                      </span>
-                                    )}
-                                  </h5>
-                                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                                    Teacher:{" "}
-                                    <span className="text-slate-850 dark:text-slate-200">
-                                      {teacherName}
-                                    </span>
-                                  </p>
-                                </div>
-                              </div>
-
-                              {c.teacher_email ? (
-                                <Button
-                                  onClick={() => {
-                                    window.location.href = `mailto:${c.teacher_email}`;
-                                  }}
-                                  className="rounded-xl bg-white hover:bg-slate-50 border border-slate-200 dark:bg-black dark:border-slate-800 text-slate-800 dark:text-slate-100 font-bold text-xs h-10 px-4 flex items-center gap-2 cursor-pointer shrink-0 transition-colors shadow-sm"
-                                >
-                                  <Mail className="w-3.5 h-3.5 text-slate-500" /> Contact{" "}
-                                  {contactName}
-                                </Button>
-                              ) : (
-                                <Button
-                                  disabled
-                                  className="rounded-xl bg-slate-100 dark:bg-slate-800/40 text-slate-400 dark:text-slate-600 font-bold text-xs h-10 px-4 flex items-center gap-2 shrink-0 shadow-none border-none"
-                                >
-                                  <Mail className="w-3.5 h-3.5" /> No Contact Info
-                                </Button>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                {!activeChildCachedData?.classrooms ||
+                activeChildCachedData.classrooms.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                    <p className="text-sm font-semibold">
+                      No active classroom enrollments found.
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    {activeChildCachedData.classrooms.map((c, index) => {
+                      const teacherName =
+                        c.teacher_first_name || c.teacher_last_name
+                          ? `${c.teacher_first_name ?? ""} ${c.teacher_last_name ?? ""}`.trim()
+                          : "Unknown Teacher";
+                      const contactName = c.teacher_last_name
+                        ? `Mr./Ms. ${c.teacher_last_name}`
+                        : "Teacher";
+
+                      return (
+                        <div
+                          key={c.classroom_id}
+                          className={`flex flex-col md:flex-row md:items-center justify-between gap-4.5 ${
+                            index > 0 ? "pt-6" : ""
+                          }`}
+                        >
+                          <div className="flex items-start gap-4 text-left w-full">
+                            <div className="w-12 h-12 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-sm border border-slate-200 dark:border-slate-800 shrink-0">
+                              <School className="w-6 h-6 text-slate-500" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h5 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight flex flex-wrap items-center gap-1.5">
+                                <span>{c.classroom_name}</span>
+                                {c.subject && (
+                                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
+                                    • {c.subject}
+                                  </span>
+                                )}
+                              </h5>
+                              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                                Teacher: <span className="text-slate-800 dark:text-slate-350 font-bold">{teacherName}</span>
+                              </p>
+                              <div className="flex flex-wrap items-center gap-2 mt-2.5 text-[10px] font-bold">
+                                <span className="text-amber-600 dark:text-amber-450 bg-amber-50 dark:bg-amber-950/20 px-2 py-0.5 rounded-md border border-amber-100/30">
+                                  {c.pending_assignments_count ?? 0} Pending
+                                </span>
+                                <span className="text-emerald-600 dark:text-emerald-450 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-md border border-emerald-100/30">
+                                  {c.completed_assignments_count ?? 0} Completed
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Contact actions */}
+                          <div className="flex items-center gap-2 w-full md:w-auto shrink-0 mt-2 md:mt-0">
+                            {c.teacher_email && (
+                              <Button
+                                onClick={() => {
+                                  window.location.href = `mailto:${c.teacher_email}`;
+                                }}
+                                className="flex-1 md:flex-none rounded-xl bg-white hover:bg-slate-50 border border-slate-200 dark:bg-black dark:border-slate-800 text-slate-855 dark:text-slate-200 font-bold text-xs h-10 px-4 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm shrink-0"
+                              >
+                                <Mail className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Email</span>
+                              </Button>
+                            )}
+                            {c.teacher_mobile_no && (
+                              <Button
+                                onClick={() => {
+                                  window.location.href = `tel:${c.teacher_mobile_no}`;
+                                }}
+                                className="flex-1 md:flex-none rounded-xl bg-white hover:bg-slate-50 border border-slate-200 dark:bg-black dark:border-slate-800 text-slate-855 dark:text-slate-200 font-bold text-xs h-10 px-4 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm shrink-0"
+                              >
+                                <Phone className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Call</span>
+                              </Button>
+                            )}
+                            {!c.teacher_email && !c.teacher_mobile_no && (
+                              <Button
+                                disabled
+                                className="w-full md:w-auto rounded-xl bg-slate-100 dark:bg-slate-800/40 text-slate-400 dark:text-slate-600 font-bold text-xs h-10 px-4 flex items-center justify-center gap-2 shrink-0 shadow-none border-none"
+                              >
+                                <Mail className="w-3.5 h-3.5" /> No Contact Info
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </Card>
             </TabsContent>
           </>

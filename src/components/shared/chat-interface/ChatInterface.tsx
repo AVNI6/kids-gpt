@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { calculateAge } from "@/lib/utils/kid/childAge";
 import ChatFooter, { ChatFooterRef } from "./ChatFooter";
 import ChatMessageList from "./ChatMessageList";
@@ -16,6 +16,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/components/ui/sidebar";
 import { getSessionManager } from "@/lib/ai/session-manager";
 import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { UserProfile } from "@/types/user";
 
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
 
@@ -39,6 +41,56 @@ export default function ChatInterface() {
 
   const { toggleSidebar, openMobile } = useSidebar();
   const { user, userProfile, isUserLoggedIn, userRole, isLoading: isLoadingAuth } = useAuth();
+
+  const [sessionOwnerProfile, setSessionOwnerProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!currentSessionId) {
+      setSessionOwnerProfile(null);
+      return;
+    }
+
+    const fetchOwner = async () => {
+      try {
+        const supabase = createClient();
+        const { data: sessionData, error: sessionError } = await supabase
+          .from("chat_sessions")
+          .select("user_id")
+          .eq("id", currentSessionId)
+          .maybeSingle();
+
+        if (sessionError || !sessionData?.user_id) {
+          if (active) setSessionOwnerProfile(null);
+          return;
+        }
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("profile")
+          .select("*")
+          .eq("user_id", sessionData.user_id)
+          .maybeSingle();
+
+        if (profileError || !profileData) {
+          if (active) setSessionOwnerProfile(null);
+          return;
+        }
+
+        if (active) {
+          setSessionOwnerProfile(profileData as UserProfile);
+        }
+      } catch (err) {
+        console.error("Failed to fetch session owner profile:", err);
+        if (active) setSessionOwnerProfile(null);
+      }
+    };
+
+    void fetchOwner();
+
+    return () => {
+      active = false;
+    };
+  }, [currentSessionId]);
 
   const childAge =
     userRole === "kid" && userProfile?.date_of_birth
@@ -150,6 +202,8 @@ export default function ChatInterface() {
           openMobile={openMobile}
           toggleSidebar={toggleSidebar}
           currentSessionId={currentSessionId}
+          sessionOwnerProfile={sessionOwnerProfile}
+          userRole={userRole}
         />
       )}
 
@@ -168,6 +222,7 @@ export default function ChatInterface() {
             hasMore={hasMore}
             isLoadingMore={isLoadingMore}
             onLoadMore={loadMore}
+            sessionOwnerProfile={sessionOwnerProfile}
           />
         )}
 

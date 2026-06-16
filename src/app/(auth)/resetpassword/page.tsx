@@ -10,6 +10,7 @@ import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { createClient } from "@/lib/supabase/client";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Logo from "@/components/shared/logo/Logo";
+import { validatePassword } from "@/lib/utils";
 
 const supabase = createClient();
 
@@ -181,11 +182,8 @@ export default function ResetPasswordPage() {
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 w-5 h-5" />
                   <input
                     {...register("password", {
-                      required: true,
-                      minLength: {
-                        value: 6,
-                        message: "Password must be at least 6 characters",
-                      },
+                      required: "Password is required",
+                      validate: validatePassword,
                     })}
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"

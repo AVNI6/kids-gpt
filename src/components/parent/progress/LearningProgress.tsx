@@ -23,7 +23,7 @@ export default function LearningProgress() {
   if (!activeChild) {
     return (
       <div className="flex items-center justify-center min-h-[70vh] w-full">
-        <Card className="rounded-[32px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center w-full">
+        <Card className="rounded-[32px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center max-w-2xl w-full">
           <CardContent className="space-y-4 pt-6">
             <BrainCircuit className="w-12 h-12 text-slate-400 mx-auto animate-pulse" />
             <h3 className="text-xl font-black text-slate-900 dark:text-white">
@@ -58,7 +58,7 @@ export default function LearningProgress() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Top Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
@@ -69,7 +69,7 @@ export default function LearningProgress() {
             <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
               Overall Progress
             </h3>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               {isLoadingChildData ? "..." : `${quizAccuracy}%`}
             </p>
           </CardContent>
@@ -85,7 +85,7 @@ export default function LearningProgress() {
             <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
               Learning Time
             </h3>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               {isLoadingChildData ? "..." : learningTimeStr}
             </p>
           </CardContent>
@@ -101,7 +101,7 @@ export default function LearningProgress() {
             <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
               Completed Activities
             </h3>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               {isLoadingChildData ? "..." : totalCompleted}
             </p>
           </CardContent>

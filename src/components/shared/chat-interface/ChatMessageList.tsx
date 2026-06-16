@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Message } from "@/types/common";
 import { useAuth } from "@/context/AuthContext";
 import ChatMessageItem from "./ChatMessageItem";
+import { UserProfile } from "@/types/user";
 
 interface ChatMessageListProps {
   messages: Message[];
@@ -21,6 +22,7 @@ interface ChatMessageListProps {
   hasMore: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => Promise<void>;
+  sessionOwnerProfile?: UserProfile | null;
 }
 
 const ChatMessageList = memo(function ChatMessageList({
@@ -32,6 +34,7 @@ const ChatMessageList = memo(function ChatMessageList({
   hasMore,
   isLoadingMore,
   onLoadMore,
+  sessionOwnerProfile,
 }: ChatMessageListProps) {
   const { userProfile, isUserLoggedIn } = useAuth();
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
@@ -107,6 +110,7 @@ const ChatMessageList = memo(function ChatMessageList({
                 handleCopy={handleCopy}
                 isUserLoggedIn={isUserLoggedIn}
                 userProfile={userProfile}
+                sessionOwnerProfile={sessionOwnerProfile}
               />
             );
           })}

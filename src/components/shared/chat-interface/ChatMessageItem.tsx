@@ -23,6 +23,7 @@ interface ChatMessageItemProps {
   handleCopy: (messageId: string, content: string) => void;
   isUserLoggedIn: boolean;
   userProfile: UserProfile | null;
+  sessionOwnerProfile?: UserProfile | null;
 }
 
 const ChatMessageItem = React.memo(
@@ -36,6 +37,7 @@ const ChatMessageItem = React.memo(
     handleCopy,
     isUserLoggedIn,
     userProfile,
+    sessionOwnerProfile,
   }: ChatMessageItemProps) {
     const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
     const [previewImageUrl, setPreviewImageUrl] = React.useState("");
@@ -109,6 +111,8 @@ const ChatMessageItem = React.memo(
       }
     }, []);
 
+    const resolvedProfile = sessionOwnerProfile || userProfile;
+
     return (
       <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
         <div
@@ -117,16 +121,16 @@ const ChatMessageItem = React.memo(
           <Avatar size={"sm"} className="shrink-0 mb-1">
             {isUser ? (
               <>
-                {isUserLoggedIn && userProfile?.avatar_url ? (
+                {isUserLoggedIn && resolvedProfile?.avatar_url ? (
                   <AvatarImage
-                    src={userProfile.avatar_url}
-                    alt={userProfile.first_name || "User"}
+                    src={resolvedProfile.avatar_url}
+                    alt={resolvedProfile.first_name || "User"}
                     referrerPolicy="no-referrer"
                   />
                 ) : null}
                 <AvatarFallback className="bg-sky-500/10 text-sky-600 font-bold uppercase">
-                  {isUserLoggedIn && userProfile?.first_name ? (
-                    userProfile.first_name.charAt(0)
+                  {isUserLoggedIn && resolvedProfile?.first_name ? (
+                    resolvedProfile.first_name.charAt(0)
                   ) : (
                     <IoPersonCircleOutline size={20} />
                   )}
@@ -266,7 +270,7 @@ const ChatMessageItem = React.memo(
                             }
 
                             return (
-                              <pre className="bg-slate-950 text-slate-100 p-4 rounded-2xl font-mono text-sm overflow-x-auto my-4 border border-slate-800/80 shadow-md">
+                              <pre className="bg-slate-950 text-slate-100 p-4 rounded-2xl font-mono text-sm whitespace-pre-wrap break-words my-4 border border-slate-800/80 shadow-md">
                                 <code className={className}>{codeString}</code>
                               </pre>
                             );
@@ -463,7 +467,9 @@ const ChatMessageItem = React.memo(
       prevProps.isCopied === nextProps.isCopied &&
       prevProps.isUserLoggedIn === nextProps.isUserLoggedIn &&
       prevProps.userProfile?.avatar_url === nextProps.userProfile?.avatar_url &&
-      prevProps.userProfile?.first_name === nextProps.userProfile?.first_name
+      prevProps.userProfile?.first_name === nextProps.userProfile?.first_name &&
+      prevProps.sessionOwnerProfile?.avatar_url === nextProps.sessionOwnerProfile?.avatar_url &&
+      prevProps.sessionOwnerProfile?.first_name === nextProps.sessionOwnerProfile?.first_name
     );
   }
 );
