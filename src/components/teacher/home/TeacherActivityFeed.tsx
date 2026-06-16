@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Activity, Send, Award, FileUp, Megaphone, PlusCircle, HelpCircle } from "lucide-react";
 import { getRelativeTime } from "@/hooks/shared/timeUtils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export type ActivityEvent = {
   id: string;
@@ -179,57 +180,61 @@ export default function TeacherActivityFeed({ activityEvents }: Props) {
         </h3>
       </div>
 
-      <CardContent className="divide-slate-100 dark:divide-slate-800/40 max-h-[360px] overflow-y-auto pr-2">
-        {activityEvents.length === 0 ? (
-          <div className="text-center py-16 text-slate-400 font-bold text-sm">
-            No activity logged yet!
-            <p className="text-xs text-slate-400 font-semibold mt-1">
-              Classroom activity will appear here once students submit assignments or you post
-              updates.
-            </p>
-          </div>
-        ) : (
-          activityEvents.map((event, idx) => {
-            const config = getEventConfig(event.event_type);
-            const Icon = config.icon;
-
-            // Resolve which avatar to display: actor's avatar
-            const avatarUrl = event.actor_avatar_url;
-            const initials = event.actor_first_name?.[0] || "?";
-
-            return (
-              <div key={event.id || idx} className="flex gap-4 items-start py-5 px-3">
-                <Avatar className="w-9 h-9 border border-white dark:border-slate-850 rounded-full shrink-0 shadow-sm ring-1 ring-slate-100 dark:ring-slate-800">
-                  <AvatarImage src={avatarUrl ?? undefined} className="object-cover" />
-                  <AvatarFallback className="text-xs font-black bg-indigo-500 text-white">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline mb-0.5">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                      {event.event_type.replace("_", " ")}
-                    </span>
-                    <span
-                      className="text-[10px] font-bold text-slate-400 shrink-0 ml-2"
-                      suppressHydrationWarning
-                    >
-                      {getRelativeTime(event.created_at)}
-                    </span>
-                  </div>
-                  {renderEventMessage(event)}
-                </div>
-
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${config.bgColor} ${config.border}`}
-                >
-                  <Icon className={`w-4 h-4 ${config.color}`} />
-                </div>
+      <CardContent className="p-6 pt-0">
+        <ScrollArea className="max-h-[360px] pr-4 -mr-4">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/40 pr-2">
+            {activityEvents.length === 0 ? (
+              <div className="text-center py-16 text-slate-400 font-bold text-sm">
+                No activity logged yet!
+                <p className="text-xs text-slate-400 font-semibold mt-1">
+                  Classroom activity will appear here once students submit assignments or you post
+                  updates.
+                </p>
               </div>
-            );
-          })
-        )}
+            ) : (
+              activityEvents.map((event, idx) => {
+                const config = getEventConfig(event.event_type);
+                const Icon = config.icon;
+
+                // Resolve which avatar to display: actor's avatar
+                const avatarUrl = event.actor_avatar_url;
+                const initials = event.actor_first_name?.[0] || "?";
+
+                return (
+                  <div key={event.id || idx} className="flex gap-4 items-start py-5 px-3">
+                    <Avatar className="w-9 h-9 border border-white dark:border-slate-850 rounded-full shrink-0 shadow-sm ring-1 ring-slate-100 dark:ring-slate-800">
+                      <AvatarImage src={avatarUrl ?? undefined} className="object-cover" />
+                      <AvatarFallback className="text-xs font-black bg-indigo-500 text-white">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline mb-0.5">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+                          {event.event_type.replace("_", " ")}
+                        </span>
+                        <span
+                          className="text-[10px] font-bold text-slate-400 shrink-0 ml-2"
+                          suppressHydrationWarning
+                        >
+                          {getRelativeTime(event.created_at)}
+                        </span>
+                      </div>
+                      {renderEventMessage(event)}
+                    </div>
+
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${config.bgColor} ${config.border}`}
+                    >
+                      <Icon className={`w-4 h-4 ${config.color}`} />
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );

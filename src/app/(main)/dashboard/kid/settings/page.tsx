@@ -53,8 +53,8 @@ async function SettingsContent() {
 
 export default async function KidSettingsPage() {
   return (
-    <main className="min-h-full bg-background text-slate-900 dark:text-slate-50 flex flex-col">
-      <div className="flex-1 w-full max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+    <main className="min-h-full bg-background text-slate-900 dark:text-slate-50 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-20 flex w-full flex-col gap-6">
         <Suspense fallback={<SettingsSkeleton />}>
           <SettingsContent />
         </Suspense>

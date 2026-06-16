@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Award, Clock, BookOpen, Search, School, ShieldCheck, Mail } from "lucide-react";
+import { ArrowLeft, Award, Clock, BookOpen, Search, School, Mail } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/parent";
 import { usePagination } from "@/hooks/shared/use-pagination";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
@@ -630,32 +630,76 @@ export default function ChildDetailPanel({
                       <School className="w-4 h-4 text-sky-500" /> Active School Enrollment
                     </h4>
 
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
-                      <div className="flex items-center gap-4.5">
-                        <div className="w-12 h-12 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                          <School className="w-6 h-6 text-slate-500" />
-                        </div>
-                        <div className="text-left">
-                          <h5 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight">
-                            Science Explorers Classroom
-                          </h5>
-                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                            Teacher:{" "}
-                            <span className="text-slate-850 dark:text-slate-200">
-                              Mr. Arthur Smith
-                            </span>
-                          </p>
-                          <p className="text-[10px] font-bold text-sky-600 dark:text-sky-400 mt-1 flex items-center gap-1.5">
-                            <ShieldCheck className="w-3.5 h-3.5" /> Approved parent-teacher
-                            monitoring link active
-                          </p>
-                        </div>
+                    {!activeChildCachedData?.classrooms ||
+                    activeChildCachedData.classrooms.length === 0 ? (
+                      <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                        <p className="text-sm font-semibold">
+                          No active classroom enrollments found.
+                        </p>
                       </div>
+                    ) : (
+                      <div className="divide-y divide-slate-100 dark:divide-slate-850 space-y-6">
+                        {activeChildCachedData.classrooms.map((c, index) => {
+                          const teacherName =
+                            c.teacher_first_name || c.teacher_last_name
+                              ? `${c.teacher_first_name ?? ""} ${c.teacher_last_name ?? ""}`.trim()
+                              : "Unknown Teacher";
+                          const contactName = c.teacher_last_name
+                            ? `Mr./Ms. ${c.teacher_last_name}`
+                            : "Teacher";
 
-                      <Button className="rounded-xl bg-white hover:bg-slate-50 border border-slate-200 dark:bg-black dark:border-slate-800 text-slate-800 dark:text-slate-100 font-bold text-xs h-10 px-4 flex items-center gap-2 cursor-pointer shrink-0 transition-colors shadow-sm">
-                        <Mail className="w-3.5 h-3.5 text-slate-500" /> Contact Mr. Smith
-                      </Button>
-                    </div>
+                          return (
+                            <div
+                              key={c.classroom_id}
+                              className={`flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 ${
+                                index > 0 ? "pt-6" : ""
+                              }`}
+                            >
+                              <div className="flex items-center gap-4.5 text-left w-full">
+                                <div className="w-12 h-12 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+                                  <School className="w-6 h-6 text-slate-500" />
+                                </div>
+                                <div className="text-left">
+                                  <h5 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight">
+                                    {c.classroom_name}
+                                    {c.subject && (
+                                      <span className="ml-2 text-xs font-bold text-slate-400 dark:text-slate-500">
+                                        • {c.subject}
+                                      </span>
+                                    )}
+                                  </h5>
+                                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Teacher:{" "}
+                                    <span className="text-slate-850 dark:text-slate-200">
+                                      {teacherName}
+                                    </span>
+                                  </p>
+                                </div>
+                              </div>
+
+                              {c.teacher_email ? (
+                                <Button
+                                  onClick={() => {
+                                    window.location.href = `mailto:${c.teacher_email}`;
+                                  }}
+                                  className="rounded-xl bg-white hover:bg-slate-50 border border-slate-200 dark:bg-black dark:border-slate-800 text-slate-800 dark:text-slate-100 font-bold text-xs h-10 px-4 flex items-center gap-2 cursor-pointer shrink-0 transition-colors shadow-sm"
+                                >
+                                  <Mail className="w-3.5 h-3.5 text-slate-500" /> Contact{" "}
+                                  {contactName}
+                                </Button>
+                              ) : (
+                                <Button
+                                  disabled
+                                  className="rounded-xl bg-slate-100 dark:bg-slate-800/40 text-slate-400 dark:text-slate-600 font-bold text-xs h-10 px-4 flex items-center gap-2 shrink-0 shadow-none border-none"
+                                >
+                                  <Mail className="w-3.5 h-3.5" /> No Contact Info
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>

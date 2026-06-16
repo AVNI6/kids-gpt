@@ -6,9 +6,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 export const createClient = (request: NextRequest) => {
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request,
   });
 
   const supabase = createServerClient(supabaseUrl!, supabaseKey!, {
@@ -22,18 +20,20 @@ export const createClient = (request: NextRequest) => {
         });
 
         response = NextResponse.next({
-          request: {
-            headers: request.headers,
-          },
+          request,
         });
 
         cookiesToSet.forEach(({ name, value, options }) =>
-          // 🛠️ FIX: Pass as a single object here as well for consistency
           response.cookies.set({ name, value, ...options })
         );
       },
     },
   });
 
-  return { supabase, response };
+  return {
+    supabase,
+    get response() {
+      return response;
+    },
+  };
 };

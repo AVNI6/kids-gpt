@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { Send, Plus, X, FileText, BrainCircuit, Camera } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import VoiceInput, { VoiceInputRef } from "./mic/VoiceInput";
+
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 type Props = {
   onSend: (
@@ -44,11 +54,24 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
   const voiceInputRef = useRef<VoiceInputRef>(null);
 
   // Auto-grow height of textarea based on content
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
+
+    // Temporarily hide overflow to prevent scrollbar flickering and layout/width reflow shifts
+    const originalOverflowY = textarea.style.overflowY;
+    textarea.style.overflowY = "hidden";
     textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+
+    const scrollHeight = textarea.scrollHeight;
+    textarea.style.height = `${Math.min(scrollHeight, 180)}px`;
+
+    // Restore overflow if content height exceeds the max height limit
+    if (scrollHeight > 180) {
+      textarea.style.overflowY = "auto";
+    } else {
+      textarea.style.overflowY = originalOverflowY;
+    }
   }, [input]);
 
   // Expose imperative handle to set input externally (e.g. from suggestions click)
@@ -361,7 +384,7 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                 onKeyDown={handleKeyDown}
                 placeholder={isAuthLoading ? "Loading chat session..." : "Ask anything"}
                 disabled={isAuthLoading || isLoading || isParsing}
-                className="flex-1 resize-none bg-transparent py-3 px-3 text-base border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 min-h-[40px] max-h-[180px] overflow-y-auto scrollbar-none text-foreground placeholder:text-muted-foreground/60 align-bottom leading-relaxed"
+                className="flex-1 min-w-0 resize-none bg-transparent py-3 px-3 text-base border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 min-h-[40px] max-h-[180px] overflow-y-auto scrollbar-none text-foreground placeholder:text-muted-foreground/60 align-bottom leading-relaxed text-left whitespace-pre-wrap break-words"
                 suppressHydrationWarning={true}
               />
 

@@ -89,7 +89,7 @@ export default function NotificationsUpdates() {
           </h2>
         </div>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4 max-h-[300px] overflow-y-auto">
+        <ScrollArea className="flex-1 pr-4 -mr-4 max-h-[300px]">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center text-slate-500 dark:text-slate-400">
               <Bell className="w-8 h-8 text-slate-400 dark:text-slate-600 mb-2 opacity-50" />

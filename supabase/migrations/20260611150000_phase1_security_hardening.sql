@@ -124,6 +124,17 @@ CREATE POLICY usage_select ON public.whole_usage_tracking
   FOR SELECT TO authenticated
   USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS usage_insert ON public.whole_usage_tracking;
+CREATE POLICY usage_insert ON public.whole_usage_tracking
+  FOR INSERT TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS usage_update ON public.whole_usage_tracking;
+CREATE POLICY usage_update ON public.whole_usage_tracking
+  FOR UPDATE TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
 -- =========================================================================
 -- 4. HARDEN OVERLY PERMISSIVE NOTIFICATION POLICIES
 -- =========================================================================

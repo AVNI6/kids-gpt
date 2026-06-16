@@ -118,8 +118,11 @@ export default function NotificationsSection() {
                   }`}
                 >
                   <CardContent className="p-6 flex gap-4 md:gap-6 items-start">
+                    {!notif.is_read && (
+                      <div className="absolute z-2 ml-1 w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
+                    )}
                     <div
-                      className={`w-12 h-12 rounded-full ${bg} flex items-center justify-center shrink-0`}
+                      className={`relative w-12 h-12 rounded-full ${bg} flex items-center justify-center shrink-0`}
                     >
                       {icon}
                     </div>
@@ -164,10 +167,6 @@ export default function NotificationsSection() {
                         {notif.message}
                       </p>
                     </div>
-
-                    {!notif.is_read && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0 mt-2" />
-                    )}
                   </CardContent>
                 </Card>
               );
