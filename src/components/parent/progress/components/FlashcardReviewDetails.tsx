@@ -40,7 +40,7 @@ export default function FlashcardReviewDetails({ data }: FlashcardReviewDetailsP
         </div>
       </div>
 
-      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+      <div className="space-y-3">
         {mastered.length > 0 && (
           <div className="space-y-2.5">
             <h4 className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">

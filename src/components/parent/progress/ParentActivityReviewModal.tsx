@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
 import type { ActivityReviewRow } from "@/types/activity-review.types";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import QuizReviewDetails from "./components/QuizReviewDetails";
 import FlashcardReviewDetails from "./components/FlashcardReviewDetails";
@@ -101,7 +102,9 @@ export default function ParentActivityReviewModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">{renderReviewDetails()}</div>
+        <ScrollArea className="flex-1 pr-3 max-h-[60vh]">
+          {renderReviewDetails()}
+        </ScrollArea>
 
         <DialogFooter className="mt-2 shrink-0">
           <Button

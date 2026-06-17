@@ -31,7 +31,7 @@ export default function MathChallengeReviewDetails({ data }: MathChallengeReview
         </div>
       </div>
 
-      <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1">
+      <div className="space-y-3.5">
         {mathItems.map((item, idx: number) => (
           <div
             key={idx}

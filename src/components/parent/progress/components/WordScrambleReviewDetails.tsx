@@ -31,7 +31,7 @@ export default function WordScrambleReviewDetails({ data }: WordScrambleReviewDe
         </div>
       </div>
 
-      <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+      <div className="space-y-2.5">
         {scrambleItems.map((item, idx: number) => (
           <div
             key={idx}

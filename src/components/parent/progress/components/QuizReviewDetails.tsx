@@ -39,7 +39,7 @@ export default function QuizReviewDetails({ data }: QuizReviewDetailsProps) {
         </div>
       </div>
 
-      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+      <div className="space-y-3">
         {quizItems.map((item, idx: number) => (
           <div
             key={idx}

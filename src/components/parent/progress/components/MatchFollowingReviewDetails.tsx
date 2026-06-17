@@ -31,7 +31,7 @@ export default function MatchFollowingReviewDetails({ data }: MatchFollowingRevi
         </div>
       </div>
 
-      <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+      <div className="space-y-2.5">
         {connections.map((item, idx: number) => (
           <div
             key={idx}
