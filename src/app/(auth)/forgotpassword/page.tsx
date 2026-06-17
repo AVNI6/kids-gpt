@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { useState } from "react";
 import Logo from "@/components/shared/logo/Logo";
+import { checkEmailExists } from "@/lib/services/shared/auth.actions";
 
 const supabase = createClient();
 
@@ -21,23 +22,38 @@ export default function ForgotPasswordPage() {
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     setIsSubmitting(true);
-    const { data, error } = await supabase.auth.resetPasswordForEmail(e.email, {
-      redirectTo: `${window.location.origin}/auth/reset-callback`,
-    });
-    if (error) {
-      toast.error("Reset link failed to send", {
-        description: error.message,
-      });
-      setIsSubmitting(false);
-      return;
-    }
-    if (data) {
-      toast.success("Reset link sent!", {
-        description: "Please check your email for instructions.",
-      });
-    }
+    try {
+      const exists = await checkEmailExists(e.email);
+      if (!exists) {
+        toast.error("Account does not exist", {
+          description: "We couldn't find an account with that email address.",
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
-    setIsSubmitting(false);
+      const { data, error } = await supabase.auth.resetPasswordForEmail(e.email, {
+        redirectTo: `${window.location.origin}/auth/reset-callback`,
+      });
+      if (error) {
+        toast.error("Reset link failed to send", {
+          description: error.message,
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      if (data) {
+        toast.success("Reset link sent!", {
+          description: "Please check your email for instructions.",
+        });
+      }
+    } catch (err) {
+      toast.error("Failed to verify account status", {
+        description: err instanceof Error ? err.message : "An unexpected error occurred.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

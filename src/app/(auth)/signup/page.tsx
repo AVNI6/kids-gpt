@@ -26,6 +26,7 @@ import Logo from "@/components/shared/logo/Logo";
 import { validatePassword } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { validateInviteToken } from "@/lib/services/shared/invitations";
+import { checkEmailExists } from "@/lib/services/shared/auth.actions";
 
 const supabase = createClient();
 
@@ -93,37 +94,53 @@ function SignupForm() {
 
     setSignupState("loading");
 
-    const siteUrl = window.location.origin;
-    const { data, error } = await supabase.auth.signUp({
-      email: e.email,
-      password: e.password,
-      options: {
-        data: {
-          fullname: e.name,
-        },
-        emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
-      },
-    });
-
-    if (error) {
-      setSignupState("idle");
-
-      toast.error("Signup failed", {
-        description: error.message,
-      });
-      return;
-    }
-    if (data) {
-      toast.success("Signup successful!", {
-        description: "Please check your email to confirm your account.",
-      });
-
-      if (data.session) {
-        router.push(`/onboarding`);
+    try {
+      const exists = await checkEmailExists(e.email);
+      if (exists) {
+        toast.error("Account already exists", {
+          description: "An account with this email address already exists. Please sign in instead.",
+        });
+        setSignupState("idle");
         return;
       }
 
-      router.push(`/signin?from=signup`);
+      const siteUrl = window.location.origin;
+      const { data, error } = await supabase.auth.signUp({
+        email: e.email,
+        password: e.password,
+        options: {
+          data: {
+            fullname: e.name,
+          },
+          emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
+        },
+      });
+
+      if (error) {
+        setSignupState("idle");
+
+        toast.error("Signup failed", {
+          description: error.message,
+        });
+        return;
+      }
+      if (data) {
+        toast.success("Signup successful!", {
+          description: "Please check your email to confirm your account.",
+        });
+
+        if (data.session) {
+          router.push(`/onboarding`);
+          return;
+        }
+
+        router.push(`/signin?from=signup`);
+      }
+    } catch (err) {
+      toast.error("Failed to verify account status", {
+        description: err instanceof Error ? err.message : "An unexpected error occurred.",
+      });
+      setSignupState("idle");
     }
   };
 
