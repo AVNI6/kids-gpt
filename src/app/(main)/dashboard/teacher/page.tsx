@@ -9,18 +9,30 @@ import TeacherDashboardContainer from "@/components/teacher/home/TeacherDashboar
 
 function HeroBannerSkeleton() {
   return (
-    <Card className="rounded-[32px] border border-slate-200/50 dark:border-slate-800/50 bg-slate-100/50 dark:bg-slate-900/50 p-8 shadow-sm">
+    <Card className="rounded-[32px] border-0 relative bg-white dark:bg-black/30 shadow-md p-8 md:p-10 transition-colors duration-300">
       <CardContent className="p-0 flex flex-col lg:flex-row items-center justify-between gap-8">
-        <div className="flex-1 flex flex-col lg:flex-row items-center gap-6 w-full">
-          <Skeleton className="h-24 w-24 md:h-28 md:w-28 rounded-full shrink-0" />
-          <div className="space-y-3 flex-1 w-full max-w-md">
-            <Skeleton className="h-8 w-2/3" />
-            <Skeleton className="h-4 w-1/3" />
-            <Skeleton className="h-4 w-1/2" />
-            <div className="flex gap-3 pt-2">
-              <Skeleton className="h-10 w-36 rounded-full" />
-              <Skeleton className="h-10 w-36 rounded-full" />
-            </div>
+        {/* Welcome greeting left */}
+        <div className="flex-1 space-y-4 w-full">
+          <div className="space-y-3">
+            <Skeleton className="h-10 md:h-12 w-2/3 rounded-xl" />
+            <Skeleton className="h-5 w-1/4 rounded-lg" />
+          </div>
+          <div className="space-y-2 pt-2">
+            <Skeleton className="h-4 w-full max-w-xl rounded" />
+            <Skeleton className="h-4 w-5/6 max-w-lg rounded" />
+          </div>
+        </div>
+
+        {/* Classroom Summary Card right */}
+        <div className="shrink-0 flex flex-col items-stretch gap-4 bg-slate-50/50 dark:bg-black/30 border border-slate-100 dark:border-slate-850 p-6 rounded-[28px] shadow-sm min-w-[280px] w-full lg:w-auto">
+          <Skeleton className="h-5 w-36 rounded-full" />
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-1.5">
+                <Skeleton className="h-3 w-20 rounded" />
+                <Skeleton className="h-6 w-12 rounded" />
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>
@@ -28,42 +40,89 @@ function HeroBannerSkeleton() {
   );
 }
 
-function StudentListSkeleton() {
+function PerformanceOverviewSkeleton() {
   return (
-    <Card className="rounded-[32px] border border-sky-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-      <CardContent className="space-y-4 p-6">
-        <Skeleton className="h-6 w-40" />
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-2xl" />
-          ))}
+    <div className="flex flex-col gap-6">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="size-4 rounded" />
+          <Skeleton className="h-5 w-40 rounded" />
         </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ClassroomsSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-10 w-32 rounded-full" />
+        <Skeleton className="h-4 w-2/3 pl-6 rounded" />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {Array.from({ length: 2 }).map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, idx) => (
           <Card
-            key={i}
-            className="rounded-[32px] border border-indigo-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+            key={idx}
+            className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm overflow-hidden"
           >
-            <CardContent className="p-6 space-y-4">
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="h-4 w-56" />
-              <Skeleton className="h-12 w-full rounded-2xl" />
+            <CardContent className="p-6 flex items-center gap-4">
+              <Skeleton className="w-12 h-12 rounded-2xl shrink-0" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-3 w-24 rounded" />
+                <Skeleton className="h-6 w-12 rounded" />
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
+    </div>
+  );
+}
+
+function BottomGridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+      {/* Recent Classrooms */}
+      <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm">
+        <CardContent className="p-5 md:p-6 flex flex-col gap-4">
+          <div className="border-b border-slate-100 dark:border-slate-800 pb-3.5">
+            <div className="flex items-center gap-2">
+              <Skeleton className="w-4 h-4 rounded" />
+              <Skeleton className="h-4 w-32 rounded" />
+            </div>
+          </div>
+          <Skeleton className="h-3.5 w-40 rounded" />
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-900/60 p-1.5 pr-3.5 rounded-full border border-slate-150/60 dark:border-slate-800 shadow-sm w-36"
+              >
+                <Skeleton className="w-9 h-9 rounded-full shrink-0" />
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  <Skeleton className="h-3 w-full rounded" />
+                  <Skeleton className="h-2 w-2/3 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Today Snapshot */}
+      <Card className="rounded-[32px] border-slate-250/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm">
+        <CardContent className="p-5 md:p-6 flex flex-col gap-4">
+          <div className="border-b border-slate-100 dark:border-slate-800 pb-3.5 space-y-1.5">
+            <Skeleton className="h-4 w-28 rounded" />
+            <Skeleton className="h-3 w-56 rounded" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-3.5 p-4 rounded-[22px] border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 h-18"
+              >
+                <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  <Skeleton className="h-2.5 w-16 rounded" />
+                  <Skeleton className="h-5 w-8 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -187,16 +246,10 @@ export default async function TeacherDashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-10">
           <HeroBannerSkeleton />
-          <div className="grid gap-8 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <ClassroomsSkeleton />
-            </div>
-            <div>
-              <StudentListSkeleton />
-            </div>
-          </div>
+          <PerformanceOverviewSkeleton />
+          <BottomGridSkeleton />
         </div>
       }
     >

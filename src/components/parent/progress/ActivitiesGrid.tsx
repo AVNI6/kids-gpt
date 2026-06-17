@@ -159,7 +159,7 @@ export default function ActivitiesGrid() {
   if (!activeChild) {
     return (
       <div className="flex items-center justify-center min-h-[70vh] w-full">
-        <Card className="rounded-[32px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center w-full">
+        <Card className="rounded-[32px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center max-w-2xl w-full">
           <CardContent className="space-y-4 pt-6">
             <BookOpen className="w-12 h-12 text-slate-400 mx-auto animate-pulse" />
             <h3 className="text-xl font-black text-slate-900 dark:text-white">

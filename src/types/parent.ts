@@ -39,6 +39,7 @@ export type ChildClassroomSummary = {
   teacher_first_name?: string | null;
   teacher_last_name?: string | null;
   teacher_email?: string | null;
+  teacher_mobile_no?: string | null;
   pending_assignments_count: number;
   completed_assignments_count: number;
 };

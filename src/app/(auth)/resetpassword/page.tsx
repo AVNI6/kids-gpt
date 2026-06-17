@@ -104,6 +104,12 @@ export default function ResetPasswordPage() {
     };
   }, []);
 
+  const validatePassword = (password: string): boolean | string => {
+    if (!password) return "Password is required";
+    if (password.length < 8) return "Password must be at least 8 characters";
+    return true;
+  };
+
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
     setMessage("");
     clearErrors("password");
@@ -183,11 +189,8 @@ export default function ResetPasswordPage() {
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 w-5 h-5 z-10" />
                   <Input
                     {...register("password", {
-                      required: true,
-                      minLength: {
-                        value: 6,
-                        message: "Password must be at least 6 characters",
-                      },
+                      required: "Password is required",
+                      validate: validatePassword,
                     })}
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"

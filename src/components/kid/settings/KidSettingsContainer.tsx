@@ -20,6 +20,7 @@ import { updateKidProfileSettings, changeKidPassword } from "@/lib/services/kid/
 import { calculateAge, formatLocalDate, parseLocalDate } from "@/lib/utils/kid/childAge";
 
 import { useAuth } from "@/context/AuthContext";
+import ChangePasswordModal from "@/components/shared/forms/ChangePasswordModal";
 
 interface KidSettingsContainerProps {
   profile: DashboardUserProfile;
@@ -34,18 +35,13 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
   const [firstName, setFirstName] = useState(profile.first_name || "");
   const [lastName, setLastName] = useState(profile.last_name || "");
   const [username, setUsername] = useState(profile.username || "");
-  
+
   const initialDate = profile.date_of_birth ? parseLocalDate(profile.date_of_birth) : undefined;
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [localAgeError, setLocalAgeError] = useState<string | null>(null);
 
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-
-  // Security Form state
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const handleDateChange = (selectedDate: Date | undefined) => {
     setDate(selectedDate);
@@ -116,38 +112,7 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
     }
   };
 
-  // Handle Change Password
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPassword) {
-      toast.error("New password is required.");
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match.");
-      return;
-    }
 
-    setIsChangingPassword(true);
-    try {
-      const res = await changeKidPassword(newPassword);
-      if (res.success) {
-        toast.success(res.message || "Password updated successfully!");
-        setNewPassword("");
-        setConfirmPassword("");
-      } else {
-        toast.error(res.error || "Failed to change password.");
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "An unexpected error occurred.");
-    } finally {
-      setIsChangingPassword(false);
-    }
-  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -359,75 +324,25 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
 
             {/* Change Password Form */}
             <Card className="rounded-[32px] border border-border bg-card shadow-sm overflow-hidden">
-              <CardHeader className="p-5 sm:p-8 lg:p-10 border-b border-border">
-                <CardTitle className="text-2xl font-black text-card-foreground">
-                  Update Password
-                </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground font-medium">
-                  Ensure your learning account is secure by using a strong password.
-                </CardDescription>
+              <CardHeader className="p-5 border-b border-border">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                  <div>
+                    <CardTitle className="text-2xl font-black text-card-foreground">
+                      Update Password
+                    </CardTitle>
+
+                    <p className="text-sm text-muted-foreground font-medium mt-2">
+                      Ensure your account is secure by using a strong password.
+                    </p>
+                  </div>
+
+                  <ChangePasswordModal
+                    email={profile.email || ""}
+                    changePasswordAction={changeKidPassword}
+                    role="kid"
+                  />
+                </div>
               </CardHeader>
-              <CardContent className="p-5 sm:p-8 lg:p-10">
-                <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="newPassword"
-                        className="text-sm font-bold text-foreground ml-1"
-                      >
-                        New Password
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="newPassword"
-                          type="password"
-                          placeholder="••••••••"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium pl-11"
-                        />
-                        <Lock className="absolute left-4 top-4 h-5 w-5 text-muted-foreground shrink-0" />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="confirmPassword"
-                        className="text-sm font-bold text-foreground ml-1"
-                      >
-                        Confirm Password
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="confirmPassword"
-                          type="password"
-                          placeholder="••••••••"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium pl-11"
-                        />
-                        <Lock className="absolute left-4 top-4 h-5 w-5 text-muted-foreground shrink-0" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end pt-6 border-t border-border mt-6">
-                    <Button
-                      type="submit"
-                      disabled={isChangingPassword}
-                      className="rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-sky-500 dark:hover:bg-sky-600 transition-all w-full sm:w-auto"
-                    >
-                      {isChangingPassword ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...
-                        </>
-                      ) : (
-                        "Update Password"
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
             </Card>
           </div>
         </TabsContent>

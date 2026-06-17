@@ -7,6 +7,12 @@ export interface ChatSession {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  profile?: {
+    first_name: string | null;
+    last_name: string | null;
+    avatar_url: string | null;
+    role: string | null;
+  } | null;
 }
 
 export type UserRole = "kid" | "parent" | "teacher";
@@ -48,6 +54,12 @@ export interface ChatSessionRow {
   summary_updated_at?: string | null;
   last_summarized_message_count?: number;
   summary_pending?: boolean;
+  profile?: {
+    first_name: string | null;
+    last_name: string | null;
+    avatar_url: string | null;
+    role: string | null;
+  } | null;
 }
 
 export interface ChatMessageRow {

@@ -78,7 +78,7 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
           <h3 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
             Current Streak
           </h3>
-          <p className="text-3xl font-black text-slate-900 dark:text-white">
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
             {activeStreak} <span className="text-base font-bold text-slate-400">days</span>
           </p>
         </div>
