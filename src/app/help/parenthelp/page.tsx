@@ -29,8 +29,7 @@ export default function ParentHelpPage() {
             Parental <span className="text-sky-600">Hub</span>
           </h1>
           <p className="text-muted-foreground text-xl font-medium">
-            Manage safety settings, billing, and your child&apos;s learning progress in ChatGPT
-            Kids.
+            Manage safety settings, billing, and your child&apos;s learning progress in Kidoza.
           </p>
         </section>
 
@@ -97,7 +96,7 @@ export default function ParentHelpPage() {
               className="rounded-2xl border-2 border-border/50 bg-card px-6 hover:border-sky-500/30 transition-colors overflow-hidden"
             >
               <AccordionTrigger className="text-lg font-bold text-foreground hover:text-sky-600 hover:no-underline py-5">
-                Is my child safe using ChatGPT Kids?
+                Is my child safe using Kidoza?
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground text-base font-medium pb-5">
                 Yes. Interactions are moderated and safety controls are built for children.

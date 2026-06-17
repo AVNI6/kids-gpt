@@ -40,7 +40,7 @@ export default function ChatHeader({
           <Menu className="w-4 h-4" />
         </button>
         <Link href="/" prefetch={false} className="flex items-center gap-2 shrink-0">
-          <Logo size="sm" iconType="none" text="ChatGPT Kids" textClassName="text-sm xs:text-base sm:text-xl" />
+          <Logo size="sm" iconType="none" text="Kidoza" textClassName="text-sm xs:text-base sm:text-xl" />
         </Link>
       </div>
 

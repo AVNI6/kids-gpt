@@ -40,6 +40,14 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
+  const hasChanges = 
+    firstName !== (profile.first_name || "") ||
+    lastName !== (profile.last_name || "") ||
+    username !== (profile.username || "") ||
+    organization !== (profile.standard || "") ||
+    mobileNo !== (profile.mobile_no || "") ||
+    avatarUrl !== (profile.avatar_url || "");
+
   // Avatar upload
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, startUploadTransition] = useTransition();
@@ -87,6 +95,14 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
     if (!firstName.trim()) {
       toast.error("First name is required.");
       return;
+    }
+
+    if (mobileNo.trim()) {
+      const cleanPhone = mobileNo.replace(/\D/g, "");
+      if (cleanPhone.length !== 10) {
+        toast.error("Mobile number must be exactly 10 digits.");
+        return;
+      }
     }
 
     setIsSavingProfile(true);
@@ -303,7 +319,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                 <div className="flex justify-end pt-6 border-t border-border">
                   <Button
                     type="submit"
-                    disabled={isSavingProfile}
+                    disabled={isSavingProfile || !hasChanges}
                     className="rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-all w-full sm:w-auto"
                   >
                     {isSavingProfile ? (

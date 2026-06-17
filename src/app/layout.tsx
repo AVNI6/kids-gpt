@@ -26,7 +26,7 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "ChatGPT Kids",
+  title: "Kidoza",
   description:
     "A safe and educational AI platform for children and fun through interactive conversations and activities.",
 };
