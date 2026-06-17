@@ -21,7 +21,28 @@ export default function ForgotPasswordPage() {
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     setIsSubmitting(true);
-    const { data, error } = await supabase.auth.resetPasswordForEmail(e.email, {
+    const email = e.email.trim().toLowerCase();
+
+    // Verify if profile exists for this email
+    const { data: profile, error: profileError } = await supabase
+      .from("profile")
+      .select("user_id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("Error checking profile:", profileError.message);
+    }
+
+    if (!profile) {
+      toast.error("Account does not exist", {
+        description: "We couldn't find an account with that email. Please sign up first!",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-callback`,
     });
     if (error) {

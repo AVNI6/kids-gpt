@@ -38,8 +38,13 @@ export function RoleOnboardingPage({ role }: Props) {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/signin");
+    if (!isLoading) {
+      if (!user) {
+        router.push("/signin");
+      } else if (user.user_metadata?.invite_token) {
+        // Automatically send invited kids to the kid onboarding page
+        router.push("/onboarding/kid");
+      }
     }
   }, [isLoading, user, router]);
 

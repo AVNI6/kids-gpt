@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) {
   const [dailySeconds, setDailySeconds] = useState(0);
@@ -137,7 +138,8 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
   };
 
   return (
-    <div className="space-y-8 max-h-[500px] overflow-y-auto pr-2 no-scrollbar">
+    <ScrollArea className="h-[520px] pr-4">
+      <div className="space-y-8">
       {/* Title */}
       <div className="space-y-1">
         <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
@@ -387,6 +389,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
           </form>
         </div>
       )}
-    </div>
+      </div>
+    </ScrollArea>
   );
 }

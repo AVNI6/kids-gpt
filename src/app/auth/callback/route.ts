@@ -43,6 +43,9 @@ export async function GET(request: Request) {
           if (profile && profile.is_onboarded === true) {
             // Already onboarded: send them directly to their role-specific dashboard
             targetPath = profile.role ? `/dashboard/${profile.role}` : "/dashboard";
+          } else if (user.user_metadata?.invite_token) {
+            // Invited kid: redirect directly to kid onboarding
+            targetPath = "/onboarding/kid";
           } else {
             // Not onboarded: always direct them to the root onboarding page for role selection
             targetPath = "/onboarding";

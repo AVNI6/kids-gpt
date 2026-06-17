@@ -92,34 +92,62 @@ function SignupForm() {
     }
 
     setSignupState("loading");
+    const email = e.email.trim().toLowerCase();
 
     const siteUrl = window.location.origin;
-    const { data, error } = await supabase.auth.signUp({
-      email: e.email,
-      password: e.password,
-      options: {
-        data: {
-          fullname: e.name,
-        },
-        emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
+    const signUpOptions: any = {
+      data: {
+        fullname: e.name,
       },
+      emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
+    };
+
+    if (inviteToken) {
+      signUpOptions.data.invite_token = inviteToken;
+      signUpOptions.data.role = "kid";
+      signUpOptions.emailRedirectTo = `${siteUrl}/auth/callback?next=/onboarding/kid`;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: e.password,
+      options: signUpOptions,
     });
 
     if (error) {
       setSignupState("idle");
 
-      toast.error("Signup failed", {
-        description: error.message,
-      });
+      // Handle direct error if enumeration protection is off
+      if (error.message.toLowerCase().includes("already") || error.status === 422) {
+        toast.error("Account already exists", {
+          description: "An account with this email address already exists. Please sign in instead!",
+        });
+      } else {
+        toast.error("Signup failed", {
+          description: error.message,
+        });
+      }
       return;
     }
-    if (data) {
+
+    if (data && data.user) {
+      // If user already exists and enumeration protection is on, identities will be empty
+      const isExistingUser = data.user.identities && data.user.identities.length === 0;
+
+      if (isExistingUser) {
+        toast.error("Account already exists", {
+          description: "An account with this email address already exists. Please sign in instead!",
+        });
+        setSignupState("idle");
+        return;
+      }
+
       toast.success("Signup successful!", {
         description: "Please check your email to confirm your account.",
       });
 
       if (data.session) {
-        router.push(`/onboarding`);
+        router.push(inviteToken ? `/onboarding/kid` : `/onboarding`);
         return;
       }
 
