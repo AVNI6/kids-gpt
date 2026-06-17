@@ -119,7 +119,7 @@ function SignupForm() {
         data: {
           fullname: e.name,
         },
-        emailRedirectTo: `${siteUrl}/auth/  ?next=/onboarding`,
+        emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
       };
 
       if (inviteToken) {
