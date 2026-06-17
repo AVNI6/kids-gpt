@@ -130,7 +130,54 @@ export async function submitKidOnboarding(
 
   let linkMessage = "Profile setup complete!";
 
-  if (parentEmail) {
+  // Check if there is an active child invitation for the child's email
+  const { data: invite, error: inviteError } = await supabase
+    .from("child_invitations")
+    .select("id, parent_id")
+    .eq("invitee_email", user.email)
+    .is("accepted_at", null)
+    .is("deleted_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+
+  if (inviteError) {
+    console.error("Error querying active child invitation:", inviteError.message);
+  }
+
+  if (invite) {
+    // 1. Get the parent's email address from their profile using parent_id
+    const { data: parentProfile, error: parentProfileError } = await supabase
+      .from("profile")
+      .select("email")
+      .eq("user_id", invite.parent_id)
+      .maybeSingle();
+
+    if (parentProfileError || !parentProfile?.email) {
+      console.error("Error fetching parent profile for auto-linking:", parentProfileError?.message);
+    } else {
+      // 2. Call link_users_by_email to automatically link parent and child
+      const { data: linkData, error: linkError } = await supabase.rpc("link_users_by_email", {
+        p_current_user_id: user.id,
+        p_target_email: parentProfile.email,
+      });
+
+      if (linkError) {
+        console.error("Error auto-linking parent-child:", linkError.message);
+      } else if (linkData?.status === "success") {
+        // 3. Mark the invitation as accepted
+        const { error: acceptError } = await supabase
+          .from("child_invitations")
+          .update({ accepted_at: new Date().toISOString() })
+          .eq("id", invite.id);
+
+        if (acceptError) {
+          console.error("Error updating accepted_at for invitation:", acceptError.message);
+        }
+
+        linkMessage = "Profile setup complete and automatically linked with parent!";
+      }
+    }
+  } else if (parentEmail) {
     const { data: linkData, error: linkError } = await supabase.rpc("link_users_by_email", {
       p_current_user_id: user.id,
       p_target_email: parentEmail,

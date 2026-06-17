@@ -17,21 +17,29 @@ import {
 } from "@/components/ui/dialog";
 
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import Logo from "@/components/shared/logo/Logo";
 import { validatePassword } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
+import { validateInviteToken } from "@/lib/services/shared/invitations";
 
 const supabase = createClient();
 
-export default function ChatGPTKidSignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("invite_token");
+
   const [signupState, setSignupState] = useState<"idle" | "loading" | "check-email">("idle");
   const [showPassword, setShowPassword] = useState(false);
   const [activeModal, setActiveModal] = useState<"safety" | "privacy" | null>(null);
+  const [isEmailLocked, setIsEmailLocked] = useState(false);
+  const [inviteStatus, setInviteStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   type FormValue = {
     name: string;
@@ -42,9 +50,38 @@ export default function ChatGPTKidSignupPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormValue>();
   const [agreed, setAgreed] = useState(false);
+
+  useEffect(() => {
+    if (inviteToken) {
+      setInviteStatus("validating");
+      validateInviteToken(inviteToken)
+        .then((res) => {
+          if (res.success && res.email) {
+            setValue("email", res.email);
+            setIsEmailLocked(true);
+            setInviteStatus("valid");
+            toast.success("Valid parent invitation detected!", {
+              description: `Signing up for ${res.email}`,
+            });
+          } else {
+            setInviteStatus("invalid");
+            setInviteError(res.error || "Invalid invitation token.");
+            toast.error("Invalid Invitation Link", {
+              description: res.error || "The invitation link is invalid or has expired.",
+            });
+          }
+        })
+        .catch((err) => {
+          setInviteStatus("invalid");
+          setInviteError("Failed to validate invitation token.");
+          console.error("Token validation error:", err);
+        });
+    }
+  }, [inviteToken, setValue]);
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     if (!agreed) {
@@ -135,9 +172,23 @@ export default function ChatGPTKidSignupPage() {
           <CardContent className="p-8 md:p-10">
             <div className="mb-8">
               <h2 className="text-4xl font-bold mb-2 text-foreground">Create Account</h2>
-              <p className="text-muted-foreground">
-                Fill in the bubbles to start your learning journey 🚀
-              </p>
+              {inviteStatus === "valid" ? (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs font-bold border border-sky-500/20 mt-1">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+                  </span>
+                  Signing up via Parent Invitation
+                </div>
+              ) : inviteStatus === "invalid" ? (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-bold border border-rose-500/20 mt-1">
+                  ⚠️ Invitation Invalid: {inviteError}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">
+                  Fill in the bubbles to start your learning journey 🚀
+                </p>
+              )}
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -160,7 +211,10 @@ export default function ChatGPTKidSignupPage() {
                   <Input
                     {...register("email", { required: true })}
                     type="email"
-                    className="pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
+                    readOnly={isEmailLocked}
+                    className={`pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground ${
+                      isEmailLocked ? "opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-900" : ""
+                    }`}
                     placeholder="you@example.com"
                   />
                 </div>
@@ -365,5 +419,20 @@ export default function ChatGPTKidSignupPage() {
         </DialogContent>
       </Dialog>
     </main>
+  );
+}
+
+export default function ChatGPTKidSignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-sky-500 mb-4" />
+          <p className="text-sm font-semibold text-muted-foreground">Loading signup form...</p>
+        </div>
+      }
+    >
+      <SignupForm />
+    </Suspense>
   );
 }

@@ -3,6 +3,7 @@
 import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { calculateActivityAnalytics } from "@/lib/utils/activity-analytics";
+import { createChildInvitation } from "@/lib/services/shared/invitations";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
@@ -213,6 +214,15 @@ export async function linkByEmail(targetEmail: string): Promise<EmailLinkResult>
 
   if (!result || typeof result.status !== "string") {
     return { status: "error", message: "Unexpected response from email linking RPC." };
+  }
+
+  if (result.status === "pending" && profile.role === "parent") {
+    const inviteResult = await createChildInvitation(email, profile.user_id);
+    if (!inviteResult.success) {
+      return { status: "error", message: inviteResult.error || "Failed to create invitation link." };
+    }
+    revalidatePath("/dashboard/parent");
+    return { status: "pending", message: inviteResult.message || "Invitation sent successfully." };
   }
 
   if (result.status === "success" || result.status === "pending") {
