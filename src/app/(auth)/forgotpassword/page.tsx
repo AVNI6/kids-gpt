@@ -146,7 +146,7 @@ export default function ForgotPasswordPage() {
           </div>
 
           <p className="mt-5 text-xs text-muted-foreground/50">
-            © 2026 ChatGPT Kid AI Learning Buddy
+            © 2026 Kidoza AI Learning Buddy
           </p>
         </footer>
       </div>

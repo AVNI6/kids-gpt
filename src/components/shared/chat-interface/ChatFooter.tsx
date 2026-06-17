@@ -425,7 +425,7 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
             </div>
           </div>
           <div className="text-center mt-3 text-[10px] sm:text-xs text-muted-foreground opacity-60">
-            ChatGPT Kid can make mistakes. Verify important information.
+            Kidoza can make mistakes. Verify important information.
           </div>
         </div>
       </footer>

@@ -57,6 +57,7 @@ function SignupForm() {
 
   useEffect(() => {
     if (inviteToken) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInviteStatus("validating");
       validateInviteToken(inviteToken)
         .then((res) => {
@@ -144,7 +145,7 @@ function SignupForm() {
           <Card className="relative border-2 border-border/50 rounded-[32px] bg-card p-2 shadow-xl overflow-visible">
             <CardContent className="p-8">
               <p className="text-xl text-muted-foreground italic leading-relaxed">
-                “Hi there! I’m your AI learning buddy. Let’s create your account and start exploring
+                “Hi there! I’m Kidoza, your AI learning buddy. Let’s create your account and start exploring
                 fun adventures together!”
               </p>
 

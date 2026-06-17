@@ -27,7 +27,7 @@ export default function TeacherHelpPage() {
             Teacher <span className="text-sky-600">Hub</span>
           </h1>
           <p className="text-muted-foreground text-xl font-medium">
-            Set up classes, generate activities, and track student outcomes with ChatGPT Kids.
+            Set up classes, generate activities, and track student outcomes with Kidoza.
           </p>
         </section>
 

@@ -47,6 +47,7 @@ export default function ChatInterface() {
   useEffect(() => {
     let active = true;
     if (!currentSessionId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSessionOwnerProfile(null);
       return;
     }

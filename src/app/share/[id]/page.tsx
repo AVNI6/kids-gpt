@@ -44,7 +44,7 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
           <div className="h-8 w-8 rounded-xl bg-sky-500 flex items-center justify-center text-white">
             <Sparkles className="w-4 h-4" />
           </div>
-          ChatGPT Kids
+          Kidoza
         </Link>
       </header>
 

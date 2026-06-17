@@ -203,6 +203,7 @@ export default function MemoryMatchPage() {
     setGameCompleted(false);
     setTimeLeft(step.timeLimit);
     setGameFailed(false);
+    // eslint-disable-next-line react-hooks/purity
     gameStartedAtRef.current = Date.now();
 
     // Trigger the initial 5s memory preview sneak peek

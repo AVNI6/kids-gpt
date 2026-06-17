@@ -16,7 +16,7 @@ const Logo: React.FC<LogoProps> = ({
   size = "lg",
   iconType = "sparkles",
   showText = true,
-  text = "ChatGPT Kid",
+  text = "Kidoza",
   className,
   iconClassName,
   textClassName,

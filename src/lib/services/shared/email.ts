@@ -20,7 +20,7 @@ export async function sendInvitationEmail(
     throw new Error("SMTP configuration is missing. Please check your environment variables.");
   }
 
-  const emailBody = `Hi there,\n\nYour parent, ${parentName}, has invited you to join Kids GPT!\n\nWith Kids GPT, you can explore, learn, and chat with your AI buddy.\n\nClick the secure link below to create your account and get started:\n${inviteLink}\n\nThis invitation link will expire in 7 days.\n\nHave fun!\nThe Kids GPT Team`;
+  const emailBody = `Hi there,\n\nYour parent, ${parentName}, has invited you to join Kidoza!\n\nWith Kidoza, you can explore, learn, and chat with your AI buddy.\n\nClick the secure link below to create your account and get started:\n${inviteLink}\n\nThis invitation link will expire in 7 days.\n\nHave fun!\nThe Kidoza Team`;
 
   const emailHtml = `
     <div style="background-color: #f8fafc; padding: 32px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; min-height: 100%; width: 100%; box-sizing: border-box; -webkit-font-smoothing: antialiased;">
@@ -30,7 +30,7 @@ export async function sendInvitationEmail(
         <div style="text-align: center; margin-bottom: 24px;">
           <div style="display: inline-block; background: linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 100%); padding: 8px 16px; border-radius: 100px; border: 1px solid #bae6fd; vertical-align: middle;">
             <span style="font-size: 18px; vertical-align: middle; margin-right: 6px;">🚀</span>
-            <span style="font-size: 14px; font-weight: 800; color: #0369a1; vertical-align: middle; letter-spacing: 0.05em; text-transform: uppercase;">ChatGPT Kids</span>
+            <span style="font-size: 14px; font-weight: 800; color: #0369a1; vertical-align: middle; letter-spacing: 0.05em; text-transform: uppercase;">Kidoza</span>
           </div>
         </div>
 
@@ -42,10 +42,10 @@ export async function sendInvitationEmail(
           Hi there!
         </p>
         <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 20px 0;">
-          Your parent, <strong style="color: #0284c7; font-weight: 700;">${parentName}</strong>, has invited you to join <strong style="color: #0f172a;">Kids GPT</strong>!
+          Your parent, <strong style="color: #0284c7; font-weight: 700;">${parentName}</strong>, has invited you to join <strong style="color: #0f172a;">Kidoza</strong>!
         </p>
         <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 24px 0; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; padding: 12px 16px;">
-          With Kids GPT, you can ask curious questions, read exciting stories, and complete fun homework challenges with your personal AI learning buddy.
+          With Kidoza, you can ask curious questions, read exciting stories, and complete fun homework challenges with your personal AI learning buddy.
         </p>
 
         <!-- CTA Button -->
@@ -81,7 +81,7 @@ export async function sendInvitationEmail(
             Have fun, explorer! 🎈
           </p>
           <p style="font-size: 14px; font-weight: 800; color: #0284c7; margin: 0;">
-            The Kids GPT Team
+            The Kidoza Team
           </p>
         </div>
       </div>
@@ -100,9 +100,9 @@ export async function sendInvitationEmail(
   });
 
   await transporter.sendMail({
-    from: `"Kids GPT" <${from}>`,
+    from: `"Kidoza" <${from}>`,
     to: toEmail,
-    subject: `Join Kids GPT! Your parent ${parentName} invited you`,
+    subject: `Join Kidoza! Your parent ${parentName} invited you`,
     text: emailBody,
     html: emailHtml,
   });

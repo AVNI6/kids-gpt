@@ -43,6 +43,13 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
+  const hasChanges = 
+    firstName !== (profile.first_name || "") ||
+    lastName !== (profile.last_name || "") ||
+    username !== (profile.username || "") ||
+    avatarUrl !== (profile.avatar_url || "") ||
+    (date ? formatLocalDate(date) !== (profile.date_of_birth || "") : false);
+
   const handleDateChange = (selectedDate: Date | undefined) => {
     setDate(selectedDate);
     if (!selectedDate) {
@@ -257,7 +264,7 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
                 <div className="flex justify-end pt-6 border-t border-border">
                   <Button
                     type="submit"
-                    disabled={isSavingProfile || !date || !!localAgeError}
+                    disabled={isSavingProfile || !date || !!localAgeError || !hasChanges}
                     className="rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-sky-500 dark:hover:bg-sky-600 transition-all w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSavingProfile ? (

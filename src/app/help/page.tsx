@@ -109,7 +109,7 @@ export default function HelpPage() {
             </h1>
 
             <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium">
-              Find guides for students, parents, and teachers. Learn how to use ChatGPT Kids safely
+              Find guides for students, parents, and teachers. Learn how to use Kidoza safely
               and effectively.
             </p>
           </div>
@@ -289,7 +289,7 @@ export default function HelpPage() {
                 a: "Students can join using the classroom code shared by the teacher.",
               },
               {
-                q: "Is ChatGPT Kids safe for children?",
+                q: "Is Kidoza safe for children?",
                 a: "Yes. All conversations are moderated and filtered for child-safe learning.",
               },
               {
@@ -365,7 +365,7 @@ export default function HelpPage() {
         <footer className="pt-12 border-t border-slate-200">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
             <div className="space-y-2">
-              <h3 className="font-black text-2xl text-sky-600 tracking-tight">ChatGPT Kid</h3>
+              <h3 className="font-black text-2xl text-sky-600 tracking-tight">Kidoza</h3>
               <p className="text-slate-500 font-medium">Safe, interactive AI learning for kids.</p>
             </div>
 

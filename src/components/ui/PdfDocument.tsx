@@ -608,7 +608,7 @@ export const PdfDocument = ({ content, role = "kid" }: PdfDocumentProps) => {
   const backgroundSrc = `/doodle${doodleIndex}.png`;
 
   return (
-    <Document title="Learning Material" author="ChatGPT Kids">
+    <Document title="Learning Material" author="Kidoza">
       <Page size="A4" style={styles.page}>
         {/* Background Doodles - Only for Kid Theme */}
         {role === "kid" && (
@@ -632,10 +632,10 @@ export const PdfDocument = ({ content, role = "kid" }: PdfDocumentProps) => {
         <View style={styles.footer} fixed>
           <Text>
             {role === "kid"
-              ? "Created with love by ChatGPT Kids 🚀 | Page "
+              ? "Created with love by Kidoza 🚀 | Page "
               : role === "teacher"
-                ? "ChatGPT Teacher Resource Hub | Page "
-                : "ChatGPT Parent Portal Summary | Page "}
+                ? "Kidoza Teacher Resource Hub | Page "
+                : "Kidoza Parent Portal Summary | Page "}
             <Text render={({ pageNumber, totalPages }) => `${pageNumber} of ${totalPages}`} />
           </Text>
         </View>

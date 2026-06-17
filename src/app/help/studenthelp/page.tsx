@@ -29,7 +29,7 @@ export default function StudentHelpPage() {
             Hello, <span className="text-sky-600">Young Explorer!</span>
           </h1>
           <p className="text-muted-foreground text-xl font-medium">
-            Learn how to chat, join classes, and earn badges in ChatGPT Kids.
+            Learn how to chat, join classes, and earn badges in Kidoza.
           </p>
         </section>
 

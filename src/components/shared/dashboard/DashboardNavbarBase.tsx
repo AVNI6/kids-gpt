@@ -50,7 +50,7 @@ export default function DashboardNavbarBase({
       ? "Teacher Hub"
       : pathname.startsWith("/dashboard/parent")
         ? "Parent Hub"
-        : "ChatGPT Kids";
+        : "Kidoza";
 
   const activeLinkClass =
     role === "teacher"

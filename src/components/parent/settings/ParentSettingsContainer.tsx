@@ -36,6 +36,11 @@ export default function ParentSettingsContainer({ profile }: ParentSettingsConta
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
+  const hasChanges = 
+    firstName !== (profile.first_name || "") ||
+    lastName !== (profile.last_name || "") ||
+    avatarUrl !== (profile.avatar_url || "");
+
   // Handle Profile Update
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,7 +175,7 @@ export default function ParentSettingsContainer({ profile }: ParentSettingsConta
                 <div className="flex justify-end pt-6 border-t border-border">
                   <Button
                     type="submit"
-                    disabled={isSavingProfile}
+                    disabled={isSavingProfile || !hasChanges}
                     className="rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-all w-full sm:w-auto"
                   >
                     {isSavingProfile ? (
