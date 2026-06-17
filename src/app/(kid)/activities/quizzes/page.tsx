@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CheckCircle2, Timer, ArrowLeft, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
@@ -14,6 +14,7 @@ import { APP_ROUTES } from "@/lib/constants/common";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import VictoryModal from "@/components/shared/VictoryModal";
 import { type QuizQuestionItem } from "@/types/activities.type";
+import type { QuizReviewData, QuizReviewItem } from "@/types/activity-review.types";
 
 interface QuizzesPageProps {
   quizTitle?: string;
@@ -84,8 +85,14 @@ export default function QuizzesPage({
   const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(120);
+  // Accumulate per-question answers for parent review — not persisted to sessionStorage
+  const answersRef = useRef<QuizReviewItem[]>([]);
+  const gameStartedAtRef = useRef<number>(0);
+  const [finalGameStartedAt, setFinalGameStartedAt] = useState<number>(0);
+  const [finalReviewItems, setFinalReviewItems] = useState<QuizReviewItem[]>([]);
 
   useEffect(() => {
+    gameStartedAtRef.current = Date.now();
     getActivityXp("quizzes").then(setXpReward);
   }, []);
 
@@ -125,6 +132,15 @@ export default function QuizzesPage({
     if (option?.correct) {
       setCorrectCount((prev) => prev + 1);
     }
+    // Record this answer for the review snapshot
+    answersRef.current.push({
+      question: rawQuiz.question,
+      options: rawQuiz.options.map((o) => o.label),
+      kid_answer: option?.label ?? null,
+      correct_answer: rawQuiz.options.find((o) => o.correct)?.label ?? "",
+      is_correct: option?.correct ?? false,
+      feedback: rawQuiz.feedback,
+    });
   };
 
   const handleNext = () => {
@@ -132,6 +148,8 @@ export default function QuizzesPage({
       setCurrentQuestion((prev) => prev + 1);
       setSelected(null);
     } else {
+      setFinalGameStartedAt(gameStartedAtRef.current);
+      setFinalReviewItems(answersRef.current);
       setQuizCompleted(true);
     }
   };
@@ -151,6 +169,10 @@ export default function QuizzesPage({
       sessionStorage.removeItem(`${storageKey}-correct`);
       sessionStorage.removeItem(`${storageKey}-time`);
     }
+    answersRef.current = [];
+    gameStartedAtRef.current = Date.now();
+    setFinalGameStartedAt(0);
+    setFinalReviewItems([]);
     setCurrentQuestion(0);
     setSelected(null);
     setTimeLeft(600);
@@ -351,6 +373,14 @@ export default function QuizzesPage({
         scoreDescription={`Incredible brainpower! You completed the quiz "${quizTitle}".`}
         rewardsDescription={`${correctCount}/${safeQuestions.length} Correct Answers`}
         assignmentId={assignmentId}
+        gameStartedAt={finalGameStartedAt}
+        reviewData={{
+          type: "quizzes",
+          title: quizTitle,
+          items: finalReviewItems,
+          total_questions: safeQuestions.length,
+          correct_count: correctCount,
+        } satisfies QuizReviewData}
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-current`);

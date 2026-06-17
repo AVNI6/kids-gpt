@@ -16,6 +16,12 @@ import { useParentAnalytics } from "@/hooks/parent/useParentAnalytics";
 import { displayAge } from "@/lib/utils/kid/childAge";
 import { displayGrade } from "@/lib/utils/kid/childGrade";
 import { getLevel, getSafeXP } from "@/hooks/kid/useChildXP";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { getActivityReviewByRewardIdForParent } from "@/lib/services/kid/activity-review.actions";
+import ParentActivityReviewModal from "../progress/ParentActivityReviewModal";
+import type { ActivityReviewRow } from "@/types/activity-review.types";
+import { toast } from "sonner";
 
 export default function ChildDetailPanel({
   selectedChild,
@@ -39,6 +45,30 @@ export default function ChildDetailPanel({
 
   // Retrieve standardized subject analytics using parent analytics hook
   useParentAnalytics(details?.timeline ?? []);
+
+  const [selectedReview, setSelectedReview] = useState<ActivityReviewRow | null>(null);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [loadingReviewId, setLoadingReviewId] = useState<string | null>(null);
+
+  const handleCardClick = async (activityId: string, activityTitle: string) => {
+    setLoadingReviewId(activityId);
+    try {
+      const res = await getActivityReviewByRewardIdForParent(activityId);
+      if (res.success && res.data) {
+        setSelectedReview(res.data);
+        setIsReviewOpen(true);
+      } else {
+        toast.info("Detailed review is only available for new activity attempts.", {
+          description: "Older attempts do not have question-level snapshotted history.",
+        });
+      }
+    } catch (err) {
+      toast.error("Failed to load activity review details.");
+    } finally {
+      setLoadingReviewId(null);
+    }
+  };
+
 
   // URL state tab managers
   const subTabFromUrl = searchParams?.get("subTab") as "history" | "activities" | "progress" | null;
@@ -495,12 +525,27 @@ export default function ChildDetailPanel({
                               : 100;
                         const isHigh = scoreVal >= 80;
 
+                        const activityTitle = act.activity_settings?.title ||
+                          (act.description
+                            ? act.description.split(" (Score:")[0]
+                            : "Completed Activity");
+
                         return (
                           <Card
                             key={act.id || index}
-                            className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white/40 dark:bg-black/20 hover:bg-slate-50/40 dark:hover:bg-black/40 transition-colors overflow-hidden flex flex-col h-full justify-between"
+                            onClick={() => {
+                              if (loadingReviewId === null && act.id) {
+                                handleCardClick(act.id, activityTitle);
+                              }
+                            }}
+                            className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white/40 dark:bg-black/20 hover:bg-slate-50/40 dark:hover:bg-black/40 transition-colors overflow-hidden flex flex-col h-full justify-between cursor-pointer hover:border-sky-200 dark:hover:border-sky-900 active:scale-98"
                           >
-                            <CardContent className="p-5 flex flex-col h-full justify-between gap-4">
+                            <CardContent className="p-5 flex flex-col h-full justify-between gap-4 relative">
+                              {loadingReviewId === act.id && (
+                                <div className="absolute inset-0 bg-white/60 dark:bg-black/60 rounded-2xl flex items-center justify-center z-10">
+                                  <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
+                                </div>
+                              )}
                               <div>
                                 <div className="flex justify-between items-center mb-3">
                                   <div
@@ -519,10 +564,7 @@ export default function ChildDetailPanel({
 
                                 <div className="space-y-1 mb-3">
                                   <h4 className="text-sm font-extrabold text-slate-850 dark:text-slate-200 line-clamp-1 leading-snug">
-                                    {act.activity_settings?.title ||
-                                      (act.description
-                                        ? act.description.split(" (Score:")[0]
-                                        : "Completed Activity")}
+                                    {activityTitle}
                                   </h4>
                                   {act.description &&
                                     act.description !==
@@ -587,6 +629,21 @@ export default function ChildDetailPanel({
                       })}
                     </div>
                   )}
+
+                  <ParentActivityReviewModal
+                    isOpen={isReviewOpen}
+                    onClose={() => {
+                      setIsReviewOpen(false);
+                      setSelectedReview(null);
+                    }}
+                    review={selectedReview}
+                    activityTitle={
+                      selectedReview?.review_data && "title" in selectedReview.review_data
+                        ? selectedReview.review_data.title
+                        : selectedReview?.activity_type || "Activity"
+                    }
+                  />
+
 
                   {activities.length > 0 && activitiesPagination.totalPages > 1 && (
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">

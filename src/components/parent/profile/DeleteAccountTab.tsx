@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { softDeleteChildConnection } from "@/lib/services/parent/parent.actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/kid";
@@ -75,16 +77,16 @@ export default function DeleteAccountTab({ child, onSuccess }: DeleteAccountTabP
 
       <div className="space-y-4 pt-2">
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-600 dark:text-slate-400">
+          <Label className="text-xs font-bold text-slate-600 dark:text-slate-400">
             To confirm, type your child&apos;s first name (
             <span className="font-extrabold">{child.first_name}</span>):
-          </label>
-          <input
+          </Label>
+          <Input
             type="text"
             placeholder={child.first_name || "Child's First Name"}
             value={typedConfirm}
             onChange={(e) => setTypedConfirm(e.target.value)}
-            className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white/40 focus:bg-white focus:ring-rose-500 focus:border-rose-500 text-sm font-semibold transition-all dark:border-slate-800 dark:bg-slate-900"
+            className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white/40 focus-visible:bg-white focus-visible:ring-rose-500 focus-visible:border-rose-500 text-sm font-semibold transition-all dark:border-slate-800 dark:bg-slate-900"
           />
         </div>
 

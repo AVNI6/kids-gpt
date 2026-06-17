@@ -5,13 +5,40 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { BookOpen, Puzzle, FileQuestion, Calendar } from "lucide-react";
+import { BookOpen, Puzzle, FileQuestion, Calendar, Loader2 } from "lucide-react";
 import { usePagination } from "@/hooks/shared/use-pagination";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
+import { getActivityReviewByRewardIdForParent } from "@/lib/services/kid/activity-review.actions";
+import ParentActivityReviewModal from "./ParentActivityReviewModal";
+import type { ActivityReviewRow } from "@/types/activity-review.types";
+import { toast } from "sonner";
 
 export default function ActivitiesGrid() {
   const { activeChild, details } = useParentDashboard();
   const [activeFilter, setActiveFilter] = useState("All");
+  const [selectedReview, setSelectedReview] = useState<ActivityReviewRow | null>(null);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [loadingReviewId, setLoadingReviewId] = useState<string | null>(null);
+
+  const handleCardClick = async (activityId: string, activityTitle: string) => {
+    setLoadingReviewId(activityId);
+    try {
+      const res = await getActivityReviewByRewardIdForParent(activityId);
+      if (res.success && res.data) {
+        setSelectedReview(res.data);
+        setIsReviewOpen(true);
+      } else {
+        toast.info("Detailed review is only available for new activity attempts.", {
+          description: "Older attempts do not have question-level snapshotted history.",
+        });
+      }
+    } catch (err) {
+      toast.error("Failed to load activity review details.");
+    } finally {
+      setLoadingReviewId(null);
+    }
+  };
+
 
   // Compute unique filters dynamically based on child's actual rewards/timeline logs
   const dynamicFilters = useMemo(() => {
@@ -189,9 +216,19 @@ export default function ActivitiesGrid() {
           activitiesPagination.currentItems.map((activity) => (
             <Card
               key={activity.id}
-              className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-all group"
+              onClick={() => {
+                if (loadingReviewId === null) {
+                  handleCardClick(activity.id, activity.title);
+                }
+              }}
+              className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-all group cursor-pointer hover:border-sky-200 dark:hover:border-sky-900 active:scale-98"
             >
-              <CardContent className="p-6 flex flex-col h-full justify-between">
+              <CardContent className="p-6 flex flex-col h-full justify-between relative">
+                {loadingReviewId === activity.id && (
+                  <div className="absolute inset-0 bg-white/60 dark:bg-black/60 rounded-[28px] flex items-center justify-center z-10">
+                    <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+                  </div>
+                )}
                 <div>
                   <div className="flex justify-between items-start mb-4">
                     <div
@@ -242,7 +279,22 @@ export default function ActivitiesGrid() {
         )}
       </div>
 
+      <ParentActivityReviewModal
+        isOpen={isReviewOpen}
+        onClose={() => {
+          setIsReviewOpen(false);
+          setSelectedReview(null);
+        }}
+        review={selectedReview}
+        activityTitle={
+          selectedReview?.review_data && "title" in selectedReview.review_data
+            ? selectedReview.review_data.title
+            : selectedReview?.activity_type || "Activity"
+        }
+      />
+
       {filteredActivities.length > 0 && activitiesPagination.totalPages > 1 && (
+
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
             Showing {activitiesPagination.startIndex + 1}-{activitiesPagination.endIndex} of{" "}

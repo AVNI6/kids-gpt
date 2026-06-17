@@ -19,6 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -380,19 +381,19 @@ export default function ClassroomResourcesTab({
                       >
                         Resource Type
                       </Label>
-                      <select
-                        id="resType"
-                        value={resType}
-                        onChange={(e) => setResType(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-850 px-3.5 h-11 bg-background text-sm font-semibold focus:border-indigo-500 focus:ring-0"
-                      >
-                        <option value="PDF">PDF File</option>
-                        <option value="VIDEO">Video Link</option>
-                        <option value="LINK">Website Link</option>
-                        <option value="DOCUMENT">Document</option>
-                        <option value="WORD">Word Document</option>
-                        <option value="IMAGE">Image File</option>
-                      </select>
+                      <Select value={resType} onValueChange={(val) => setResType(val || "")}>
+                        <SelectTrigger className="w-full rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-850 px-3.5 h-11 bg-background text-sm font-semibold focus:border-indigo-500 focus:ring-0">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PDF">PDF File</SelectItem>
+                          <SelectItem value="VIDEO">Video Link</SelectItem>
+                          <SelectItem value="LINK">Website Link</SelectItem>
+                          <SelectItem value="DOCUMENT">Document</SelectItem>
+                          <SelectItem value="WORD">Word Document</SelectItem>
+                          <SelectItem value="IMAGE">Image File</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-1.5">
                       <Label

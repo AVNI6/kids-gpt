@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   RotateCcw,
@@ -25,6 +25,7 @@ import {
 import { toast } from "sonner";
 import VictoryModal from "@/components/shared/VictoryModal";
 import { memoryCampaignLevels, MemoryLevel, MemoryStep } from "@/lib/constants/kid";
+import type { MemoryMatchReviewData } from "@/types/activity-review.types";
 
 interface MemoryCard {
   id: number;
@@ -61,6 +62,10 @@ export default function MemoryMatchPage() {
   const [isRevealedPreview, setIsRevealedPreview] = useState(false);
   const [previewCountdown, setPreviewCountdown] = useState(5);
 
+  // Track game start time for review duration
+  const gameStartedAtRef = useRef<number>(0);
+  const [finalGameStartedAt, setFinalGameStartedAt] = useState<number>(0);
+
   // Fetch campaign progress and base XP reward on mount
   const fetchProgress = async (showLoadingScreen: boolean = false) => {
     try {
@@ -92,11 +97,20 @@ export default function MemoryMatchPage() {
   };
 
   useEffect(() => {
+    gameStartedAtRef.current = Date.now();
     const timer = setTimeout(() => {
       fetchProgress(true);
     }, 0);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (gameCompleted) {
+      setFinalGameStartedAt(gameStartedAtRef.current);
+    } else {
+      setFinalGameStartedAt(0);
+    }
+  }, [gameCompleted]);
 
   // Main countdown timer effect (paused during preview)
   useEffect(() => {
@@ -189,6 +203,7 @@ export default function MemoryMatchPage() {
     setGameCompleted(false);
     setTimeLeft(step.timeLimit);
     setGameFailed(false);
+    gameStartedAtRef.current = Date.now();
 
     // Trigger the initial 5s memory preview sneak peek
     setIsRevealedPreview(true);
@@ -523,6 +538,15 @@ export default function MemoryMatchPage() {
           rewardsDescription={`World ${level.id} - Step ${step.stepNumber} Completion`}
           memoryMatchWorldId={level.id}
           memoryMatchStepNumber={step.stepNumber}
+          gameStartedAt={finalGameStartedAt}
+          reviewData={{
+            type: "memory-match",
+            world_id: level.id,
+            step_number: step.stepNumber,
+            total_pairs: step.pairCount,
+            matches_found: matches,
+            total_flips: flipsCount,
+          } satisfies MemoryMatchReviewData}
           onClaimSuccess={async () => {
             await fetchProgress(false);
           }}

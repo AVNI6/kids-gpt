@@ -10,6 +10,8 @@ import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { createClient } from "@/lib/supabase/client";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Logo from "@/components/shared/logo/Logo";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const supabase = createClient();
 
@@ -173,13 +175,13 @@ export default function ResetPasswordPage() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
+                <Label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
                   Enter Your Password
-                </label>
+                </Label>
 
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 w-5 h-5" />
-                  <input
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 w-5 h-5 z-10" />
+                  <Input
                     {...register("password", {
                       required: true,
                       minLength: {
@@ -189,13 +191,13 @@ export default function ResetPasswordPage() {
                     })}
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="w-full h-14 pl-12 pr-12 bg-muted/30 border-2 border-border focus:border-sky-500 focus:ring-0 rounded-2xl text-base outline-none transition-all text-foreground"
+                    className="w-full h-14 pl-12 pr-12 bg-muted/30 border-2 border-border focus-visible:border-sky-500 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-2xl text-base outline-none transition-all text-foreground"
                   />
 
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground/60 hover:text-foreground transition-colors z-10"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground/60 hover:text-foreground transition-colors z-25"
                   >
                     {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                   </button>

@@ -4,6 +4,7 @@ import React from "react";
 import { MoreVertical, Edit2, Share2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { ChatSessionRow } from "@/types/common";
 
 interface RecentChatItemProps {
@@ -43,12 +44,12 @@ const RecentChatItem = React.memo(
             onSubmit={(e) => onSaveRename(e, session.id)}
             className="flex items-center gap-2 p-1"
           >
-            <input
+            <Input
               autoFocus
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               onBlur={(e) => onSaveRename(e, session.id)}
-              className="w-full bg-sidebar-accent border border-sky-500 rounded-md px-2 py-1 text-sm focus:outline-none text-foreground"
+              className="w-full bg-sidebar-accent border border-sky-500 rounded-md px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
               placeholder="Save..."
             />
           </form>

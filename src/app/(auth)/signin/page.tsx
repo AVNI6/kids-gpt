@@ -2,6 +2,8 @@
 export const dynamic = "force-dynamic";
 import { Suspense } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "@/components/shared/forms/GoogleSignInButton";
 import { Mail, Lock, CheckCircle, BookOpen, Brain } from "lucide-react";
@@ -162,24 +164,24 @@ function LoginPageContent() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <label className="block mb-2 text-sm font-semibold text-foreground">Email</label>
+              <Label className="block mb-2 text-sm font-semibold text-foreground">Email</Label>
               <div className="relative">
                 <Mail
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 z-10"
                   size={20}
                 />
-                <input
+                <Input
                   {...register("email", { required: true })}
                   type="email"
                   placeholder="you@example.com"
-                  className="w-full rounded-full border-2 border-border bg-muted/50 py-4 pl-12 pr-4 outline-none transition focus:border-sky-500 text-foreground"
+                  className="w-full rounded-full border-2 border-border bg-muted/50 h-14 pl-12 pr-4 focus-visible:border-sky-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between items-center mb-2">
-                <label className="text-sm font-semibold text-foreground">Password</label>
+                <Label className="text-sm font-semibold text-foreground">Password</Label>
                 <Link
                   href={APP_ROUTES.ForgotPassword}
                   className="text-sm font-semibold text-sky-500 hover:underline"
@@ -189,20 +191,20 @@ function LoginPageContent() {
               </div>
               <div className="relative">
                 <Lock
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 z-10"
                   size={20}
                 />
-                <input
+                <Input
                   {...register("password", { required: true })}
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full rounded-full border-2 border-border bg-muted/50 py-4 pl-12 pr-12 outline-none transition focus:border-sky-500 text-foreground"
+                  className="w-full rounded-full border-2 border-border bg-muted/50 h-14 pl-12 pr-12 focus-visible:border-sky-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors z-10"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors z-20"
                 >
                   {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                 </button>

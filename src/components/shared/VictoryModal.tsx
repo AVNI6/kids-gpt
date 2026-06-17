@@ -15,8 +15,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { processActivityCompletion } from "@/lib/services/kid/rewards.actions";
 import { submitAssignmentActivityCompletion } from "@/lib/services/kid/classroom.actions";
+import { saveActivityReview } from "@/lib/services/kid/activity-review.actions";
 import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
 import { APP_ROUTES } from "@/lib/constants/common";
+import type { ActivityReviewData } from "@/types/activity-review.types";
 
 interface VictoryModalProps {
   isOpen: boolean;
@@ -36,6 +38,10 @@ interface VictoryModalProps {
   memoryMatchStepNumber?: number;
   onClaimSuccess?: () => void;
   children?: React.ReactNode; // Extra content (e.g., matching answers review)
+  /** Detailed gameplay snapshot to persist in activity_reviews table */
+  reviewData?: ActivityReviewData;
+  /** Duration tracking: pass Date.now() at game start; VictoryModal computes seconds */
+  gameStartedAt?: number;
 }
 
 export default function VictoryModal({
@@ -55,6 +61,8 @@ export default function VictoryModal({
   memoryMatchStepNumber,
   onClaimSuccess,
   children,
+  reviewData,
+  gameStartedAt,
 }: VictoryModalProps) {
   const router = useRouter();
   const hasClaimed = useRef(false);
@@ -97,10 +105,31 @@ export default function VictoryModal({
       const triggerAutoClaim = async () => {
         try {
           const finalScoreStr = score || "100%";
+          // Parse score percentage for the review record
+          const scoreNum = parseInt(finalScoreStr.replace(/[^0-9]/g, ""), 10) || 100;
+          // Compute duration if the caller provided a start timestamp
+          const durationSeconds =
+            gameStartedAt != null ? Math.round((Date.now() - gameStartedAt) / 1000) : undefined;
+
           if (assignmentId) {
             // Claim via classroom assignment completion
             const result = await submitAssignmentActivityCompletion(assignmentId, finalScoreStr);
             if (result.success) {
+              // Persist review snapshot — wait for completion
+              if (reviewData) {
+                const reviewResult = await saveActivityReview({
+                  activityType: activitySlug,
+                  rewardId: result.rewardId ?? null,
+                  submissionId: result.submissionId ?? null,
+                  scorePercentage: scoreNum,
+                  xpEarned,
+                  durationSeconds,
+                  reviewData,
+                });
+                if (!reviewResult.success) {
+                  console.warn("saveActivityReview failed (assignment):", reviewResult.error);
+                }
+              }
               setClaimCompleted(true);
               toast.success("Assignment Submitted! 🎉", {
                 description: `Your score of ${finalScoreStr} was submitted and graded.`,
@@ -125,6 +154,20 @@ export default function VictoryModal({
             });
 
             if (result.success) {
+              // Persist review snapshot — wait for completion
+              if (reviewData) {
+                const reviewResult = await saveActivityReview({
+                  activityType: activitySlug,
+                  rewardId: result.rewardId ?? null,
+                  scorePercentage: scoreNum,
+                  xpEarned,
+                  durationSeconds,
+                  reviewData,
+                });
+                if (!reviewResult.success) {
+                  console.warn("saveActivityReview failed:", reviewResult.error);
+                }
+              }
               setClaimCompleted(true);
               toast.success("Awesome Job! 🎉", {
                 description: `+${xpEarned} Experience Points automatically awarded to your kid profile!`,

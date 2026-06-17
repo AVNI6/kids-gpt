@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavItemConfig } from "@/config/navigation/kid-nav";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface MobileNavDrawerProps {
   isOpen: boolean;
@@ -26,25 +25,6 @@ export default function MobileNavDrawer({
   isLinkActive,
   dueCount = 0,
 }: MobileNavDrawerProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMounted(true);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Auto-dismiss drawer on window scroll
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleDismiss = () => onClose();
-    window.addEventListener("scroll", handleDismiss, { passive: true });
-    return () => window.removeEventListener("scroll", handleDismiss);
-  }, [isOpen, onClose]);
-
-  if (!isOpen || !mounted) return null;
-
   const brandTitle =
     role === "teacher" ? "Teacher Hub" : role === "parent" ? "Parent Hub" : "Explorer Hub";
 
@@ -60,24 +40,21 @@ export default function MobileNavDrawer({
         ? "Parent Mode Enforced"
         : "Student Mode";
 
-  return createPortal(
-    <div className="lg:hidden fixed inset-0 z-[9999] flex">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md transition-opacity duration-300 animate-in fade-in"
-        onClick={onClose}
-      />
-
-      {/* Drawer Panel */}
-      <div className="relative ml-auto w-80 max-w-xs h-screen bg-white dark:bg-slate-900 p-6 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 border-l border-slate-200 dark:border-slate-800 z-50">
+  return (
+    <Sheet open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <SheetContent
+        side="right"
+        showCloseButton={false}
+        className="w-80 max-w-xs h-screen bg-white dark:bg-slate-900 p-6 flex flex-col shadow-2xl border-l border-slate-200 dark:border-slate-800 z-50 outline-none"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800/60 mb-6">
+        <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800/60 mb-6 shrink-0">
           <span className="font-black text-lg bg-gradient-to-r from-sky-500 to-indigo-600 bg-clip-text text-transparent">
             {brandTitle}
           </span>
           <button
             onClick={onClose}
-            className="p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-900 transition-colors cursor-pointer"
+            className="p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-900 transition-colors cursor-pointer border-0 bg-transparent"
             aria-label="Close menu"
           >
             <X className="size-5" />
@@ -85,7 +62,7 @@ export default function MobileNavDrawer({
         </div>
 
         {/* Navigation links inside drawer */}
-        <div className="flex-1 flex flex-col gap-2">
+        <div className="flex-1 flex flex-col gap-2 overflow-y-auto pr-1 py-1">
           {navItems.map((item) => {
             const active = isLinkActive(item);
             const isClassrooms = item.label === "Classrooms";
@@ -113,13 +90,13 @@ export default function MobileNavDrawer({
         </div>
 
         {/* Footer */}
-        <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center">
+        <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center shrink-0">
           <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
             {footerText}
           </p>
         </div>
-      </div>
-    </div>,
-    document.body
+      </SheetContent>
+    </Sheet>
   );
 }
+

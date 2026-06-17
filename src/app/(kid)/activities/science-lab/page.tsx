@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Beaker, CheckCircle2, FlaskConical, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { type ScienceLabItem } from "@/types/activities.type";
 import VictoryModal from "@/components/shared/VictoryModal";
+import type { QuizReviewData, ScienceLabReviewItem } from "@/types/activity-review.types";
 
 interface ScienceLabPageProps {
   labTitle?: string;
@@ -51,8 +52,14 @@ export default function ScienceLabPage({
   const [correctCount, setCorrectCount] = useState(0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(160);
+  const resultsRef = useRef<ScienceLabReviewItem[]>([]);
+  const gameStartedAtRef = useRef<number>(0);
+
+  const [finalGameStartedAt, setFinalGameStartedAt] = useState<number>(0);
+  const [finalReviewItems, setFinalReviewItems] = useState<ScienceLabReviewItem[]>([]);
 
   useEffect(() => {
+    gameStartedAtRef.current = Date.now();
     getActivityXp("science-lab").then(setXpReward);
   }, []);
 
@@ -72,6 +79,8 @@ export default function ScienceLabPage({
 
   const handleNext = () => {
     if (currentExp === safeExperiments.length - 1) {
+      setFinalGameStartedAt(gameStartedAtRef.current);
+      setFinalReviewItems(resultsRef.current);
       setChallengeCompleted(true);
     } else {
       setCurrentExp((prev) => prev + 1);
@@ -88,6 +97,10 @@ export default function ScienceLabPage({
   };
 
   const handleReset = () => {
+    resultsRef.current = [];
+    gameStartedAtRef.current = Date.now();
+    setFinalGameStartedAt(0);
+    setFinalReviewItems([]);
     setCurrentExp(0);
     setSelected(null);
     setCorrectCount(0);
@@ -153,9 +166,19 @@ export default function ScienceLabPage({
                   onClick={() => {
                     if (!selected) {
                       setSelected(opt.id);
-                      if (opt.correct) {
+                      const isOptCorrect = opt.correct;
+                      if (isOptCorrect) {
                         setCorrectCount((prev) => prev + 1);
                       }
+                      // Capture this experiment's result for the review snapshot
+                      resultsRef.current.push({
+                        title: rawExp.title,
+                        setup: rawExp.setup,
+                        kid_answer: opt.label,
+                        correct_answer: rawExp.options.find((o) => o.correct)?.label ?? "",
+                        is_correct: isOptCorrect,
+                        explanation: rawExp.explanation,
+                      });
                     }
                   }}
                   disabled={selected !== null}
@@ -204,6 +227,14 @@ export default function ScienceLabPage({
         scoreDescription={`Super lab experiment! You completed "${labTitle}".`}
         rewardsDescription={`${correctCount}/${safeExperiments.length} Correct Experiments`}
         assignmentId={assignmentId}
+        gameStartedAt={finalGameStartedAt}
+        reviewData={{
+          type: "science-lab",
+          title: labTitle,
+          items: finalReviewItems,
+          total_questions: safeExperiments.length,
+          correct_count: correctCount,
+        } satisfies QuizReviewData}
       />
     </div>
   );

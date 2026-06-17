@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyUserRole } from "./dashboard.actions";
 import type {
   TeacherDashboardData,
@@ -351,7 +352,7 @@ export async function getKidClassroomData(): Promise<{
 }> {
   try {
     const { userId } = await verifyUserRole("kid");
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
       .from("classroom_members")
@@ -368,6 +369,10 @@ export async function getKidClassroomData(): Promise<{
           grade,
           class_code,
           teacher_user_id,
+          is_active,
+          created_at,
+          updated_at,
+          deleted_at,
           teacher:profile!classrooms_teacher_user_id_fkey (
             first_name,
             last_name,
@@ -1041,11 +1046,27 @@ export async function getTeacherAssignmentOverview(assignmentId: string) {
  */
 export async function getStudentClassroomWorkspace(classroomId: string) {
   try {
-    await verifyUserRole("kid");
-    const supabase = await createClient();
+    const { userId } = await verifyUserRole("kid");
+    console.log("[getStudentClassroomWorkspace] Diagnostic - classroomId:", classroomId, "userId:", userId);
+    const adminSupabase = createAdminClient();
+
+    // Verify student is approved member of the classroom
+    const { data: member, error: memberErr } = await adminSupabase
+      .from("classroom_members")
+      .select("id")
+      .eq("classroom_id", classroomId)
+      .eq("student_user_id", userId)
+      .eq("status", "APPROVED")
+      .maybeSingle();
+
+    console.log("[getStudentClassroomWorkspace] Diagnostic - member check:", member, "error:", memberErr);
+
+    if (memberErr || !member) {
+      throw new Error("You are not an approved member of this classroom.");
+    }
 
     // 1. Fetch classroom metadata
-    const { data: classroom, error: classErr } = await supabase
+    const { data: classroom, error: classErr } = await adminSupabase
       .from("classrooms")
       .select(
         `
@@ -1063,35 +1084,123 @@ export async function getStudentClassroomWorkspace(classroomId: string) {
       `
       )
       .eq("id", classroomId)
-      .is("deleted_at", null)
       .single();
+
+    console.log("[getStudentClassroomWorkspace] Diagnostic - classroom fetch:", classroom, "error:", classErr);
 
     if (classErr || !classroom) {
       throw new Error(classErr?.message || "Classroom not found.");
     }
 
     // 2. Fetch teacher profile details
-    const { data: teacher } = await supabase
+    const { data: teacher } = await adminSupabase
       .from("profile")
       .select("first_name, last_name, avatar_url")
       .eq("user_id", classroom.teacher_user_id)
       .single();
 
-    // 3. Fetch RPC data for assignments, resources, announcements
-    const { data: rpcData, error } = await supabase.rpc("get_student_classroom_workspace", {
-      p_classroom_id: classroomId,
+    // 3. Fetch published assignments
+    const { data: assignments, error: assignErr } = await adminSupabase
+      .from("assignments")
+      .select(`
+        id,
+        classroom_id,
+        teacher_user_id,
+        created_by,
+        title,
+        description,
+        subject,
+        total_points,
+        due_date,
+        status,
+        published_at,
+        closed_at,
+        created_at,
+        updated_at,
+        deleted_at,
+        activity_type,
+        topic,
+        difficulty,
+        question_count
+      `)
+      .eq("classroom_id", classroomId)
+      .eq("status", "PUBLISHED")
+      .is("deleted_at", null)
+      .order("due_date", { ascending: true })
+      .order("created_at", { ascending: false });
+
+    if (assignErr) throw new Error(assignErr.message);
+
+    // 4. Fetch student submissions
+    const { data: submissions, error: subErr } = await adminSupabase
+      .from("assignment_submissions")
+      .select(`
+        id,
+        assignment_id,
+        submission_type,
+        submission_text,
+        submission_url,
+        submitted_at,
+        score,
+        feedback,
+        graded_at
+      `)
+      .eq("student_user_id", userId)
+      .is("deleted_at", null);
+
+    if (subErr) throw new Error(subErr.message);
+
+    // Merge assignments with submissions
+    const submissionMap = new Map();
+    if (submissions) {
+      for (const sub of submissions) {
+        submissionMap.set(sub.assignment_id, sub);
+      }
+    }
+
+    const mergedAssignments = (assignments || []).map((assign) => {
+      const sub = submissionMap.get(assign.id);
+      return {
+        ...assign,
+        submission_id: sub ? sub.id : null,
+        submission_type: sub ? sub.submission_type : null,
+        submission_text: sub ? sub.submission_text : null,
+        submission_url: sub ? sub.submission_url : null,
+        submitted_at: sub ? sub.submitted_at : null,
+        score: sub ? sub.score : null,
+        feedback: sub ? sub.feedback : null,
+        graded_at: sub ? sub.graded_at : null,
+      };
     });
 
-    if (error) throw new Error(error.message);
+    // 5. Fetch classroom resources
+    const { data: resources, error: resErr } = await adminSupabase
+      .from("classroom_resources")
+      .select("id, classroom_id, teacher_user_id, title, description, resource_type, resource_url, storage_path, created_at, updated_at, deleted_at")
+      .eq("classroom_id", classroomId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+
+    if (resErr) throw new Error(resErr.message);
+
+    // 6. Fetch announcements
+    const { data: announcements, error: annErr } = await adminSupabase
+      .from("announcements")
+      .select("id, classroom_id, teacher_user_id, title, message, created_at, updated_at, deleted_at")
+      .eq("classroom_id", classroomId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+
+    if (annErr) throw new Error(annErr.message);
 
     const mergedData = {
       classroom: {
         ...classroom,
         teacher: teacher || null,
       },
-      assignments: rpcData.assignments || [],
-      resources: rpcData.resources || [],
-      announcements: rpcData.announcements || [],
+      assignments: mergedAssignments,
+      resources: resources || [],
+      announcements: announcements || [],
     };
 
     return { success: true, data: mergedData };
@@ -1102,6 +1211,7 @@ export async function getStudentClassroomWorkspace(classroomId: string) {
     };
   }
 }
+
 
 /**
  * Start assignment activity and track it as IN_PROGRESS (Kid only)
@@ -1215,7 +1325,13 @@ export async function submitAssignmentActivityCompletion(
       return { success: false, error: rpcError.message };
     }
 
-    const result = rpcData as { success: boolean; error?: string; classroom_id?: string } | null;
+    const result = rpcData as {
+      success: boolean;
+      error?: string;
+      classroom_id?: string;
+      reward_id?: string | null;
+      submission_id?: string | null;
+    } | null;
     if (!result || !result.success || !result.classroom_id) {
       return { success: false, error: result?.error || "Failed to complete assignment activity." };
     }
@@ -1225,7 +1341,12 @@ export async function submitAssignmentActivityCompletion(
     revalidatePath("/dashboard/kid");
     revalidatePath("/dashboard/parent");
 
-    return { success: true, classroomId: result.classroom_id };
+    return {
+      success: true,
+      classroomId: result.classroom_id,
+      rewardId: result.reward_id ?? null,
+      submissionId: result.submission_id ?? null,
+    };
   } catch (err) {
     return {
       success: false,

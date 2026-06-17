@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import { Puzzle, Star, Brain, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/common";
 import VictoryModal from "@/components/shared/VictoryModal";
+import type { QuizReviewData, LogicPuzzleReviewItem } from "@/types/activity-review.types";
 
 interface OptionItem {
   label: string;
@@ -69,8 +70,13 @@ export default function LogicPuzzlesPage({
   const [correctCount, setCorrectCount] = useState(0);
   const [xpReward, setXpReward] = useState<number>(150);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const answersRef = useRef<LogicPuzzleReviewItem[]>([]);
+  const gameStartedAtRef = useRef<number>(0);
+  const [finalGameStartedAt, setFinalGameStartedAt] = useState<number>(0);
+  const [finalReviewItems, setFinalReviewItems] = useState<LogicPuzzleReviewItem[]>([]);
 
   useEffect(() => {
+    gameStartedAtRef.current = Date.now();
     getActivityXp("logic-puzzles").then(setXpReward);
   }, []);
 
@@ -97,6 +103,8 @@ export default function LogicPuzzlesPage({
   };
 
   const handleFinish = () => {
+    setFinalGameStartedAt(gameStartedAtRef.current);
+    setFinalReviewItems(answersRef.current);
     setChallengeCompleted(true);
   };
 
@@ -109,6 +117,10 @@ export default function LogicPuzzlesPage({
   };
 
   const handleRestart = () => {
+    answersRef.current = [];
+    gameStartedAtRef.current = Date.now();
+    setFinalGameStartedAt(0);
+    setFinalReviewItems([]);
     setCurrentPuzzle(0);
     setSelected(null);
     setCorrectCount(0);
@@ -180,6 +192,14 @@ export default function LogicPuzzlesPage({
                       if (option.correct) {
                         setCorrectCount((prev) => prev + 1);
                       }
+                      // Record this selection for the review snapshot
+                      answersRef.current.push({
+                        sequence: rawPuzzle.sequence,
+                        kid_answer: option.label,
+                        correct_answer: rawPuzzle.options.find((o) => o.correct)?.label ?? "",
+                        is_correct: option.correct,
+                        hint: rawPuzzle.hint,
+                      });
                     }
                   }}
                   disabled={selected !== null}
@@ -233,6 +253,14 @@ export default function LogicPuzzlesPage({
         scoreDescription={`Super brain logic! You completed "${puzzleTitle}".`}
         rewardsDescription={`${correctCount}/${safePuzzles.length} Correct Answers`}
         assignmentId={assignmentId}
+        gameStartedAt={finalGameStartedAt}
+        reviewData={{
+          type: "logic-puzzles",
+          title: puzzleTitle,
+          items: finalReviewItems,
+          total_questions: safePuzzles.length,
+          correct_count: correctCount,
+        } satisfies QuizReviewData}
       />
     </div>
   );

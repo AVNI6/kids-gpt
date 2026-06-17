@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Plus_Jakarta_Sans, Lexend } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -46,9 +45,8 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <Script
+        <script
           id="theme-init"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               try {
@@ -62,11 +60,11 @@ export default function RootLayout({
                   document.documentElement.style.colorScheme = 'light';
                 } else if (theme === 'system') {
                   if (systemDark) {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.style.colorScheme = 'dark';
+                     document.documentElement.classList.add('dark');
+                     document.documentElement.style.colorScheme = 'dark';
                   } else {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.style.colorScheme = 'light';
+                     document.documentElement.classList.remove('dark');
+                     document.documentElement.style.colorScheme = 'light';
                   }
                 }
               } catch (_) {}

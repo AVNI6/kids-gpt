@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect, useState } from "react";
 import { useMatchGame } from "./hooks/useMatchGame";
 import { MatchBoard } from "./components/MatchBoard";
 import VictoryModal from "@/components/shared/VictoryModal";
@@ -10,6 +11,7 @@ import { ArrowLeft, RotateCcw, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { toast } from "sonner";
+import type { MatchFollowingReviewData } from "@/types/activity-review.types";
 
 interface MatchFollowingPageProps {
   matchTitle?: string;
@@ -28,6 +30,22 @@ export default function MatchFollowingPage({
   pairs = defaultPairs,
 }: MatchFollowingPageProps) {
   const game = useMatchGame({ pairs });
+  const gameStartedAtRef = useRef<number>(0);
+  const [finalGameStartedAt, setFinalGameStartedAt] = useState<number>(0);
+
+  useEffect(() => {
+    if (!game.hasSubmitted && !game.showScorecard) {
+      gameStartedAtRef.current = Date.now();
+    }
+  }, [game.hasSubmitted, game.showScorecard]);
+
+  useEffect(() => {
+    if (game.showScorecard) {
+      setFinalGameStartedAt(gameStartedAtRef.current);
+    } else {
+      setFinalGameStartedAt(0);
+    }
+  }, [game.showScorecard]);
 
   return (
     <div className="h-full bg-background overflow-hidden flex flex-col relative min-h-screen">
@@ -150,6 +168,23 @@ export default function MatchFollowingPage({
             : "You've successfully finished pairing! Let's check your results and grab your rewards."
         }
         rewardsDescription={`${game.correctCount}/${pairs.length} Correct Connections`}
+        gameStartedAt={finalGameStartedAt}
+        reviewData={{
+          type: "match-following",
+          title: matchTitle,
+          connections: pairs.map((item) => {
+            const matchedRightId = game.connections[item.id];
+            const userMatchedRightItem = game.rightOrder.find((r) => r.id === matchedRightId);
+            return {
+              left_text: item.leftText,
+              right_text: item.rightText,
+              kid_right_text: userMatchedRightItem ? userMatchedRightItem.rightText : null,
+              is_correct: matchedRightId === item.id,
+            };
+          }),
+          total_pairs: pairs.length,
+          correct_count: game.correctCount,
+        } satisfies MatchFollowingReviewData}
       >
         <Button
           onClick={game.toggleShowAnswers}

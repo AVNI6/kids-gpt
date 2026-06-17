@@ -11,7 +11,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, FolderOpen, Megaphone, Users } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -57,6 +58,7 @@ export default function TeacherClassroomWorkspaceClient({
   initialAnnouncements,
   initialStudents,
 }: Props) {
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Tab is driven directly by URL query parameter (href) or defaults to assignments
@@ -205,7 +207,13 @@ export default function TeacherClassroomWorkspaceClient({
   };
 
   return (
-    <div className="mx-auto w-full flex flex-col gap-6">
+    <Tabs
+      value={activeTab}
+      onValueChange={(val) =>
+        router.push(`/dashboard/teacher/classrooms/${classroomId}?tab=${val}`, { scroll: false })
+      }
+      className="mx-auto w-full flex flex-col gap-6"
+    >
       {/* 1. Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -229,8 +237,8 @@ export default function TeacherClassroomWorkspaceClient({
           </div>
         </div>
 
-        {/* Tab Controls (driven by Next.js router query param/href) */}
-        <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-slate-950/40 p-1.5 rounded-full border border-slate-200/50 dark:border-slate-850 self-start sm:self-auto overflow-x-auto">
+        {/* Tab Controls (driven by Next.js router query param/href via TabsList) */}
+        <TabsList className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-slate-950/40 p-1.5 rounded-full border border-slate-200/50 dark:border-slate-850 self-start sm:self-auto overflow-x-auto h-auto">
           {[
             { id: "assignments", label: "Assignments", icon: BookOpen },
             { id: "resources", label: "Resources", icon: FolderOpen },
@@ -238,27 +246,22 @@ export default function TeacherClassroomWorkspaceClient({
             { id: "students", label: "Students", icon: Users },
           ].map((tab) => {
             const Icon = tab.icon;
-            const active = activeTab === tab.id;
             return (
-              <Link
+              <TabsTrigger
                 key={tab.id}
-                href={`/dashboard/teacher/classrooms/${classroomId}?tab=${tab.id}`}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer select-none shrink-0 ${
-                  active
-                    ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                }`}
+                value={tab.id}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer select-none shrink-0 border-0 bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 data-active:bg-white dark:data-active:bg-slate-900 data-active:text-indigo-600 dark:data-active:text-indigo-400 data-active:shadow-sm"
               >
                 <Icon className="h-3.5 w-3.5" />
                 <span>{tab.label}</span>
-              </Link>
+              </TabsTrigger>
             );
           })}
-        </div>
+        </TabsList>
       </div>
 
       {/* 2. Workspace Tabs Viewports */}
-      {activeTab === "assignments" && (
+      <TabsContent value="assignments" className="mt-0 outline-none">
         <ClassroomAssignmentsTab
           classroomId={classroomId}
           assignments={assignments}
@@ -267,29 +270,29 @@ export default function TeacherClassroomWorkspaceClient({
           handleDeleteAssignment={handleDeleteAssignment}
           handleOpenGrading={handleOpenGrading}
         />
-      )}
+      </TabsContent>
 
-      {activeTab === "resources" && (
+      <TabsContent value="resources" className="mt-0 outline-none">
         <ClassroomResourcesTab
           classroomId={classroomId}
           resources={resources}
           setResources={setResources}
           handleDeleteResource={handleDeleteResource}
         />
-      )}
+      </TabsContent>
 
-      {activeTab === "announcements" && (
+      <TabsContent value="announcements" className="mt-0 outline-none">
         <ClassroomAnnouncementsTab
           classroomId={classroomId}
           announcements={announcements}
           setAnnouncements={setAnnouncements}
           handleDeleteAnnouncement={handleDeleteAnnouncement}
         />
-      )}
+      </TabsContent>
 
-      {activeTab === "students" && (
+      <TabsContent value="students" className="mt-0 outline-none">
         <ClassroomStudentsTab students={students} getInitials={getInitials} />
-      )}
+      </TabsContent>
 
       {/* 3. Grading dialog */}
       <ClassroomGradingDialog
@@ -321,6 +324,6 @@ export default function TeacherClassroomWorkspaceClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </Tabs>
   );
 }

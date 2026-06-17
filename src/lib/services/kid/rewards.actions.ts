@@ -38,11 +38,14 @@ export async function processActivityCompletion({
   error?: string;
   message?: string;
   xpEarned?: number;
+  rewardId?: string | null;
 }> {
   try {
     const supabase = await createClient();
 
-    function isSuccessfulRpcResult(data: unknown): data is { success: true; xp_earned?: number } {
+    function isSuccessfulRpcResult(
+      data: unknown
+    ): data is { success: true; xp_earned?: number; reward_id?: string | null } {
       return (
         typeof data === "object" &&
         data !== null &&
@@ -107,7 +110,7 @@ export async function processActivityCompletion({
       }
 
       if (maxDbStep >= memoryMatchStepNumber) {
-        return { success: true, message: "Replay completed. Progress preserved." };
+        return { success: true, message: "Replay completed. Progress preserved.", rewardId: null };
       }
 
       // Securely query dynamic XP setting, default to 80 XP if missing
@@ -141,8 +144,8 @@ export async function processActivityCompletion({
         timezone
       );
 
-      // Execute upsert via SECURITY DEFINER RPC
-      const { error: rpcError } = await supabase.rpc("upsert_memory_reward", {
+      // Execute upsert via SECURITY DEFINER RPC — now returns the reward UUID
+      const { data: memoryRewardId, error: rpcError } = await supabase.rpc("upsert_memory_reward", {
         p_user_id: userId,
         p_world_id: memoryMatchWorldId,
         p_step_number: memoryMatchStepNumber,
@@ -169,14 +172,8 @@ export async function processActivityCompletion({
         return { success: false, error: profileUpdateError.message };
       }
 
-      const { data: latestReward } = await supabase
-        .from("rewards")
-        .select("id")
-        .eq("user_id", userId)
-        .like("description", `%memory-match-w${memoryMatchWorldId}-s%`)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // memoryRewardId is the uuid returned directly by the updated RPC
+      const resolvedRewardId = memoryRewardId as string | null;
 
       try {
         const { data: prof } = await supabase
@@ -191,7 +188,7 @@ export async function processActivityCompletion({
           "quiz_completed",
           "Activity Completed",
           `${kidName} completed Memory Match - World ${memoryMatchWorldId}, Step ${memoryMatchStepNumber} (Score: ${score || "N/A"})`,
-          latestReward ? { reward_id: latestReward.id } : {}
+          resolvedRewardId ? { reward_id: resolvedRewardId } : {}
         );
       } catch (e) {
         console.warn("Failed to trigger parent notification for Memory Match:", e);
@@ -199,7 +196,7 @@ export async function processActivityCompletion({
 
       revalidatePath("/dashboard/kid");
       revalidatePath("/dashboard/parent");
-      return { success: true, xpEarned: actualXp };
+      return { success: true, xpEarned: actualXp, rewardId: resolvedRewardId };
     }
 
     // =========================================================================
@@ -335,7 +332,7 @@ export async function processActivityCompletion({
 
       revalidatePath("/dashboard/kid");
       revalidatePath("/dashboard/parent");
-      return { success: true, xpEarned: actualXp };
+      return { success: true, xpEarned: actualXp, rewardId: insertedReward?.id ?? null };
     }
 
     // =========================================================================
@@ -351,6 +348,9 @@ export async function processActivityCompletion({
     });
 
     if (!rpcError && rpcData && isSuccessfulRpcResult(rpcData)) {
+      // reward_id is now returned directly by the updated RPC
+      const rpcRewardId = rpcData.reward_id ?? null;
+
       try {
         const { data: prof } = await supabase
           .from("profile")
@@ -359,20 +359,12 @@ export async function processActivityCompletion({
           .maybeSingle();
         const kidName = prof?.first_name || "Your child";
 
-        const { data: latestReward } = await supabase
-          .from("rewards")
-          .select("id")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
         await createParentNotification(
           userId,
           "quiz_completed",
           "Activity Completed",
           `${kidName} completed ${activityTitle}${score ? ` (Score: ${score})` : ""}`,
-          latestReward ? { reward_id: latestReward.id } : {}
+          rpcRewardId ? { reward_id: rpcRewardId } : {}
         );
       } catch (e) {
         console.warn("Failed to trigger parent notification in RPC path:", e);
@@ -384,7 +376,7 @@ export async function processActivityCompletion({
         rpcData && typeof rpcData === "object" && "xp_earned" in rpcData
           ? (rpcData as { xp_earned?: number }).xp_earned
           : undefined;
-      return { success: true, xpEarned };
+      return { success: true, xpEarned, rewardId: rpcRewardId };
     }
 
     if (rpcError) {
@@ -538,7 +530,7 @@ export async function processActivityCompletion({
     revalidatePath("/dashboard/kid");
     revalidatePath("/dashboard/parent");
 
-    return { success: true, xpEarned: actualXp };
+    return { success: true, xpEarned: actualXp, rewardId: insertedReward?.id ?? null };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : "An unexpected error occurred.";
     return { success: false, error: errorMsg };

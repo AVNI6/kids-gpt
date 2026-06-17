@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as ShadcnCalendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns";
+import { parseLocalDate, formatLocalDate } from "@/lib/utils/kid/childAge";
 import {
   Dialog,
   DialogContent,
@@ -266,17 +271,17 @@ export default function ClassroomAssignmentsTab({
                   >
                     Activity Type
                   </Label>
-                  <select
-                    id="assignActivityType"
-                    value={assignActivityType}
-                    onChange={(e) => setAssignActivityType(e.target.value)}
-                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  >
-                    <option value="quizzes">Quiz</option>
-                    <option value="flashcards">Flashcards</option>
-                    <option value="math-challenges">Math Challenge</option>
-                    <option value="word-scrambles">Spelling Scramble</option>
-                  </select>
+                  <Select value={assignActivityType} onValueChange={(val) => setAssignActivityType(val || "")}>
+                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                      <SelectValue placeholder="Select activity type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="quizzes">Quiz</SelectItem>
+                      <SelectItem value="flashcards">Flashcards</SelectItem>
+                      <SelectItem value="math-challenges">Math Challenge</SelectItem>
+                      <SelectItem value="word-scrambles">Spelling Scramble</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label
@@ -322,21 +327,21 @@ export default function ClassroomAssignmentsTab({
                   >
                     Difficulty
                   </Label>
-                  <select
-                    id="assignDifficulty"
-                    value={assignDifficulty}
-                    onChange={(e) => setAssignDifficulty(e.target.value)}
-                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  >
-                    <option value="Grade 1">Grade 1</option>
-                    <option value="Grade 2">Grade 2</option>
-                    <option value="Grade 3">Grade 3</option>
-                    <option value="Grade 4">Grade 4</option>
-                    <option value="Grade 5">Grade 5</option>
-                    <option value="Grade 6">Grade 6</option>
-                    <option value="Grade 7">Grade 7</option>
-                    <option value="Grade 8">Grade 8</option>
-                  </select>
+                  <Select value={assignDifficulty} onValueChange={(val) => setAssignDifficulty(val || "")}>
+                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                      <SelectValue placeholder="Select difficulty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Grade 1">Grade 1</SelectItem>
+                      <SelectItem value="Grade 2">Grade 2</SelectItem>
+                      <SelectItem value="Grade 3">Grade 3</SelectItem>
+                      <SelectItem value="Grade 4">Grade 4</SelectItem>
+                      <SelectItem value="Grade 5">Grade 5</SelectItem>
+                      <SelectItem value="Grade 6">Grade 6</SelectItem>
+                      <SelectItem value="Grade 7">Grade 7</SelectItem>
+                      <SelectItem value="Grade 8">Grade 8</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -347,13 +352,28 @@ export default function ClassroomAssignmentsTab({
                 >
                   Due Date
                 </Label>
-                <Input
-                  id="assignDueDate"
-                  type="date"
-                  value={assignDueDate}
-                  onChange={(e) => setAssignDueDate(e.target.value)}
-                  className="rounded-xl h-11 text-sm font-semibold"
-                />
+                <Popover>
+                  <PopoverTrigger
+                    type="button"
+                    id="assignDueDate"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 text-left justify-start flex items-center gap-2 hover:bg-background/90"
+                  >
+                    <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                    {assignDueDate ? (
+                      format(parseLocalDate(assignDueDate), "PPP")
+                    ) : (
+                      <span className="text-muted-foreground/50">Select due date</span>
+                    )}
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                    <ShadcnCalendar
+                      mode="single"
+                      selected={assignDueDate ? parseLocalDate(assignDueDate) : undefined}
+                      onSelect={(d) => setAssignDueDate(d ? formatLocalDate(d) : "")}
+                      disabled={{ before: new Date() }}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 -mx-6 -mb-6 flex gap-2 rounded-b-[32px]">
@@ -651,21 +671,24 @@ export default function ClassroomAssignmentsTab({
                 >
                   Activity Type
                 </Label>
-                <select
-                  id="editActivityType"
+                <Select
                   value={editActivityType}
-                  onChange={(e) => setEditActivityType(e.target.value)}
+                  onValueChange={(val) => setEditActivityType(val || "")}
                   disabled={
                     editingAssignment?.status === "PUBLISHED" ||
                     editingAssignment?.status === "CLOSED"
                   }
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50"
                 >
-                  <option value="quizzes">Quiz</option>
-                  <option value="flashcards">Flashcards</option>
-                  <option value="math-challenges">Math Challenge</option>
-                  <option value="word-scrambles">Spelling Scramble</option>
-                </select>
+                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50">
+                    <SelectValue placeholder="Select activity type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="quizzes">Quiz</SelectItem>
+                    <SelectItem value="flashcards">Flashcards</SelectItem>
+                    <SelectItem value="math-challenges">Math Challenge</SelectItem>
+                    <SelectItem value="word-scrambles">Spelling Scramble</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label
@@ -719,25 +742,28 @@ export default function ClassroomAssignmentsTab({
                 >
                   Difficulty
                 </Label>
-                <select
-                  id="editDifficulty"
+                <Select
                   value={editDifficulty}
-                  onChange={(e) => setEditDifficulty(e.target.value)}
+                  onValueChange={(val) => setEditDifficulty(val || "")}
                   disabled={
                     editingAssignment?.status === "PUBLISHED" ||
                     editingAssignment?.status === "CLOSED"
                   }
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50"
                 >
-                  <option value="Grade 1">Grade 1</option>
-                  <option value="Grade 2">Grade 2</option>
-                  <option value="Grade 3">Grade 3</option>
-                  <option value="Grade 4">Grade 4</option>
-                  <option value="Grade 5">Grade 5</option>
-                  <option value="Grade 6">Grade 6</option>
-                  <option value="Grade 7">Grade 7</option>
-                  <option value="Grade 8">Grade 8</option>
-                </select>
+                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50">
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Grade 1">Grade 1</SelectItem>
+                    <SelectItem value="Grade 2">Grade 2</SelectItem>
+                    <SelectItem value="Grade 3">Grade 3</SelectItem>
+                    <SelectItem value="Grade 4">Grade 4</SelectItem>
+                    <SelectItem value="Grade 5">Grade 5</SelectItem>
+                    <SelectItem value="Grade 6">Grade 6</SelectItem>
+                    <SelectItem value="Grade 7">Grade 7</SelectItem>
+                    <SelectItem value="Grade 8">Grade 8</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -748,13 +774,28 @@ export default function ClassroomAssignmentsTab({
               >
                 Due Date
               </Label>
-              <Input
-                id="editDueDate"
-                type="date"
-                value={editDueDate}
-                onChange={(e) => setEditDueDate(e.target.value)}
-                className="rounded-xl h-11 text-sm font-semibold"
-              />
+              <Popover>
+                <PopoverTrigger
+                  type="button"
+                  id="editDueDate"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 text-left justify-start flex items-center gap-2 hover:bg-background/90"
+                >
+                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                  {editDueDate ? (
+                    format(parseLocalDate(editDueDate), "PPP")
+                  ) : (
+                    <span className="text-muted-foreground/50">Select due date</span>
+                  )}
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                  <ShadcnCalendar
+                    mode="single"
+                    selected={editDueDate ? parseLocalDate(editDueDate) : undefined}
+                    onSelect={(d) => setEditDueDate(d ? formatLocalDate(d) : "")}
+                    disabled={{ before: new Date() }}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 -mx-6 -mb-6 flex gap-2 rounded-b-[32px]">

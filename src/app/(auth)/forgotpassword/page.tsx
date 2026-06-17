@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { useState } from "react";
 import Logo from "@/components/shared/logo/Logo";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const supabase = createClient();
 
@@ -78,19 +80,19 @@ export default function ForgotPasswordPage() {
             {/* Form */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
+                <Label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
                   Enter Your Email
-                </label>
+                </Label>
 
                 <div className="relative">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground/50 w-5 h-5" />
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground/50 w-5 h-5 z-10" />
 
-                  <input
+                  <Input
                     type="email"
                     {...register("email", { required: true })}
                     placeholder="student@learning.com"
                     required
-                    className="w-full h-14 pl-14 pr-5 bg-muted/30 border-2 border-border focus:border-sky-500 focus:ring-0 rounded-2xl text-base outline-none transition-all text-foreground"
+                    className="w-full h-14 pl-14 pr-5 bg-muted/30 border-2 border-border focus-visible:border-sky-500 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-2xl text-base outline-none transition-all text-foreground"
                   />
                 </div>
               </div>

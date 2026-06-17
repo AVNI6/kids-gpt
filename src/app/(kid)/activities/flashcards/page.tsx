@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { RefreshCcw, CheckCircle2, RotateCcw, Sparkles, Rocket, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/common";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import VictoryModal from "@/components/shared/VictoryModal";
+import type { FlashcardReviewData } from "@/types/activity-review.types";
 
 interface Flashcard {
   question: string;
@@ -68,8 +69,11 @@ export default function FlashcardsPage({
   const [reviewIds, setReviewIds] = useSessionStorageState<number[]>(`${storageKey}-review`, []);
   const [deckCompleted, setDeckCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(100);
+  const gameStartedAtRef = useRef<number>(0);
+  const [finalGameStartedAt, setFinalGameStartedAt] = useState<number>(0);
 
   useEffect(() => {
+    gameStartedAtRef.current = Date.now();
     getActivityXp("flashcards").then(setXpReward);
   }, []);
 
@@ -81,6 +85,7 @@ export default function FlashcardsPage({
       setCurrentCard((prev) => prev + 1);
       setFlipped(false);
     } else {
+      setFinalGameStartedAt(gameStartedAtRef.current);
       setDeckCompleted(true);
     }
   };
@@ -107,6 +112,8 @@ export default function FlashcardsPage({
       sessionStorage.removeItem(`${storageKey}-mastered`);
       sessionStorage.removeItem(`${storageKey}-review`);
     }
+    gameStartedAtRef.current = Date.now();
+    setFinalGameStartedAt(0);
     setCurrentCard(0);
     setFlipped(false);
     setMasteredIds([]);
@@ -258,6 +265,20 @@ export default function FlashcardsPage({
         scoreDescription={`Incredible learning speed! You finished studying the deck "${deckTitle}".`}
         rewardsDescription={`${masteredIds.length}/${flashcards.length} Cards Mastered`}
         assignmentId={assignmentId}
+        gameStartedAt={finalGameStartedAt}
+        reviewData={{
+          type: "flashcards",
+          title: deckTitle,
+          total_cards: flashcards.length,
+          mastered: masteredIds.map((i) => ({
+            question: flashcards[i]?.question ?? "",
+            answer: flashcards[i]?.answer ?? "",
+          })),
+          review: reviewIds.map((i) => ({
+            question: flashcards[i]?.question ?? "",
+            answer: flashcards[i]?.answer ?? "",
+          })),
+        } satisfies FlashcardReviewData}
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-currentCard`);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Trophy, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
@@ -14,6 +14,7 @@ import { APP_ROUTES } from "@/lib/constants/common";
 
 import { type MathChallengeItem } from "@/types/activities.type";
 import VictoryModal from "@/components/shared/VictoryModal";
+import type { MathChallengeReviewData, MathChallengeReviewItem } from "@/types/activity-review.types";
 
 interface MathChallengesPageProps {
   challengeTitle?: string;
@@ -53,8 +54,13 @@ export default function MathChallengesPage({
   const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(130);
+  const resultsRef = useRef<MathChallengeReviewItem[]>([]);
+  const gameStartedAtRef = useRef<number>(0);
+  const [finalGameStartedAt, setFinalGameStartedAt] = useState<number>(0);
+  const [finalReviewItems, setFinalReviewItems] = useState<MathChallengeReviewItem[]>([]);
 
   useEffect(() => {
+    gameStartedAtRef.current = Date.now();
     getActivityXp("math-challenges").then(setXpReward);
   }, []);
   const safeEquations = equations.length > 0 ? equations : defaultEquations;
@@ -64,6 +70,8 @@ export default function MathChallengesPage({
 
   const handleNext = () => {
     if (currentIndex === safeEquations.length - 1) {
+      setFinalGameStartedAt(gameStartedAtRef.current);
+      setFinalReviewItems(resultsRef.current);
       setChallengeCompleted(true);
     } else {
       setCurrentIndex((prev) => prev + 1);
@@ -74,9 +82,18 @@ export default function MathChallengesPage({
   const handleOptionClick = (opt: number) => {
     if (selected === null) {
       setSelected(opt);
-      if (opt === eq.answer) {
+      const correct = opt === eq.answer;
+      if (correct) {
         setCorrectCount((prev) => prev + 1);
       }
+      // Capture this equation's result for the review snapshot
+      resultsRef.current.push({
+        question: eq.question,
+        kid_answer: opt,
+        correct_answer: eq.answer,
+        options: eq.options,
+        is_correct: correct,
+      });
     }
   };
 
@@ -94,6 +111,10 @@ export default function MathChallengesPage({
       sessionStorage.removeItem(`${storageKey}-selected`);
       sessionStorage.removeItem(`${storageKey}-correct`);
     }
+    resultsRef.current = [];
+    gameStartedAtRef.current = Date.now();
+    setFinalGameStartedAt(0);
+    setFinalReviewItems([]);
     setCurrentIndex(0);
     setSelected(null);
     setCorrectCount(0);
@@ -202,6 +223,14 @@ export default function MathChallengesPage({
         scoreDescription={`Super math solving! You finished the challenge "${challengeTitle}".`}
         rewardsDescription={`${correctCount}/${safeEquations.length} Correct Answers`}
         assignmentId={assignmentId}
+        gameStartedAt={finalGameStartedAt}
+        reviewData={{
+          type: "math-challenges",
+          title: challengeTitle,
+          items: finalReviewItems,
+          total_questions: safeEquations.length,
+          correct_count: correctCount,
+        } satisfies MathChallengeReviewData}
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-current`);

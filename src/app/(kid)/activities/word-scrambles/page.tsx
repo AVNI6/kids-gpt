@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Type, Sparkles, CheckCircle2, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
@@ -10,9 +10,11 @@ import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { APP_ROUTES } from "@/lib/constants/common";
 import VictoryModal from "@/components/shared/VictoryModal";
 import { type WordScrambleItem } from "@/types/activities.type";
+import type { WordScrambleReviewData, WordScrambleReviewItem } from "@/types/activity-review.types";
 
 interface WordScramblesPageProps {
   scrambleTitle?: string;
@@ -50,8 +52,13 @@ export default function WordScramblesPage({
   const [correctCount, setCorrectCount] = useSessionStorageState(`${storageKey}-correct`, 0);
   const [scrambleCompleted, setScrambleCompleted] = useState(false);
   const [xpReward, setXpReward] = useState<number>(140);
+  const resultsRef = useRef<WordScrambleReviewItem[]>([]);
+  const gameStartedAtRef = useRef<number>(0);
+  const [finalGameStartedAt, setFinalGameStartedAt] = useState<number>(0);
+  const [finalReviewItems, setFinalReviewItems] = useState<WordScrambleReviewItem[]>([]);
 
   useEffect(() => {
+    gameStartedAtRef.current = Date.now();
     getActivityXp("word-scrambles").then(setXpReward);
   }, []);
 
@@ -63,15 +70,26 @@ export default function WordScramblesPage({
 
   const handleCheck = () => {
     if (input.trim()) {
-      if (isCorrect) {
+      const correct = isCorrect;
+      if (correct) {
         setCorrectCount((prev) => prev + 1);
       }
+      // Capture this word's result for the review snapshot
+      resultsRef.current.push({
+        scrambled: word.scrambled,
+        kid_input: input.trim(),
+        correct_answer: word.answer,
+        is_correct: correct,
+        hint: word.hint,
+      });
       setShowResult(true);
     }
   };
 
   const handleNext = () => {
     if (currentWord === safeWords.length - 1) {
+      setFinalGameStartedAt(gameStartedAtRef.current);
+      setFinalReviewItems(resultsRef.current);
       setScrambleCompleted(true);
     } else {
       setCurrentWord((prev) => prev + 1);
@@ -95,6 +113,10 @@ export default function WordScramblesPage({
       sessionStorage.removeItem(`${storageKey}-showResult`);
       sessionStorage.removeItem(`${storageKey}-correct`);
     }
+    resultsRef.current = [];
+    gameStartedAtRef.current = Date.now();
+    setFinalGameStartedAt(0);
+    setFinalReviewItems([]);
     setCurrentWord(0);
     setInput("");
     setShowResult(false);
@@ -153,13 +175,13 @@ export default function WordScramblesPage({
             </div>
 
             <div className="flex flex-col items-center shrink-0">
-              <input
+              <Input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value.toUpperCase())}
                 disabled={showResult}
                 placeholder="Type answer..."
-                className="w-full max-w-xs text-center text-2xl font-black uppercase tracking-widest p-3 rounded-2xl border-4 border-border bg-background focus:border-pink-500 focus:outline-none shadow-inner text-foreground transition-colors"
+                className="w-full max-w-xs text-center text-2xl font-black uppercase tracking-widest h-14 rounded-2xl border-4 border-border bg-background focus-visible:border-pink-500 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-inner text-foreground transition-colors"
                 maxLength={word.answer.length}
               />
             </div>
@@ -210,6 +232,14 @@ export default function WordScramblesPage({
         scoreDescription={`Spectacular spelling, word wizard! You finished the scramble "${scrambleTitle}".`}
         rewardsDescription={`${correctCount}/${safeWords.length} Correct Words`}
         assignmentId={assignmentId}
+        gameStartedAt={finalGameStartedAt}
+        reviewData={{
+          type: "word-scrambles",
+          title: scrambleTitle,
+          items: finalReviewItems,
+          total_words: safeWords.length,
+          correct_count: correctCount,
+        } satisfies WordScrambleReviewData}
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-current`);
