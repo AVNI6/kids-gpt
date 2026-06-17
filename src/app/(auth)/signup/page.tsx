@@ -95,15 +95,30 @@ function SignupForm() {
     setSignupState("loading");
 
     const siteUrl = window.location.origin;
+    const signUpOptions: {
+      data: {
+        fullname: string;
+        invite_token?: string;
+        role?: string;
+      };
+      emailRedirectTo: string;
+    } = {
+      data: {
+        fullname: e.name,
+      },
+      emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
+    };
+
+    if (inviteToken) {
+      signUpOptions.data.invite_token = inviteToken;
+      signUpOptions.data.role = "kid";
+      signUpOptions.emailRedirectTo = `${siteUrl}/auth/callback?next=/onboarding/kid`;
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email: e.email,
       password: e.password,
-      options: {
-        data: {
-          fullname: e.name,
-        },
-        emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
-      },
+      options: signUpOptions,
     });
 
     if (error) {
@@ -120,7 +135,7 @@ function SignupForm() {
       });
 
       if (data.session) {
-        router.push(`/onboarding`);
+        router.push(inviteToken ? `/onboarding/kid` : `/onboarding`);
         return;
       }
 

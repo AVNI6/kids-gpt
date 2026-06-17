@@ -79,8 +79,13 @@ function LoginPageContent() {
           const isOnboarded = Boolean(profileData?.is_onboarded);
 
           if (!isOnboarded) {
-            // Always redirect to the root onboarding role selection page if not onboarded yet
-            window.location.assign("/onboarding");
+            // Check if invited kid
+            if (data.user?.user_metadata?.invite_token) {
+              window.location.assign("/onboarding/kid");
+            } else {
+              // Always redirect to the root onboarding role selection page if not onboarded yet
+              window.location.assign("/onboarding");
+            }
             return;
           }
         }
