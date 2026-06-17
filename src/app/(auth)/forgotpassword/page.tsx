@@ -10,6 +10,7 @@ import { useState } from "react";
 import Logo from "@/components/shared/logo/Logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { checkIfEmailExists } from "@/lib/services/shared/profile.actions";
 
 const supabase = createClient();
 
@@ -23,23 +24,39 @@ export default function ForgotPasswordPage() {
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     setIsSubmitting(true);
-    const { data, error } = await supabase.auth.resetPasswordForEmail(e.email, {
-      redirectTo: `${window.location.origin}/auth/reset-callback`,
-    });
-    if (error) {
-      toast.error("Reset link failed to send", {
-        description: error.message,
-      });
-      setIsSubmitting(false);
-      return;
-    }
-    if (data) {
-      toast.success("Reset link sent!", {
-        description: "Please check your email for instructions.",
-      });
-    }
+    
+    try {
+      const exists = await checkIfEmailExists(e.email);
+      if (!exists) {
+        toast.error("Account does not exist.");
+        setIsSubmitting(false);
+        return;
+      }
 
-    setIsSubmitting(false);
+      const { data, error } = await supabase.auth.resetPasswordForEmail(e.email, {
+        redirectTo: `${window.location.origin}/auth/reset-callback`,
+      });
+
+      if (error) {
+        toast.error("Reset link failed to send", {
+          description: error.message,
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (data) {
+        toast.success("Reset link sent!", {
+          description: "Please check your email for instructions.",
+        });
+      }
+    } catch (err) {
+      toast.error("An error occurred", {
+        description: err instanceof Error ? err.message : "Failed to reset password.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
