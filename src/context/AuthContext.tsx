@@ -14,6 +14,12 @@ export interface AuthContextType {
   refreshProfile: () => Promise<void>;
 }
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+function clearKeepSignedInCookie() {
+  if (typeof document !== "undefined") {
+    document.cookie = "keep_signed_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure";
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -179,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserProfile(null);
       setUserRole(null);
       setIsUserLoggedIn(false);
+      clearKeepSignedInCookie();
       await supabase.auth.signOut();
       window.location.href = "/";
     } catch (error) {

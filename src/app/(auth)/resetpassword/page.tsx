@@ -12,6 +12,7 @@ import { APP_ROUTES } from "@/lib/constants/common";
 import Logo from "@/components/shared/logo/Logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 const supabase = createClient();
 
@@ -213,14 +214,15 @@ export default function ResetPasswordPage() {
                 )}
               </div>
 
-              <button
+              <Button
                 type="submit"
-                disabled={isSubmitting || !linkChecked || !!linkError}
+                loading={isSubmitting}
+                disabled={!linkChecked || !!linkError}
                 className="w-full h-14 bg-sky-600 hover:bg-sky-700 text-white text-base font-bold rounded-2xl shadow-lg hover:shadow-sky-500/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
               >
-                <span>{isSubmitting ? "Resetting..." : "Reset password"}</span>
+                Reset password
                 <ArrowRight className="w-5 h-5" />
-              </button>
+              </Button>
             </form>
 
             <div className="mt-6 pt-6 border-t border-border flex flex-col items-center gap-3">

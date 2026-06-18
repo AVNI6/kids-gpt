@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import ChatInterface from "@/components/shared/chat-interface/ChatInterface";
+import ChatSkeleton from "@/components/shared/chat-interface/ChatSkeleton";
 import MainLayout from "@/app/(main)/layout";
 
 type Role = "parent" | "kid" | "teacher";
@@ -16,16 +17,10 @@ export default async function ChatRoute({ params }: { params: Promise<{ role: st
   }
 
   return (
-    <Suspense
-      fallback={
-        <div className="flex-1 flex items-center justify-center bg-background text-slate-400">
-          Loading...
-        </div>
-      }
-    >
-      <MainLayout>
+    <MainLayout>
+      <Suspense fallback={<ChatSkeleton />}>
         <ChatInterface />
-      </MainLayout>
-    </Suspense>
+      </Suspense>
+    </MainLayout>
   );
 }

@@ -125,21 +125,21 @@ export default function WordScramblesPage({
   };
 
   return (
-    <div className="min-h-screen bg-pink-50 flex flex-col font-sans">
-      <header className="px-4 py-4 flex items-center justify-between bg-white border-b border-pink-100">
+    <div className="min-h-screen bg-pink-50 dark:bg-pink-950/20 flex flex-col font-sans">
+      <header className="px-4 py-4 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-pink-100 dark:border-slate-800">
         <Link
           href={APP_ROUTES.Activities}
-          className="flex items-center gap-2 font-bold text-pink-600 hover:text-pink-700"
+          className="flex items-center gap-2 font-bold text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300"
         >
           <ArrowLeft className="w-5 h-5" /> Back
         </Link>
-        <h1 className="font-black text-lg text-pink-900">{scrambleTitle}</h1>
+        <h1 className="font-black text-lg text-pink-900 dark:text-pink-300">{scrambleTitle}</h1>
         <div className="w-20" />
       </header>
 
       <main className="flex-1 p-4 max-w-2xl mx-auto w-full flex flex-col">
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex items-center justify-between text-xs text-pink-600 font-bold">
+          <div className="flex items-center justify-between text-xs text-pink-600 dark:text-pink-400 font-bold">
             <span>Word Magic Progress</span>
             <span className="flex items-center gap-1.5 rounded-full bg-card px-2.5 py-0.5 shadow-sm border border-border">
               Word {currentWord + 1} of {safeWords.length}
@@ -151,10 +151,10 @@ export default function WordScramblesPage({
           />
         </div>
 
-        <Card className="border-4 border-pink-500/20 shadow-md rounded-[1.5rem] bg-card flex-1 flex flex-col min-h-0 overflow-hidden mt-1">
+        <Card className="border-4 border-pink-500/20 dark:border-pink-500/10 shadow-md rounded-[1.5rem] bg-card flex-1 flex flex-col min-h-0 overflow-hidden mt-1">
           <CardContent className="p-4 md:p-6 text-center flex-1 flex flex-col justify-center gap-5 min-h-0 overflow-y-auto">
             <div className="mx-auto bg-pink-500/10 w-16 h-16 rounded-full flex items-center justify-center shrink-0">
-              <Type className="h-8 w-8 text-pink-600" />
+              <Type className="h-8 w-8 text-pink-600 dark:text-pink-400" />
             </div>
 
             <div className="shrink-0 space-y-1">
@@ -166,7 +166,7 @@ export default function WordScramblesPage({
                 {word.scrambled.split(/\s+/).map((letter, i) => (
                   <div
                     key={i}
-                    className="bg-background border-4 border-pink-500/30 w-12 h-16 md:w-14 md:h-18 rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-black text-pink-600 shadow-sm rotate-[-2deg] hover:rotate-[2deg] transition-transform select-none"
+                    className="bg-background border-4 border-pink-500/30 dark:border-pink-500/20 w-12 h-16 md:w-14 md:h-18 rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-black text-pink-600 dark:text-pink-400 shadow-sm rotate-[-2deg] hover:rotate-[2deg] transition-transform select-none"
                   >
                     {letter}
                   </div>
@@ -181,12 +181,12 @@ export default function WordScramblesPage({
                 onChange={(e) => setInput(e.target.value.toUpperCase())}
                 disabled={showResult}
                 placeholder="Type answer..."
-                className="w-full max-w-xs text-center text-2xl font-black uppercase tracking-widest h-14 rounded-2xl border-4 border-border bg-background focus-visible:border-pink-500 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-inner text-foreground transition-colors"
+                className="w-full max-w-xs text-center text-2xl font-black uppercase tracking-widest h-14 rounded-2xl border-4 border-border dark:border-slate-800 bg-background focus-visible:border-pink-500 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-inner text-foreground transition-colors"
                 maxLength={word.answer.length}
               />
             </div>
 
-            <p className="text-pink-500 font-bold text-sm shrink-0 bg-pink-500/5 px-4 py-2 rounded-full border border-pink-500/10 w-fit mx-auto">
+            <p className="text-pink-500 dark:text-pink-400 font-bold text-sm shrink-0 bg-pink-500/5 px-4 py-2 rounded-full border border-pink-500/10 dark:border-pink-500/20 w-fit mx-auto">
               💡 Hint: {word.hint}
             </p>
           </CardContent>

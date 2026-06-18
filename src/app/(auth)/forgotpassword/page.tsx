@@ -10,6 +10,7 @@ import { useState } from "react";
 import Logo from "@/components/shared/logo/Logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { checkIfEmailExists } from "@/lib/services/shared/profile.actions";
 
 const supabase = createClient();
@@ -114,15 +115,14 @@ export default function ForgotPasswordPage() {
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <button
+              <Button
                 type="submit"
-                disabled={isSubmitting}
+                loading={isSubmitting}
                 className="w-full h-14 bg-sky-600 hover:bg-sky-700 text-white text-base font-bold rounded-2xl shadow-lg hover:shadow-sky-500/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>{isSubmitting ? "Sending..." : "Send Reset Link"}</span>
+                Send Reset Link
                 <ArrowRight className="w-5 h-5" />
-              </button>
+              </Button>
             </form>
 
             {/* Back to Login */}

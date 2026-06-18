@@ -209,7 +209,7 @@ export default function ClassroomAssignmentsTab({
                   onChange={(e) => setAssignTitle(e.target.value)}
                   required
                   placeholder="e.g. Science Lab Project"
-                  className="rounded-xl h-11 text-sm font-semibold"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -225,7 +225,7 @@ export default function ClassroomAssignmentsTab({
                   value={assignDesc}
                   onChange={(e) => setAssignDesc(e.target.value)}
                   placeholder="Describe submission format, resources, details..."
-                  className="rounded-xl h-11 text-sm font-semibold"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -242,7 +242,7 @@ export default function ClassroomAssignmentsTab({
                     value={assignSubject}
                     onChange={(e) => setAssignSubject(e.target.value)}
                     placeholder="e.g. Physics"
-                    className="rounded-xl h-11 text-sm font-semibold"
+                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -258,7 +258,7 @@ export default function ClassroomAssignmentsTab({
                     value={assignPoints}
                     onChange={(e) => setAssignPoints(Number(e.target.value))}
                     required
-                    className="rounded-xl h-11 text-sm font-semibold"
+                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -272,7 +272,7 @@ export default function ClassroomAssignmentsTab({
                     Activity Type
                   </Label>
                   <Select value={assignActivityType} onValueChange={(val) => setAssignActivityType(val || "")}>
-                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                       <SelectValue placeholder="Select activity type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -298,7 +298,7 @@ export default function ClassroomAssignmentsTab({
                     value={assignQuestionCount}
                     onChange={(e) => setAssignQuestionCount(Number(e.target.value))}
                     required
-                    className="rounded-xl h-11 text-sm font-semibold"
+                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -317,7 +317,7 @@ export default function ClassroomAssignmentsTab({
                     onChange={(e) => setAssignTopic(e.target.value)}
                     required
                     placeholder="e.g. Addition, Dinosaurs"
-                    className="rounded-xl h-11 text-sm font-semibold"
+                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -328,7 +328,7 @@ export default function ClassroomAssignmentsTab({
                     Difficulty
                   </Label>
                   <Select value={assignDifficulty} onValueChange={(val) => setAssignDifficulty(val || "")}>
-                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                       <SelectValue placeholder="Select difficulty" />
                     </SelectTrigger>
                     <SelectContent>
@@ -356,7 +356,7 @@ export default function ClassroomAssignmentsTab({
                   <PopoverTrigger
                     type="button"
                     id="assignDueDate"
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 text-left justify-start flex items-center gap-2 hover:bg-background/90"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 text-left justify-start flex items-center gap-2 hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                     {assignDueDate ? (
@@ -387,7 +387,7 @@ export default function ClassroomAssignmentsTab({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  loading={isLoading}
                   className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
                 >
                   Save as Draft
@@ -605,7 +605,7 @@ export default function ClassroomAssignmentsTab({
                 onChange={(e) => setEditTitle(e.target.value)}
                 required
                 placeholder="e.g. Science Lab Project"
-                className="rounded-xl h-11 text-sm font-semibold"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -621,7 +621,7 @@ export default function ClassroomAssignmentsTab({
                 value={editDesc}
                 onChange={(e) => setEditDesc(e.target.value)}
                 placeholder="Describe submission format, resources, details..."
-                className="rounded-xl h-11 text-sm font-semibold"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -638,7 +638,7 @@ export default function ClassroomAssignmentsTab({
                   value={editSubject}
                   onChange={(e) => setEditSubject(e.target.value)}
                   placeholder="e.g. Physics"
-                  className="rounded-xl h-11 text-sm font-semibold"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
               <div className="space-y-1.5">
@@ -658,7 +658,7 @@ export default function ClassroomAssignmentsTab({
                     editingAssignment?.status === "PUBLISHED" ||
                     editingAssignment?.status === "CLOSED"
                   }
-                  className="rounded-xl h-11 text-sm font-semibold"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -679,7 +679,7 @@ export default function ClassroomAssignmentsTab({
                     editingAssignment?.status === "CLOSED"
                   }
                 >
-                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50">
+                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                     <SelectValue placeholder="Select activity type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -709,7 +709,7 @@ export default function ClassroomAssignmentsTab({
                     editingAssignment?.status === "PUBLISHED" ||
                     editingAssignment?.status === "CLOSED"
                   }
-                  className="rounded-xl h-11 text-sm font-semibold"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -732,7 +732,7 @@ export default function ClassroomAssignmentsTab({
                     editingAssignment?.status === "CLOSED"
                   }
                   placeholder="e.g. Addition, Dinosaurs"
-                  className="rounded-xl h-11 text-sm font-semibold"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
               <div className="space-y-1.5">
@@ -750,7 +750,7 @@ export default function ClassroomAssignmentsTab({
                     editingAssignment?.status === "CLOSED"
                   }
                 >
-                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50">
+                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
                   <SelectContent>
@@ -778,7 +778,7 @@ export default function ClassroomAssignmentsTab({
                 <PopoverTrigger
                   type="button"
                   id="editDueDate"
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 text-left justify-start flex items-center gap-2 hover:bg-background/90"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 text-left justify-start flex items-center gap-2 hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                   {editDueDate ? (
@@ -809,7 +809,7 @@ export default function ClassroomAssignmentsTab({
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading}
+                loading={isLoading}
                 className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
               >
                 Save Changes

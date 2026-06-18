@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "@/components/shared/forms/GoogleSignInButton";
 import { Mail, Lock, CheckCircle, BookOpen, Brain } from "lucide-react";
@@ -20,12 +21,22 @@ import Logo from "@/components/shared/logo/Logo";
 
 const supabase = createClient();
 
+function setKeepSignedInCookie(keep: boolean) {
+  if (typeof document !== "undefined") {
+    if (keep) {
+      document.cookie = "keep_signed_in=true; path=/; max-age=31536000; SameSite=Lax; Secure";
+    } else {
+      document.cookie = "keep_signed_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure";
+    }
+  }
+}
+
 function LoginPageContent() {
   const searchParams = useSearchParams();
   const from = searchParams?.get("from");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [keepSignedIn, setKeepSignedIn] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   type FormValue = {
     email: string;
@@ -35,14 +46,29 @@ function LoginPageContent() {
   const { register, handleSubmit, setValue } = useForm<FormValue>();
 
   useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberedEmail");
-    const savedPassword = localStorage.getItem("rememberedPassword");
-    if (savedEmail && savedPassword) {
-      setValue("email", savedEmail);
-      setValue("password", savedPassword);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setKeepSignedIn(true);
-    }
+    const initRemembered = async () => {
+      const remember = localStorage.getItem("rememberMe") === "true";
+      setRememberMe(remember);
+      if (remember) {
+        const savedEmail = localStorage.getItem("rememberedEmail");
+        if (savedEmail) {
+          setValue("email", savedEmail);
+        }
+        const savedPassword = localStorage.getItem("rememberedPassword");
+        if (savedPassword) {
+          try {
+            const { decryptPassword } = await import("@/lib/utils/crypto");
+            const decrypted = await decryptPassword(savedPassword);
+            if (decrypted) {
+              setValue("password", decrypted);
+            }
+          } catch (err) {
+            console.error("Failed to decrypt remembered password:", err);
+          }
+        }
+      }
+    };
+    initRemembered();
   }, [setValue]);
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
@@ -57,13 +83,29 @@ function LoginPageContent() {
       return;
     }
     if (data) {
-      // Save or clear credentials in localStorage based on Keep Signed In checkbox
-      if (keepSignedIn) {
+      // Save credentials if Remember Me is checked. Otherwise clear them.
+      if (rememberMe) {
+        localStorage.setItem("rememberMe", "true");
         localStorage.setItem("rememberedEmail", e.email);
-        localStorage.setItem("rememberedPassword", e.password);
+        
+        try {
+          const { encryptPassword } = await import("@/lib/utils/crypto");
+          const encrypted = await encryptPassword(e.password);
+          if (encrypted) {
+            localStorage.setItem("rememberedPassword", encrypted);
+          }
+        } catch (err) {
+          console.error("Failed to encrypt password for remember me:", err);
+        }
+        
+        // Set helper cookie for SSR middleware
+        setKeepSignedInCookie(true);
       } else {
+        localStorage.setItem("rememberMe", "false");
         localStorage.removeItem("rememberedEmail");
         localStorage.removeItem("rememberedPassword");
+        // Clear helper cookie for SSR middleware
+        setKeepSignedInCookie(false);
       }
 
       // Attempt to read profile and route first-time users to onboarding.
@@ -181,15 +223,7 @@ function LoginPageContent() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between items-center mb-2">
-                <Label className="text-sm font-semibold text-foreground">Password</Label>
-                <Link
-                  href={APP_ROUTES.ForgotPassword}
-                  className="text-sm font-semibold text-sky-500 hover:underline"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
+              <Label className="block mb-2 text-sm font-semibold text-foreground">Password</Label>
               <div className="relative">
                 <Lock
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 z-10"
@@ -210,29 +244,37 @@ function LoginPageContent() {
                   {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                 </button>
               </div>
+              <div className="flex justify-end mt-1">
+                <Link
+                  href={APP_ROUTES.ForgotPassword}
+                  className="text-sm font-semibold text-sky-500 hover:underline"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
               <Checkbox
-                id="keep-signed-in"
-                checked={keepSignedIn}
-                onCheckedChange={(checked) => setKeepSignedIn(checked === true)}
+                id="remember-me"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
               />
               <label
-                htmlFor="keep-signed-in"
+                htmlFor="remember-me"
                 className="text-sm text-muted-foreground cursor-pointer select-none"
               >
-                Keep me logged in
+                Remember Me
               </label>
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-full py-4 font-bold text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
+              loading={isSubmitting}
+              className="w-full rounded-full py-4 font-bold text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5 h-14"
             >
-              {isSubmitting ? "Signing In..." : "Sign In"}
-            </button>
+              Sign In
+            </Button>
           </form>
 
           <div className="relative my-8">
@@ -260,9 +302,44 @@ function LoginPageContent() {
   );
 }
 
+function AuthSkeleton() {
+  return (
+    <main className="min-h-screen flex flex-col px-6 font-sans bg-background relative overflow-hidden">
+      <div className="my-auto mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2 relative z-10">
+        <div className="hidden flex-col gap-8 lg:flex animate-pulse">
+          <div className="h-8 w-24 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+          <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl space-y-4">
+            <div className="h-6 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            <div className="h-4 w-64 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            <div className="h-4 w-48 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+          </div>
+        </div>
+        <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl md:p-10 space-y-6 animate-pulse w-full">
+          <div className="space-y-2">
+            <div className="h-8 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            <div className="h-4 w-48 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="h-4 w-16 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+              <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 w-16 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+              <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            </div>
+            <div className="h-4 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<AuthSkeleton />}>
       <LoginPageContent />
     </Suspense>
   );

@@ -256,16 +256,11 @@ export default function ChangePasswordModal({
             </Button>
             <Button
               type="submit"
-              disabled={!isFormValid || isPending}
+              loading={isPending}
+              disabled={!isFormValid}
               className={`rounded-2xl text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg transition-all ${buttonColor} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {isPending ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
+              Save Changes
             </Button>
           </DialogFooter>
         </form>

@@ -215,30 +215,30 @@ export default function TeacherClassroomWorkspaceClient({
       className="mx-auto w-full flex flex-col gap-6"
     >
       {/* 1. Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/dashboard/teacher/classrooms"
-            className={cn(
-              buttonVariants({ variant: "outline" }),
-              "rounded-full h-10 w-10 p-0 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 flex items-center justify-center"
-            )}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white tracking-tight flex items-center gap-2">
-              {classroom.name}
-            </h1>
-            <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
-              {classroom.subject || "General"} • {classroom.grade || "No Grade Set"} • Class Code:{" "}
-              <span className="font-bold font-mono tracking-wider">{classroom.class_code}</span>
-            </p>
-          </div>
+      <div className="flex items-center gap-4">
+        <Link
+          href="/dashboard/teacher/classrooms"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "rounded-full h-10 w-10 p-0 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 flex items-center justify-center shrink-0"
+          )}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white tracking-tight flex items-center gap-2">
+            {classroom.name}
+          </h1>
+          <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
+            {classroom.subject || "General"} • {classroom.grade || "No Grade Set"} • Class Code:{" "}
+            <span className="font-bold font-mono tracking-wider">{classroom.class_code}</span>
+          </p>
         </div>
+      </div>
 
-        {/* Tab Controls (driven by Next.js router query param/href via TabsList) */}
-        <TabsList className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-slate-950/40 p-1.5 rounded-full border border-slate-200/50 dark:border-slate-850 self-start sm:self-auto overflow-x-auto h-auto">
+      {/* Tab Controls (driven by Next.js router query param/href via TabsList) */}
+      <div className="overflow-x-auto p-1 pb-2 -mb-2 w-full">
+        <TabsList className="flex !h-auto p-1 bg-muted dark:bg-slate-900 rounded-full w-full">
           {[
             { id: "assignments", label: "Assignments", icon: BookOpen },
             { id: "resources", label: "Resources", icon: FolderOpen },
@@ -250,9 +250,9 @@ export default function TeacherClassroomWorkspaceClient({
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer select-none shrink-0 border-0 bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 data-active:bg-white dark:data-active:bg-slate-900 data-active:text-indigo-600 dark:data-active:text-indigo-400 data-active:shadow-sm"
+                className="flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0 border-none bg-transparent text-muted-foreground hover:text-foreground transition-all"
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                 <span>{tab.label}</span>
               </TabsTrigger>
             );

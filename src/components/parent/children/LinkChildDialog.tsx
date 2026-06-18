@@ -89,10 +89,10 @@ export default function LinkChildDialog({ trigger, open: controlledOpen, onOpenC
 
       <Button
         type="submit"
-        disabled={isLoading}
+        loading={isLoading}
         className="w-full rounded-xl bg-sky-600 text-white hover:bg-sky-700 h-11 font-bold cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600"
       >
-        {isLoading ? "Sending..." : "Link Child"}
+        Link Child
       </Button>
     </form>
   );

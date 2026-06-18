@@ -15,17 +15,29 @@ export const createClient = (request: NextRequest) => {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
+        const keepSignedIn = request.cookies.get("keep_signed_in")?.value === "true";
+        
         cookiesToSet.forEach(({ name, value, options }) => {
-          request.cookies.set({ name, value, ...options });
+          const cookieOptions = { ...options };
+          if (!keepSignedIn && name.startsWith("sb-")) {
+            delete cookieOptions.maxAge;
+            delete cookieOptions.expires;
+          }
+          request.cookies.set({ name, value, ...cookieOptions });
         });
 
         response = NextResponse.next({
           request,
         });
 
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set({ name, value, ...options })
-        );
+        cookiesToSet.forEach(({ name, value, options }) => {
+          const cookieOptions = { ...options };
+          if (!keepSignedIn && name.startsWith("sb-")) {
+            delete cookieOptions.maxAge;
+            delete cookieOptions.expires;
+          }
+          response.cookies.set({ name, value, ...cookieOptions });
+        });
       },
     },
   });
