@@ -39,32 +39,9 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
   const [isClaiming, setIsClaiming] = useState(false);
 
   const hasClaimedRef = useRef(false);
-  const cleanupConfettiRef = useRef<(() => void) | null>(null);
-
-  const handleClose = () => {
-    if (cleanupConfettiRef.current) {
-      cleanupConfettiRef.current();
-      cleanupConfettiRef.current = null;
-    }
-    onClose();
-  };
-
-  // Clean up confetti on unmount
-  useEffect(() => {
-    return () => {
-      if (cleanupConfettiRef.current) {
-        cleanupConfettiRef.current();
-        cleanupConfettiRef.current = null;
-      }
-    };
-  }, []);
 
   const loadNextChallenge = () => {
-    if (cleanupConfettiRef.current) {
-      cleanupConfettiRef.current();
-      cleanupConfettiRef.current = null;
-    }
-
+ 
     const types: GameType[] = ["WhoAmI", "BrainTeaser", "FactFusion", "Riddle"];
     const rolledType = types[Math.floor(Math.random() * types.length)];
     setGameType(rolledType);
@@ -94,12 +71,7 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
         loadNextChallenge();
       }, 0);
       return () => clearTimeout(timer);
-    } else {
-      if (cleanupConfettiRef.current) {
-        cleanupConfettiRef.current();
-        cleanupConfettiRef.current = null;
-      }
-    }
+    } 
   }, [isOpen]);
 
   const handleSelectString = async (ans: string) => {
@@ -110,13 +82,9 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
     const correct = ans === activeChallenge.answer;
 
     if (correct) {
-      // Trigger confetti instantly on correct answer for zero-delay response
-      cleanupConfettiRef.current = triggerConfettiSideCannons();
-
+      triggerConfettiSideCannons();
       // Call reward integration in background
       handleClaimReward();
-    } else {
-      toast.error("Oops! That's not correct. Try again next time!");
     }
   };
 
@@ -134,9 +102,6 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
 
       if (result.success) {
         const xp = result.xpEarned ?? 20;
-        toast.success("Correct Answer! 🎉", {
-          description: `+${xp} XP awarded directly to your profile!`,
-        });
       } else {
         toast.error("Could not claim XP reward.", {
           description: result.error,
@@ -153,7 +118,7 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        if (!open) handleClose();
+        if (!open) onClose();
       }}
     >
       <DialogContent className="w-[95vw] sm:w-full max-w-md p-0 gap-0 overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl z-50 flex flex-col max-h-[85vh] sm:max-h-[80vh]">
@@ -162,7 +127,7 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
           <DialogDescription>A rapid-fire daily brain boost game to earn XP.</DialogDescription>
         </DialogHeader>
 
-        <div className="w-full flex-1 min-h-0 max-h-[65vh] sm:max-h-[100vh] overflow-y-auto">
+        <div className="w-full flex-1 min-h-0 max-h-[65vh] sm:max-h-screen overflow-y-auto">
           <div className="p-4.5 sm:p-6 flex flex-col gap-3.5 sm:gap-4.5 w-full">
             {/* Game Views */}
             {gameType === "WhoAmI" && activeChallenge && (

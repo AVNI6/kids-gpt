@@ -47,7 +47,7 @@ export default function WhoAmI({ data, selectedAnswer, onSelectAnswer, showResul
             ? isCorrect
               ? "!bg-green-600 dark:!bg-green-600 !text-white !border-green-600 dark:!border-green-700 scale-[1.01]"
               : isSelected
-                ? "!bg-red-650 dark:!bg-red-650 !text-white !border-red-600 dark:!border-red-700 opacity-90"
+                ? "!bg-red-650 dark:!bg-red-650 text-black dark:text-white !border-red-600 dark:!border-red-700 opacity-90"
                 : "opacity-40 border-border"
             : isSelected
               ? "border-amber-500 bg-amber-500/10 text-amber-600"
