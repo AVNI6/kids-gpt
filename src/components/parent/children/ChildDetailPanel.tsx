@@ -392,7 +392,7 @@ export default function ChildDetailPanel({
             {/* SUB TAB 1: AI Search History */}
             <TabsContent value="history" className="mt-3">
               <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-4 sm:p-8 shadow-sm">
-                <div className="space-y-6">
+                <div className="space-y-2">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-4">
                     <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
                       <span className="text-sky-500">✨</span> Curious AI Topic Searches
@@ -414,7 +414,7 @@ export default function ChildDetailPanel({
                       </p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white/40 dark:bg-black/25 rounded-[24px] border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm">
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white/40 dark:bg-black/25 overflow-hidden">
                       {searchHistoryPagination.currentItems.map((session, index) => (
                         <div
                           key={session.id || index}
