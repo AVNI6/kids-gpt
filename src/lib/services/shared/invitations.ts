@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sendInvitationEmail } from "./email";
 import { headers } from "next/headers";
 import crypto from "crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type InvitationValidationResult = {
   success: boolean;
@@ -88,6 +89,10 @@ export async function createChildInvitation(
     .eq("user_id", parentId)
     .maybeSingle();
 
+  if (profileError) {
+    console.error("Error fetching parent profile for child invitation:", profileError.message);
+  }
+
   const parentName = parentProfile
     ? `${parentProfile.first_name || ""} ${parentProfile.last_name || ""}`.trim() || "Your Parent"
     : "Your Parent";
@@ -116,19 +121,25 @@ export async function createChildInvitation(
   }
 
   // Build the invitation link
-  let baseUrl = "http://localhost:3000";
+  let baseUrl = "";
   try {
     const headersList = await headers();
-    const host = headersList.get("host");
+    const host = headersList.get("x-forwarded-host") || headersList.get("host");
+    const proto = headersList.get("x-forwarded-proto") ||
+      (host && (host.includes("localhost") || host.includes("127.0.0.1")) ? "http" : "https");
     if (host) {
-      const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
-      baseUrl = `${protocol}://${host}`;
+      baseUrl = `${proto}://${host}`;
     }
-  } catch (e) {
-    if (process.env.NEXT_PUBLIC_APP_URL) {
-      baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-    }
+  } catch {
+    // Fallback when headers() is not available
   }
+
+  if (!baseUrl) {
+    baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
+  }
+
+  // Normalize trailing slash
+  baseUrl = baseUrl.replace(/\/$/, "");
 
   const inviteLink = `${baseUrl}/signup?invite_token=${token}`;
 
@@ -148,31 +159,68 @@ export async function createChildInvitation(
  * Used to pre-fill the parentEmail field on the kid onboarding page.
  */
 export async function getParentEmailByInviteToken(token: string): Promise<string | null> {
-  if (!token) return null;
+  const res = await getParentDetailsByInviteToken(token);
+  return res.parentEmail;
+}
 
-  const supabase = await createClient();
+export type ParentDetailsResult = {
+  parentId: string | null;
+  parentEmail: string | null;
+  error?: string;
+};
 
-  // 1. Find the invitation row by token (must be active and unexpired)
-  const { data: invite, error: inviteError } = await supabase
+/**
+ * Resolves the parent_id and parent_email for an invitation token securely from the database.
+ */
+export async function getParentDetailsByInviteToken(token: string): Promise<ParentDetailsResult> {
+  if (!token) return { parentId: null, parentEmail: null, error: "Invitation token is missing." };
+
+  const adminClient = createAdminClient();
+
+  // Find the invitation row by token (must be active and unexpired)
+  const { data: invite, error: inviteError } = await adminClient
     .from("child_invitations")
-    .select("parent_id")
+    .select("parent_id, invitee_email, expires_at, accepted_at, deleted_at")
     .eq("token", token)
-    .is("accepted_at", null)
-    .is("deleted_at", null)
-    .gt("expires_at", new Date().toISOString())
     .maybeSingle();
 
-  if (inviteError || !invite?.parent_id) return null;
+  if (inviteError) {
+    console.error("Error finding invitation:", inviteError.message);
+    return { parentId: null, parentEmail: null, error: "Failed to query invitation." };
+  }
 
-  // 2. Resolve parent's email from their profile
-  const { data: parentProfile, error: profileError } = await supabase
+  if (!invite) {
+    return { parentId: null, parentEmail: null, error: "Invitation not found." };
+  }
+
+  if (invite.accepted_at) {
+    return { parentId: null, parentEmail: null, error: "This invitation has already been accepted." };
+  }
+
+  if (invite.deleted_at) {
+    return { parentId: null, parentEmail: null, error: "This invitation is no longer active." };
+  }
+
+  const expiresAt = new Date(invite.expires_at);
+  if (expiresAt.getTime() < Date.now()) {
+    return { parentId: null, parentEmail: null, error: "This invitation link has expired." };
+  }
+
+  // Resolve parent's email from their profile
+  const { data: parentProfile, error: profileError } = await adminClient
     .from("profile")
     .select("email")
     .eq("user_id", invite.parent_id)
     .is("deleted_at", null)
     .maybeSingle();
 
-  if (profileError || !parentProfile?.email) return null;
+  if (profileError || !parentProfile?.email) {
+    console.error("Error finding parent profile:", profileError?.message);
+    return { parentId: null, parentEmail: null, error: "Parent profile not found." };
+  }
 
-  return parentProfile.email;
+  return {
+    parentId: invite.parent_id,
+    parentEmail: parentProfile.email,
+  };
 }
