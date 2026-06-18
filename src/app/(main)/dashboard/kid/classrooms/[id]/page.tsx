@@ -19,7 +19,7 @@ function WorkspaceSkeleton() {
           <Skeleton className="h-4 w-32" />
         </div>
       </div>
-      <Card className="rounded-[32px] border border-slate-200/50 dark:border-slate-800/50 bg-slate-100/50 dark:bg-slate-900/50 p-6 shadow-sm">
+      <Card className="rounde8 d-[32px] border border-slate-200/50 dark:border-slate-800/50 bg-slate-100/50 dark:bg-slate-900/50 p-6 shadow-sm">
         <CardContent className="p-0 space-y-4">
           <div className="flex gap-4 border-b pb-4">
             <Skeleton className="h-8 w-24 rounded-md" />

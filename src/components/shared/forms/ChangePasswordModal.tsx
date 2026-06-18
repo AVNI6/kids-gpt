@@ -244,7 +244,7 @@ export default function ChangePasswordModal({
             )}
           </div>
 
-          <DialogFooter className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-6 border-t border-border mt-4">
+          <DialogFooter className="-mx-6 -mb-6 p-6 rounded-b-3xl flex flex-col-reverse sm:flex-row justify-end gap-2 border-t border-border">
             <Button
               type="button"
               variant="outline"

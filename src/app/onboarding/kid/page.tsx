@@ -109,12 +109,22 @@ export default function KidOnboardingPage() {
     const inviteToken = user?.user_metadata?.invite_token;
     if (!inviteToken) return;
 
-    setIsResolvingEmail(true);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) setIsResolvingEmail(true);
+    });
+
     getParentEmailByInviteToken(inviteToken)
       .then((email) => {
-        if (email) setPrefillParentEmail(email);
+        if (active && email) setPrefillParentEmail(email);
       })
-      .finally(() => setIsResolvingEmail(false));
+      .finally(() => {
+        if (active) setIsResolvingEmail(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [user]);
 
   useEffect(() => {

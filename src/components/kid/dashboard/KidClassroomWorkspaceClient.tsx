@@ -104,13 +104,13 @@ export default function KidClassroomWorkspaceClient({
           assignments.map((a) =>
             a.id === selectedAssignment.id
               ? {
-                  ...a,
-                  submission_id: result.submission.id,
-                  submission_type: result.submission.submission_type,
-                  submission_text: result.submission.submission_text,
-                  submission_url: result.submission.submission_url,
-                  submitted_at: result.submission.submitted_at,
-                }
+                ...a,
+                submission_id: result.submission.id,
+                submission_type: result.submission.submission_type,
+                submission_text: result.submission.submission_text,
+                submission_url: result.submission.submission_url,
+                submitted_at: result.submission.submitted_at,
+              }
               : a
           )
         );
@@ -207,11 +207,10 @@ export default function KidClassroomWorkspaceClient({
                 onClick={() =>
                   setActiveTab(tab.id as "overview" | "assignments" | "resources" | "announcements")
                 }
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer select-none shrink-0 ${
-                  active
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer select-none shrink-0 ${active
                     ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
                     : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                }`}
+                  }`}
               >
                 <Icon className="h-3.5 w-3.5" />
                 <span>{tab.label}</span>
@@ -431,9 +430,9 @@ export default function KidClassroomWorkspaceClient({
 
                 const formattedDate = assign.due_date
                   ? new Date(assign.due_date).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                    })
+                    month: "short",
+                    day: "numeric",
+                  })
                   : "No due date";
 
                 return (
@@ -511,11 +510,10 @@ export default function KidClassroomWorkspaceClient({
                               </div>
                               <Link
                                 href={`/activities/launcher?assignment_id=${assign.id}`}
-                                className={`w-full rounded-full font-bold h-10 text-xs px-4 flex items-center justify-center cursor-pointer transition-colors ${
-                                  isInProgress
+                                className={`w-full rounded-full font-bold h-10 text-xs px-4 flex items-center justify-center cursor-pointer transition-colors ${isInProgress
                                     ? "bg-amber-500 hover:bg-amber-600 text-white"
                                     : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                }`}
+                                  }`}
                               >
                                 {isInProgress ? "Resume Activity" : "Launch Activity"}
                               </Link>
@@ -590,7 +588,7 @@ export default function KidClassroomWorkspaceClient({
                                     </DialogDescription>
                                   </DialogHeader>
 
-                                  <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
+                                  <form onSubmit={handleSubmit} className="space-y-4 py-6">
                                     <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50 space-y-1 dark:bg-slate-950">
                                       <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block">
                                         Instructions
@@ -744,15 +742,14 @@ export default function KidClassroomWorkspaceClient({
                     <CardContent className="p-6 md:p-7 space-y-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 ${
-                            isPdf
+                          className={`h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 ${isPdf
                               ? "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400"
                               : isVideo
                                 ? "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
                                 : isLink
                                   ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
                                   : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400"
-                          }`}
+                            }`}
                         >
                           {isPdf && <FileText className="h-5 w-5" />}
                           {isVideo && <Video className="h-5 w-5" />}

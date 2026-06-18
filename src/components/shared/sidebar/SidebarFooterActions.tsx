@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Settings, Sparkles, HelpCircle, Sun, Moon, Monitor } from "lucide-react";
+import { Settings, HelpCircle, Sun, Moon, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SidebarFooter } from "@/components/ui/sidebar";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Profile from "./Profile";
+import { useAuth } from "@/context/AuthContext";
 
 interface SidebarFooterActionsProps {
   isOpen: boolean;
@@ -20,15 +21,16 @@ interface SidebarFooterActionsProps {
 export default function SidebarFooterActions({
   isOpen,
   isUserLoggedIn,
-  isLoadingAuth,
   theme,
   setTheme,
 }: SidebarFooterActionsProps) {
+  const { isInitializing } = useAuth();
+
   return (
     <SidebarFooter className="p-4 flex flex-col shrink-0 gap-2 border-t border-sidebar-border bg-sidebar">
-      {!isLoadingAuth && !isUserLoggedIn && (
+      {!isInitializing && !isUserLoggedIn && (
         <>
-          <Link
+          {/* <Link
             href={APP_ROUTES.Subscription}
             className={cn(
               buttonVariants({ variant: "default" }),
@@ -38,17 +40,17 @@ export default function SidebarFooterActions({
             )}
           >
             {isOpen ? "Try Premium" : <Sparkles className="w-5 h-5" />}
-          </Link>
+          </Link> */}
           <Popover>
             <PopoverTrigger
               suppressHydrationWarning={true}
               className={cn(
                 buttonVariants({ variant: "ghost" }),
                 "w-full justify-start mt-1 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-xl cursor-pointer",
-                !isOpen && "justify-center p-0! h-10! w-10! mx-auto"
+                !isOpen && "justify-center mx-auto"
               )}
             >
-              <Settings className={cn("w-5 h-5", isOpen && "mr-2")} />
+              <Settings className={cn("!w-5 !h-5", isOpen && "mr-2")} />
               {isOpen && "Settings"}
             </PopoverTrigger>
             <PopoverContent
@@ -76,7 +78,7 @@ export default function SidebarFooterActions({
                         : "text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground"
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-6 w-6" />
                     <span>{label}</span>
                   </button>
                 ))}
@@ -91,7 +93,7 @@ export default function SidebarFooterActions({
               !isOpen && "justify-center p-0! h-10! w-10! mx-auto"
             )}
           >
-            <HelpCircle className={cn("w-5 h-5", isOpen && "mr-2")} /> {isOpen && "Help"}
+            <HelpCircle className={cn("!w-5 !h-5", isOpen && "mr-2")} /> {isOpen && "Help"}
           </Link>
         </>
       )}

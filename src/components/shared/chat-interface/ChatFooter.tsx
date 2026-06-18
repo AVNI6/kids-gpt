@@ -382,7 +382,7 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isAuthLoading ? "Loading chat session..." : "Ask anything"}
+                placeholder="Ask anything"
                 disabled={isAuthLoading || isLoading || isParsing}
                 className="flex-1 min-w-0 resize-none bg-transparent py-3 px-3 text-base border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 min-h-[40px] max-h-[180px] overflow-y-auto scrollbar-none text-foreground placeholder:text-muted-foreground/60 align-bottom leading-relaxed text-left whitespace-pre-wrap break-words"
                 suppressHydrationWarning={true}

@@ -30,11 +30,13 @@ export const AuthService = {
       initialAuthPromise = (async (): Promise<AuthBootstrapResult> => {
         try {
           const {
-            data: { user },
-            error: userError,
-          } = await supabase.auth.getUser();
+            data: { session },
+            error: sessionError,
+          } = await supabase.auth.getSession();
 
-          if (userError || !user) {
+          const user = session?.user;
+
+          if (sessionError || !user) {
             return { user: null, profile: null, role: null };
           }
 

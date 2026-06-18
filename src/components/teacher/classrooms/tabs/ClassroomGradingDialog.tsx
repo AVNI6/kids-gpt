@@ -79,7 +79,7 @@ export default function ClassroomGradingDialog({
 
   return (
     <Dialog open={gradingOpen} onOpenChange={setGradingOpen}>
-      <DialogContent className="max-w-3xl rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col max-h-[85vh]">
+      <DialogContent className="max-w-3xl rounded-[32px] pb-4 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col max-h-[85vh]">
         <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4 shrink-0">
           <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-indigo-600" />
