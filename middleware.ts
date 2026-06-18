@@ -13,13 +13,13 @@ import { createClient } from "@/lib/supabase/middleware";
  * This was the root cause of the assignment completion "Unauthorized" error.
  */
 export async function middleware(request: NextRequest) {
-  const { supabase, response } = createClient(request);
+  const client = createClient(request);
 
   // Refresh session if expired. MUST call getUser() — not getSession() — to
   // ensure the server-side token is validated and refreshed in cookies.
-  await supabase.auth.getUser();
+  await client.supabase.auth.getUser();
 
-  return response;
+  return client.response;
 }
 
 export const config = {

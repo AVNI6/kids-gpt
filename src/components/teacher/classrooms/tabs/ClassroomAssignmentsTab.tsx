@@ -165,7 +165,7 @@ export default function ClassroomAssignmentsTab({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
           <h3 className="text-lg font-black text-slate-950 dark:text-white flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-indigo-600" />

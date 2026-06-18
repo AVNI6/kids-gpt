@@ -237,27 +237,29 @@ export default function TeacherClassroomWorkspaceClient({
       </div>
 
       {/* Tab Controls (driven by Next.js router query param/href via TabsList) */}
-      <div className="overflow-x-auto p-1 pb-2 -mb-2 w-full">
-        <TabsList className="flex !h-auto p-1 bg-muted dark:bg-slate-900 rounded-full w-full">
-          {[
-            { id: "assignments", label: "Assignments", icon: BookOpen },
-            { id: "resources", label: "Resources", icon: FolderOpen },
-            { id: "announcements", label: "Announcements", icon: Megaphone },
-            { id: "students", label: "Students", icon: Users },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className="flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0 border-none bg-transparent text-muted-foreground hover:text-foreground transition-all"
-              >
-                <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                <span>{tab.label}</span>
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
+      <div className="w-full bg-muted dark:bg-slate-900 rounded-full p-1 overflow-hidden">
+        <div className="overflow-x-auto scrollbar-none w-full">
+          <TabsList className="flex !h-auto p-0 bg-transparent dark:bg-transparent rounded-none min-w-full w-max">
+            {[
+              { id: "assignments", label: "Assignments", icon: BookOpen },
+              { id: "resources", label: "Resources", icon: FolderOpen },
+              { id: "announcements", label: "Announcements", icon: Megaphone },
+              { id: "students", label: "Students", icon: Users },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0 border-none bg-transparent text-muted-foreground hover:text-foreground transition-all"
+                >
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span>{tab.label}</span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </div>
       </div>
 
       {/* 2. Workspace Tabs Viewports */}

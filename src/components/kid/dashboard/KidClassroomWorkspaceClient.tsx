@@ -191,38 +191,40 @@ export default function KidClassroomWorkspaceClient({
       </div>
 
       {/* Tab Controls */}
-      <div className="overflow-x-auto p-1 pb-2 -mb-2 w-full">
-        <div className="flex !h-auto p-1 bg-muted dark:bg-slate-900 rounded-full w-full">
-          {[
-            { id: "overview", label: "Overview", icon: School },
-            { id: "assignments", label: "Assignments", icon: BookOpen, count: getPendingCount() },
-            { id: "resources", label: "Resources", icon: FolderOpen },
-            { id: "announcements", label: "Announcements", icon: Megaphone },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() =>
-                  setActiveTab(tab.id as "overview" | "assignments" | "resources" | "announcements")
-                }
-                className={`flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 transition-all select-none whitespace-nowrap shrink-0 border-none bg-transparent ${
-                  active
-                    ? "bg-background text-foreground dark:bg-input/50 shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                <span>{tab.label}</span>
-                {tab.count !== undefined && tab.count > 0 && (
-                  <span className="inline-flex h-4 sm:h-5 px-1.5 items-center justify-center text-[9px] sm:text-xs font-bold rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 ml-1">
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+      <div className="w-full bg-muted dark:bg-slate-900 rounded-full p-1 overflow-hidden">
+        <div className="overflow-x-auto scrollbar-none w-full">
+          <div className="flex !h-auto min-w-full w-max">
+            {[
+              { id: "overview", label: "Overview", icon: School },
+              { id: "assignments", label: "Assignments", icon: BookOpen, count: getPendingCount() },
+              { id: "resources", label: "Resources", icon: FolderOpen },
+              { id: "announcements", label: "Announcements", icon: Megaphone },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() =>
+                    setActiveTab(tab.id as "overview" | "assignments" | "resources" | "announcements")
+                  }
+                  className={`flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 transition-all select-none whitespace-nowrap shrink-0 border-none bg-transparent ${
+                    active
+                      ? "bg-background text-foreground dark:bg-input/50 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span>{tab.label}</span>
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span className="inline-flex h-4 sm:h-5 px-1.5 items-center justify-center text-[9px] sm:text-xs font-bold rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 ml-1">
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

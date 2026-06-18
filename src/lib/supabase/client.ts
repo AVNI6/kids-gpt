@@ -12,14 +12,9 @@ const customStorage = {
   },
   setItem: (key: string, value: string): void => {
     if (typeof window === "undefined") return;
-    const keepSignedIn = window.localStorage.getItem("keepSignedIn") === "true";
-    if (keepSignedIn) {
-      window.localStorage.setItem(key, value);
-      window.sessionStorage.removeItem(key);
-    } else {
-      window.sessionStorage.setItem(key, value);
-      window.localStorage.removeItem(key);
-    }
+    // Always store session in localStorage to ensure the user stays logged in
+    window.localStorage.setItem(key, value);
+    window.sessionStorage.removeItem(key);
   },
   removeItem: (key: string): void => {
     if (typeof window === "undefined") return;

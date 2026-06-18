@@ -15,15 +15,8 @@ export const createClient = (request: NextRequest) => {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        const keepSignedIn = request.cookies.get("keep_signed_in")?.value === "true";
-        
         cookiesToSet.forEach(({ name, value, options }) => {
-          const cookieOptions = { ...options };
-          if (!keepSignedIn && name.startsWith("sb-")) {
-            delete cookieOptions.maxAge;
-            delete cookieOptions.expires;
-          }
-          request.cookies.set({ name, value, ...cookieOptions });
+          request.cookies.set({ name, value, ...options });
         });
 
         response = NextResponse.next({
@@ -31,12 +24,7 @@ export const createClient = (request: NextRequest) => {
         });
 
         cookiesToSet.forEach(({ name, value, options }) => {
-          const cookieOptions = { ...options };
-          if (!keepSignedIn && name.startsWith("sb-")) {
-            delete cookieOptions.maxAge;
-            delete cookieOptions.expires;
-          }
-          response.cookies.set({ name, value, ...cookieOptions });
+          response.cookies.set({ name, value, ...options });
         });
       },
     },

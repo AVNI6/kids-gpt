@@ -193,16 +193,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoggingOutRef.current = true;
       AuthService.clearInitialAuthCache();
       lastLoadedUserIdRef.current = null;
-      setUser(null);
-      setUserProfile(null);
-      setUserRole(null);
-      setIsUserLoggedIn(false);
       clearKeepSignedInCookie();
       await supabase.auth.signOut();
       window.location.href = "/";
     } catch (error) {
       console.error("Error logging out:", error);
-    } finally {
       isLoggingOutRef.current = false;
     }
   }, [supabase]);
