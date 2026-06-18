@@ -141,7 +141,8 @@ export default function ClassroomAnnouncementsTab({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  loading={isLoading}
+                  loadingText="Publishing..."
                   className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
                 >
                   Publish

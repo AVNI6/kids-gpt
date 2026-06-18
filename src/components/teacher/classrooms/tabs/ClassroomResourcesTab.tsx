@@ -442,7 +442,9 @@ export default function ClassroomResourcesTab({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading || isUploadingFile || !resUrl}
+                  loading={isLoading || isUploadingFile}
+                  loadingText={isUploadingFile ? "Uploading..." : "Saving..."}
+                  disabled={!resUrl}
                   className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
                 >
                   Save Resource

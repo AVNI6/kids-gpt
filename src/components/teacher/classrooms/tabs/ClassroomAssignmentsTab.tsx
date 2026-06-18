@@ -387,7 +387,8 @@ export default function ClassroomAssignmentsTab({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  loading={isLoading}
+                  loadingText="Saving..."
                   className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
                 >
                   Save as Draft
@@ -810,6 +811,7 @@ export default function ClassroomAssignmentsTab({
               <Button
                 type="submit"
                 loading={isLoading}
+                loadingText="Saving..."
                 className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
               >
                 Save Changes

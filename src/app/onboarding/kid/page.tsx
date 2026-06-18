@@ -42,20 +42,13 @@ function KidSubmitButton({ disabled }: { disabled?: boolean }) {
   return (
     <Button
       type="submit"
-      disabled={pending || disabled}
+      loading={pending}
+      loadingText="Setting up your space..."
+      disabled={disabled}
       className="h-14 w-full rounded-2xl bg-sky-600 text-base font-bold shadow-[0_16px_30px_rgba(2,132,199,0.3)] hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          Setting up your space...
-        </>
-      ) : (
-        <>
-          Start My Adventure!
-          <Rocket className="ml-2 h-5 w-5" />
-        </>
-      )}
+      Start My Adventure!
+      <Rocket className="ml-2 h-5 w-5" />
     </Button>
   );
 }

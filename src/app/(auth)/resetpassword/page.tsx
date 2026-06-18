@@ -217,6 +217,7 @@ export default function ResetPasswordPage() {
               <Button
                 type="submit"
                 loading={isSubmitting}
+                loadingText="Updating..."
                 disabled={!linkChecked || !!linkError}
                 className="w-full h-14 bg-sky-600 hover:bg-sky-700 text-white text-base font-bold rounded-2xl shadow-lg hover:shadow-sky-500/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
               >

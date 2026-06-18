@@ -90,6 +90,7 @@ export default function LinkChildDialog({ trigger, open: controlledOpen, onOpenC
       <Button
         type="submit"
         loading={isLoading}
+        loadingText="Linking..."
         className="w-full rounded-xl bg-sky-600 text-white hover:bg-sky-700 h-11 font-bold cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600"
       >
         Link Child

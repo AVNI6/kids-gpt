@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MoreVertical, Edit2, Share2, Trash2 } from "lucide-react";
+import { MoreVertical, Edit2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ const RecentChatItem = React.memo(
     onSelectSession,
     onSaveRename,
     onStartRename,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onSetSessionToShare,
     onSetSessionToDelete,
   }: RecentChatItemProps) {

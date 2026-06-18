@@ -101,7 +101,7 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
       });
 
       if (result.success) {
-        const xp = result.xpEarned ?? 20;
+        // XP claimed successfully
       } else {
         toast.error("Could not claim XP reward.", {
           description: result.error,

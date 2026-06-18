@@ -20,7 +20,7 @@ export default function ActivitiesGrid() {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [loadingReviewId, setLoadingReviewId] = useState<string | null>(null);
 
-  const handleCardClick = async (activityId: string, activityTitle: string) => {
+  const handleCardClick = async (activityId: string) => {
     setLoadingReviewId(activityId);
     try {
       const res = await getActivityReviewByRewardIdForParent(activityId);
@@ -32,7 +32,7 @@ export default function ActivitiesGrid() {
           description: "Older attempts do not have question-level snapshotted history.",
         });
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to load activity review details.");
     } finally {
       setLoadingReviewId(null);
@@ -218,7 +218,7 @@ export default function ActivitiesGrid() {
               key={activity.id}
               onClick={() => {
                 if (loadingReviewId === null) {
-                  handleCardClick(activity.id, activity.title);
+                  handleCardClick(activity.id);
                 }
               }}
               className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-all group cursor-pointer hover:border-sky-200 dark:hover:border-sky-900 active:scale-98"

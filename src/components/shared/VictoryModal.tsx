@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Trophy, RefreshCw, Sparkles, Loader2 } from "lucide-react";
+import { Trophy, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import {
@@ -66,6 +66,7 @@ export default function VictoryModal({
   const hasClaimed = useRef(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimCompleted, setClaimCompleted] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const cleanupConfettiRef = useRef<(() => void) | null>(null);
 
   // Background Auto-Claim XP Trigger
@@ -171,6 +172,8 @@ export default function VictoryModal({
     memoryMatchStepNumber,
     xpEarned,
     onClaimSuccess,
+    gameStartedAt,
+    reviewData,
   ]);
 
   const handleContinueClick = () => {

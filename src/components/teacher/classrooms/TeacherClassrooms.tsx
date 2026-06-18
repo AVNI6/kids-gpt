@@ -227,7 +227,8 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  loading={isLoading}
+                  loadingText="Creating..."
                   className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
                 >
                   Create
@@ -257,7 +258,8 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
               <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
               <Button
                 variant="destructive"
-                disabled={isLoading}
+                loading={isLoading}
+                loadingText="Deleting..."
                 onClick={async () => {
                   if (!deleteClassroomTarget) return;
                   const target = deleteClassroomTarget;

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { UserRound, KeyRound, Loader2, Mail, Lock, Shield } from "lucide-react";
+import { UserRound, KeyRound, Mail, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -175,16 +175,12 @@ export default function ParentSettingsContainer({ profile }: ParentSettingsConta
                 <div className="flex justify-end pt-6 border-t border-border">
                   <Button
                     type="submit"
-                    disabled={isSavingProfile || !hasChanges}
+                    loading={isSavingProfile}
+                    disabled={!hasChanges}
+                    loadingText="Saving..."
                     className="rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-all w-full sm:w-auto"
                   >
-                    {isSavingProfile ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...
-                      </>
-                    ) : (
-                      "Save Changes"
-                    )}
+                    Save Changes
                   </Button>
                 </div>
               </form>

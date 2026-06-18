@@ -271,6 +271,7 @@ function LoginPageContent() {
             <Button
               type="submit"
               loading={isSubmitting}
+              loadingText="Signing in..."
               className="w-full rounded-full py-4 font-bold text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5 h-14"
             >
               Sign In

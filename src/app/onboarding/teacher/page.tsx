@@ -38,20 +38,12 @@ function TeacherSubmitButton() {
   return (
     <Button
       type="submit"
-      disabled={pending}
+      loading={pending}
+      loadingText="Preparing workspace..."
       className="h-14 w-full rounded-2xl bg-indigo-600 text-base font-bold shadow-[0_16px_30px_rgba(79,70,229,0.32)] hover:bg-indigo-700"
     >
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          Preparing workspace...
-        </>
-      ) : (
-        <>
-          Finish Teacher Setup
-          <Sparkles className="ml-2 h-5 w-5" />
-        </>
-      )}
+      Finish Teacher Setup
+      <Sparkles className="ml-2 h-5 w-5" />
     </Button>
   );
 }

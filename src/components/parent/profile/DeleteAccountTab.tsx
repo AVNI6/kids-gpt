@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import type { LinkedChildProfile } from "@/types/kid";
 
 interface DeleteAccountTabProps {
@@ -94,16 +94,12 @@ export default function DeleteAccountTab({ child, onSuccess }: DeleteAccountTabP
           <Button
             type="button"
             onClick={handleDelete}
-            disabled={isPending || typedConfirm.toLowerCase() !== child.first_name?.toLowerCase()}
+            loading={isPending}
+            loadingText="Removeing..."
+            disabled={typedConfirm.toLowerCase() !== child.first_name?.toLowerCase()}
             className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold h-11 px-6 text-xs cursor-pointer shadow-md hover:shadow-lg focus:ring-rose-500 disabled:opacity-50"
           >
-            {isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Unlinking...
-              </>
-            ) : (
-              "Confirm Unlink Connection"
-            )}
+            Confirm Unlink Connection
           </Button>
         </div>
       </div>

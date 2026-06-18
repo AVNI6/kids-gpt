@@ -303,6 +303,7 @@ function SignupForm() {
               <Button
                 type="submit"
                 loading={signupState === "loading"}
+                loadingText="Creating account..."
                 className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2 text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
               >
                 Create Account

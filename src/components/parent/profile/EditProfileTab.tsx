@@ -238,6 +238,7 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
         <Button
           type="submit"
           loading={isPending}
+          loadingText="Saving..."
           disabled={isUploading}
           className="rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-11 px-6 text-xs cursor-pointer shadow-md hover:shadow-lg dark:bg-sky-500 dark:hover:bg-sky-600"
         >

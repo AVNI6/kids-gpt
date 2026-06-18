@@ -310,7 +310,8 @@ export default function ClassroomGradingDialog({
 
                   <Button
                     type="submit"
-                    disabled={isLoading}
+                    loading={isLoading}
+                    loadingText="Grading..."
                     className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 shadow-sm mt-4 cursor-pointer"
                   >
                     <Send className="mr-2 h-4 w-4" />

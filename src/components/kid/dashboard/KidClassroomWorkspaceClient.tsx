@@ -678,6 +678,7 @@ export default function KidClassroomWorkspaceClient({
                                       <Button
                                         type="submit"
                                         loading={isLoading}
+                                        loadingText="Submitting..."
                                         className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 border-none"
                                       >
                                         {!isLoading && <Send className="mr-2 h-4 w-4 shrink-0" />}

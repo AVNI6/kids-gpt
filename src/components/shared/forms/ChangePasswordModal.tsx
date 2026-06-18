@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -257,6 +257,7 @@ export default function ChangePasswordModal({
             <Button
               type="submit"
               loading={isPending}
+              loadingText="Saving..."
               disabled={!isFormValid}
               className={`rounded-2xl text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg transition-all ${buttonColor} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
