@@ -73,6 +73,7 @@ export function OnboardingLayout({
                   alt="Mascot"
                   width={140}
                   height={140}
+                  loading="eager"
                   className="h-32 w-32 object-contain"
                 />
               </div>

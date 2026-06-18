@@ -126,6 +126,7 @@ function LoginPageContent() {
                 alt="Mascot"
                 width={128}
                 height={128}
+                loading="eager"
                 className="h-32 w-32 object-contain"
               />
             </div>

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { uploadUserAvatar } from "@/lib/storage";
 import { calculateAge, parseLocalDate } from "@/lib/utils/kid/childAge";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type KidOnboardingState = {
   error: string | null;
@@ -367,4 +368,23 @@ export async function updateUserProfile(
   }
 
   return { success: true, message: "Profile updated successfully!", error: null };
+}
+
+export async function checkIfEmailExists(email: string): Promise<boolean> {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail) return false;
+
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
+    .from("profile")
+    .select("user_id")
+    .eq("email", cleanEmail)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error in checkIfEmailExists server action:", error);
+    return false;
+  }
+
+  return !!data;
 }

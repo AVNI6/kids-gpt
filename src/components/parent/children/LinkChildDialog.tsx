@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DashboardService } from "@/components/parent/home/dashboard.service";
+import { toast } from "sonner";
 
 interface LinkChildDialogProps {
   trigger?: React.ReactElement;
@@ -21,31 +22,45 @@ interface LinkChildDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export default function LinkChildDialog({ trigger, open, onOpenChange }: LinkChildDialogProps) {
+export default function LinkChildDialog({ trigger, open: controlledOpen, onOpenChange: controlledOnOpenChange }: LinkChildDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [linkEmail, setLinkEmail] = useState("");
-  const [linkMessage, setLinkMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const isControlled = typeof controlledOpen !== "undefined" && controlledOnOpenChange !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const onOpenChange = isControlled ? controlledOnOpenChange : setInternalOpen;
 
   const handleLinkSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const email = linkEmail.trim();
 
     if (!email) {
-      setLinkMessage("Please enter an email address.");
+      toast.error("Please enter an email address.");
       return;
     }
 
     setIsLoading(true);
-    setLinkMessage(null);
 
     try {
       const result = await DashboardService.linkChild(email);
-      setLinkMessage(result.message);
-      if (result.status === "success" || result.status === "pending") {
+      if (result.status === "success") {
+        toast.success("Child account linked successfully.");
         setLinkEmail("");
+        onOpenChange?.(false);
+      } else if (result.status === "pending") {
+        toast.success(`An invitation email has been sent to ${email}!`);
+        setLinkEmail("");
+        onOpenChange?.(false);
+      } else {
+        toast.error("Linking failed", {
+          description: result.message || "Failed to link child.",
+        });
       }
     } catch (error) {
-      setLinkMessage(error instanceof Error ? error.message : "Failed to link Child.");
+      toast.error("Error occurred", {
+        description: error instanceof Error ? error.message : "Failed to link Child.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -64,6 +79,7 @@ export default function LinkChildDialog({ trigger, open, onOpenChange }: LinkChi
           id="childEmail"
           name="childEmail"
           type="email"
+          disabled={isLoading}
           value={linkEmail}
           onChange={(event) => setLinkEmail(event.target.value)}
           placeholder="child@example.com"
@@ -78,12 +94,6 @@ export default function LinkChildDialog({ trigger, open, onOpenChange }: LinkChi
       >
         {isLoading ? "Sending..." : "Link Child"}
       </Button>
-
-      {linkMessage ? (
-        <p className="rounded-xl bg-sky-50 dark:bg-sky-950/30 px-4 py-3 text-sm font-semibold text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-900/30">
-          {linkMessage}
-        </p>
-      ) : null}
     </form>
   );
 
@@ -98,19 +108,8 @@ export default function LinkChildDialog({ trigger, open, onOpenChange }: LinkChi
     </DialogHeader>
   );
 
-  if (typeof open !== "undefined" && onOpenChange) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
-          {dialogHeader}
-          {formContent}
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger render={trigger} />
       <DialogContent className="max-w-md rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
         {dialogHeader}

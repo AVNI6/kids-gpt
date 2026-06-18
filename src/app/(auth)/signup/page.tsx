@@ -26,6 +26,7 @@ import Logo from "@/components/shared/logo/Logo";
 import { validatePassword } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { validateInviteToken } from "@/lib/services/shared/invitations";
+import { checkIfEmailExists } from "@/lib/services/shared/profile.actions";
 
 const supabase = createClient();
 
@@ -93,38 +94,62 @@ function SignupForm() {
     }
 
     setSignupState("loading");
+    const email = e.email.trim().toLowerCase();
 
-    const siteUrl = window.location.origin;
-    const { data, error } = await supabase.auth.signUp({
-      email: e.email,
-      password: e.password,
-      options: {
-        data: {
-          fullname: e.name,
-        },
-        emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
-      },
-    });
-
-    if (error) {
-      setSignupState("idle");
-
-      toast.error("Signup failed", {
-        description: error.message,
-      });
-      return;
-    }
-    if (data) {
-      toast.success("Signup successful!", {
-        description: "Please check your email to confirm your account.",
-      });
-
-      if (data.session) {
-        router.push(`/onboarding`);
+    try {
+      // Prevent duplicate account creation
+      const exists = await checkIfEmailExists(email);
+      if (exists) {
+        toast.error("Account already exists", {
+          description: "An account with this email already exists. Please sign in instead.",
+        });
+        setSignupState("idle");
         return;
       }
 
-      router.push(`/signin?from=signup`);
+      const siteUrl = window.location.origin;
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: e.password,
+        options: {
+          data: {
+            fullname: e.name,
+            invite_token: inviteToken ?? null,
+            role: inviteToken ? "kid" : undefined,
+          },
+          emailRedirectTo: `${siteUrl}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        setSignupState("idle");
+        toast.error("Signup failed", {
+          description: error.message,
+        });
+        return;
+      }
+
+      if (data && data.user) {
+        toast.success("Signup successful!", {
+          description: "Please check your email to confirm your account.",
+        });
+
+        if (data.session) {
+          if (inviteToken) {
+            router.push(`/onboarding/kid`);
+          } else {
+            router.push(`/onboarding`);
+          }
+          return;
+        }
+
+        router.push(`/signin?from=signup`);
+      }
+    } catch (err) {
+      toast.error("An error occurred during signup", {
+        description: err instanceof Error ? err.message : "Failed to register.",
+      });
+      setSignupState("idle");
     }
   };
 
