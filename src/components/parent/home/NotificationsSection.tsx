@@ -118,13 +118,13 @@ export default function NotificationsSection() {
                   }`}
                 >
                   <CardContent className="p-6 flex gap-4 md:gap-6 items-start">
-                    {!notif.is_read && (
-                      <div className="absolute z-2 ml-1 w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
-                    )}
                     <div
                       className={`relative w-12 h-12 rounded-full ${bg} flex items-center justify-center shrink-0`}
                     >
                       {icon}
+                      {!notif.is_read && (
+                        <div className="absolute -top-0.5 -right-0.5 z-10 w-3 h-3 rounded-full bg-purple-500 ring-2 ring-white dark:ring-slate-900 shrink-0" />
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">

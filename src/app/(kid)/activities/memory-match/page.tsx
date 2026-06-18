@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   RotateCcw,
-  Loader2,
   Lock,
   CheckCircle2,
   Sparkles,
@@ -266,11 +265,112 @@ export default function MemoryMatchPage() {
   // View toggles & layouts
   if (loadingProgress) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-background gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-pink-600" />
-        <p className="text-sm font-bold text-muted-foreground animate-pulse">
-          Loading campaign map...
-        </p>
+      <div className="h-screen bg-background overflow-hidden flex flex-col relative min-h-0">
+        {/* Background Orbs */}
+        <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-pink-500/5 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-20 right-10 h-80 w-80 rounded-full bg-purple-500/5 blur-3xl pointer-events-none" />
+
+        {/* Main Campaign Dashboard Panel */}
+        <main className="relative z-10 flex-1 px-4 py-4 md:px-8 flex flex-col min-h-0">
+          <div className="mx-auto max-w-4xl w-full h-full flex flex-col gap-4 min-h-0 animate-pulse">
+            {/* Header Progress panel */}
+            <div className="flex flex-col sm:flex-row items-center justify-between bg-card rounded-3xl p-4 md:p-6 shadow-sm border border-border gap-4 shrink-0">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="h-10 w-10 rounded-2xl bg-slate-200 dark:bg-slate-800 shrink-0" />
+                <div className="space-y-2 flex-1 sm:flex-initial">
+                  <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-md w-48" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-64" />
+                </div>
+              </div>
+
+              {/* Campaign overall progress status */}
+              <div className="w-full sm:w-60 flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-32" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-8" />
+                </div>
+                <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full w-full" />
+              </div>
+            </div>
+
+            {/* Worlds List (Scrollable timeline) */}
+            <div className="flex-1 overflow-y-auto px-1 pt-1 space-y-4 pb-6 min-h-0 scrollbar-none">
+              {/* World 1 (Expanded) */}
+              <div className="rounded-3xl border border-pink-500/20 bg-card shadow-sm">
+                <div className="flex items-center justify-between p-4 md:p-5 border-b border-border/50">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-slate-200 dark:bg-slate-800 shrink-0" />
+                    <div className="space-y-1.5">
+                      <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded-md w-36" />
+                      <div className="h-3.5 bg-slate-200 dark:bg-slate-800 rounded-md w-64 hidden sm:block" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-20 hidden sm:block" />
+                    <div className="h-5 w-5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                  </div>
+                </div>
+
+                {/* Grid of Steps */}
+                <div className="p-5 bg-muted/10">
+                  <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-md w-36 mb-4" />
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex flex-col items-center justify-between p-3.5 rounded-2xl border border-border/50 bg-card/50 min-h-[110px] space-y-3"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-md w-10" />
+                          <div className="h-3.5 w-3.5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                        </div>
+                        <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-800" />
+                        <div className="flex flex-col items-center gap-1 w-full mt-auto">
+                          <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded-md w-12" />
+                          <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded-md w-8" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* World 2 (Collapsed) */}
+              <div className="rounded-3xl border border-border bg-card shadow-sm opacity-80">
+                <div className="flex items-center justify-between p-4 md:p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-slate-200 dark:bg-slate-800 shrink-0" />
+                    <div className="space-y-1.5">
+                      <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded-md w-40" />
+                      <div className="h-3.5 bg-slate-200 dark:bg-slate-800 rounded-md w-72 hidden sm:block" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-20 hidden sm:block" />
+                    <div className="h-5 w-5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                  </div>
+                </div>
+              </div>
+
+              {/* World 3 (Collapsed) */}
+              <div className="rounded-3xl border border-border bg-card shadow-sm opacity-60">
+                <div className="flex items-center justify-between p-4 md:p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-slate-200 dark:bg-slate-800 shrink-0" />
+                    <div className="space-y-1.5">
+                      <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded-md w-32" />
+                      <div className="h-3.5 bg-slate-200 dark:bg-slate-800 rounded-md w-56 hidden sm:block" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-20 hidden sm:block" />
+                    <div className="h-5 w-5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

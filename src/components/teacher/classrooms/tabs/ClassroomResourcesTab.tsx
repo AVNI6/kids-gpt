@@ -220,7 +220,7 @@ export default function ClassroomResourcesTab({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
           <h3 className="text-lg font-black text-slate-950 dark:text-white flex items-center gap-2">
             <FolderOpen className="h-5 w-5 text-indigo-600" />
@@ -250,7 +250,7 @@ export default function ClassroomResourcesTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleUploadResource} className="space-y-4 px-6 py-5">
+            <form onSubmit={handleUploadResource} className="space-y-4 py-6">
               {/* Method Switcher */}
               <div className="flex gap-2 bg-slate-100 dark:bg-slate-950/40 p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800">
                 <button
@@ -442,7 +442,9 @@ export default function ClassroomResourcesTab({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading || isUploadingFile || !resUrl}
+                  loading={isLoading || isUploadingFile}
+                  loadingText={isUploadingFile ? "Uploading..." : "Saving..."}
+                  disabled={!resUrl}
                   className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
                 >
                   Save Resource

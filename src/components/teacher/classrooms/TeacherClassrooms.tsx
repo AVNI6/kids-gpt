@@ -142,7 +142,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-5 px-6 py-5">
+            <form onSubmit={handleCreateSubmit} className="space-y-5 px-6 pb-5">
               <div className="space-y-1.5">
                 <Label
                   htmlFor="className"
@@ -227,7 +227,8 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  loading={isLoading}
+                  loadingText="Creating..."
                   className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
                 >
                   Create
@@ -257,7 +258,8 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
               <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
               <Button
                 variant="destructive"
-                disabled={isLoading}
+                loading={isLoading}
+                loadingText="Deleting..."
                 onClick={async () => {
                   if (!deleteClassroomTarget) return;
                   const target = deleteClassroomTarget;

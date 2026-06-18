@@ -302,10 +302,11 @@ function SignupForm() {
 
               <Button
                 type="submit"
-                disabled={signupState === "loading"}
+                loading={signupState === "loading"}
+                loadingText="Creating account..."
                 className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2 text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
               >
-                {signupState === "loading" ? "Creating Account..." : "Create Account"}
+                Create Account
                 <Rocket className="w-5 h-5" />
               </Button>
 
@@ -445,16 +446,44 @@ function SignupForm() {
   );
 }
 
+function AuthSkeleton() {
+  return (
+    <main className="min-h-screen flex flex-col px-6 font-sans bg-background relative overflow-hidden">
+      <div className="my-auto mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2 relative z-10">
+        <div className="hidden flex-col gap-8 lg:flex animate-pulse">
+          <div className="h-8 w-24 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+          <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl space-y-4">
+            <div className="h-6 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            <div className="h-4 w-64 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            <div className="h-4 w-48 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+          </div>
+        </div>
+        <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl md:p-10 space-y-6 animate-pulse w-full">
+          <div className="space-y-2">
+            <div className="h-8 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            <div className="h-4 w-48 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="h-4 w-16 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+              <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 w-16 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+              <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            </div>
+            <div className="h-4 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+            <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
 export default function ChatGPTKidSignupPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-sky-500 mb-4" />
-          <p className="text-sm font-semibold text-muted-foreground">Loading signup form...</p>
-        </div>
-      }
-    >
+    <Suspense fallback={<AuthSkeleton />}>
       <SignupForm />
     </Suspense>
   );

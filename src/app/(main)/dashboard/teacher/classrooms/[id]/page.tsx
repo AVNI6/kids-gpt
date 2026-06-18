@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 function WorkspaceSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="mx-auto space-y-6">
       <div className="flex items-center gap-4">
         <Skeleton className="h-10 w-24 rounded-full" />
         <div className="space-y-2 flex-1">

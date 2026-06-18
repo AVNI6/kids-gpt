@@ -65,7 +65,7 @@ export default function ClassroomAnnouncementsTab({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
           <h3 className="text-lg font-black text-slate-950 dark:text-white flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-indigo-600" />
@@ -95,7 +95,7 @@ export default function ClassroomAnnouncementsTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCreateAnnouncement} className="space-y-4 px-6 py-5">
+            <form onSubmit={handleCreateAnnouncement} className="space-y-4 py-6">
               <div className="space-y-1.5">
                 <Label
                   htmlFor="annTitle"
@@ -141,7 +141,8 @@ export default function ClassroomAnnouncementsTab({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  loading={isLoading}
+                  loadingText="Publishing..."
                   className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
                 >
                   Publish

@@ -9,16 +9,24 @@ export interface AuthContextType {
   userProfile: UserProfile | null;
   userRole: UserRole | null;
   isLoading: boolean;
+  isInitializing: boolean;
   isUserLoggedIn: boolean;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+function clearKeepSignedInCookie() {
+  if (typeof document !== "undefined") {
+    document.cookie = "keep_signed_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure";
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const isLoggingOutRef = useRef(false);
   const lastLoadedUserIdRef = useRef<string | null>(null);
@@ -56,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } finally {
         if (isMounted) {
           setIsLoading(false);
+          setIsInitializing(false);
         }
       }
     };
@@ -66,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
       if (!isMounted || isLoggingOutRef.current) {
         setIsLoading(false);
+        setIsInitializing(false);
         return;
       }
       // Ignore INITIAL_SESSION if we are already bootstrapping
@@ -76,33 +86,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
         AuthService.clearInitialAuthCache();
       }
-      if (session?.user) {
-        setUser(session.user);
-        setIsUserLoggedIn(true);
-        // Fetch profile if not already loaded for this user
-        if (lastLoadedUserIdRef.current !== session.user.id) {
-          lastLoadedUserIdRef.current = session.user.id;
-          const { data: profile } = await supabase
-            .from("profile")
-            .select("*")
-            .eq("user_id", session.user.id)
-            .maybeSingle();
-          if (!isMounted || isLoggingOutRef.current) return;
-          if (profile) {
-            setUserProfile(profile);
-            if (profile.role) {
-              setUserRole(profile.role as UserRole);
+      try {
+        if (session?.user) {
+          setUser(session.user);
+          setIsUserLoggedIn(true);
+          // Fetch profile if not already loaded for this user
+          if (lastLoadedUserIdRef.current !== session.user.id) {
+            lastLoadedUserIdRef.current = session.user.id;
+            const { data: profile } = await supabase
+              .from("profile")
+              .select("*")
+              .eq("user_id", session.user.id)
+              .maybeSingle();
+            if (!isMounted || isLoggingOutRef.current) return;
+            if (profile) {
+              setUserProfile(profile);
+              if (profile.role) {
+                setUserRole(profile.role as UserRole);
+              }
             }
           }
+        } else {
+          lastLoadedUserIdRef.current = null;
+          setUser(null);
+          setUserProfile(null);
+          setUserRole(null);
+          setIsUserLoggedIn(false);
         }
-      } else {
-        lastLoadedUserIdRef.current = null;
-        setUser(null);
-        setUserProfile(null);
-        setUserRole(null);
-        setIsUserLoggedIn(false);
+      } catch (error) {
+        console.error("AuthContext: Error in onAuthStateChange handler:", error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+          setIsInitializing(false);
+        }
       }
-      setIsLoading(false);
     });
     return () => {
       isMounted = false;
@@ -175,15 +193,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoggingOutRef.current = true;
       AuthService.clearInitialAuthCache();
       lastLoadedUserIdRef.current = null;
-      setUser(null);
-      setUserProfile(null);
-      setUserRole(null);
-      setIsUserLoggedIn(false);
+      clearKeepSignedInCookie();
       await supabase.auth.signOut();
       window.location.href = "/";
     } catch (error) {
       console.error("Error logging out:", error);
-    } finally {
       isLoggingOutRef.current = false;
     }
   }, [supabase]);
@@ -194,11 +208,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userProfile,
       userRole,
       isLoading,
+      isInitializing,
       isUserLoggedIn,
       logout,
       refreshProfile,
     }),
-    [user, userProfile, userRole, isLoading, isUserLoggedIn, logout, refreshProfile]
+    [user, userProfile, userRole, isLoading, isInitializing, isUserLoggedIn, logout, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

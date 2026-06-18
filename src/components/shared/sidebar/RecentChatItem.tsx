@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MoreVertical, Edit2, Share2, Trash2 } from "lucide-react";
+import { MoreVertical, Edit2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ const RecentChatItem = React.memo(
     onSelectSession,
     onSaveRename,
     onStartRename,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onSetSessionToShare,
     onSetSessionToDelete,
   }: RecentChatItemProps) {
@@ -94,7 +95,7 @@ const RecentChatItem = React.memo(
                   >
                     <Edit2 className="w-4 h-4 text-slate-500" /> Rename
                   </button>
-                  <button
+                  {/* <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setOpenPopoverId(null);
@@ -103,7 +104,7 @@ const RecentChatItem = React.memo(
                     className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-sky-500 w-full text-left cursor-pointer"
                   >
                     <Share2 className="w-4 h-4" /> Share
-                  </button>
+                  </button> */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

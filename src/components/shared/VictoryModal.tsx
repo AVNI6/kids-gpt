@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Trophy, RefreshCw, Sparkles, Loader2 } from "lucide-react";
+import { Trophy, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import {
@@ -37,10 +37,8 @@ interface VictoryModalProps {
   memoryMatchWorldId?: number;
   memoryMatchStepNumber?: number;
   onClaimSuccess?: () => void;
-  children?: React.ReactNode; // Extra content (e.g., matching answers review)
-  /** Detailed gameplay snapshot to persist in activity_reviews table */
+  children?: React.ReactNode; 
   reviewData?: ActivityReviewData;
-  /** Duration tracking: pass Date.now() at game start; VictoryModal computes seconds */
   gameStartedAt?: number;
 }
 
@@ -68,33 +66,8 @@ export default function VictoryModal({
   const hasClaimed = useRef(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimCompleted, setClaimCompleted] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const cleanupConfettiRef = useRef<(() => void) | null>(null);
-
-  // Trigger side cannons immediately when opening and clean up when closing/unmounting
-  useEffect(() => {
-    if (isOpen) {
-      // Trigger confetti immediately without waiting for network call
-      const cleanup = triggerConfettiSideCannons();
-      cleanupConfettiRef.current = cleanup;
-    } else {
-      // Clear confetti immediately when closed
-      if (cleanupConfettiRef.current) {
-        cleanupConfettiRef.current();
-        cleanupConfettiRef.current = null;
-      }
-      hasClaimed.current = false;
-      setTimeout(() => {
-        setIsClaiming(false);
-        setClaimCompleted(false);
-      }, 0);
-    }
-
-    return () => {
-      if (cleanupConfettiRef.current) {
-        cleanupConfettiRef.current();
-      }
-    };
-  }, [isOpen]);
 
   // Background Auto-Claim XP Trigger
   useEffect(() => {
@@ -169,9 +142,7 @@ export default function VictoryModal({
                 }
               }
               setClaimCompleted(true);
-              toast.success("Awesome Job! 🎉", {
-                description: `+${xpEarned} Experience Points automatically awarded to your kid profile!`,
-              });
+              triggerConfettiSideCannons();
               if (onClaimSuccess) onClaimSuccess();
             } else {
               console.error("Activity completion auto-claim failed:", result.error);
@@ -201,6 +172,8 @@ export default function VictoryModal({
     memoryMatchStepNumber,
     xpEarned,
     onClaimSuccess,
+    gameStartedAt,
+    reviewData,
   ]);
 
   const handleContinueClick = () => {
@@ -266,11 +239,6 @@ export default function VictoryModal({
                 <div className="text-xs font-semibold text-slate-400 dark:text-slate-500">
                   {rewardsDescription || "Activity Completed"}
                 </div>
-                {isClaiming && (
-                  <div className="text-[10px] text-amber-600 font-semibold flex items-center gap-1 mt-1 animate-pulse">
-                    <Loader2 className="size-3 animate-spin" /> Saving progress...
-                  </div>
-                )}
               </motion.div>
 
               {/* Custom Children Content (e.g. results scorecard connections review) */}

@@ -104,13 +104,13 @@ export default function KidClassroomWorkspaceClient({
           assignments.map((a) =>
             a.id === selectedAssignment.id
               ? {
-                  ...a,
-                  submission_id: result.submission.id,
-                  submission_type: result.submission.submission_type,
-                  submission_text: result.submission.submission_text,
-                  submission_url: result.submission.submission_url,
-                  submitted_at: result.submission.submitted_at,
-                }
+                ...a,
+                submission_id: result.submission.id,
+                submission_type: result.submission.submission_type,
+                submission_text: result.submission.submission_text,
+                submission_url: result.submission.submission_url,
+                submitted_at: result.submission.submitted_at,
+              }
               : a
           )
         );
@@ -169,60 +169,62 @@ export default function KidClassroomWorkspaceClient({
   return (
     <div className="mx-auto w-full max-w-7xl flex flex-col gap-6">
       {/* 1. Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/dashboard/kid/classrooms"
-            className={cn(
-              buttonVariants({ variant: "outline" }),
-              "rounded-full h-10 w-10 p-0 hover:bg-slate-50 border-slate-200 flex items-center justify-center cursor-pointer"
-            )}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              {classroom.name}
-            </h1>
-            <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
-              {classroom.subject || "General"} • {classroom.grade || "No Grade Set"} • Teacher:{" "}
-              <span className="font-bold">{formatTeacherName(classroom.teacher)}</span>
-            </p>
-          </div>
+      <div className="flex items-center gap-4">
+        <Link
+          href="/dashboard/kid/classrooms"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "rounded-full h-10 w-10 p-0 hover:bg-slate-50 border-slate-200 flex items-center justify-center cursor-pointer shrink-0"
+          )}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            {classroom.name}
+          </h1>
+          <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
+            {classroom.subject || "General"} • {classroom.grade || "No Grade Set"} • Teacher:{" "}
+            <span className="font-bold">{formatTeacherName(classroom.teacher)}</span>
+          </p>
         </div>
+      </div>
 
-        {/* Tab Controls */}
-        <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-slate-950/40 p-1.5 rounded-full border border-slate-200/50 dark:border-slate-850 self-start sm:self-auto overflow-x-auto">
-          {[
-            { id: "overview", label: "Overview", icon: School },
-            { id: "assignments", label: "Assignments", icon: BookOpen, count: getPendingCount() },
-            { id: "resources", label: "Resources", icon: FolderOpen },
-            { id: "announcements", label: "Announcements", icon: Megaphone },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() =>
-                  setActiveTab(tab.id as "overview" | "assignments" | "resources" | "announcements")
-                }
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer select-none shrink-0 ${
-                  active
-                    ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span>{tab.label}</span>
-                {tab.count !== undefined && tab.count > 0 && (
-                  <span className="inline-flex h-4 px-1.5 items-center justify-center text-[9px] font-bold rounded-full bg-indigo-100 text-indigo-700 ml-1">
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+      {/* Tab Controls */}
+      <div className="w-full bg-muted dark:bg-slate-900 rounded-full p-1 overflow-hidden">
+        <div className="overflow-x-auto scrollbar-none w-full">
+          <div className="flex !h-auto min-w-full w-max">
+            {[
+              { id: "overview", label: "Overview", icon: School },
+              { id: "assignments", label: "Assignments", icon: BookOpen, count: getPendingCount() },
+              { id: "resources", label: "Resources", icon: FolderOpen },
+              { id: "announcements", label: "Announcements", icon: Megaphone },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() =>
+                    setActiveTab(tab.id as "overview" | "assignments" | "resources" | "announcements")
+                  }
+                  className={`flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 transition-all select-none whitespace-nowrap shrink-0 border-none bg-transparent ${
+                    active
+                      ? "bg-background text-foreground dark:bg-input/50 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span>{tab.label}</span>
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span className="inline-flex h-4 sm:h-5 px-1.5 items-center justify-center text-[9px] sm:text-xs font-bold rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 ml-1">
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -431,9 +433,9 @@ export default function KidClassroomWorkspaceClient({
 
                 const formattedDate = assign.due_date
                   ? new Date(assign.due_date).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                    })
+                    month: "short",
+                    day: "numeric",
+                  })
                   : "No due date";
 
                 return (
@@ -511,11 +513,10 @@ export default function KidClassroomWorkspaceClient({
                               </div>
                               <Link
                                 href={`/activities/launcher?assignment_id=${assign.id}`}
-                                className={`w-full rounded-full font-bold h-10 text-xs px-4 flex items-center justify-center cursor-pointer transition-colors ${
-                                  isInProgress
+                                className={`w-full rounded-full font-bold h-10 text-xs px-4 flex items-center justify-center cursor-pointer transition-colors ${isInProgress
                                     ? "bg-amber-500 hover:bg-amber-600 text-white"
                                     : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                }`}
+                                  }`}
                               >
                                 {isInProgress ? "Resume Activity" : "Launch Activity"}
                               </Link>
@@ -590,7 +591,7 @@ export default function KidClassroomWorkspaceClient({
                                     </DialogDescription>
                                   </DialogHeader>
 
-                                  <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
+                                  <form onSubmit={handleSubmit} className="space-y-4 py-6">
                                     <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50 space-y-1 dark:bg-slate-950">
                                       <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block">
                                         Instructions
@@ -676,10 +677,11 @@ export default function KidClassroomWorkspaceClient({
                                       </Button>
                                       <Button
                                         type="submit"
-                                        disabled={isLoading}
+                                        loading={isLoading}
+                                        loadingText="Submitting..."
                                         className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 border-none"
                                       >
-                                        <Send className="mr-2 h-4 w-4" />
+                                        {!isLoading && <Send className="mr-2 h-4 w-4 shrink-0" />}
                                         Submit
                                       </Button>
                                     </DialogFooter>
@@ -744,15 +746,14 @@ export default function KidClassroomWorkspaceClient({
                     <CardContent className="p-6 md:p-7 space-y-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 ${
-                            isPdf
+                          className={`h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 ${isPdf
                               ? "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400"
                               : isVideo
                                 ? "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
                                 : isLink
                                   ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
                                   : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400"
-                          }`}
+                            }`}
                         >
                           {isPdf && <FileText className="h-5 w-5" />}
                           {isVideo && <Video className="h-5 w-5" />}

@@ -29,20 +29,12 @@ function ParentSubmitButton() {
   return (
     <Button
       type="submit"
-      disabled={pending}
+      loading={pending}
+      loadingText="Saving profile..."
       className="h-14 w-full rounded-2xl bg-sky-600 text-base font-bold shadow-[0_16px_30px_rgba(2,132,199,0.3)] hover:bg-sky-700"
     >
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          Saving profile...
-        </>
-      ) : (
-        <>
-          Finish Parent Setup
-          <Sparkles className="ml-2 h-5 w-5" />
-        </>
-      )}
+      Finish Parent Setup
+      <Sparkles className="ml-2 h-5 w-5" />
     </Button>
   );
 }

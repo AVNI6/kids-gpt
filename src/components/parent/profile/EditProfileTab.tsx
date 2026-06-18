@@ -122,7 +122,7 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
       <div className="space-y-4">
         {/* Dynamic Profile Picture Selector */}
         <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <Label className="text-xs font-bold uppercase pt-4 tracking-wider text-slate-500">
             Profile Picture
           </Label>
           <div className="flex flex-col sm:flex-row items-center gap-4.5 bg-slate-50/50 dark:bg-black/20 p-4 rounded-3xl border border-slate-100/50 dark:border-slate-800/40">
@@ -237,16 +237,12 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
       <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800/60">
         <Button
           type="submit"
-          disabled={isPending || isUploading}
+          loading={isPending}
+          loadingText="Saving..."
+          disabled={isUploading}
           className="rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-11 px-6 text-xs cursor-pointer shadow-md hover:shadow-lg dark:bg-sky-500 dark:hover:bg-sky-600"
         >
-          {isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...
-            </>
-          ) : (
-            "Save Profile"
-          )}
+          Save Profile
         </Button>
       </div>
     </form>

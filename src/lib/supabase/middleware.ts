@@ -23,9 +23,9 @@ export const createClient = (request: NextRequest) => {
           request,
         });
 
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set({ name, value, ...options })
-        );
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set({ name, value, ...options });
+        });
       },
     },
   });

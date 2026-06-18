@@ -305,7 +305,7 @@ export default function Sidebar() {
         </SidebarHeader>
 
         {/* Sidebar Navigation and Recent Chats Content */}
-        <SidebarContent className="flex flex-col flex-1 min-h-0 py-2 gap-4 px-0">
+        <SidebarContent className="flex flex-col flex-1 min-h-0 pt-2 gap-4 px-0">
           <SidebarNavigation
             isOpen={isOpen}
             isUserLoggedIn={isUserLoggedIn}
