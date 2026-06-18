@@ -141,3 +141,38 @@ export async function createChildInvitation(
     inviteLink,
   };
 }
+
+/**
+ * Given an invite token stored in the user's metadata,
+ * resolves and returns the inviting parent's email address.
+ * Used to pre-fill the parentEmail field on the kid onboarding page.
+ */
+export async function getParentEmailByInviteToken(token: string): Promise<string | null> {
+  if (!token) return null;
+
+  const supabase = await createClient();
+
+  // 1. Find the invitation row by token (must be active and unexpired)
+  const { data: invite, error: inviteError } = await supabase
+    .from("child_invitations")
+    .select("parent_id")
+    .eq("token", token)
+    .is("accepted_at", null)
+    .is("deleted_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+
+  if (inviteError || !invite?.parent_id) return null;
+
+  // 2. Resolve parent's email from their profile
+  const { data: parentProfile, error: profileError } = await supabase
+    .from("profile")
+    .select("email")
+    .eq("user_id", invite.parent_id)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (profileError || !parentProfile?.email) return null;
+
+  return parentProfile.email;
+}

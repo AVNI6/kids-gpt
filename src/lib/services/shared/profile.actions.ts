@@ -121,6 +121,7 @@ export async function submitKidOnboarding(
       first_name: firstName,
       last_name: lastName,
       date_of_birth: dateOfBirth,
+      role: "kid",
       is_onboarded: true,
     })
     .eq("user_id", user.id);
@@ -131,69 +132,93 @@ export async function submitKidOnboarding(
 
   let linkMessage = "Profile setup complete!";
 
-  // Check if there is an active child invitation for the child's email
-  const { data: invite, error: inviteError } = await supabase
-    .from("child_invitations")
-    .select("id, parent_id")
-    .eq("invitee_email", user.email)
-    .is("accepted_at", null)
-    .is("deleted_at", null)
-    .gt("expires_at", new Date().toISOString())
-    .maybeSingle();
+  // ─── Auto-link via invite token (stored in user metadata at sign-up) ───────
+  // This is the primary path for invited kids. More reliable than email lookup
+  // because it matches the exact token used in the invite link.
+  const inviteToken = user.user_metadata?.invite_token as string | undefined;
 
-  if (inviteError) {
-    console.error("Error querying active child invitation:", inviteError.message);
-  }
+  console.log("[submitKidOnboarding] user.id:", user.id);
+  console.log("[submitKidOnboarding] user.email:", user.email);
+  console.log("[submitKidOnboarding] invite_token from metadata:", inviteToken ?? "NONE");
+  console.log("[submitKidOnboarding] parentEmail from form:", parentEmail || "EMPTY");
 
-  if (invite) {
-    // 1. Get the parent's email address from their profile using parent_id
-    const { data: parentProfile, error: parentProfileError } = await supabase
-      .from("profile")
-      .select("email")
-      .eq("user_id", invite.parent_id)
+  if (inviteToken) {
+    // Lookup the invitation directly by token
+    const { data: invite, error: inviteError } = await supabase
+      .from("child_invitations")
+      .select("id, parent_id")
+      .eq("token", inviteToken)
+      .is("accepted_at", null)
+      .is("deleted_at", null)
+      .gt("expires_at", new Date().toISOString())
       .maybeSingle();
 
-    if (parentProfileError || !parentProfile?.email) {
-      console.error("Error fetching parent profile for auto-linking:", parentProfileError?.message);
-    } else {
-      // 2. Call link_users_by_email to automatically link parent and child
-      const { data: linkData, error: linkError } = await supabase.rpc("link_users_by_email", {
-        p_current_user_id: user.id,
-        p_target_email: parentProfile.email,
-      });
+    console.log("[submitKidOnboarding] invite lookup result:", JSON.stringify(invite));
+    if (inviteError) {
+      console.error("[submitKidOnboarding] invite lookup error:", inviteError.message);
+    }
 
-      if (linkError) {
-        console.error("Error auto-linking parent-child:", linkError.message);
-      } else if (linkData?.status === "success") {
-        // 3. Mark the invitation as accepted
-        const { error: acceptError } = await supabase
-          .from("child_invitations")
-          .update({ accepted_at: new Date().toISOString() })
-          .eq("id", invite.id);
+    if (invite?.parent_id) {
+      // Get parent's email from their profile
+      const { data: parentProfile, error: parentProfileError } = await supabase
+        .from("profile")
+        .select("email")
+        .eq("user_id", invite.parent_id)
+        .maybeSingle();
 
-        if (acceptError) {
-          console.error("Error updating accepted_at for invitation:", acceptError.message);
+      console.log("[submitKidOnboarding] parent profile:", JSON.stringify(parentProfile));
+      if (parentProfileError) {
+        console.error("[submitKidOnboarding] parent profile error:", parentProfileError.message);
+      }
+
+      if (parentProfile?.email) {
+        // Call link_users_by_email RPC
+        const { data: linkData, error: linkError } = await supabase.rpc("link_users_by_email", {
+          p_current_user_id: user.id,
+          p_target_email: parentProfile.email,
+        });
+
+        console.log("[submitKidOnboarding] link RPC result:", JSON.stringify(linkData));
+        if (linkError) {
+          console.error("[submitKidOnboarding] link RPC error:", linkError.message);
         }
 
-        linkMessage = "Profile setup complete and automatically linked with parent!";
+        if (linkData?.status === "success") {
+          // Mark invitation as accepted
+          const { error: acceptError } = await supabase
+            .from("child_invitations")
+            .update({ accepted_at: new Date().toISOString() })
+            .eq("id", invite.id);
+
+          if (acceptError) {
+            console.error("[submitKidOnboarding] accept invitation error:", acceptError.message);
+          }
+
+          linkMessage = "Profile setup complete and automatically linked with parent!";
+          console.log("[submitKidOnboarding] ✅ Auto-linked successfully!");
+        } else {
+          console.warn("[submitKidOnboarding] RPC did not return success:", linkData?.message);
+        }
       }
     }
   } else if (parentEmail) {
+    // ─── Fallback: manual parent email entered in the form ──────────────────
+    console.log("[submitKidOnboarding] trying manual parentEmail path:", parentEmail);
+
     const { data: linkData, error: linkError } = await supabase.rpc("link_users_by_email", {
       p_current_user_id: user.id,
       p_target_email: parentEmail,
     });
 
+    console.log("[submitKidOnboarding] manual link RPC result:", JSON.stringify(linkData));
+
     if (linkError) {
-      return { error: linkError.message };
-    }
-
-    if (linkData?.status === "error" || linkData?.status === "pending") {
-      return { error: linkData.message };
-    }
-
-    if (linkData?.message) {
-      linkMessage = linkData.message;
+      console.error("[submitKidOnboarding] manual link RPC error:", linkError.message);
+      // Non-fatal — profile is already updated, don't block success
+    } else if (linkData?.status === "success") {
+      linkMessage = linkData.message ?? "Linked with parent!";
+    } else {
+      console.warn("[submitKidOnboarding] manual link did not succeed:", linkData?.message);
     }
   }
 

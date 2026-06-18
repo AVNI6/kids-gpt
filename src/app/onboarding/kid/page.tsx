@@ -21,6 +21,7 @@ import {
   submitKidOnboarding,
   type KidOnboardingState,
 } from "@/lib/services/shared/profile.actions";
+import { getParentEmailByInviteToken } from "@/lib/services/shared/invitations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,6 +67,8 @@ export default function KidOnboardingPage() {
 
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [localAgeError, setLocalAgeError] = useState<string | null>(null);
+  const [prefillParentEmail, setPrefillParentEmail] = useState<string | null>(null);
+  const [isResolvingEmail, setIsResolvingEmail] = useState(false);
 
   const handleDateChange = (selectedDate: Date | undefined) => {
     setDate(selectedDate);
@@ -100,6 +103,19 @@ export default function KidOnboardingPage() {
       router.push("/signin");
     }
   }, [isLoading, user, router]);
+
+  // Resolve parent email from invite token stored in user metadata
+  useEffect(() => {
+    const inviteToken = user?.user_metadata?.invite_token;
+    if (!inviteToken) return;
+
+    setIsResolvingEmail(true);
+    getParentEmailByInviteToken(inviteToken)
+      .then((email) => {
+        if (email) setPrefillParentEmail(email);
+      })
+      .finally(() => setIsResolvingEmail(false));
+  }, [user]);
 
   useEffect(() => {
     if (kidState.success && !toastShownRef.current) {
@@ -223,18 +239,37 @@ export default function KidOnboardingPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="parentEmail" className="text-sm font-bold text-foreground ml-1">
-              Parent&apos;s Email <span className="text-muted-foreground">(Optional)</span>
+              Parent&apos;s Email
+              {prefillParentEmail ? (
+                <span className="ml-2 text-xs font-semibold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-full">
+                  ✓ From your invite
+                </span>
+              ) : (
+                <span className="text-muted-foreground"> (Optional)</span>
+              )}
             </Label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
               <Input
+                key={prefillParentEmail ?? "no-invite"}
                 id="parentEmail"
                 name="parentEmail"
                 type="email"
-                placeholder="mom@example.com"
-                className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
+                defaultValue={prefillParentEmail ?? ""}
+                placeholder={isResolvingEmail ? "Resolving..." : "mom@example.com"}
+                readOnly={!!prefillParentEmail}
+                className={`h-12 rounded-2xl border-2 pl-11 text-base font-medium bg-background text-foreground focus:ring-0 ${
+                  prefillParentEmail
+                    ? "border-sky-500/50 bg-sky-50/30 dark:bg-sky-900/10 text-sky-600 dark:text-sky-400 cursor-not-allowed"
+                    : "border-border focus:border-sky-500"
+                }`}
               />
             </div>
+            {prefillParentEmail && (
+              <p className="text-xs text-muted-foreground ml-1">
+                Your account will be automatically linked to your parent.
+              </p>
+            )}
           </div>
         </div>
 
