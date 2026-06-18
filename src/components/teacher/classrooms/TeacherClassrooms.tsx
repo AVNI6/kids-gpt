@@ -142,7 +142,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-5 px-6 py-5">
+            <form onSubmit={handleCreateSubmit} className="space-y-5 px-6 pb-5">
               <div className="space-y-1.5">
                 <Label
                   htmlFor="className"
