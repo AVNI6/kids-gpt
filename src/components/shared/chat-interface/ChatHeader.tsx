@@ -5,7 +5,6 @@ import Navbar from "@/components/ui/Navbar";
 import Logo from "@/components/shared/logo/Logo";
 import { Menu } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { UserProfile } from "@/types/user";
 
 interface ChatHeaderProps {
@@ -26,7 +25,6 @@ function getInitials(firstName?: string | null, lastName?: string | null): strin
 export default function ChatHeader({
   toggleSidebar,
   sessionOwnerProfile,
-  userRole,
 }: ChatHeaderProps) {
   return (
     <header className="sticky top-0 z-40 w-full h-16 bg-background border-b border-border flex items-center px-4 md:px-6 font-bold text-sky-600 justify-between shrink-0 gap-4">

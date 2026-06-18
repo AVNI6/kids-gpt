@@ -1,7 +1,6 @@
 "use client";
 import {
   UserRound,
-  Sparkles,
   Settings,
   HelpCircle,
   Sun,
@@ -29,22 +28,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 interface ProfileProps {
   isCollapsed?: boolean;
 }
 
-function getInitials(name?: string, email?: string): string {
+function getInitials(name?: string): string {
   if (name) {
     const parts = name.trim().split(" ");
     if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     return parts[0][0].toUpperCase();
   }
-  if (email) return email[0].toUpperCase();
   return "U";
 }
 
 export default function Profile({ isCollapsed }: ProfileProps) {
-  const { user, userProfile, isUserLoggedIn, logout } = useAuth();
+  const { user, userProfile, isUserLoggedIn, logout, isLoading, isInitializing } = useAuth();
   const { setTheme, theme } = useTheme();
   const pathname = usePathname();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -57,18 +57,32 @@ export default function Profile({ isCollapsed }: ProfileProps) {
     setMounted(true);
   });
 
-  if (!isUserLoggedIn || !user) return null;
+  const isProfileLoading = isInitializing || (isUserLoggedIn && isLoading && !userProfile);
 
-  const displayName =
-    userProfile && (userProfile.first_name || userProfile.last_name)
-      ? `${userProfile.first_name ?? ""} ${userProfile.last_name ?? ""}`.trim()
-      : user.user_metadata?.fullname ||
-        user.user_metadata?.full_name ||
-        (user.email?.split("@")[0] ?? "User");
+  if (isProfileLoading) {
+    if (isCollapsed) {
+      return (
+        <div className="w-full flex justify-center p-0! h-10! w-10! mx-auto items-center">
+          <Skeleton className="h-10 w-10 rounded-full" />
+        </div>
+      );
+    }
+    return (
+      <div className="w-full flex items-center gap-3 p-2 rounded-2xl">
+        <Skeleton className="h-12 w-12 rounded-full shrink-0" />
+        <div className="flex flex-col gap-1.5 flex-1 min-w-0 text-left">
+          <Skeleton className="h-4 w-28 rounded-md" />
+          <Skeleton className="h-3 w-16 rounded-md" />
+        </div>
+      </div>
+    );
+  }
 
-  const avatarUrl =
-    userProfile?.avatar_url ?? (user.user_metadata?.avatar_url as string | undefined);
-  const dashboardRole = userProfile?.role ?? "kid";
+  if (!isUserLoggedIn || !user || !userProfile) return null;
+
+  const displayName = `${userProfile.first_name ?? ""} ${userProfile.last_name ?? ""}`.trim() || user.email?.split("@")[0] || "User";
+  const avatarUrl = userProfile.avatar_url;
+  const dashboardRole = userProfile.role ?? "kid";
 
   return (
     <div className="w-full">
@@ -82,7 +96,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
           <Avatar size="lg" className="border-2 border-emerald-500/20 shadow-sm shrink-0">
             <AvatarImage src={avatarUrl} />
             <AvatarFallback className="bg-emerald-500/10 text-emerald-600 font-bold text-base">
-              {getInitials(displayName, user.email)}
+              {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>
           {!isCollapsed && (

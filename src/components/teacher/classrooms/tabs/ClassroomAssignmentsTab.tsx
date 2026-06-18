@@ -195,7 +195,7 @@ export default function ClassroomAssignmentsTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCreateAssignment} className="space-y-4 px-6 py-5">
+            <form onSubmit={handleCreateAssignment} className="space-y-4 px-6 pb-5">
               <div className="space-y-1.5">
                 <Label
                   htmlFor="assignTitle"
@@ -387,8 +387,8 @@ export default function ClassroomAssignmentsTab({
                 </Button>
                 <Button
                   type="submit"
-                  loading={isLoading}
-                  className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
+                  disabled={isLoading}
+                  className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
                 >
                   Save as Draft
                 </Button>
@@ -591,7 +591,7 @@ export default function ClassroomAssignmentsTab({
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleUpdateAssignment} className="space-y-4 px-6 py-5">
+          <form onSubmit={handleUpdateAssignment} className="space-y-4 px-6 pb-5">
             <div className="space-y-1.5">
               <Label
                 htmlFor="editTitle"

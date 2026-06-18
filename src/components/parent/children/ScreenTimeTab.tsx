@@ -18,7 +18,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) {
   const [dailySeconds, setDailySeconds] = useState(0);
@@ -138,7 +137,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
   };
 
   return (
-    <ScrollArea className="h-[500px] pr-4">
+    <div className="w-full">
       <div className="space-y-8">
       {/* Title */}
       <div className="space-y-1">
@@ -390,6 +389,6 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
         </div>
       )}
       </div>
-    </ScrollArea>
+    </div>
   );
 }

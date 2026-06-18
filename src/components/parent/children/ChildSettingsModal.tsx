@@ -7,6 +7,7 @@ import type { LinkedChildProfile } from "@/types/kid";
 import EditProfileTab from "@/components/parent/profile/EditProfileTab";
 import ScreenTimeTab from "@/components/parent/children/ScreenTimeTab";
 import DeleteAccountTab from "@/components/parent/profile/DeleteAccountTab";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type SettingsTab = "profile" | "screentime" | "delete";
 
@@ -97,13 +98,15 @@ export default function ChildSettingsModal({
         </div>
 
         {/* Right Side Content Panel */}
-        <div className="flex-1 p-6 sm:p-8 overflow-y-auto flex flex-col justify-between bg-white dark:bg-slate-900">
-          <div className="flex-1">
-            {activeTab === "profile" && <EditProfileTab child={child} onSuccess={handleClose} />}
-            {activeTab === "screentime" && <ScreenTimeTab child={child} />}
-            {activeTab === "delete" && <DeleteAccountTab child={child} onSuccess={handleClose} />}
+        <ScrollArea className="flex-1 h-full bg-white dark:bg-slate-900">
+          <div className="p-6 sm:p-8 flex flex-col min-h-full justify-between">
+            <div className="flex-1">
+              {activeTab === "profile" && <EditProfileTab child={child} onSuccess={handleClose} />}
+              {activeTab === "screentime" && <ScreenTimeTab child={child} />}
+              {activeTab === "delete" && <DeleteAccountTab child={child} onSuccess={handleClose} />}
+            </div>
           </div>
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

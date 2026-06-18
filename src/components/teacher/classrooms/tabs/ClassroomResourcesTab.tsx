@@ -250,7 +250,7 @@ export default function ClassroomResourcesTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleUploadResource} className="space-y-4 px-6 py-5">
+            <form onSubmit={handleUploadResource} className="space-y-4 py-6">
               {/* Method Switcher */}
               <div className="flex gap-2 bg-slate-100 dark:bg-slate-950/40 p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800">
                 <button
