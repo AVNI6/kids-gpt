@@ -122,7 +122,7 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
       <div className="space-y-4">
         {/* Dynamic Profile Picture Selector */}
         <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <Label className="text-xs font-bold uppercase pt-4 tracking-wider text-slate-500">
             Profile Picture
           </Label>
           <div className="flex flex-col sm:flex-row items-center gap-4.5 bg-slate-50/50 dark:bg-black/20 p-4 rounded-3xl border border-slate-100/50 dark:border-slate-800/40">
