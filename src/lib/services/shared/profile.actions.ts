@@ -74,9 +74,6 @@ export async function submitKidOnboarding(
   const firstName = String(formData.get("firstName") ?? "").trim();
   const lastName = String(formData.get("lastName") ?? "").trim();
   const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
-  const parentEmail = String(formData.get("parentEmail") ?? "")
-    .trim()
-    .toLowerCase();
 
   if (!firstName) {
     return { error: "First name is required." };
@@ -115,7 +112,50 @@ export async function submitKidOnboarding(
     return { error: "Please sign in again to continue onboarding." };
   }
 
-  const { error: profileUpdateError } = await supabase
+  const inviteToken = user.user_metadata?.invite_token as string | undefined;
+
+  if (!inviteToken) {
+    return { error: "Invitation token is missing. You must be invited by a parent to sign up as a kid." };
+  }
+
+  const adminClient = createAdminClient();
+
+  // 1. Fetch the invitation details using admin client (bypassing RLS)
+  const { data: invite, error: inviteError } = await adminClient
+    .from("child_invitations")
+    .select("id, parent_id, invitee_email, expires_at, accepted_at, deleted_at")
+    .eq("token", inviteToken)
+    .maybeSingle();
+
+  if (inviteError) {
+    console.error("[submitKidOnboarding] invite query error:", inviteError.message);
+    return { error: "Failed to verify invitation." };
+  }
+
+  if (!invite) {
+    return { error: "Invitation not found." };
+  }
+
+  if (invite.accepted_at) {
+    return { error: "This invitation has already been accepted." };
+  }
+
+  if (invite.deleted_at) {
+    return { error: "This invitation is no longer active." };
+  }
+
+  const expiresAt = new Date(invite.expires_at);
+  if (expiresAt.getTime() < Date.now()) {
+    return { error: "This invitation link has expired." };
+  }
+
+  // 2. Security requirement: Validate invitation belongs to the authenticated user
+  if (invite.invitee_email.trim().toLowerCase() !== user.email?.trim().toLowerCase()) {
+    return { error: "This invitation belongs to a different email address." };
+  }
+
+  // 3. Mark the child's profile as onboarded (using admin client to ensure database write success)
+  const { error: profileUpdateError } = await adminClient
     .from("profile")
     .update({
       first_name: firstName,
@@ -127,102 +167,50 @@ export async function submitKidOnboarding(
     .eq("user_id", user.id);
 
   if (profileUpdateError) {
-    return { error: profileUpdateError.message };
+    console.error("[submitKidOnboarding] profile update error:", profileUpdateError.message);
+    return { error: "Failed to update profile details." };
   }
 
-  let linkMessage = "Profile setup complete!";
+  // 4. Resolve the parent's email from their profile
+  const { data: parentProfile, error: parentProfileError } = await adminClient
+    .from("profile")
+    .select("email")
+    .eq("user_id", invite.parent_id)
+    .is("deleted_at", null)
+    .maybeSingle();
 
-  // ─── Auto-link via invite token (stored in user metadata at sign-up) ───────
-  // This is the primary path for invited kids. More reliable than email lookup
-  // because it matches the exact token used in the invite link.
-  const inviteToken = user.user_metadata?.invite_token as string | undefined;
-
-  console.log("[submitKidOnboarding] user.id:", user.id);
-  console.log("[submitKidOnboarding] user.email:", user.email);
-  console.log("[submitKidOnboarding] invite_token from metadata:", inviteToken ?? "NONE");
-  console.log("[submitKidOnboarding] parentEmail from form:", parentEmail || "EMPTY");
-
-  if (inviteToken) {
-    // Lookup the invitation directly by token
-    const { data: invite, error: inviteError } = await supabase
-      .from("child_invitations")
-      .select("id, parent_id")
-      .eq("token", inviteToken)
-      .is("accepted_at", null)
-      .is("deleted_at", null)
-      .gt("expires_at", new Date().toISOString())
-      .maybeSingle();
-
-    console.log("[submitKidOnboarding] invite lookup result:", JSON.stringify(invite));
-    if (inviteError) {
-      console.error("[submitKidOnboarding] invite lookup error:", inviteError.message);
-    }
-
-    if (invite?.parent_id) {
-      // Get parent's email from their profile
-      const { data: parentProfile, error: parentProfileError } = await supabase
-        .from("profile")
-        .select("email")
-        .eq("user_id", invite.parent_id)
-        .maybeSingle();
-
-      console.log("[submitKidOnboarding] parent profile:", JSON.stringify(parentProfile));
-      if (parentProfileError) {
-        console.error("[submitKidOnboarding] parent profile error:", parentProfileError.message);
-      }
-
-      if (parentProfile?.email) {
-        // Call link_users_by_email RPC
-        const { data: linkData, error: linkError } = await supabase.rpc("link_users_by_email", {
-          p_current_user_id: user.id,
-          p_target_email: parentProfile.email,
-        });
-
-        console.log("[submitKidOnboarding] link RPC result:", JSON.stringify(linkData));
-        if (linkError) {
-          console.error("[submitKidOnboarding] link RPC error:", linkError.message);
-        }
-
-        if (linkData?.status === "success") {
-          // Mark invitation as accepted
-          const { error: acceptError } = await supabase
-            .from("child_invitations")
-            .update({ accepted_at: new Date().toISOString() })
-            .eq("id", invite.id);
-
-          if (acceptError) {
-            console.error("[submitKidOnboarding] accept invitation error:", acceptError.message);
-          }
-
-          linkMessage = "Profile setup complete and automatically linked with parent!";
-          console.log("[submitKidOnboarding] ✅ Auto-linked successfully!");
-        } else {
-          console.warn("[submitKidOnboarding] RPC did not return success:", linkData?.message);
-        }
-      }
-    }
-  } else if (parentEmail) {
-    // ─── Fallback: manual parent email entered in the form ──────────────────
-    console.log("[submitKidOnboarding] trying manual parentEmail path:", parentEmail);
-
-    const { data: linkData, error: linkError } = await supabase.rpc("link_users_by_email", {
-      p_current_user_id: user.id,
-      p_target_email: parentEmail,
-    });
-
-    console.log("[submitKidOnboarding] manual link RPC result:", JSON.stringify(linkData));
-
-    if (linkError) {
-      console.error("[submitKidOnboarding] manual link RPC error:", linkError.message);
-      // Non-fatal — profile is already updated, don't block success
-    } else if (linkData?.status === "success") {
-      linkMessage = linkData.message ?? "Linked with parent!";
-    } else {
-      console.warn("[submitKidOnboarding] manual link did not succeed:", linkData?.message);
-    }
+  if (parentProfileError || !parentProfile?.email) {
+    console.error("[submitKidOnboarding] parent profile lookup failed:", parentProfileError?.message);
+    return { error: "Failed to resolve parent profile." };
   }
 
-  return { success: true, message: linkMessage, error: null };
+  // 5. Create the parent-child relationship using the invitation parent email via RPC
+  const { data: linkData, error: linkError } = await adminClient.rpc("link_users_by_email", {
+    p_current_user_id: user.id,
+    p_target_email: parentProfile.email,
+  });
+
+  if (linkError) {
+    console.error("[submitKidOnboarding] link users RPC error:", linkError.message);
+    return { error: "Failed to establish parent-child relationship." };
+  }
+
+  if (linkData?.status !== "success") {
+    console.error("[submitKidOnboarding] link users RPC failed status:", linkData?.message);
+    return { error: linkData?.message || "Failed to link accounts." };
+  }
+
+  // 6. Mark the invitation as accepted
+  const { error: acceptError } = await adminClient
+    .from("child_invitations")
+    .update({ accepted_at: new Date().toISOString() })
+    .eq("id", invite.id);
+
+  if (acceptError) {
+    console.error("[submitKidOnboarding] accept invitation status error:", acceptError.message);
+  }
+
+  return { success: true, message: "Profile setup complete and automatically linked with parent!", error: null };
 }
 
 export async function submitParentOnboarding(

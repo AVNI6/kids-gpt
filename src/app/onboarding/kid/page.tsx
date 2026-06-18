@@ -12,6 +12,7 @@ import {
   Brain,
   Mail,
   Calendar as CalendarIcon,
+  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
@@ -21,7 +22,7 @@ import {
   submitKidOnboarding,
   type KidOnboardingState,
 } from "@/lib/services/shared/profile.actions";
-import { getParentEmailByInviteToken } from "@/lib/services/shared/invitations";
+import { getParentDetailsByInviteToken } from "@/lib/services/shared/invitations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,6 +70,7 @@ export default function KidOnboardingPage() {
   const [localAgeError, setLocalAgeError] = useState<string | null>(null);
   const [prefillParentEmail, setPrefillParentEmail] = useState<string | null>(null);
   const [isResolvingEmail, setIsResolvingEmail] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   const handleDateChange = (selectedDate: Date | undefined) => {
     setDate(selectedDate);
@@ -104,18 +106,42 @@ export default function KidOnboardingPage() {
     }
   }, [isLoading, user, router]);
 
-  // Resolve parent email from invite token stored in user metadata
+  // Resolve parent details from invite token stored in user metadata
   useEffect(() => {
-    const inviteToken = user?.user_metadata?.invite_token;
-    if (!inviteToken) return;
+    if (isLoading || !user) return;
 
-    setIsResolvingEmail(true);
-    getParentEmailByInviteToken(inviteToken)
-      .then((email) => {
-        if (email) setPrefillParentEmail(email);
-      })
-      .finally(() => setIsResolvingEmail(false));
-  }, [user]);
+    const resolveInvite = async () => {
+      const inviteToken = user.user_metadata?.invite_token;
+      if (!inviteToken) {
+        setInviteError("Invitation token is missing. You must register using a parent's invitation link.");
+        return;
+      }
+
+      setIsResolvingEmail(true);
+      setInviteError(null);
+      try {
+        const res = await getParentDetailsByInviteToken(inviteToken);
+        if (res.error) {
+          setInviteError(res.error);
+        } else if (res.parentEmail) {
+          setPrefillParentEmail(res.parentEmail);
+        } else {
+          setInviteError("Invalid invitation.");
+        }
+      } catch (err) {
+        console.error("Error resolving invite:", err);
+        setInviteError("Failed to verify invitation. Please try again.");
+      } finally {
+        setIsResolvingEmail(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      resolveInvite();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [user, isLoading]);
 
   useEffect(() => {
     if (kidState.success && !toastShownRef.current) {
@@ -129,11 +155,49 @@ export default function KidOnboardingPage() {
     }
   }, [kidState, router, refreshProfile]);
 
-  if (isLoading) {
+  if (isLoading || isResolvingEmail) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
       </div>
+    );
+  }
+
+  if (inviteError) {
+    return (
+      <OnboardingLayout
+        leftIcon={ShieldAlert}
+        quote="“Oops! It looks like there's an issue with your invitation. Let's get that sorted out so we can start our adventure.”"
+        badges={[
+          { text: "Security Verification", icon: ShieldAlert },
+        ]}
+        title="Verification Required"
+        description="We couldn't verify your invitation"
+        footer={
+          <p className="text-center text-xs font-bold text-muted-foreground">
+            Ask your parent to send you a new invitation link!
+          </p>
+        }
+      >
+        <div className="flex flex-col items-center justify-center p-6 space-y-6 border-2 border-rose-500/20 bg-rose-500/5 dark:bg-rose-950/10 rounded-3xl text-center">
+          <div className="rounded-full bg-rose-100 dark:bg-rose-900/30 p-4 text-rose-500">
+            <ShieldAlert className="h-10 w-10 animate-bounce" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-bold text-foreground">Invalid Invitation Link</h3>
+            <p className="text-sm font-semibold text-muted-foreground max-w-sm">
+              {inviteError}
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => router.push("/signin")}
+            className="w-full h-12 rounded-2xl bg-sky-600 hover:bg-sky-700 text-base font-bold shadow-[0_16px_30px_rgba(2,132,199,0.3)]"
+          >
+            Go to Sign In
+          </Button>
+        </div>
+      </OnboardingLayout>
     );
   }
 
@@ -240,36 +304,21 @@ export default function KidOnboardingPage() {
           <div className="space-y-2">
             <Label htmlFor="parentEmail" className="text-sm font-bold text-foreground ml-1">
               Parent&apos;s Email
-              {prefillParentEmail ? (
-                <span className="ml-2 text-xs font-semibold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-full">
-                  ✓ From your invite
-                </span>
-              ) : (
-                <span className="text-muted-foreground"> (Optional)</span>
-              )}
             </Label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
               <Input
-                key={prefillParentEmail ?? "no-invite"}
                 id="parentEmail"
                 name="parentEmail"
                 type="email"
-                defaultValue={prefillParentEmail ?? ""}
-                placeholder={isResolvingEmail ? "Resolving..." : "mom@example.com"}
-                readOnly={!!prefillParentEmail}
-                className={`h-12 rounded-2xl border-2 pl-11 text-base font-medium bg-background text-foreground focus:ring-0 ${
-                  prefillParentEmail
-                    ? "border-sky-500/50 bg-sky-50/30 dark:bg-sky-900/10 text-sky-600 dark:text-sky-400 cursor-not-allowed"
-                    : "border-border focus:border-sky-500"
-                }`}
+                value={prefillParentEmail ?? ""}
+                readOnly
+                className="h-12 rounded-2xl border-2 border-sky-500/30 pl-11 text-base font-medium bg-sky-50/30 dark:bg-sky-900/10 text-sky-600 dark:text-sky-400 cursor-not-allowed focus:ring-0"
               />
             </div>
-            {prefillParentEmail && (
-              <p className="text-xs text-muted-foreground ml-1">
-                Your account will be automatically linked to your parent.
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground ml-1">
+              Your account is automatically linked to your parent.
+            </p>
           </div>
         </div>
 
