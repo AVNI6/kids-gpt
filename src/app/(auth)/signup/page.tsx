@@ -108,14 +108,14 @@ function SignupForm() {
       }
 
       const siteUrl = window.location.origin;
+
       const { data, error } = await supabase.auth.signUp({
         email: email,
         password: e.password,
         options: {
           data: {
             fullname: e.name,
-            invite_token: inviteToken ?? null,
-            role: inviteToken ? "kid" : undefined,
+            ...(inviteToken ? { invite_token: inviteToken, role: "kid" } : {}),
           },
           emailRedirectTo: `${siteUrl}/auth/callback`,
         },
@@ -134,12 +134,9 @@ function SignupForm() {
           description: "Please check your email to confirm your account.",
         });
 
+        // Email confirmation disabled (dev mode) — session returned immediately
         if (data.session) {
-          if (inviteToken) {
-            router.push(`/onboarding/kid`);
-          } else {
-            router.push(`/onboarding`);
-          }
+          router.push(inviteToken ? `/onboarding/kid` : `/onboarding`);
           return;
         }
 
