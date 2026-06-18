@@ -121,12 +121,6 @@ export default function NotificationBell({
 }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Set ring colors based on dashboard roles
-  const activeRingClass =
-    role === "teacher"
-      ? "focus:ring-indigo-500/20 hover:bg-slate-100 dark:hover:bg-slate-800"
-      : "focus:ring-sky-500/20 hover:bg-slate-100 dark:hover:bg-slate-800";
-
   const markAllTextClass =
     role === "teacher"
       ? "text-indigo-650 dark:text-indigo-400 hover:text-indigo-750"
@@ -143,8 +137,7 @@ export default function NotificationBell({
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger
         className={cn(
-          "relative p-2 text-slate-500 rounded-full transition-colors focus:outline-none focus:ring-2 cursor-pointer",
-          activeRingClass
+          "relative p-2 text-slate-500 cursor-pointer",
         )}
       >
         <Bell className="size-5" />

@@ -94,7 +94,7 @@ const RecentChatItem = React.memo(
                   >
                     <Edit2 className="w-4 h-4 text-slate-500" /> Rename
                   </button>
-                  <button
+                  {/* <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setOpenPopoverId(null);
@@ -103,7 +103,7 @@ const RecentChatItem = React.memo(
                     className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors text-sky-500 w-full text-left cursor-pointer"
                   >
                     <Share2 className="w-4 h-4" /> Share
-                  </button>
+                  </button> */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
