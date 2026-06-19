@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { RefreshCcw, CheckCircle2, RotateCcw, Sparkles, Rocket, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";

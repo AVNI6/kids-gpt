@@ -18,7 +18,7 @@ import {
   changeParentPassword,
 } from "@/lib/services/parent/settings.actions";
 
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import ChangePasswordModal from "@/components/shared/forms/ChangePasswordModal";
 
 interface ParentSettingsContainerProps {

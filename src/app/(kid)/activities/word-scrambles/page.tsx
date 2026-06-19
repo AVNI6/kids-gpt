@@ -5,7 +5,7 @@ import { Type, Sparkles, CheckCircle2, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";

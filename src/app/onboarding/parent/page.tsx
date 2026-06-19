@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { Loader2, Sparkles, UserRound, Users, ShieldCheck, CheckCircle2, Mail } from "lucide-react";
 import { toast } from "sonner";
