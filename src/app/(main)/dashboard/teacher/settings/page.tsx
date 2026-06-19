@@ -2,61 +2,31 @@ import { Suspense } from "react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getCurrentDashboardProfile } from "@/lib/services/kid/dashboard.actions";
 import TeacherSettingsContainer from "@/components/teacher/settings/TeacherSettingsContainer";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-
-function SettingsSkeleton() {
-  return (
-    <div className="animate-pulse flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-9 w-40 bg-slate-200 dark:bg-slate-800" />
-        <Skeleton className="h-4 w-80 bg-slate-200 dark:bg-slate-800" />
-      </div>
-
-      <Skeleton className="h-12 w-full rounded-2xl bg-slate-100 dark:bg-slate-900" />
-
-      <Card className="rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-8 shadow-sm">
-        <CardContent className="p-0 flex flex-col gap-6">
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-5 w-24 bg-slate-200 dark:bg-slate-800" />
-            <Skeleton className="h-24 w-full rounded-3xl bg-slate-100 dark:bg-slate-900" />
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-4 w-20 bg-slate-200 dark:bg-slate-800" />
-              <Skeleton className="h-11 w-full rounded-xl bg-slate-100 dark:bg-slate-900" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-4 w-20 bg-slate-200 dark:bg-slate-800" />
-              <Skeleton className="h-11 w-full rounded-xl bg-slate-100 dark:bg-slate-900" />
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-4 w-32 bg-slate-200 dark:bg-slate-800" />
-            <Skeleton className="h-11 w-full rounded-xl bg-slate-100 dark:bg-slate-900" />
-          </div>
-          <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800/60">
-            <Skeleton className="h-11 w-32 rounded-xl bg-slate-200 dark:bg-slate-800" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+import { ProfileSettingsSkeleton } from "@/components/shared/skeletonLoading";
 
 async function SettingsContent() {
   await checkDashboardAccess(["teacher"]);
   const profile = await getCurrentDashboardProfile();
 
+  if (!profile) {
+    return (
+      <div className="p-8 text-center font-bold text-slate-500">
+        Profile not found. Please complete onboarding.
+      </div>
+    );
+  }
+
   return <TeacherSettingsContainer profile={profile} />;
 }
 
-export default async function TeacherSettingsPage() {
+export default function TeacherSettingsPage() {
   return (
-    <main className="min-h-full bg-background text-slate-900 dark:text-slate-50">
-      <Suspense fallback={<SettingsSkeleton />}>
-        <SettingsContent />
-      </Suspense>
+    <main className="min-h-full bg-background px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8 dark:text-slate-50">
+      <div className="mx-auto w-full max-w-7xl">
+        <Suspense fallback={<ProfileSettingsSkeleton />}>
+          <SettingsContent />
+        </Suspense>
+      </div>
     </main>
   );
 }

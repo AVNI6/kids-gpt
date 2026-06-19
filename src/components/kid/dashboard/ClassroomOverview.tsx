@@ -25,7 +25,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -453,7 +452,7 @@ export default function ClassroomOverview({ memberships }: Props) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel 
+            <AlertDialogCancel
               onClick={() => setLeaveDialog((prev) => ({ ...prev, open: false }))}
               disabled={isLeaving}
             >
@@ -481,25 +480,25 @@ export function ClassroomOverviewSkeleton() {
       <Card className="rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-8 shadow-sm">
         <CardContent className="p-0 flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-3 flex-1">
-            <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800" />
-            <Skeleton className="h-8 w-96 bg-slate-200 dark:bg-slate-800" />
-            <Skeleton className="h-4 w-64 bg-slate-200 dark:bg-slate-800" />
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-8 w-96" />
+            <Skeleton className="h-4 w-64" />
           </div>
-          <Skeleton className="h-20 w-64 rounded-[28px] bg-slate-200 dark:bg-slate-800" />
+          <Skeleton className="h-20 w-64 rounded-[28px]" />
         </CardContent>
       </Card>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800" />
+          <Skeleton className="h-6 w-48" />
           <div className="grid gap-6 sm:grid-cols-2">
-            <Skeleton className="h-32 rounded-[32px] bg-slate-100 dark:bg-slate-800" />
-            <Skeleton className="h-32 rounded-[32px] bg-slate-100 dark:bg-slate-800" />
+            <Skeleton className="h-32 rounded-[32px]" />
+            <Skeleton className="h-32 rounded-[32px]" />
           </div>
         </div>
         <div>
-          <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800" />
-          <Skeleton className="h-64 rounded-[32px] bg-slate-100 dark:bg-slate-800 mt-4" />
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-64 rounded-[32px] mt-4" />
         </div>
       </div>
     </div>

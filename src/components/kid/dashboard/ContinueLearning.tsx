@@ -11,10 +11,10 @@ export function ContinueLearningSkeleton() {
   return (
     <Card className="rounded-[32px] border-sky-100 bg-white shadow-sm">
       <CardContent className="p-6 space-y-4">
-        <Skeleton className="h-8 w-48 bg-slate-100" />
+        <Skeleton className="h-8 w-48" />
         <div className="flex gap-4">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-56 w-72 rounded-[28px] bg-slate-100 shrink-0" />
+            <Skeleton key={i} className="h-56 w-72 rounded-[28px] shrink-0" />
           ))}
         </div>
       </CardContent>
