@@ -19,7 +19,7 @@ import type { DashboardUserProfile } from "@/types/kid";
 import { updateKidProfileSettings, changeKidPassword } from "@/lib/services/kid/settings.actions";
 import { calculateAge, formatLocalDate, parseLocalDate } from "@/lib/utils/kid/childAge";
 
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import ChangePasswordModal from "@/components/shared/forms/ChangePasswordModal";
 
 interface KidSettingsContainerProps {

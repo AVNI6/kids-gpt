@@ -19,7 +19,7 @@ import {
 } from "@/lib/services/teacher/settings.actions";
 import { uploadAvatar } from "@/lib/services/shared/profile.actions";
 
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import ChangePasswordModal from "@/components/shared/forms/ChangePasswordModal";
 
 interface TeacherSettingsContainerProps {

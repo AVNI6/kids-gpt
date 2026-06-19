@@ -21,15 +21,7 @@ import Logo from "@/components/shared/logo/Logo";
 
 const supabase = createClient();
 
-function setKeepSignedInCookie(keep: boolean) {
-  if (typeof document !== "undefined") {
-    if (keep) {
-      document.cookie = "keep_signed_in=true; path=/; max-age=31536000; SameSite=Lax; Secure";
-    } else {
-      document.cookie = "keep_signed_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure";
-    }
-  }
-}
+
 
 function LoginPageContent() {
   const searchParams = useSearchParams();
@@ -98,14 +90,10 @@ function LoginPageContent() {
           console.error("Failed to encrypt password for remember me:", err);
         }
         
-        // Set helper cookie for SSR middleware
-        setKeepSignedInCookie(true);
       } else {
         localStorage.setItem("rememberMe", "false");
         localStorage.removeItem("rememberedEmail");
         localStorage.removeItem("rememberedPassword");
-        // Clear helper cookie for SSR middleware
-        setKeepSignedInCookie(false);
       }
 
       // Attempt to read profile and route first-time users to onboarding.

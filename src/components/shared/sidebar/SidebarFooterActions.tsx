@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { SidebarFooter } from "@/components/ui/sidebar";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Profile from "./Profile";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SidebarFooterActionsProps {
   isOpen: boolean;

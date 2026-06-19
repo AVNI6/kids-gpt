@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { CheckCircle2, Timer, ArrowLeft, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 
 import { Button } from "@/components/ui/button";

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Loader2, Camera, CheckCircle2, UserRound } from "lucide-react";
 import { uploadAvatar } from "@/lib/services/shared/profile.actions";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AvatarUploadProps {
   initialAvatarUrl?: string | null;

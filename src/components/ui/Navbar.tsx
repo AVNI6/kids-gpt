@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Navbar = () => {
