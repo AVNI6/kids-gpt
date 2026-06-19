@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -22,6 +21,11 @@ import { getActivityReviewByRewardIdForParent } from "@/lib/services/kid/activit
 import ParentActivityReviewModal from "../progress/ParentActivityReviewModal";
 import type { ActivityReviewRow } from "@/types/activity-review.types";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import {
+  getParentActivitiesPaginated,
+  getParentSearchHistoryPaginated,
+} from "@/lib/services/parent/parent-dashboard.actions";
 
 export default function ChildDetailPanel({
   selectedChild,
@@ -38,8 +42,6 @@ export default function ChildDetailPanel({
     activeChildCachedData,
     details,
     safety,
-    searchHistory,
-    activities,
     screenTime,
   } = useParentDashboard();
 
@@ -83,24 +85,55 @@ export default function ChildDetailPanel({
     router.replace(newUrl, { scroll: false });
   };
 
-  const searchHistoryPagination = usePagination(searchHistory);
-  const { setPage: setSearchHistoryPage } = searchHistoryPagination;
-  const activitiesPagination = usePagination(activities);
-  const { setPage: setActivitiesPage } = activitiesPagination;
+  const [activitiesPage, setActivitiesPage] = useState(1);
+  const [searchHistoryPage, setSearchHistoryPage] = useState(1);
+  const pageSize = 9;
 
-  useEffect(() => {
+  const { data: activitiesData, isLoading: isLoadingActivities } = useQuery({
+    queryKey: ["child-activities", selectedChild.user_id, activitiesPage, pageSize],
+    queryFn: () => getParentActivitiesPaginated(selectedChild.user_id, activitiesPage, pageSize),
+    enabled: !!selectedChild.user_id,
+  });
+
+  const { data: searchHistoryData, isLoading: isLoadingSearchHistory } = useQuery({
+    queryKey: ["child-search-history", selectedChild.user_id, searchHistoryPage, pageSize],
+    queryFn: () => getParentSearchHistoryPaginated(selectedChild.user_id, searchHistoryPage, pageSize),
+    enabled: !!selectedChild.user_id,
+  });
+
+  const paginatedActivities = activitiesData?.activities || [];
+  const activitiesCount = activitiesData?.totalCount || 0;
+
+  const paginatedSearchHistory = searchHistoryData?.history || [];
+  const searchHistoryCount = searchHistoryData?.totalCount || 0;
+
+  const searchHistoryPagination = usePagination(paginatedSearchHistory, {
+    pageSize,
+    totalItems: searchHistoryCount,
+    page: searchHistoryPage,
+    onPageChange: setSearchHistoryPage,
+  });
+
+  const activitiesPagination = usePagination(paginatedActivities, {
+    pageSize,
+    totalItems: activitiesCount,
+    page: activitiesPage,
+    onPageChange: setActivitiesPage,
+  });
+
+  // Reset page pagination state during render when switching selected child
+  const [prevChildId, setPrevChildId] = useState(selectedChild.user_id);
+  if (selectedChild.user_id !== prevChildId) {
+    setPrevChildId(selectedChild.user_id);
     setSearchHistoryPage(1);
-  }, [selectedChild.user_id, searchHistory.length, setSearchHistoryPage]);
-
-  useEffect(() => {
     setActivitiesPage(1);
-  }, [selectedChild.user_id, activities.length, setActivitiesPage]);
+  }
 
   const gradeStr = displayGrade(selectedChild.standard);
   const ageStr = displayAge(selectedChild.date_of_birth);
   const totalXP = getSafeXP(selectedChild.total_experience_points);
 
-  const totalCompleted = details?.total_completed ?? activities.length ?? 0;
+  const totalCompleted = details?.total_completed ?? activitiesCount ?? 0;
   const usedMinutes = screenTime
     ? Math.floor(screenTime.screenTimeSeconds / 60)
     : (safety?.daily_screen_time_mins ?? 25);
@@ -397,11 +430,15 @@ export default function ChildDetailPanel({
                       <span className="text-sky-500">✨</span> Curious AI Topic Searches
                     </h3>
                     <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 font-extrabold px-3 py-1 rounded-full text-xs shrink-0 border border-sky-100/50">
-                      {searchHistory.length} Sessions Found
+                      {searchHistoryCount} Sessions Found
                     </Badge>
                   </div>
 
-                  {searchHistory.length === 0 ? (
+                  {isLoadingSearchHistory ? (
+                    <div className="flex items-center justify-center py-16">
+                      <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
+                    </div>
+                  ) : searchHistoryCount === 0 ? (
                     <div className="text-center py-16 bg-slate-50/50 dark:bg-black/20 rounded-[24px] border border-slate-100 dark:border-slate-900 border-dashed">
                       <Search className="w-10 h-10 text-slate-350 dark:text-slate-700 mx-auto mb-3" />
                       <p className="text-sm font-bold text-slate-400">
@@ -454,7 +491,7 @@ export default function ChildDetailPanel({
                     </div>
                   )}
 
-                  {searchHistory.length > 0 && searchHistoryPagination.totalPages > 1 && (
+                  {searchHistoryCount > 0 && searchHistoryPagination.totalPages > 1 && (
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
                       <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                         Showing {searchHistoryPagination.startIndex + 1}-
@@ -495,11 +532,15 @@ export default function ChildDetailPanel({
                       Completed Activities
                     </h3>
                     <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 font-extrabold px-3 py-1 rounded-full text-xs shrink-0 border border-emerald-100/30">
-                      {activities.length} Completed
+                      {activitiesCount} Completed
                     </Badge>
                   </div>
 
-                  {activities.length === 0 ? (
+                  {isLoadingActivities ? (
+                    <div className="flex items-center justify-center py-16">
+                      <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                    </div>
+                  ) : activitiesCount === 0 ? (
                     <div className="text-center py-16 bg-slate-50/50 dark:bg-black/20 rounded-[24px] border border-slate-100 dark:border-slate-900 border-dashed">
                       <Award className="w-10 h-10 text-slate-350 dark:text-slate-700 mx-auto mb-3" />
                       <p className="text-sm font-bold text-slate-400">
@@ -643,7 +684,7 @@ export default function ChildDetailPanel({
                     }
                   />
 
-                  {activities.length > 0 && activitiesPagination.totalPages > 1 && (
+                  {activitiesCount > 0 && activitiesPagination.totalPages > 1 && (
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">
                       <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                         Showing {activitiesPagination.startIndex + 1}-

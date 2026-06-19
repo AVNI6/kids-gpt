@@ -43,20 +43,39 @@ interface DashboardContextType {
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
-const fetchNotifications = async (parentUserId: string) => {
-  if (!parentUserId) return [];
+const fetchNotifications = async (parentUserId: string, limit?: number) => {
+  if (!parentUserId) return { items: [], unreadCount: 0 };
   const supabase = createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("parent_notifications")
     .select("*")
     .eq("parent_id", parentUserId)
     .order("created_at", { ascending: false });
 
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
   if (error) {
     console.error("Failed to fetch notifications:", error);
-    return [];
+    return { items: [], unreadCount: 0 };
   }
-  return data || [];
+
+  const { count: unreadCount, error: countError } = await supabase
+    .from("parent_notifications")
+    .select("*", { count: "exact", head: true })
+    .eq("parent_id", parentUserId)
+    .eq("is_read", false);
+
+  if (countError) {
+    console.error("Failed to fetch unread count:", countError);
+  }
+
+  return {
+    items: data || [],
+    unreadCount: unreadCount || 0,
+  };
 };
 
 export function DashboardProvider({
@@ -106,7 +125,7 @@ export function DashboardProvider({
 
   const { data: notificationsQueryData, isLoading: isLoadingNotificationsQuery } = useQuery({
     queryKey: ["parent-dashboard", "notifications"],
-    queryFn: () => fetchNotifications(initialProfile.user_id),
+    queryFn: () => fetchNotifications(initialProfile.user_id, 10),
     enabled: !!initialProfile.user_id,
     staleTime: Infinity,
   });
@@ -162,9 +181,8 @@ export function DashboardProvider({
   useEffect(() => {
     if (notificationsQueryData) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setNotifications(notificationsQueryData);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setUnreadCount(notificationsQueryData.filter((n: any) => !n.is_read).length);
+      setNotifications(notificationsQueryData.items);
+      setUnreadCount(notificationsQueryData.unreadCount);
     }
   }, [notificationsQueryData]);
 
@@ -242,8 +260,12 @@ export function DashboardProvider({
   const updateNotifications = useCallback(
     (next: NotificationItem[]) => {
       const sorted = sortNotifications(next);
+      const prevUnreadCountInPreview = notificationsRef.current.filter((n) => !n.is_read).length;
+      const nextUnreadCountInPreview = sorted.filter((n) => !n.is_read).length;
+      const diff = nextUnreadCountInPreview - prevUnreadCountInPreview;
+
       setNotifications(sorted);
-      setUnreadCount(sorted.filter((n) => !n.is_read).length);
+      setUnreadCount((prev) => Math.max(0, prev + diff));
     },
     [sortNotifications]
   );
@@ -263,8 +285,15 @@ export function DashboardProvider({
   const markAsRead = useCallback(
     async (id: string) => {
       const previous = notificationsRef.current;
-      // Optimistic Update for instant UI feel!
-      updateNotifications(previous.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+      // Check if this item was unread in the preview so we can decrement the real total count
+      const wasUnread = previous.find((n) => n.id === id)?.is_read === false;
+
+      // Optimistic update: mark item read in preview list
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+      // Decrement the real unread count by 1 (the true DB total, not just preview)
+      if (wasUnread) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
 
       try {
         const supabase = createClient();
@@ -273,22 +302,24 @@ export function DashboardProvider({
           .update({ is_read: true })
           .eq("id", id);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
       } catch (err) {
         console.error("Failed to mark notification read:", err);
-        updateNotifications(previous);
+        // Rollback
+        setNotifications(previous);
+        if (wasUnread) setUnreadCount((prev) => prev + 1);
       }
     },
-    [updateNotifications]
+    []
   );
 
   const markAllAsRead = useCallback(async () => {
     if (!initialProfile.user_id) return;
     const previous = notificationsRef.current;
-    // Optimistic Update
-    updateNotifications(previous.map((n) => ({ ...n, is_read: true })));
+
+    // Optimistic update: mark all preview items read and zero out the REAL total badge count
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    setUnreadCount(0);
 
     try {
       const supabase = createClient();
@@ -298,41 +329,46 @@ export function DashboardProvider({
         .eq("parent_id", initialProfile.user_id)
         .eq("is_read", false);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
     } catch (err) {
       console.error("Failed to mark all read:", err);
-      updateNotifications(previous);
+      // Rollback
+      setNotifications(previous);
+      setUnreadCount(previous.filter((n) => !n.is_read).length);
     }
-  }, [initialProfile.user_id, updateNotifications]);
+  }, [initialProfile.user_id]);
 
   const deleteNotification = useCallback(
     async (id: string) => {
       const previous = notificationsRef.current;
-      // Optimistic Update
-      updateNotifications(previous.filter((n) => n.id !== id));
+      const wasUnread = previous.find((n) => n.id === id)?.is_read === false;
+
+      // Optimistic update
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      if (wasUnread) setUnreadCount((prev) => Math.max(0, prev - 1));
 
       try {
         const supabase = createClient();
         const { error } = await supabase.from("parent_notifications").delete().eq("id", id);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
       } catch (err) {
         console.error("Failed to delete notification:", err);
-        updateNotifications(previous);
+        // Rollback
+        setNotifications(previous);
+        if (wasUnread) setUnreadCount((prev) => prev + 1);
       }
     },
-    [updateNotifications]
+    []
   );
 
   const deleteAllNotifications = useCallback(async () => {
     if (!initialProfile.user_id) return;
     const previous = notificationsRef.current;
-    // Optimistic Update
-    updateNotifications([]);
+
+    // Optimistic update: clear everything including real badge count
+    setNotifications([]);
+    setUnreadCount(0);
 
     try {
       const supabase = createClient();
@@ -341,14 +377,14 @@ export function DashboardProvider({
         .delete()
         .eq("parent_id", initialProfile.user_id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
     } catch (err) {
       console.error("Failed to delete all notifications:", err);
-      updateNotifications(previous);
+      // Rollback
+      setNotifications(previous);
+      setUnreadCount(previous.filter((n) => !n.is_read).length);
     }
-  }, [initialProfile.user_id, updateNotifications]);
+  }, [initialProfile.user_id]);
 
   // Notifications Realtime Subscription (Only connect on user interaction, not on initial load)
   useEffect(() => {

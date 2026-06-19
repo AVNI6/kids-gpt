@@ -32,7 +32,7 @@ export function NotificationsUpdatesSkeleton() {
 }
 
 export default function NotificationsUpdates() {
-  const { notifications, isLoading, markAsRead } = useClassroomNotifications("kid", 10);
+  const { notifications, isLoading, markAsRead } = useClassroomNotifications("kid", { limit: 10 });
 
   const getNotifIcon = (type: string) => {
     switch (type) {

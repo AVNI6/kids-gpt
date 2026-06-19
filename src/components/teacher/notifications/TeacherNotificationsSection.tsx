@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, Check, Trash2 } from "lucide-react";
@@ -10,18 +11,27 @@ import { useClassroomNotifications } from "@/hooks/shared/useClassroomNotificati
 import { getNotifIcon, getNotifBg } from "@/utils/teacherNotificationHelpers";
 
 export default function TeacherNotificationsSection() {
+  const [pageState, setPageState] = useState(1);
+  const pageSize = 9;
+
   // Use the single custom hook definition for all data fetching and actions
   const {
     notifications,
+    totalCount,
     isLoading,
     markAsRead,
     markAllAsRead,
     deleteNotification,
     deleteAllNotifications,
-  } = useClassroomNotifications("teacher");
+  } = useClassroomNotifications("teacher", { page: pageState, pageSize });
 
   const { currentItems, page, totalPages, nextPage, prevPage, hasNextPage, hasPrevPage } =
-    usePagination(notifications);
+    usePagination(notifications, {
+      pageSize,
+      totalItems: totalCount,
+      page: pageState,
+      onPageChange: setPageState,
+    });
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">

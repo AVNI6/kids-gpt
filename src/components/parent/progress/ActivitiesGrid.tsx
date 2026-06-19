@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,8 @@ import { getActivityReviewByRewardIdForParent } from "@/lib/services/kid/activit
 import ParentActivityReviewModal from "./ParentActivityReviewModal";
 import type { ActivityReviewRow } from "@/types/activity-review.types";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { getParentActivitiesPaginated } from "@/lib/services/parent/parent-dashboard.actions";
 
 export default function ActivitiesGrid() {
   const { activeChild, details } = useParentDashboard();
@@ -74,25 +76,33 @@ export default function ActivitiesGrid() {
     return [{ label: "All Activities", slug: "All" }, ...filtersArray];
   }, [details?.timeline]);
 
-  // Parse actual Supabase database timeline logs into completed activities matching presets
-  const dbActivities = useMemo(() => {
-    return (details?.timeline ?? []).map((log) => {
+  const [pageState, setPageState] = useState(1);
+  const pageSize = 9;
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["child-activities-filtered", activeChild?.user_id, pageState, pageSize, activeFilter],
+    queryFn: () => getParentActivitiesPaginated(activeChild!.user_id, pageState, pageSize, activeFilter),
+    enabled: !!activeChild?.user_id,
+  });
+
+  const activitiesCount = data?.totalCount || 0;
+
+  // Parse activities returned from query
+  const paginatedActivities = useMemo(() => {
+    const raw = data?.activities || [];
+    return raw.map((log) => {
       const desc = log.description || "Completed Activity";
 
       // Extract score if present
       const scoreMatch = desc.match(/Score:\s*(\d+)%/i);
       const score = scoreMatch ? `${scoreMatch[1]}%` : log.score ? `${log.score}%` : "100%";
 
-      // Get slug and title from activity_settings or source_type with legacy fallback
       const slug = log.activity_settings?.slug || log.source_type || "";
-
-      // UI elements must render reward.activity_settings.title as the primary label.
       const title =
         log.activity_settings?.title ||
         desc.replace(/^Completed\s+/i, "").replace(/\s*\(Score:\s*\d+%\)/i, "") ||
         "Completed Activity";
 
-      // Determine type, icon and color based strictly on activity_settings.slug (or source_type)
       let icon = <Puzzle className="w-6 h-6 text-orange-500" />;
       let color = "bg-orange-100 dark:bg-orange-950/30";
 
@@ -125,13 +135,16 @@ export default function ActivitiesGrid() {
         ? new Date(log.created_at).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
           })
-        : "Recently";
+        : "Recent";
 
       return {
         id: log.id,
         title,
-        description: desc, // description only for secondary contextual text
+        description: desc,
         slug,
         status: "Completed",
         difficulty: "Medium",
@@ -141,19 +154,23 @@ export default function ActivitiesGrid() {
         color,
       };
     });
-  }, [details?.timeline]);
+  }, [data?.activities]);
 
-  const filteredActivities = useMemo(() => {
-    if (activeFilter === "All") return dbActivities;
-    return dbActivities.filter((activity) => activity.slug === activeFilter);
-  }, [dbActivities, activeFilter]);
+  const activitiesPagination = usePagination(paginatedActivities, {
+    pageSize,
+    totalItems: activitiesCount,
+    page: pageState,
+    onPageChange: setPageState,
+  });
 
-  const activitiesPagination = usePagination(filteredActivities);
-  const { setPage: setActivitiesPage } = activitiesPagination;
-
-  useEffect(() => {
-    setActivitiesPage(1);
-  }, [activeFilter, filteredActivities.length, setActivitiesPage]);
+  // Reset page state during render when filter or child changes
+  const [prevChildId, setPrevChildId] = useState(activeChild?.user_id);
+  const [prevFilter, setPrevFilter] = useState(activeFilter);
+  if (activeChild?.user_id !== prevChildId || activeFilter !== prevFilter) {
+    setPrevChildId(activeChild?.user_id);
+    setPrevFilter(activeFilter);
+    setPageState(1);
+  }
 
   if (!activeChild) {
     return (
@@ -200,12 +217,16 @@ export default function ActivitiesGrid() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredActivities.length === 0 ? (
+        {isLoading ? (
+          <div className="col-span-full flex items-center justify-center p-12">
+            <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
+          </div>
+        ) : paginatedActivities.length === 0 ? (
           <Card className="col-span-full rounded-[28px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center">
             <CardContent className="space-y-3">
               <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
               <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
-                {dbActivities.length === 0
+                {(details?.timeline ?? []).length === 0
                   ? "No completed activities yet."
                   : "No completed activities match this filter."}
               </p>
@@ -278,6 +299,41 @@ export default function ActivitiesGrid() {
         )}
       </div>
 
+      {/* Pagination — always directly below the grid */}
+      {activitiesCount > 0 && activitiesPagination.totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800/60 pt-5 animate-in fade-in duration-300">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            {(() => {
+              const start = activitiesPagination.startIndex + 1;
+              const end = activitiesPagination.startIndex + paginatedActivities.length;
+              const total = activitiesPagination.totalItems;
+              if (start === end) return `Showing ${start} of ${total}`;
+              return `Showing ${start}\u2013${end} of ${total}`;
+            })()}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!activitiesPagination.hasPrevPage}
+              onClick={activitiesPagination.prevPage}
+              className="rounded-xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 font-bold h-9 px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900"
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!activitiesPagination.hasNextPage}
+              onClick={activitiesPagination.nextPage}
+              className="rounded-xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 font-bold h-9 px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
       <ParentActivityReviewModal
         isOpen={isReviewOpen}
         onClose={() => {
@@ -291,35 +347,6 @@ export default function ActivitiesGrid() {
             : selectedReview?.activity_type || "Activity"
         }
       />
-
-      {filteredActivities.length > 0 && activitiesPagination.totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Showing {activitiesPagination.startIndex + 1}-{activitiesPagination.endIndex} of{" "}
-            {activitiesPagination.totalItems}
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!activitiesPagination.hasPrevPage}
-              onClick={activitiesPagination.prevPage}
-              className="rounded-lg px-3 h-9 text-xs font-bold"
-            >
-              Prev
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!activitiesPagination.hasNextPage}
-              onClick={activitiesPagination.nextPage}
-              className="rounded-lg px-3 h-9 text-xs font-bold"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

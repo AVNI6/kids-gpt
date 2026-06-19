@@ -39,7 +39,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       </div>
     </SidebarProvider>
   );
-
+  
   if (isKid) {
     return <ScreenTimeTracker>{layoutContent}</ScreenTimeTracker>;
   }

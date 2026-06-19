@@ -421,6 +421,146 @@ export async function getParentSearchHistory(childUserId: string, parentId?: str
   return data || [];
 }
 
+export async function getParentActivitiesPaginated(
+  childUserId: string,
+  page: number,
+  pageSize: number,
+  activitySlug?: string
+): Promise<{ activities: ParentActivityItem[]; totalCount: number }> {
+  const { userId: parentId } = await verifyUserRole("parent");
+  const supabase = await createClient();
+
+  // Verify parent access
+  const { data: link, error: linkError } = await supabase
+    .from("parent_child_link")
+    .select("id")
+    .eq("parent_user_id", parentId)
+    .eq("child_user_id", childUserId)
+    .eq("is_approved", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (linkError || !link) {
+    throw new Error("Unauthorized access to child profile");
+  }
+
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from("rewards")
+    .select(
+      "id, rewards_amount, description, created_at, updated_at, source_type, score, activity_settings(id, slug, title)",
+      { count: "exact" }
+    )
+    .eq("user_id", childUserId)
+    .order("updated_at", { ascending: false });
+
+  if (activitySlug && activitySlug !== "All") {
+    // PostgREST does not allow .or() on joined foreign table columns.
+    // Instead, look up the activity_settings id for this slug first,
+    // then filter by source_type OR activity_settings_id on top-level columns only.
+    const { data: settingsRows } = await supabase
+      .from("activity_settings")
+      .select("id")
+      .eq("slug", activitySlug);
+
+    const settingIds = (settingsRows ?? []).map((r) => r.id as string);
+
+    if (settingIds.length > 0) {
+      // Filter: source_type matches slug OR source_id is one of the found activity_settings ids
+      query = query.or(
+        `source_type.eq.${activitySlug},source_id.in.(${settingIds.join(",")})`
+      );
+    } else {
+      // No settings row found — filter by source_type only
+      query = query.eq("source_type", activitySlug);
+    }
+  }
+
+  query = query.range(from, to);
+
+  const { data, count, error } = await query;
+  if (error) throw error;
+
+  const activities = ((data as RewardQueryResult[] | null) ?? []).map((r) => {
+    const actSettings = r.activity_settings
+      ? Array.isArray(r.activity_settings)
+        ? r.activity_settings[0] || null
+        : r.activity_settings
+      : null;
+    return {
+      id: r.id,
+      rewards_amount: r.rewards_amount ?? 0,
+      description: r.description,
+      created_at: r.updated_at || r.created_at,
+      source_type: r.source_type ?? "",
+      score: r.score,
+      activity_settings: actSettings
+        ? {
+            id: actSettings.id,
+            slug: actSettings.slug,
+            title: actSettings.title,
+          }
+        : null,
+    };
+  });
+
+  return {
+    activities,
+    totalCount: count || 0,
+  };
+}
+
+export async function getParentSearchHistoryPaginated(
+  childUserId: string,
+  page: number,
+  pageSize: number
+): Promise<{ history: SearchHistoryItem[]; totalCount: number }> {
+  const { userId: parentId } = await verifyUserRole("parent");
+  const supabase = await createClient();
+
+  // Verify parent access
+  const { data: link, error: linkError } = await supabase
+    .from("parent_child_link")
+    .select("id")
+    .eq("parent_user_id", parentId)
+    .eq("child_user_id", childUserId)
+    .eq("is_approved", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (linkError || !link) {
+    throw new Error("Unauthorized access to child profile");
+  }
+
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const adminClient = createAdminClient();
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, count, error } = await adminClient
+    .from("chat_sessions")
+    .select("id, title, created_at", { count: "exact" })
+    .eq("user_id", childUserId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) throw error;
+
+  const history: SearchHistoryItem[] = (data || []).map((h) => ({
+    id: String(h.id ?? ""),
+    title: h.title ? String(h.title) : null,
+    created_at: h.created_at ? String(h.created_at) : null,
+  }));
+
+  return {
+    history,
+    totalCount: count || 0,
+  };
+}
+
 export async function getParentSessionMessages(
   sessionId: string,
   cursorCreatedAt?: string,
