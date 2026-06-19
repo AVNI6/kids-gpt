@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProfileSkeleton } from "@/components/shared/skeletonLoading";
 
 interface ProfileProps {
   isCollapsed?: boolean;
@@ -60,22 +60,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
   const isProfileLoading = isInitializing || (isUserLoggedIn && isLoading && !userProfile);
 
   if (isProfileLoading) {
-    if (isCollapsed) {
-      return (
-        <div className="w-full flex justify-center p-0! h-10! w-10! mx-auto items-center">
-          <Skeleton className="h-10 w-10 rounded-full" />
-        </div>
-      );
-    }
-    return (
-      <div className="w-full flex items-center gap-3 p-2 rounded-2xl">
-        <Skeleton className="h-12 w-12 rounded-full shrink-0" />
-        <div className="flex flex-col gap-1.5 flex-1 min-w-0 text-left">
-          <Skeleton className="h-4 w-28 rounded-md" />
-          <Skeleton className="h-3 w-16 rounded-md" />
-        </div>
-      </div>
-    );
+    return <ProfileSkeleton isCollapsed={isCollapsed} />;
   }
 
   if (!isUserLoggedIn || !user || !userProfile) return null;
@@ -128,6 +113,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
             <Link
               href={`/dashboard/${dashboardRole}`}
               onClick={() => setOpenPath(null)}
+              prefetch={false}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
             >
               <UserRound className="h-4 w-4" />
@@ -137,6 +123,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
             <Link
               href={APP_ROUTES.Help}
               onClick={() => setOpenPath(null)}
+              prefetch={false}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
             >
               <HelpCircle className="h-4 w-4" />

@@ -35,6 +35,8 @@ import { uploadResource } from "@/lib/services/kid/classroom.actions";
 import { uploadChatAttachment } from "@/lib/storage/attachments";
 import { createClient } from "@/lib/supabase/client";
 import type { ClassroomResource } from "@/types/classroom.types";
+import { getSignedResourceUrl } from "@/lib/services/shared/storage.actions";
+import { useResourceDisplay } from "@/hooks/useResourceDisplay";
 
 type Props = {
   classroomId: string;
@@ -43,42 +45,6 @@ type Props = {
   handleDeleteResource: (id: string) => void;
 };
 
-// Extension type mapping
-const getResourceIcon = (type: string) => {
-  switch (type.toUpperCase()) {
-    case "PDF":
-      return <FileText className="h-5 w-5" />;
-    case "VIDEO":
-      return <Video className="h-5 w-5" />;
-    case "LINK":
-      return <LinkIcon className="h-5 w-5" />;
-    case "IMAGE":
-      return <ImageIcon className="h-5 w-5" />;
-    case "DOCUMENT":
-    case "WORD":
-      return <FileText className="h-5 w-5" />;
-    default:
-      return <FileArchive className="h-5 w-5" />;
-  }
-};
-
-const getResourceColor = (type: string) => {
-  switch (type.toUpperCase()) {
-    case "PDF":
-      return "bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-450";
-    case "VIDEO":
-      return "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-450";
-    case "LINK":
-      return "bg-sky-50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-450";
-    case "IMAGE":
-      return "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450";
-    case "DOCUMENT":
-    case "WORD":
-      return "bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-450";
-    default:
-      return "bg-slate-50 dark:bg-slate-950/20 text-slate-600 dark:text-slate-450";
-  }
-};
 
 export default function ClassroomResourcesTab({
   classroomId,
@@ -207,8 +173,28 @@ export default function ClassroomResourcesTab({
   const handleAccessResource = async (res: ClassroomResource) => {
     if (res.storage_path) {
       try {
-        const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
-        const url = await getSignedResourceUrl(res.storage_path);
+        const result = await getSignedResourceUrl(res.storage_path);
+        if (!result.success || !result.url) {
+          toast.error(result.error || "Failed to generate secure link. Please try again.");
+          return;
+        }
+        const url = result.url;
+
+        // If it is an SVG, fetch and open as an inline blob URL to prevent direct download
+        if (res.storage_path.toLowerCase().endsWith(".svg")) {
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Failed to fetch SVG resource");
+            const blob = await response.blob();
+            const svgBlob = new Blob([blob], { type: "image/svg+xml" });
+            const blobUrl = URL.createObjectURL(svgBlob);
+            window.open(blobUrl, "_blank");
+            return;
+          } catch (fetchErr) {
+            console.error("Failed to fetch SVG for inline preview, falling back to direct URL open:", fetchErr);
+          }
+        }
+
         // Open in new tab — inline display works because the file was uploaded
         // with the correct Content-Type (e.g. image/svg+xml, application/pdf)
         window.open(url, "_blank", "noopener,noreferrer");
@@ -216,6 +202,19 @@ export default function ClassroomResourcesTab({
         toast.error("Failed to generate secure link. Please try again.");
       }
     } else if (res.resource_url) {
+      if (res.resource_url.toLowerCase().endsWith(".svg")) {
+        try {
+          const response = await fetch(res.resource_url);
+          if (!response.ok) throw new Error("Failed to fetch SVG resource URL");
+          const blob = await response.blob();
+          const svgBlob = new Blob([blob], { type: "image/svg+xml" });
+          const blobUrl = URL.createObjectURL(svgBlob);
+          window.open(blobUrl, "_blank");
+          return;
+        } catch (fetchErr) {
+          console.error("Failed to fetch SVG URL for inline preview, falling back to direct URL open:", fetchErr);
+        }
+      }
       window.open(res.resource_url, "_blank", "noopener,noreferrer");
     }
   };
@@ -333,7 +332,7 @@ export default function ClassroomResourcesTab({
                     <div className="flex flex-col items-center justify-center gap-2 py-2">
                       <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
                       <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
-                        Uploading file to storage...
+                        Uploading file...
                       </p>
                     </div>
                   ) : (
@@ -444,9 +443,9 @@ export default function ClassroomResourcesTab({
                 </Button>
                 <Button
                   type="submit"
-                  loading={isLoading || isUploadingFile}
-                  loadingText={isUploadingFile ? "Uploading..." : "Saving..."}
-                  disabled={!resUrl}
+                  loading={isLoading}
+                  loadingText="Saving..."
+                  disabled={!resUrl || isUploadingFile || isLoading}
                   className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
                 >
                   Save Resource
@@ -476,6 +475,8 @@ export default function ClassroomResourcesTab({
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {resources.map((res) => {
+            const { displayType, icon, colorClass } = useResourceDisplay(res);
+
             return (
               <Card
                 key={res.id}
@@ -487,14 +488,14 @@ export default function ClassroomResourcesTab({
                       <div
                         className={cn(
                           "h-10 w-10 rounded-2xl flex items-center justify-center shrink-0",
-                          getResourceColor(res.resource_type)
+                          colorClass
                         )}
                       >
-                        {getResourceIcon(res.resource_type)}
+                        {icon}
                       </div>
                       <div>
                         <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                          {res.resource_type}
+                          {displayType}
                         </span>
                         <h4 className="text-sm font-black text-slate-950 dark:text-white leading-tight line-clamp-1">
                           {res.title}

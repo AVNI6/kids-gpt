@@ -20,10 +20,10 @@ export function NotificationsUpdatesSkeleton() {
   return (
     <Card className="rounded-[36px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm h-full">
       <CardContent className="p-6 space-y-4">
-        <Skeleton className="h-8 w-32 bg-slate-100 dark:bg-slate-800" />
+        <Skeleton className="h-8 w-32" />
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-16 w-full rounded-2xl bg-slate-100 dark:bg-slate-800" />
+            <Skeleton key={i} className="h-16 w-full rounded-2xl" />
           ))}
         </div>
       </CardContent>

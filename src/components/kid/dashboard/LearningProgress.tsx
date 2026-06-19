@@ -13,15 +13,15 @@ export function LearningProgressSkeleton() {
   return (
     <Card className="rounded-[32px] border-sky-100 bg-white shadow-sm h-full">
       <CardContent className="p-6 space-y-4">
-        <Skeleton className="h-8 w-48 bg-slate-100" />
+        <Skeleton className="h-8 w-48" />
         <div className="space-y-4 pt-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="space-y-2">
               <div className="flex justify-between">
-                <Skeleton className="h-4 w-20 bg-slate-100" />
-                <Skeleton className="h-4 w-8 bg-slate-100" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-8" />
               </div>
-              <Skeleton className="h-3 w-full rounded-full bg-slate-100" />
+              <Skeleton className="h-3 w-full rounded-full" />
             </div>
           ))}
         </div>

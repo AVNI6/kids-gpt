@@ -18,6 +18,7 @@ import {
 
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useState, useEffect, Suspense } from "react";
+import { AuthSkeleton } from "@/components/shared/skeletonLoading";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/lib/constants/common";
@@ -442,41 +443,6 @@ function SignupForm() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
-  );
-}
-
-function AuthSkeleton() {
-  return (
-    <main className="min-h-screen flex flex-col px-6 font-sans bg-background relative overflow-hidden">
-      <div className="my-auto mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2 relative z-10">
-        <div className="hidden flex-col gap-8 lg:flex animate-pulse">
-          <div className="h-8 w-24 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl space-y-4">
-            <div className="h-6 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-4 w-64 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-4 w-48 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          </div>
-        </div>
-        <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl md:p-10 space-y-6 animate-pulse w-full">
-          <div className="space-y-2">
-            <div className="h-8 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-4 w-48 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="h-4 w-16 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-              <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 w-16 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-              <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            </div>
-            <div className="h-4 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          </div>
-        </div>
-      </div>
     </main>
   );
 }

@@ -8,10 +8,10 @@ export function AchievementsRewardsSkeleton() {
   return (
     <Card className="rounded-[32px] border-amber-100 bg-white shadow-sm h-full">
       <CardContent className="p-6 space-y-4">
-        <Skeleton className="h-8 w-48 bg-slate-100" />
+        <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24 rounded-2xl bg-slate-100" />
+            <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
         </div>
       </CardContent>

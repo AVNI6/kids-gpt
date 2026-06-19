@@ -87,6 +87,7 @@ export default function SidebarFooterActions({
           </Popover>
           <Link
             href={APP_ROUTES.Help}
+            prefetch={false}
             className={cn(
               buttonVariants({ variant: "ghost" }),
               "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-xl cursor-pointer flex items-center h-10",

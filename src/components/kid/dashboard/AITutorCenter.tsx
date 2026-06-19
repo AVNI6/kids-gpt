@@ -9,11 +9,11 @@ export function AITutorCenterSkeleton() {
   return (
     <Card className="rounded-[32px] border-sky-100 bg-white shadow-sm h-full">
       <CardContent className="p-6 space-y-4">
-        <Skeleton className="h-8 w-48 bg-slate-100" />
-        <Skeleton className="h-32 w-full rounded-2xl bg-slate-100" />
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-32 w-full rounded-2xl" />
         <div className="flex gap-2">
-          <Skeleton className="h-10 w-24 rounded-full bg-slate-100" />
-          <Skeleton className="h-10 w-24 rounded-full bg-slate-100" />
+          <Skeleton className="h-10 w-24 rounded-full" />
+          <Skeleton className="h-10 w-24 rounded-full" />
         </div>
       </CardContent>
     </Card>

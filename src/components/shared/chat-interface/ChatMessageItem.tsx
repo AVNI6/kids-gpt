@@ -52,8 +52,12 @@ const ChatMessageItem = React.memo(
         if (message.uploadedImage.includes("/object/public/materials/")) {
           const relativePath = message.uploadedImage.split("/object/public/materials/")[1];
           getSignedResourceUrl(relativePath)
-            .then((url) => {
-              if (active) setResolvedImageUrl(url);
+            .then((res) => {
+              if (active && res.success && res.url) {
+                setResolvedImageUrl(res.url);
+              } else if (active) {
+                setResolvedImageUrl(message.uploadedImage!);
+              }
             })
             .catch((err) => {
               console.error("Failed to sign user image:", err);
@@ -76,8 +80,12 @@ const ChatMessageItem = React.memo(
         if (message.content.includes("/object/public/materials/")) {
           const relativePath = message.content.split("/object/public/materials/")[1];
           getSignedResourceUrl(relativePath)
-            .then((url) => {
-              if (active) setResolvedGeneratedImageUrl(url);
+            .then((res) => {
+              if (active && res.success && res.url) {
+                setResolvedGeneratedImageUrl(res.url);
+              } else if (active) {
+                setResolvedGeneratedImageUrl(message.content);
+              }
             })
             .catch((err) => {
               console.error("Failed to sign generated image:", err);

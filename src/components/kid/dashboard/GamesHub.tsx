@@ -7,10 +7,10 @@ import Link from "next/link";
 export function GamesHubSkeleton() {
   return (
     <div className="space-y-4">
-      <Skeleton className="h-8 w-48 bg-slate-100" />
+      <Skeleton className="h-8 w-48" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-32 rounded-[24px] bg-slate-100" />
+          <Skeleton key={i} className="h-32 rounded-[24px]" />
         ))}
       </div>
     </div>
