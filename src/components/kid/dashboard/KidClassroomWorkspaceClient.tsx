@@ -149,12 +149,14 @@ export default function KidClassroomWorkspaceClient({
       try {
         const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
         const url = await getSignedResourceUrl(res.storage_path);
-        window.open(url, "_blank");
+        // Open in new tab — inline display works because the file was uploaded
+        // with the correct Content-Type (e.g. image/svg+xml, application/pdf)
+        window.open(url, "_blank", "noopener,noreferrer");
       } catch {
-        toast.error("Failed to generate secure download link.");
+        toast.error("Failed to generate secure link. Please try again.");
       }
-    } else {
-      window.open(res.resource_url, "_blank");
+    } else if (res.resource_url) {
+      window.open(res.resource_url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -591,7 +593,7 @@ export default function KidClassroomWorkspaceClient({
                                     </DialogDescription>
                                   </DialogHeader>
 
-                                  <form onSubmit={handleSubmit} className="space-y-4 py-6">
+                                  <form onSubmit={handleSubmit} className="space-y-4 py-6 px-6">
                                     <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50 space-y-1 dark:bg-slate-950">
                                       <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block">
                                         Instructions

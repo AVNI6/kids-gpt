@@ -15,7 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, FolderOpen, Megaphone, Users } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -82,6 +82,10 @@ export default function TeacherClassroomWorkspaceClient({
   );
   const [gradingOpen, setGradingOpen] = useState(false);
 
+  // Loading and Confirmation states
+  const [publishingAssignmentId, setPublishingAssignmentId] = useState<string | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+
   // Shared confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -97,10 +101,12 @@ export default function TeacherClassroomWorkspaceClient({
 
   const openConfirm = (title: string, description: string, onConfirm: () => Promise<void>) => {
     setConfirmDialog({ open: true, title, description, onConfirm });
+    setIsConfirming(false);
   };
 
   const closeConfirm = () => {
     setConfirmDialog((prev) => ({ ...prev, open: false }));
+    setIsConfirming(false);
   };
 
   // -------------------------------------------------------------------------
@@ -109,6 +115,7 @@ export default function TeacherClassroomWorkspaceClient({
 
   const handlePublishAssignment = async (id: string) => {
     try {
+      setPublishingAssignmentId(id);
       const result = await publishAssignment(id);
       if (result.success) {
         toast.success("Assignment published!");
@@ -122,6 +129,8 @@ export default function TeacherClassroomWorkspaceClient({
       }
     } catch {
       toast.error("Failed to publish assignment.");
+    } finally {
+      setPublishingAssignmentId(null);
     }
   };
 
@@ -161,25 +170,24 @@ export default function TeacherClassroomWorkspaceClient({
     }
   };
 
-  const handleDeleteResource = async (id: string) => {
-    toast.warning("Are you sure you want to delete this resource?", {
-      action: {
-        label: "Delete",
-        onClick: async () => {
-          try {
-            const result = await deleteResource(id);
-            if (result.success) {
-              toast.success("Resource deleted.");
-              setResources((prev) => prev.filter((r) => r.id !== id));
-            } else {
-              toast.error(result.error || "Failed to delete resource.");
-            }
-          } catch {
-            toast.error("Failed to delete resource.");
+  const handleDeleteResource = (id: string) => {
+    openConfirm(
+      "Delete Resource",
+      "Are you sure you want to delete this resource? This action cannot be undone.",
+      async () => {
+        try {
+          const result = await deleteResource(id);
+          if (result.success) {
+            toast.success("Resource deleted.");
+            setResources((prev) => prev.filter((r) => r.id !== id));
+          } else {
+            toast.error(result.error || "Failed to delete resource.");
           }
-        },
-      },
-    });
+        } catch {
+          toast.error("Failed to delete resource.");
+        }
+      }
+    );
   };
 
   const handleDeleteAnnouncement = (id: string) => {
@@ -271,6 +279,7 @@ export default function TeacherClassroomWorkspaceClient({
           handlePublishAssignment={handlePublishAssignment}
           handleDeleteAssignment={handleDeleteAssignment}
           handleOpenGrading={handleOpenGrading}
+          publishingAssignmentId={publishingAssignmentId}
         />
       </TabsContent>
 
@@ -307,22 +316,33 @@ export default function TeacherClassroomWorkspaceClient({
       />
 
       {/* 4. Shared Confirmation Dialog */}
-      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => !open && closeConfirm()}>
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => !open && !isConfirming && closeConfirm()}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
             <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={closeConfirm}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+            <AlertDialogCancel onClick={closeConfirm} disabled={isConfirming}>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              loading={isConfirming}
+              loadingText="Deleting..."
               onClick={async () => {
-                closeConfirm();
-                await confirmDialog.onConfirm();
+                try {
+                  setIsConfirming(true);
+                  await confirmDialog.onConfirm();
+                  closeConfirm();
+                } catch {
+                  // Handled by onConfirm toast messages
+                } finally {
+                  setIsConfirming(false);
+                }
               }}
+              className="cursor-pointer rounded-lg px-4"
             >
               Delete
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

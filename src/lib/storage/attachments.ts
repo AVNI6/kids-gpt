@@ -21,10 +21,45 @@ export async function uploadChatAttachment(
       }
     }
 
-    // 2. Upload to the materials bucket
+    // 2. Upload to the materials bucket with explicit content type for inline browser viewing
+    let contentType = "application/octet-stream";
+    if (file && typeof file === "object") {
+      const fileName = (file as any).name;
+      if (fileName && typeof fileName === "string") {
+        const ext = fileName.split(".").pop()?.toLowerCase();
+        const mimeTypes: Record<string, string> = {
+          svg: "image/svg+xml",
+          png: "image/png",
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          gif: "image/gif",
+          webp: "image/webp",
+          pdf: "application/pdf",
+          mp4: "video/mp4",
+          webm: "video/webm",
+          ogg: "video/ogg",
+          mp3: "audio/mpeg",
+          wav: "audio/wav",
+          txt: "text/plain",
+          html: "text/html",
+          htm: "text/html",
+          json: "application/json",
+        };
+
+        if (ext && mimeTypes[ext]) {
+          contentType = mimeTypes[ext];
+        } else {
+          contentType = (file as any).type || "application/octet-stream";
+        }
+      } else {
+        contentType = (file as any).type || "application/octet-stream";
+      }
+    }
+
     const { error: uploadError } = await supabase.storage.from("materials").upload(path, file, {
       cacheControl: "3600",
       upsert: true,
+      contentType,
     });
 
     if (uploadError) {

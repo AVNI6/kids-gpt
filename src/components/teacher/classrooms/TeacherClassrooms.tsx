@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { School, Trash2, Plus, CopyIcon, CheckIcon } from "lucide-react";
 import { toast } from "sonner";
 import { createClassroom, deleteClassroom } from "@/lib/services/kid/classroom.actions";
@@ -44,6 +45,8 @@ type Props = {
 };
 
 export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpen }: Props) {
+  const router = useRouter();
+  const [loadingClassroomId, setLoadingClassroomId] = useState<string | null>(null);
   const [localOpen, setLocalOpen] = useState(createOpen || false);
   const isOpen = setCreateOpen ? createOpen || false : localOpen;
   const setIsOpen = setCreateOpen || setLocalOpen;
@@ -434,7 +437,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                           Class Code
                         </span>
-                        <p className="text-md font-black text-slate-900 dark:text-white tracking-widest font-mono truncate">
+                        <p className="text-md font-black text-slate-900 dark:text-white tracking-widest font-bold truncate">
                           {cls.class_code}
                         </p>
                       </div>
@@ -464,11 +467,11 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                       </Button>
                     </div>
 
-                    {/* Open Classroom Workspace Button */}
-                    {/* Open Classroom Workspace Link */}
-                    <Link
-                      href={`/dashboard/teacher/classrooms/${cls.id}`}
+                    <Button
+                      loading={loadingClassroomId === cls.id}
+                      loadingText="Opening..."
                       onClick={() => {
+                        setLoadingClassroomId(cls.id);
                         // Track access in client storage
                         try {
                           const stored = localStorage.getItem("teacher_recent_classrooms");
@@ -478,11 +481,12 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         } catch (e) {
                           console.error(e);
                         }
+                        router.push(`/dashboard/teacher/classrooms/${cls.id}`);
                       }}
-                      className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 text-white dark:text-slate-950 font-bold h-11 flex items-center justify-center text-sm transition-colors"
+                      className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 text-white dark:text-slate-950 font-bold h-11 flex items-center justify-center text-sm transition-colors cursor-pointer"
                     >
                       Open Workspace
-                    </Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

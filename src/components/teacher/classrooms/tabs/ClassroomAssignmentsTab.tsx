@@ -32,6 +32,7 @@ type Props = {
   handlePublishAssignment: (id: string) => Promise<void>;
   handleDeleteAssignment: (id: string, title: string) => void;
   handleOpenGrading: (assignment: ClassroomAssignment) => Promise<void>;
+  publishingAssignmentId?: string | null;
 };
 
 export default function ClassroomAssignmentsTab({
@@ -41,6 +42,7 @@ export default function ClassroomAssignmentsTab({
   handlePublishAssignment,
   handleDeleteAssignment,
   handleOpenGrading,
+  publishingAssignmentId,
 }: Props) {
   const [assignmentOpen, setAssignmentOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -541,6 +543,8 @@ export default function ClassroomAssignmentsTab({
                     <div className="flex gap-2 w-full pt-1">
                       {isDraft ? (
                         <Button
+                          loading={publishingAssignmentId === assign.id}
+                          loadingText="Publishing..."
                           onClick={() => handlePublishAssignment(assign.id)}
                           className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-9 text-xs px-4 flex-1 cursor-pointer"
                         >

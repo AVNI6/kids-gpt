@@ -51,6 +51,7 @@ export default function ClassroomOverview({ memberships }: Props) {
   const [isLoading, setIsLoading] = useState(false);
 
   // Confirmation dialog for leaving a classroom
+  const [isLeaving, setIsLeaving] = useState(false);
   const [leaveDialog, setLeaveDialog] = useState<{
     open: boolean;
     classroomId: string;
@@ -101,23 +102,24 @@ export default function ClassroomOverview({ memberships }: Props) {
 
   const handleLeaveClass = (classroomId: string, className: string) => {
     setLeaveDialog({ open: true, classroomId, className });
+    setIsLeaving(false);
   };
 
   const confirmLeaveClass = async () => {
     const { classroomId, className } = leaveDialog;
-    setLeaveDialog((prev) => ({ ...prev, open: false }));
     try {
-      setIsLoading(true);
+      setIsLeaving(true);
       const result = await leaveClassroom(classroomId);
       if (result.success) {
         toast.success(`You left the classroom "${className}".`);
+        setLeaveDialog((prev) => ({ ...prev, open: false }));
       } else {
         toast.error(result.error || "Failed to leave classroom.");
       }
     } catch {
       toast.error("An unexpected error occurred.");
     } finally {
-      setIsLoading(false);
+      setIsLeaving(false);
     }
   };
 
@@ -437,7 +439,7 @@ export default function ClassroomOverview({ memberships }: Props) {
       {/* Leave Classroom Confirmation Dialog */}
       <AlertDialog
         open={leaveDialog.open}
-        onOpenChange={(open) => !open && setLeaveDialog((prev) => ({ ...prev, open: false }))}
+        onOpenChange={(open) => !open && !isLeaving && setLeaveDialog((prev) => ({ ...prev, open: false }))}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -451,10 +453,21 @@ export default function ClassroomOverview({ memberships }: Props) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setLeaveDialog((prev) => ({ ...prev, open: false }))}>
+            <AlertDialogCancel 
+              onClick={() => setLeaveDialog((prev) => ({ ...prev, open: false }))}
+              disabled={isLeaving}
+            >
               Stay
             </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmLeaveClass}>Leave</AlertDialogAction>
+            <Button
+              variant="destructive"
+              loading={isLeaving}
+              loadingText="Leaving..."
+              onClick={confirmLeaveClass}
+              className="cursor-pointer px-4 rounded-lg"
+            >
+              Leave
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

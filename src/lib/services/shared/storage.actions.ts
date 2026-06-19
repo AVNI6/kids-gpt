@@ -40,7 +40,7 @@ export async function getSignedResourceUrl(filePath: string): Promise<string> {
   if (user.id === fileOwnerId) {
     const { data, error } = await supabase.storage
       .from("materials")
-      .createSignedUrl(cleanPath, 900);
+      .createSignedUrl(cleanPath, 900, { download: false });
     if (error) throw error;
     return data.signedUrl;
   }
@@ -60,7 +60,7 @@ export async function getSignedResourceUrl(filePath: string): Promise<string> {
     if (isLinked) {
       const { data, error } = await supabase.storage
         .from("materials")
-        .createSignedUrl(cleanPath, 900);
+        .createSignedUrl(cleanPath, 900, { download: false });
       if (error) throw error;
       return data.signedUrl;
     }
@@ -78,7 +78,7 @@ export async function getSignedResourceUrl(filePath: string): Promise<string> {
     if (isStudent) {
       const { data, error } = await supabase.storage
         .from("materials")
-        .createSignedUrl(cleanPath, 900);
+        .createSignedUrl(cleanPath, 900, { download: false });
       if (error) throw error;
       return data.signedUrl;
     }
@@ -96,7 +96,7 @@ export async function getSignedResourceUrl(filePath: string): Promise<string> {
     if (isTeacher) {
       const { data, error } = await supabase.storage
         .from("materials")
-        .createSignedUrl(cleanPath, 900);
+        .createSignedUrl(cleanPath, 900, { download: false });
       if (error) throw error;
       return data.signedUrl;
     }

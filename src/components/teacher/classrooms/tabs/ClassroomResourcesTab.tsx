@@ -40,7 +40,7 @@ type Props = {
   classroomId: string;
   resources: ClassroomResource[];
   setResources: React.Dispatch<React.SetStateAction<ClassroomResource[]>>;
-  handleDeleteResource: (id: string) => Promise<void>;
+  handleDeleteResource: (id: string) => void;
 };
 
 // Extension type mapping
@@ -128,7 +128,7 @@ export default function ClassroomResourcesTab({
         const ext = fileExtension.toUpperCase();
         if (ext === "PDF") {
           setResType("PDF");
-        } else if (["PNG", "JPG", "JPEG", "GIF", "WEBP"].includes(ext)) {
+        } else if (["PNG", "JPG", "JPEG", "GIF", "WEBP", "SVG"].includes(ext)) {
           setResType("IMAGE");
         } else if (["DOC", "DOCX"].includes(ext)) {
           setResType("WORD");
@@ -209,12 +209,14 @@ export default function ClassroomResourcesTab({
       try {
         const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
         const url = await getSignedResourceUrl(res.storage_path);
-        window.open(url, "_blank");
+        // Open in new tab — inline display works because the file was uploaded
+        // with the correct Content-Type (e.g. image/svg+xml, application/pdf)
+        window.open(url, "_blank", "noopener,noreferrer");
       } catch {
-        toast.error("Failed to generate secure download link.");
+        toast.error("Failed to generate secure link. Please try again.");
       }
-    } else {
-      window.open(res.resource_url, "_blank");
+    } else if (res.resource_url) {
+      window.open(res.resource_url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -250,7 +252,7 @@ export default function ClassroomResourcesTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleUploadResource} className="space-y-4 py-6">
+            <form onSubmit={handleUploadResource} className="space-y-4 py-6 px-6">
               {/* Method Switcher */}
               <div className="flex gap-2 bg-slate-100 dark:bg-slate-950/40 p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800">
                 <button
@@ -353,7 +355,7 @@ export default function ClassroomResourcesTab({
                         type="file"
                         onChange={handleFileChange}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                        accept="image/*,image/svg+xml,.svg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                       />
                     </>
                   )}

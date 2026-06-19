@@ -95,7 +95,7 @@ export default function ClassroomAnnouncementsTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCreateAnnouncement} className="space-y-4 py-6">
+            <form onSubmit={handleCreateAnnouncement} className="space-y-4 py-6 px-6">
               <div className="space-y-1.5">
                 <Label
                   htmlFor="annTitle"
