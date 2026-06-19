@@ -79,7 +79,7 @@ function LoginPageContent() {
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");
         localStorage.setItem("rememberedEmail", e.email);
-        
+
         try {
           const { encryptPassword } = await import("@/lib/utils/crypto");
           const encrypted = await encryptPassword(e.password);
@@ -89,7 +89,7 @@ function LoginPageContent() {
         } catch (err) {
           console.error("Failed to encrypt password for remember me:", err);
         }
-        
+
       } else {
         localStorage.setItem("rememberMe", "false");
         localStorage.removeItem("rememberedEmail");
@@ -232,7 +232,20 @@ function LoginPageContent() {
                   {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                 </button>
               </div>
-              <div className="flex justify-end mt-1">
+              <div className="flex justify-between mt-1">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
+                  <label
+                    htmlFor="remember-me"
+                    className="text-sm text-muted-foreground cursor-pointer select-none"
+                  >
+                    Remember Me
+                  </label>
+                </div>
                 <Link
                   href={APP_ROUTES.ForgotPassword}
                   className="text-sm font-semibold text-sky-500 hover:underline"
@@ -242,19 +255,7 @@ function LoginPageContent() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="remember-me"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked === true)}
-              />
-              <label
-                htmlFor="remember-me"
-                className="text-sm text-muted-foreground cursor-pointer select-none"
-              >
-                Remember Me
-              </label>
-            </div>
+
 
             <Button
               type="submit"

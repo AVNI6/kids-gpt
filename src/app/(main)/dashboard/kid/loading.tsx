@@ -25,13 +25,15 @@ function KidStreakBannerSkeleton() {
 export default function KidDashboardLoading() {
   return (
     <main className="min-h-full bg-background px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8 dark:text-slate-50">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6">
         <KidStreakBannerSkeleton />
-        <div className="w-full">
-          <GameHistorySkeleton />
-        </div>
-        <div className="w-full">
-          <NotificationsUpdatesSkeleton />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <div>
+            <GameHistorySkeleton />
+          </div>
+          <div>
+            <NotificationsUpdatesSkeleton />
+          </div>
         </div>
       </div>
     </main>

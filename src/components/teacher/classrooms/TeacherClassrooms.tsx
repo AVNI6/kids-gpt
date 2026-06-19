@@ -244,7 +244,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
         <AlertDialog
           open={deleteClassroomTarget !== null}
           onOpenChange={(open) => {
-            if (!open) setDeleteClassroomTarget(null);
+            if (!open && !isLoading) setDeleteClassroomTarget(null);
           }}
         >
           <AlertDialogContent className="sm:max-w-[400px] rounded-[24px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl">
@@ -258,7 +258,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-2 pt-4">
-              <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="rounded-full" disabled={isLoading}>Cancel</AlertDialogCancel>
               <Button
                 variant="destructive"
                 loading={isLoading}
@@ -266,12 +266,12 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                 onClick={async () => {
                   if (!deleteClassroomTarget) return;
                   const target = deleteClassroomTarget;
-                  setDeleteClassroomTarget(null);
                   try {
                     setIsLoading(true);
                     const result = await deleteClassroom(target.id);
                     if (result.success) {
                       toast.success(`Classroom "${target.name}" deleted.`);
+                      setDeleteClassroomTarget(null);
                     } else {
                       toast.error(result.error || "Failed to delete classroom.");
                     }
@@ -281,7 +281,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                     setIsLoading(false);
                   }
                 }}
-                className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm font-bold px-5"
+                className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm font-bold px-5 cursor-pointer"
               >
                 Delete
               </Button>

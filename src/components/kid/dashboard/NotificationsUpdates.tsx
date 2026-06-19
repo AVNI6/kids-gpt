@@ -32,7 +32,7 @@ export function NotificationsUpdatesSkeleton() {
 }
 
 export default function NotificationsUpdates() {
-  const { notifications, isLoading } = useClassroomNotifications("kid", 10);
+  const { notifications, isLoading, markAsRead } = useClassroomNotifications("kid", 10);
 
   const getNotifIcon = (type: string) => {
     switch (type) {
@@ -89,7 +89,7 @@ export default function NotificationsUpdates() {
           </h2>
         </div>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4 max-h-[300px]">
+        <ScrollArea className="flex-1 pr-4 -mr-4 max-h-81">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center text-slate-500 dark:text-slate-400">
               <Bell className="w-8 h-8 text-slate-400 dark:text-slate-600 mb-2 opacity-50" />
@@ -104,12 +104,21 @@ export default function NotificationsUpdates() {
                 return (
                   <div
                     key={notif.id}
+                    onClick={() => !notif.is_read && markAsRead(notif.id)}
                     className={`flex gap-3 items-start p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 shadow-sm hover:bg-slate-100/80 transition-colors dark:bg-slate-950 dark:border-slate-800/80 dark:hover:bg-slate-900/60 ${
-                      !notif.is_read ? "ring-1 ring-sky-500/30 bg-white dark:bg-slate-900" : ""
+                      !notif.is_read
+                        ? "ring-1 ring-sky-500/30 bg-white dark:bg-slate-900 cursor-pointer"
+                        : "cursor-default"
                     }`}
                   >
-                    <div className={`p-2 rounded-full ${colorClass} shrink-0`}>
-                      <Icon className="w-4.5 h-4.5" />
+                    {/* Icon with unread dot badge on top-right */}
+                    <div className="relative shrink-0">
+                      <div className={`p-2 rounded-full ${colorClass}`}>
+                        <Icon className="w-4.5 h-4.5" />
+                      </div>
+                      {!notif.is_read && (
+                        <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-sky-500 ring-2 ring-white dark:ring-slate-950" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex justify-between items-baseline gap-2">
@@ -127,9 +136,6 @@ export default function NotificationsUpdates() {
                         {notif.message}
                       </p>
                     </div>
-                    {!notif.is_read && (
-                      <div className="w-2 h-2 rounded-full bg-sky-500 shrink-0 self-center" />
-                    )}
                   </div>
                 );
               })}

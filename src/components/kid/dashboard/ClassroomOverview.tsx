@@ -339,7 +339,7 @@ export default function ClassroomOverview({ memberships }: Props) {
             )}
 
             {/* Future Modules Placeholders */}
-            <div>
+            {/* <div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2 mb-4">
                 <HelpCircle className="h-5 w-5 text-slate-400" />
                 Classroom Modules
@@ -375,7 +375,7 @@ export default function ClassroomOverview({ memberships }: Props) {
                   );
                 })}
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Right Column (1/3) - Join Classroom Portal */}
