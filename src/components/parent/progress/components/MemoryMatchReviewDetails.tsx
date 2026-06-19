@@ -48,8 +48,8 @@ export default function MemoryMatchReviewDetails({
           Memory Quest Succeeded!
         </h5>
         <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-          Your kid matched all {data.total_pairs} card pairs with a total of {data.total_flips} flips
-          in {formatDuration(data.duration_seconds)}.
+          Your kid matched all {data.total_pairs} card pairs with a total of {data.total_flips}{" "}
+          flips in {formatDuration(data.duration_seconds)}.
         </p>
       </div>
     </div>

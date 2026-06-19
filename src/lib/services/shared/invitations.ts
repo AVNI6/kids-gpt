@@ -106,14 +106,12 @@ export async function createChildInvitation(
     .is("deleted_at", null);
 
   // Insert invitation
-  const { error: insertError } = await supabase
-    .from("child_invitations")
-    .insert({
-      parent_id: parentId,
-      invitee_email: targetEmail,
-      token,
-      expires_at: expiresAt.toISOString(),
-    });
+  const { error: insertError } = await supabase.from("child_invitations").insert({
+    parent_id: parentId,
+    invitee_email: targetEmail,
+    token,
+    expires_at: expiresAt.toISOString(),
+  });
 
   if (insertError) {
     console.error("Error creating child invitation:", insertError.message);
@@ -125,7 +123,8 @@ export async function createChildInvitation(
   try {
     const headersList = await headers();
     const host = headersList.get("x-forwarded-host") || headersList.get("host");
-    const proto = headersList.get("x-forwarded-proto") ||
+    const proto =
+      headersList.get("x-forwarded-proto") ||
       (host && (host.includes("localhost") || host.includes("127.0.0.1")) ? "http" : "https");
     if (host) {
       baseUrl = `${proto}://${host}`;
@@ -194,7 +193,11 @@ export async function getParentDetailsByInviteToken(token: string): Promise<Pare
   }
 
   if (invite.accepted_at) {
-    return { parentId: null, parentEmail: null, error: "This invitation has already been accepted." };
+    return {
+      parentId: null,
+      parentEmail: null,
+      error: "This invitation has already been accepted.",
+    };
   }
 
   if (invite.deleted_at) {

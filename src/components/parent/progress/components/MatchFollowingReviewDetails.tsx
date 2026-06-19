@@ -1,7 +1,10 @@
 "use client";
 
 import React from "react";
-import type { MatchFollowingReviewData, MatchConnectionReviewItem } from "@/types/activity-review.types";
+import type {
+  MatchFollowingReviewData,
+  MatchConnectionReviewItem,
+} from "@/types/activity-review.types";
 
 interface MatchFollowingReviewDetailsProps {
   data: MatchFollowingReviewData;

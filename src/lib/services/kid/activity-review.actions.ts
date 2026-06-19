@@ -1,10 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import type {
-  SaveActivityReviewPayload,
-  ActivityReviewRow,
-} from "@/types/activity-review.types";
+import type { SaveActivityReviewPayload, ActivityReviewRow } from "@/types/activity-review.types";
 
 /**
  * Save a detailed activity review snapshot immediately after the kid claims XP.
@@ -137,4 +134,3 @@ export async function getActivityReviewByRewardIdForParent(
     return { success: false, error: msg };
   }
 }
-

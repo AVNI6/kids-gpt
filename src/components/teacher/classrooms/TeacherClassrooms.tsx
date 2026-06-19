@@ -258,7 +258,9 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-2 pt-4">
-              <AlertDialogCancel className="rounded-full" disabled={isLoading}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="rounded-full" disabled={isLoading}>
+                Cancel
+              </AlertDialogCancel>
               <Button
                 variant="destructive"
                 loading={isLoading}

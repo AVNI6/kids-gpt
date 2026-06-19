@@ -53,7 +53,9 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
         if (isMounted) {
           // If there is no active session on mount, immediately resolve loading states.
           // Otherwise, loading state will resolve once the profile fetch thunk completes.
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          const {
+            data: { session: currentSession },
+          } = await supabase.auth.getSession();
           if (!currentSession?.user) {
             dispatch(setLoadingState(false));
             dispatch(setInitializingState(false));

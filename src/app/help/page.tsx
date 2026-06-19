@@ -109,8 +109,8 @@ export default function HelpPage() {
             </h1>
 
             <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium">
-              Find guides for students, parents, and teachers. Learn how to use Kidoza safely
-              and effectively.
+              Find guides for students, parents, and teachers. Learn how to use Kidoza safely and
+              effectively.
             </p>
           </div>
         </section>

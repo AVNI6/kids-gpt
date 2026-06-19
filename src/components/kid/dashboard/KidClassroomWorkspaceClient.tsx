@@ -104,13 +104,13 @@ export default function KidClassroomWorkspaceClient({
           assignments.map((a) =>
             a.id === selectedAssignment.id
               ? {
-                ...a,
-                submission_id: result.submission.id,
-                submission_type: result.submission.submission_type,
-                submission_text: result.submission.submission_text,
-                submission_url: result.submission.submission_url,
-                submitted_at: result.submission.submitted_at,
-              }
+                  ...a,
+                  submission_id: result.submission.id,
+                  submission_type: result.submission.submission_type,
+                  submission_text: result.submission.submission_text,
+                  submission_url: result.submission.submission_url,
+                  submitted_at: result.submission.submitted_at,
+                }
               : a
           )
         );
@@ -165,7 +165,10 @@ export default function KidClassroomWorkspaceClient({
             window.open(blobUrl, "_blank");
             return;
           } catch (fetchErr) {
-            console.error("Failed to fetch SVG for inline preview, falling back to direct URL open:", fetchErr);
+            console.error(
+              "Failed to fetch SVG for inline preview, falling back to direct URL open:",
+              fetchErr
+            );
           }
         }
 
@@ -186,7 +189,10 @@ export default function KidClassroomWorkspaceClient({
           window.open(blobUrl, "_blank");
           return;
         } catch (fetchErr) {
-          console.error("Failed to fetch SVG URL for inline preview, falling back to direct URL open:", fetchErr);
+          console.error(
+            "Failed to fetch SVG URL for inline preview, falling back to direct URL open:",
+            fetchErr
+          );
         }
       }
       window.open(res.resource_url, "_blank", "noopener,noreferrer");
@@ -241,13 +247,15 @@ export default function KidClassroomWorkspaceClient({
                 <button
                   key={tab.id}
                   onClick={() =>
-                    setActiveTab(tab.id as "overview" | "assignments" | "resources" | "announcements")
+                    setActiveTab(
+                      tab.id as "overview" | "assignments" | "resources" | "announcements"
+                    )
                   }
                   className={`flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 transition-all select-none whitespace-nowrap shrink-0 border-none bg-transparent ${
                     active
                       ? "bg-background bg-white text-foreground dark:bg-input/50 shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                    }`}
+                  }`}
                 >
                   <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                   <span>{tab.label}</span>
@@ -468,9 +476,9 @@ export default function KidClassroomWorkspaceClient({
 
                 const formattedDate = assign.due_date
                   ? new Date(assign.due_date).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                  })
+                      month: "short",
+                      day: "numeric",
+                    })
                   : "No due date";
 
                 return (
@@ -548,10 +556,11 @@ export default function KidClassroomWorkspaceClient({
                               </div>
                               <Link
                                 href={`/activities/launcher?assignment_id=${assign.id}`}
-                                className={`w-full rounded-full font-bold h-10 text-xs px-4 flex items-center justify-center cursor-pointer transition-colors ${isInProgress
-                                  ? "bg-amber-500 hover:bg-amber-600 text-white"
-                                  : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                  }`}
+                                className={`w-full rounded-full font-bold h-10 text-xs px-4 flex items-center justify-center cursor-pointer transition-colors ${
+                                  isInProgress
+                                    ? "bg-amber-500 hover:bg-amber-600 text-white"
+                                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                }`}
                               >
                                 {isInProgress ? "Resume Activity" : "Launch Activity"}
                               </Link>

@@ -75,12 +75,19 @@ export default function ParentActivityReviewModal({
         return <JigsawPuzzleReviewDetails data={data} formatDuration={formatDuration} />;
 
       default:
-        return <p className="text-sm text-slate-500">Supported details for this game are not parsed.</p>;
+        return (
+          <p className="text-sm text-slate-500">Supported details for this game are not parsed.</p>
+        );
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="max-w-md rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 flex flex-col gap-4 max-h-[90vh]">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-1">
@@ -102,9 +109,7 @@ export default function ParentActivityReviewModal({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-3 max-h-[60vh]">
-          {renderReviewDetails()}
-        </ScrollArea>
+        <ScrollArea className="flex-1 pr-3 max-h-[60vh]">{renderReviewDetails()}</ScrollArea>
 
         <DialogFooter className="mt-2 shrink-0">
           <Button

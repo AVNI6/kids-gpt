@@ -316,14 +316,19 @@ export default function TeacherClassroomWorkspaceClient({
       />
 
       {/* 4. Shared Confirmation Dialog */}
-      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => !open && !isConfirming && closeConfirm()}>
+      <AlertDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => !open && !isConfirming && closeConfirm()}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
             <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={closeConfirm} disabled={isConfirming}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={closeConfirm} disabled={isConfirming}>
+              Cancel
+            </AlertDialogCancel>
             <Button
               variant="destructive"
               loading={isConfirming}

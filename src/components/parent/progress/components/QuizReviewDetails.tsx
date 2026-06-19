@@ -64,9 +64,7 @@ export default function QuizReviewDetails({ data }: QuizReviewDetailsProps) {
                 </span>
                 <span
                   className={`font-black flex items-center gap-1 ${
-                    item.is_correct
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-500"
+                    item.is_correct ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"
                   }`}
                 >
                   {item.is_correct ? (

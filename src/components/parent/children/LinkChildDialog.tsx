@@ -22,12 +22,17 @@ interface LinkChildDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export default function LinkChildDialog({ trigger, open: controlledOpen, onOpenChange: controlledOnOpenChange }: LinkChildDialogProps) {
+export default function LinkChildDialog({
+  trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: LinkChildDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [linkEmail, setLinkEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const isControlled = typeof controlledOpen !== "undefined" && controlledOnOpenChange !== undefined;
+  const isControlled =
+    typeof controlledOpen !== "undefined" && controlledOnOpenChange !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
   const onOpenChange = isControlled ? controlledOnOpenChange : setInternalOpen;
 

@@ -22,8 +22,6 @@ import Logo from "@/components/shared/logo/Logo";
 
 const supabase = createClient();
 
-
-
 function LoginPageContent() {
   const searchParams = useSearchParams();
   const from = searchParams?.get("from");
@@ -90,7 +88,6 @@ function LoginPageContent() {
         } catch (err) {
           console.error("Failed to encrypt password for remember me:", err);
         }
-
       } else {
         localStorage.setItem("rememberMe", "false");
         localStorage.removeItem("rememberedEmail");
@@ -255,8 +252,6 @@ function LoginPageContent() {
                 </Link>
               </div>
             </div>
-
-
 
             <Button
               type="submit"

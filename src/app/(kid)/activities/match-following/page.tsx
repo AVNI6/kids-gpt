@@ -169,22 +169,24 @@ export default function MatchFollowingPage({
         }
         rewardsDescription={`${game.correctCount}/${pairs.length} Correct Connections`}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "match-following",
-          title: matchTitle,
-          connections: pairs.map((item) => {
-            const matchedRightId = game.connections[item.id];
-            const userMatchedRightItem = game.rightOrder.find((r) => r.id === matchedRightId);
-            return {
-              left_text: item.leftText,
-              right_text: item.rightText,
-              kid_right_text: userMatchedRightItem ? userMatchedRightItem.rightText : null,
-              is_correct: matchedRightId === item.id,
-            };
-          }),
-          total_pairs: pairs.length,
-          correct_count: game.correctCount,
-        } satisfies MatchFollowingReviewData}
+        reviewData={
+          {
+            type: "match-following",
+            title: matchTitle,
+            connections: pairs.map((item) => {
+              const matchedRightId = game.connections[item.id];
+              const userMatchedRightItem = game.rightOrder.find((r) => r.id === matchedRightId);
+              return {
+                left_text: item.leftText,
+                right_text: item.rightText,
+                kid_right_text: userMatchedRightItem ? userMatchedRightItem.rightText : null,
+                is_correct: matchedRightId === item.id,
+              };
+            }),
+            total_pairs: pairs.length,
+            correct_count: game.correctCount,
+          } satisfies MatchFollowingReviewData
+        }
       >
         <Button
           onClick={game.toggleShowAnswers}

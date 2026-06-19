@@ -41,7 +41,12 @@ export default function MobileNavDrawer({
         : "Student Mode";
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <SheetContent
         side="right"
         showCloseButton={false}
@@ -99,4 +104,3 @@ export default function MobileNavDrawer({
     </Sheet>
   );
 }
-

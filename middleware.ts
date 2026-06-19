@@ -17,21 +17,25 @@ function getSessionExpiry(request: NextRequest): number | null {
   try {
     const allCookies = request.cookies.getAll();
     // Find the cookie starting with sb- and ending with -auth-token (or chunked .0)
-    const mainCookie = allCookies.find(c => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+    const mainCookie = allCookies.find(
+      (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token")
+    );
     let cookieValue = mainCookie?.value || null;
 
     if (!cookieValue) {
-      const chunkZeroCookie = allCookies.find(c => c.name.startsWith("sb-") && c.name.endsWith("-auth-token.0"));
+      const chunkZeroCookie = allCookies.find(
+        (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token.0")
+      );
       if (chunkZeroCookie) {
         const baseName = chunkZeroCookie.name.slice(0, -2); // remove ".0"
         const chunks = allCookies
-          .filter(c => c.name.startsWith(baseName))
+          .filter((c) => c.name.startsWith(baseName))
           .sort((a, b) => {
             const aNum = parseInt(a.name.split(".").pop() || "0", 10);
             const bNum = parseInt(b.name.split(".").pop() || "0", 10);
             return aNum - bNum;
           });
-        cookieValue = chunks.map(c => c.value).join("");
+        cookieValue = chunks.map((c) => c.value).join("");
       }
     }
 
@@ -42,7 +46,7 @@ function getSessionExpiry(request: NextRequest): number | null {
       const base64Str = cookieValue.substring("base64-".length);
       rawJson = atob(base64Str);
     }
-    
+
     const decoded = JSON.parse(rawJson);
     if (decoded && typeof decoded.expires_at === "number") {
       return decoded.expires_at;

@@ -1,13 +1,13 @@
 /**
  * Client-Side Obfuscation & Encryption Utility
  * Used exclusively for browser localStorage convenience persistence ("Remember Me").
- * 
+ *
  * SECURITY LIMITATIONS & TRADEOFFS:
  * Since this code runs entirely in the browser, any secret keys must be bundled
  * in the client-side build. A motivated actor with physical/local access to the device
  * or local storage could inspect the client bundle, extract the salt/passphrase, and
  * decrypt the password.
- * 
+ *
  * Therefore, this client-side encryption is an obfuscation mechanism intended solely
  * to prevent simple plain-text visual exposure of credentials in localStorage (e.g.,
  * from casual inspect element or basic disk dumps). It is NOT a replacement for
@@ -24,7 +24,7 @@ export async function encryptPassword(password: string): Promise<string> {
   if (!password) return "";
   try {
     const enc = new TextEncoder();
-    
+
     // Import raw key material
     const keyMaterial = await window.crypto.subtle.importKey(
       "raw",
@@ -33,34 +33,34 @@ export async function encryptPassword(password: string): Promise<string> {
       false,
       ["deriveBits", "deriveKey"]
     );
-    
+
     // Derive AES-GCM Key using PBKDF2
     const key = await window.crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
         salt: enc.encode(SECRET_SALT),
         iterations: 1000,
-        hash: "SHA-256"
+        hash: "SHA-256",
       },
       keyMaterial,
       { name: "AES-GCM", length: 256 },
       false,
       ["encrypt", "decrypt"]
     );
-    
+
     // Generate a random 12-byte Initialization Vector (IV)
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
-    
+
     // Encrypt the password data
     const encrypted = await window.crypto.subtle.encrypt(
       {
         name: "AES-GCM",
-        iv: iv
+        iv: iv,
       },
       key,
       enc.encode(password)
     );
-    
+
     // Package IV and Ciphertext as Base64 JSON
     const ivArray = Array.from(iv);
     const encryptedArray = Array.from(new Uint8Array(encrypted));
@@ -79,7 +79,7 @@ export async function decryptPassword(ciphertext: string): Promise<string> {
   if (!ciphertext) return "";
   try {
     const enc = new TextEncoder();
-    
+
     // Import raw key material
     const keyMaterial = await window.crypto.subtle.importKey(
       "raw",
@@ -88,35 +88,35 @@ export async function decryptPassword(ciphertext: string): Promise<string> {
       false,
       ["deriveBits", "deriveKey"]
     );
-    
+
     // Derive AES-GCM Key using PBKDF2
     const key = await window.crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
         salt: enc.encode(SECRET_SALT),
         iterations: 1000,
-        hash: "SHA-256"
+        hash: "SHA-256",
       },
       keyMaterial,
       { name: "AES-GCM", length: 256 },
       false,
       ["encrypt", "decrypt"]
     );
-    
+
     // Decode Base64 string and extract IV/Data
     const rawJSON = atob(ciphertext);
     const { iv, data } = JSON.parse(rawJSON);
-    
+
     // Decrypt data
     const decrypted = await window.crypto.subtle.decrypt(
       {
         name: "AES-GCM",
-        iv: new Uint8Array(iv)
+        iv: new Uint8Array(iv),
       },
       key,
       new Uint8Array(data)
     );
-    
+
     const dec = new TextDecoder();
     return dec.decode(decrypted);
   } catch (err) {

@@ -59,9 +59,7 @@ export default function WordScrambleReviewDetails({ data }: WordScrambleReviewDe
                 </span>
                 <span
                   className={`font-black uppercase tracking-wide ${
-                    item.is_correct
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-500"
+                    item.is_correct ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"
                   }`}
                 >
                   {item.kid_input || "None"}

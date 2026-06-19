@@ -39,7 +39,6 @@ export default function ActivitiesGrid() {
     }
   };
 
-
   // Compute unique filters dynamically based on child's actual rewards/timeline logs
   const dynamicFilters = useMemo(() => {
     const uniqueFilters = new Map<string, string>();
@@ -294,7 +293,6 @@ export default function ActivitiesGrid() {
       />
 
       {filteredActivities.length > 0 && activitiesPagination.totalPages > 1 && (
-
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
             Showing {activitiesPagination.startIndex + 1}-{activitiesPagination.endIndex} of{" "}

@@ -228,13 +228,15 @@ export default function ScienceLabPage({
         rewardsDescription={`${correctCount}/${safeExperiments.length} Correct Experiments`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "science-lab",
-          title: labTitle,
-          items: finalReviewItems,
-          total_questions: safeExperiments.length,
-          correct_count: correctCount,
-        } satisfies QuizReviewData}
+        reviewData={
+          {
+            type: "science-lab",
+            title: labTitle,
+            items: finalReviewItems,
+            total_questions: safeExperiments.length,
+            correct_count: correctCount,
+          } satisfies QuizReviewData
+        }
       />
     </div>
   );

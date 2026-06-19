@@ -1,20 +1,14 @@
 import React from "react";
-import {
-  FileText,
-  Video,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  FolderOpen,
-} from "lucide-react";
+import { FileText, Video, Link as LinkIcon, Image as ImageIcon, FolderOpen } from "lucide-react";
 import type { ClassroomResource } from "@/types/classroom.types";
 
 export type ResourceDisplayType = "PDF" | "VIDEO" | "LINK" | "IMAGE" | "DOCUMENT";
 
 export function getResourceDisplay(res: ClassroomResource) {
   const ext = (res.resource_url || res.storage_path || "").split(".").pop()?.toLowerCase();
-  
+
   let displayType: ResourceDisplayType = "DOCUMENT";
-  
+
   if (res.resource_type === "PDF") {
     displayType = "PDF";
   } else if (res.resource_type === "VIDEO") {

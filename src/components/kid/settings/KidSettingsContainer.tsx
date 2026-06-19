@@ -43,7 +43,7 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-  const hasChanges = 
+  const hasChanges =
     firstName !== (profile.first_name || "") ||
     lastName !== (profile.last_name || "") ||
     username !== (profile.username || "") ||
@@ -118,8 +118,6 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
       setIsSavingProfile(false);
     }
   };
-
-
 
   return (
     <div className="flex flex-col gap-8">

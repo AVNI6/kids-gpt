@@ -37,7 +37,7 @@ interface VictoryModalProps {
   memoryMatchWorldId?: number;
   memoryMatchStepNumber?: number;
   onClaimSuccess?: () => void;
-  children?: React.ReactNode; 
+  children?: React.ReactNode;
   reviewData?: ActivityReviewData;
   gameStartedAt?: number;
 }

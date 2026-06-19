@@ -1047,160 +1047,114 @@ export async function getTeacherAssignmentOverview(assignmentId: string) {
 export async function getStudentClassroomWorkspace(classroomId: string) {
   try {
     const { userId } = await verifyUserRole("kid");
-    console.log("[getStudentClassroomWorkspace] Diagnostic - classroomId:", classroomId, "userId:", userId);
+    console.log(
+      "[getStudentClassroomWorkspace] Diagnostic - classroomId:",
+      classroomId,
+      "userId:",
+      userId
+    );
+    const supabase = await createClient();
     const adminSupabase = createAdminClient();
 
-    // Verify student is approved member of the classroom
-    const { data: member, error: memberErr } = await adminSupabase
-      .from("classroom_members")
-      .select("id")
-      .eq("classroom_id", classroomId)
-      .eq("student_user_id", userId)
-      .eq("status", "APPROVED")
-      .maybeSingle();
+    // Fetch approved membership, classroom details, and teacher profile details in a single query
+    // and run RPC in parallel
+    const [memberResult, workspaceResult] = await Promise.all([
+      adminSupabase
+        .from("classroom_members")
+        .select(
+          `
+          id,
+          classroom:classrooms (
+            id,
+            name,
+            description,
+            subject,
+            grade,
+            class_code,
+            teacher_user_id,
+            is_active,
+            created_at,
+            updated_at,
+            deleted_at,
+            teacher:profile!classrooms_teacher_user_id_fkey (
+              first_name,
+              last_name,
+              avatar_url
+            )
+          )
+        `
+        )
+        .eq("classroom_id", classroomId)
+        .eq("student_user_id", userId)
+        .eq("status", "APPROVED")
+        .maybeSingle(),
+      supabase.rpc("get_student_classroom_workspace", { p_classroom_id: classroomId }),
+    ]);
 
-    console.log("[getStudentClassroomWorkspace] Diagnostic - member check:", member, "error:", memberErr);
-
-    if (memberErr || !member) {
+    if (memberResult.error || !memberResult.data) {
       throw new Error("You are not an approved member of this classroom.");
     }
 
-    // 1. Fetch classroom metadata
-    const { data: classroom, error: classErr } = await adminSupabase
-      .from("classrooms")
-      .select(
-        `
-        id,
-        name,
-        description,
-        subject,
-        grade,
-        class_code,
-        teacher_user_id,
-        is_active,
-        created_at,
-        updated_at,
-        deleted_at
-      `
-      )
-      .eq("id", classroomId)
-      .single();
-
-    console.log("[getStudentClassroomWorkspace] Diagnostic - classroom fetch:", classroom, "error:", classErr);
-
-    if (classErr || !classroom) {
-      throw new Error(classErr?.message || "Classroom not found.");
+    const classroomRaw = memberResult.data.classroom;
+    // Handle classrooms returning as array or single object
+    const classroom = Array.isArray(classroomRaw) ? classroomRaw[0] : classroomRaw;
+    if (!classroom) {
+      throw new Error("Classroom not found.");
     }
 
-    // 2. Fetch teacher profile details
-    const { data: teacher } = await adminSupabase
-      .from("profile")
-      .select("first_name, last_name, avatar_url")
-      .eq("user_id", classroom.teacher_user_id)
-      .single();
-
-    // 3. Fetch published assignments
-    const { data: assignments, error: assignErr } = await adminSupabase
-      .from("assignments")
-      .select(`
-        id,
-        classroom_id,
-        teacher_user_id,
-        created_by,
-        title,
-        description,
-        subject,
-        total_points,
-        due_date,
-        status,
-        published_at,
-        closed_at,
-        created_at,
-        updated_at,
-        deleted_at,
-        activity_type,
-        topic,
-        difficulty,
-        question_count
-      `)
-      .eq("classroom_id", classroomId)
-      .eq("status", "PUBLISHED")
-      .is("deleted_at", null)
-      .order("due_date", { ascending: true })
-      .order("created_at", { ascending: false });
-
-    if (assignErr) throw new Error(assignErr.message);
-
-    // 4. Fetch student submissions
-    const { data: submissions, error: subErr } = await adminSupabase
-      .from("assignment_submissions")
-      .select(`
-        id,
-        assignment_id,
-        submission_type,
-        submission_text,
-        submission_url,
-        submitted_at,
-        score,
-        feedback,
-        graded_at
-      `)
-      .eq("student_user_id", userId)
-      .is("deleted_at", null);
-
-    if (subErr) throw new Error(subErr.message);
-
-    // Merge assignments with submissions
-    const submissionMap = new Map();
-    if (submissions) {
-      for (const sub of submissions) {
-        submissionMap.set(sub.assignment_id, sub);
-      }
+    if (workspaceResult.error) {
+      throw new Error(workspaceResult.error.message);
     }
 
-    const mergedAssignments = (assignments || []).map((assign) => {
-      const sub = submissionMap.get(assign.id);
-      return {
-        ...assign,
-        submission_id: sub ? sub.id : null,
-        submission_type: sub ? sub.submission_type : null,
-        submission_text: sub ? sub.submission_text : null,
-        submission_url: sub ? sub.submission_url : null,
-        submitted_at: sub ? sub.submitted_at : null,
-        score: sub ? sub.score : null,
-        feedback: sub ? sub.feedback : null,
-        graded_at: sub ? sub.graded_at : null,
-      };
-    });
+    const rpcData = workspaceResult.data || {};
+    const teacherRaw = classroom.teacher;
+    const teacher = Array.isArray(teacherRaw) ? teacherRaw[0] || null : teacherRaw || null;
 
-    // 5. Fetch classroom resources
-    const { data: resources, error: resErr } = await adminSupabase
-      .from("classroom_resources")
-      .select("id, classroom_id, teacher_user_id, title, description, resource_type, resource_url, storage_path, created_at, updated_at, deleted_at")
-      .eq("classroom_id", classroomId)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+    // Map RPC assignments to StudentAssignment interface
+    const rpcAssignments = rpcData.assignments || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mergedAssignments = rpcAssignments.map((assign: any) => ({
+      ...assign,
+      classroom_id: classroomId,
+      teacher_user_id: classroom.teacher_user_id,
+      created_by: classroom.teacher_user_id,
+      created_at: assign.created_at || classroom.created_at,
+      updated_at: assign.updated_at || classroom.updated_at,
+      deleted_at: null,
+    }));
 
-    if (resErr) throw new Error(resErr.message);
+    // Map RPC resources to ClassroomResource interface
+    const rpcResources = rpcData.resources || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resources = rpcResources.map((res: any) => ({
+      ...res,
+      classroom_id: classroomId,
+      teacher_user_id: classroom.teacher_user_id,
+      updated_at: res.created_at || classroom.created_at,
+      deleted_at: null,
+    }));
 
-    // 6. Fetch announcements
-    const { data: announcements, error: annErr } = await adminSupabase
-      .from("announcements")
-      .select("id, classroom_id, teacher_user_id, title, message, created_at, updated_at, deleted_at")
-      .eq("classroom_id", classroomId)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+    // Map RPC announcements to ClassroomAnnouncement interface
+    const rpcAnnouncements = rpcData.announcements || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const announcements = rpcAnnouncements.map((ann: any) => ({
+      ...ann,
+      classroom_id: classroomId,
+      teacher_user_id: classroom.teacher_user_id,
+      updated_at: ann.created_at || classroom.created_at,
+      deleted_at: null,
+    }));
 
-    if (annErr) throw new Error(annErr.message);
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { teacher: _, ...classroomMetadata } = classroom;
     const mergedData = {
       classroom: {
-        ...classroom,
-        teacher: teacher || null,
+        ...classroomMetadata,
+        teacher: teacher,
       },
       assignments: mergedAssignments,
-      resources: resources || [],
-      announcements: announcements || [],
+      resources: resources,
+      announcements: announcements,
     };
 
     return { success: true, data: mergedData };
@@ -1211,7 +1165,6 @@ export async function getStudentClassroomWorkspace(classroomId: string) {
     };
   }
 }
-
 
 /**
  * Start assignment activity and track it as IN_PROGRESS (Kid only)
@@ -1387,48 +1340,34 @@ export async function getKidPendingAssignmentsCount(): Promise<number> {
     const { userId } = await verifyUserRole("kid");
     const supabase = await createClient();
 
-    // Fetch classrooms student is approved in
-    const { data: members, error: memberErr } = await supabase
-      .from("classroom_members")
-      .select("classroom_id")
-      .eq("student_user_id", userId)
-      .eq("status", "APPROVED");
-
-    if (memberErr || !members || members.length === 0) {
-      return 0;
-    }
-
-    const classroomIds = members.map((m) => m.classroom_id);
-
-    // Fetch active published assignments in those classrooms
+    // Query active published assignments and the student's submission (if any) in a single joined select.
+    // RLS automatically limits retrieved assignments to those in classrooms where the student is approved.
     const { data: assignments, error: assignErr } = await supabase
       .from("assignments")
-      .select("id")
-      .in("classroom_id", classroomIds)
+      .select(
+        `
+        id,
+        assignment_submissions!left(id, submitted_at)
+      `
+      )
       .eq("status", "PUBLISHED")
-      .is("deleted_at", null);
+      .is("deleted_at", null)
+      .eq("assignment_submissions.student_user_id", userId)
+      .is("assignment_submissions.deleted_at", null);
 
-    if (assignErr || !assignments || assignments.length === 0) {
+    if (assignErr || !assignments) {
+      console.error("Error fetching pending assignments count:", assignErr);
       return 0;
     }
 
-    const assignmentIds = assignments.map((a) => a.id);
-
-    // Fetch completed submissions for these assignments
-    const { data: submissions, error: subErr } = await supabase
-      .from("assignment_submissions")
-      .select("assignment_id")
-      .in("assignment_id", assignmentIds)
-      .eq("student_user_id", userId)
-      .not("submitted_at", "is", null)
-      .is("deleted_at", null);
-
-    if (subErr) {
-      return assignments.length;
-    }
-
-    const completedAssignmentIds = new Set((submissions || []).map((s) => s.assignment_id));
-    const pendingCount = assignments.filter((a) => !completedAssignmentIds.has(a.id)).length;
+    // A pending assignment has no approved submission with a valid submitted_at timestamp
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pendingCount = assignments.filter((a: any) => {
+      const submissions = a.assignment_submissions || [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const hasSubmission = submissions.some((s: any) => s.submitted_at !== null);
+      return !hasSubmission;
+    }).length;
 
     return pendingCount;
   } catch (err) {

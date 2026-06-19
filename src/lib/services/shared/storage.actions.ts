@@ -124,9 +124,15 @@ export async function getSignedResourceUrl(filePath: string): Promise<SignedUrlR
       }
     }
 
-    return { success: false, error: "Access denied. You do not have permission to view this resource." };
+    return {
+      success: false,
+      error: "Access denied. You do not have permission to view this resource.",
+    };
   } catch (err) {
     console.error("getSignedResourceUrl: Error occurred:", err);
-    return { success: false, error: err instanceof Error ? err.message : "Failed to sign resource URL" };
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to sign resource URL",
+    };
   }
 }

@@ -40,7 +40,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-  const hasChanges = 
+  const hasChanges =
     firstName !== (profile.first_name || "") ||
     lastName !== (profile.last_name || "") ||
     username !== (profile.username || "") ||
@@ -52,8 +52,6 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, startUploadTransition] = useTransition();
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
-
-
 
   // Initials helper
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.trim().toUpperCase() || "T";
@@ -129,8 +127,6 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
     }
   };
 
-
-
   return (
     <div className="flex flex-col gap-8">
       {/* Settings Header */}
@@ -189,10 +185,11 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
-                        className={`relative group rounded-full p-1 border-2 border-border transition-all shrink-0 ${isUploading
+                        className={`relative group rounded-full p-1 border-2 border-border transition-all shrink-0 ${
+                          isUploading
                             ? "cursor-not-allowed opacity-80"
                             : "cursor-pointer hover:scale-105 hover:border-indigo-500 active:scale-95"
-                          }`}
+                        }`}
                       >
                         <Avatar className="w-24 h-24 rounded-full cursor-pointer">
                           <AvatarImage src={displayUrl || undefined} className="object-cover" />

@@ -338,25 +338,29 @@ export default function JigsawPuzzlePage() {
               {/* Utility Tools */}
               <div className="flex gap-2">
                 <Tooltip>
-                  <TooltipTrigger render={
-                    <button
-                      onClick={() => setIsHintOpen(true)}
-                      className="p-3 rounded-2xl bg-muted/80 hover:bg-muted border border-border text-sky-600 dark:text-sky-400 transition-all shadow-md cursor-pointer"
-                    >
-                      <HelpCircle className="size-5" />
-                    </button>
-                  } />
+                  <TooltipTrigger
+                    render={
+                      <button
+                        onClick={() => setIsHintOpen(true)}
+                        className="p-3 rounded-2xl bg-muted/80 hover:bg-muted border border-border text-sky-600 dark:text-sky-400 transition-all shadow-md cursor-pointer"
+                      >
+                        <HelpCircle className="size-5" />
+                      </button>
+                    }
+                  />
                   <TooltipContent side="top">Show image guide hint</TooltipContent>
                 </Tooltip>
                 <Tooltip>
-                  <TooltipTrigger render={
-                    <button
-                      onClick={handleReset}
-                      className="p-3 rounded-2xl bg-muted/80 hover:bg-muted border border-border text-emerald-600 dark:text-emerald-400 transition-all shadow-md cursor-pointer"
-                    >
-                      <RotateCcw className="size-5" />
-                    </button>
-                  } />
+                  <TooltipTrigger
+                    render={
+                      <button
+                        onClick={handleReset}
+                        className="p-3 rounded-2xl bg-muted/80 hover:bg-muted border border-border text-emerald-600 dark:text-emerald-400 transition-all shadow-md cursor-pointer"
+                      >
+                        <RotateCcw className="size-5" />
+                      </button>
+                    }
+                  />
                   <TooltipContent side="top">Reshuffle pieces</TooltipContent>
                 </Tooltip>
               </div>

@@ -14,7 +14,10 @@ import { APP_ROUTES } from "@/lib/constants/common";
 
 import { type MathChallengeItem } from "@/types/activities.type";
 import VictoryModal from "@/components/shared/VictoryModal";
-import type { MathChallengeReviewData, MathChallengeReviewItem } from "@/types/activity-review.types";
+import type {
+  MathChallengeReviewData,
+  MathChallengeReviewItem,
+} from "@/types/activity-review.types";
 
 interface MathChallengesPageProps {
   challengeTitle?: string;
@@ -224,13 +227,15 @@ export default function MathChallengesPage({
         rewardsDescription={`${correctCount}/${safeEquations.length} Correct Answers`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "math-challenges",
-          title: challengeTitle,
-          items: finalReviewItems,
-          total_questions: safeEquations.length,
-          correct_count: correctCount,
-        } satisfies MathChallengeReviewData}
+        reviewData={
+          {
+            type: "math-challenges",
+            title: challengeTitle,
+            items: finalReviewItems,
+            total_questions: safeEquations.length,
+            correct_count: correctCount,
+          } satisfies MathChallengeReviewData
+        }
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-current`);

@@ -1,13 +1,10 @@
 import { Suspense } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getCurrentDashboardProfile } from "@/lib/services/kid/dashboard.actions";
 import { getTeacherDashboardData } from "@/lib/services/kid/classroom.actions";
 import { createClient } from "@/lib/supabase/server";
 import TeacherDashboardContainer from "@/components/teacher/home/TeacherDashboardContainer";
 import { TeacherDashboardSkeleton } from "@/components/shared/skeletonLoading";
-
-
 
 interface TeacherDashboardAnalyticsResponse {
   published_assignments_count: number;
@@ -25,14 +22,19 @@ interface TeacherDashboardAnalyticsResponse {
 
 async function TeacherDashboardContent() {
   await checkDashboardAccess(["teacher"]);
-  const profile = await getCurrentDashboardProfile();
-  const { classrooms, students, pendingRequests } = await getTeacherDashboardData();
   const supabase = await createClient();
 
-  // Call the consolidated database analytics RPC
-  const { data: analytics, error: analyticsError } = (await supabase.rpc(
-    "get_teacher_dashboard_analytics"
-  )) as { data: TeacherDashboardAnalyticsResponse | null; error: { message: string } | null };
+  const [profile, dashboardData, analyticsResult] = await Promise.all([
+    getCurrentDashboardProfile(),
+    getTeacherDashboardData(),
+    supabase.rpc("get_teacher_dashboard_analytics"),
+  ]);
+
+  const { classrooms, students, pendingRequests } = dashboardData;
+  const { data: analytics, error: analyticsError } = analyticsResult as {
+    data: TeacherDashboardAnalyticsResponse | null;
+    error: { message: string } | null;
+  };
 
   if (analyticsError || !analytics) {
     throw new Error(

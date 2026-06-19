@@ -254,13 +254,15 @@ export default function LogicPuzzlesPage({
         rewardsDescription={`${correctCount}/${safePuzzles.length} Correct Answers`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "logic-puzzles",
-          title: puzzleTitle,
-          items: finalReviewItems,
-          total_questions: safePuzzles.length,
-          correct_count: correctCount,
-        } satisfies QuizReviewData}
+        reviewData={
+          {
+            type: "logic-puzzles",
+            title: puzzleTitle,
+            items: finalReviewItems,
+            total_questions: safePuzzles.length,
+            correct_count: correctCount,
+          } satisfies QuizReviewData
+        }
       />
     </div>
   );

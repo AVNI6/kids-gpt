@@ -36,14 +36,10 @@ export default function JigsawPuzzleReviewDetails({
 
       <div className="bg-card rounded-2xl p-6 border border-slate-100 dark:border-slate-800 text-center space-y-2.5 shadow-xs">
         <Award className="w-10 h-10 text-emerald-500 mx-auto" />
-        <h5 className="font-black text-sm text-slate-800 dark:text-slate-200">
-          Jigsaw Solved!
-        </h5>
+        <h5 className="font-black text-sm text-slate-800 dark:text-slate-200">Jigsaw Solved!</h5>
         <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
           Your kid matched all {data.grid_size * data.grid_size} jigsaw pieces and assembled the{" "}
-          <span className="font-bold text-slate-700 dark:text-slate-300">
-            {data.theme_name}
-          </span>{" "}
+          <span className="font-bold text-slate-700 dark:text-slate-300">{data.theme_name}</span>{" "}
           image correctly in {formatDuration(data.duration_seconds)}.
         </p>
       </div>

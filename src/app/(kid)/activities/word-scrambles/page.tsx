@@ -233,13 +233,15 @@ export default function WordScramblesPage({
         rewardsDescription={`${correctCount}/${safeWords.length} Correct Words`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "word-scrambles",
-          title: scrambleTitle,
-          items: finalReviewItems,
-          total_words: safeWords.length,
-          correct_count: correctCount,
-        } satisfies WordScrambleReviewData}
+        reviewData={
+          {
+            type: "word-scrambles",
+            title: scrambleTitle,
+            items: finalReviewItems,
+            total_words: safeWords.length,
+            correct_count: correctCount,
+          } satisfies WordScrambleReviewData
+        }
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-current`);

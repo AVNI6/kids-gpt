@@ -19,7 +19,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +50,6 @@ type Props = {
   setResources: React.Dispatch<React.SetStateAction<ClassroomResource[]>>;
   handleDeleteResource: (id: string) => void;
 };
-
 
 export default function ClassroomResourcesTab({
   classroomId,
@@ -191,7 +196,10 @@ export default function ClassroomResourcesTab({
             window.open(blobUrl, "_blank");
             return;
           } catch (fetchErr) {
-            console.error("Failed to fetch SVG for inline preview, falling back to direct URL open:", fetchErr);
+            console.error(
+              "Failed to fetch SVG for inline preview, falling back to direct URL open:",
+              fetchErr
+            );
           }
         }
 
@@ -212,7 +220,10 @@ export default function ClassroomResourcesTab({
           window.open(blobUrl, "_blank");
           return;
         } catch (fetchErr) {
-          console.error("Failed to fetch SVG URL for inline preview, falling back to direct URL open:", fetchErr);
+          console.error(
+            "Failed to fetch SVG URL for inline preview, falling back to direct URL open:",
+            fetchErr
+          );
         }
       }
       window.open(res.resource_url, "_blank", "noopener,noreferrer");

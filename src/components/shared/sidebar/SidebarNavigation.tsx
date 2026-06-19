@@ -124,7 +124,13 @@ export default function SidebarNavigation({
 
         if (item.href) {
           return (
-            <Link key={item.label} href={item.href} onClick={item.onClick} prefetch={false} className={buttonClass}>
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={item.onClick}
+              prefetch={false}
+              className={buttonClass}
+            >
               {itemContent}
             </Link>
           );

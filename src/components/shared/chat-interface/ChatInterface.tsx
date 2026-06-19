@@ -57,22 +57,20 @@ export default function ChatInterface() {
         const supabase = createClient();
         const { data: sessionData, error: sessionError } = await supabase
           .from("chat_sessions")
-          .select("user_id")
+          .select("user_id, profile:profile(*)")
           .eq("id", currentSessionId)
           .maybeSingle();
 
-        if (sessionError || !sessionData?.user_id) {
+        if (sessionError || !sessionData) {
           if (active) setSessionOwnerProfile(null);
           return;
         }
 
-        const { data: profileData, error: profileError } = await supabase
-          .from("profile")
-          .select("*")
-          .eq("user_id", sessionData.user_id)
-          .maybeSingle();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const profileRaw = (sessionData as any).profile;
+        const profileData = Array.isArray(profileRaw) ? profileRaw[0] : profileRaw;
 
-        if (profileError || !profileData) {
+        if (!profileData) {
           if (active) setSessionOwnerProfile(null);
           return;
         }

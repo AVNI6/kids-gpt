@@ -115,7 +115,9 @@ export async function submitKidOnboarding(
   const inviteToken = user.user_metadata?.invite_token as string | undefined;
 
   if (!inviteToken) {
-    return { error: "Invitation token is missing. You must be invited by a parent to sign up as a kid." };
+    return {
+      error: "Invitation token is missing. You must be invited by a parent to sign up as a kid.",
+    };
   }
 
   const adminClient = createAdminClient();
@@ -180,7 +182,10 @@ export async function submitKidOnboarding(
     .maybeSingle();
 
   if (parentProfileError || !parentProfile?.email) {
-    console.error("[submitKidOnboarding] parent profile lookup failed:", parentProfileError?.message);
+    console.error(
+      "[submitKidOnboarding] parent profile lookup failed:",
+      parentProfileError?.message
+    );
     return { error: "Failed to resolve parent profile." };
   }
 
@@ -210,7 +215,11 @@ export async function submitKidOnboarding(
     console.error("[submitKidOnboarding] accept invitation status error:", acceptError.message);
   }
 
-  return { success: true, message: "Profile setup complete and automatically linked with parent!", error: null };
+  return {
+    success: true,
+    message: "Profile setup complete and automatically linked with parent!",
+    error: null,
+  };
 }
 
 export async function submitParentOnboarding(

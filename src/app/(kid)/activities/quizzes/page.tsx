@@ -374,13 +374,15 @@ export default function QuizzesPage({
         rewardsDescription={`${correctCount}/${safeQuestions.length} Correct Answers`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "quizzes",
-          title: quizTitle,
-          items: finalReviewItems,
-          total_questions: safeQuestions.length,
-          correct_count: correctCount,
-        } satisfies QuizReviewData}
+        reviewData={
+          {
+            type: "quizzes",
+            title: quizTitle,
+            items: finalReviewItems,
+            total_questions: safeQuestions.length,
+            correct_count: correctCount,
+          } satisfies QuizReviewData
+        }
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-current`);

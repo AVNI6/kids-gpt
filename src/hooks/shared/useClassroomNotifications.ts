@@ -1,16 +1,17 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { ClassroomNotification } from "@/types/classroom.types";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useClassroomNotifications(role: "kid" | "teacher", limit?: number) {
-  const [notifications, setNotifications] = useState<ClassroomNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-
   const supabase = useMemo(() => createClient(), []);
+  const queryClient = useQueryClient();
 
-  const fetchNotifications = useCallback(async () => {
-    try {
+  const queryKey = useMemo(() => ["classroom-notifications", role, limit], [role, limit]);
+
+  const { data: notifications = [], isLoading } = useQuery<ClassroomNotification[]>({
+    queryKey,
+    queryFn: async () => {
       let query = supabase
         .from("notifications")
         .select("*")
@@ -22,44 +23,41 @@ export function useClassroomNotifications(role: "kid" | "teacher", limit?: numbe
       }
 
       const { data } = await query;
+      return (data as ClassroomNotification[]) || [];
+    },
+    staleTime: 5000, // deduplicate and cache for 5 seconds
+  });
 
-      if (data) {
-        const typed = data as ClassroomNotification[];
-        setNotifications(typed);
-        setUnreadCount(typed.filter((n) => !n.is_read).length);
-      }
+  const unreadCount = useMemo(() => {
+    return notifications.filter((n) => !n.is_read).length;
+  }, [notifications]);
 
-      // Auto-purge read notifications older than 7 days
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      supabase
-        .from("notifications")
-        .delete()
-        .eq("recipient_role", role)
-        .eq("is_read", true)
-        .lt("created_at", sevenDaysAgo.toISOString())
-        .then((res: { error: unknown }) => {
-          if (res.error) {
-            console.error("Failed to auto-purge old read classroom notifications:", res.error);
-          }
-        });
-    } catch (err) {
-      console.error(`Failed to fetch notifications for ${role}:`, err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [supabase, role, limit]);
-
+  // Purge old read notifications in the background
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchNotifications();
-  }, [fetchNotifications]);
+    if (notifications.length === 0) return;
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    supabase
+      .from("notifications")
+      .delete()
+      .eq("recipient_role", role)
+      .eq("is_read", true)
+      .lt("created_at", sevenDaysAgo.toISOString())
+      .then((res: { error: unknown }) => {
+        if (res.error) {
+          console.error("Failed to auto-purge old read classroom notifications:", res.error);
+        }
+      });
+  }, [role, supabase, notifications.length]);
 
   const markAsRead = async (id: string) => {
     try {
+      // Optimistic update
+      queryClient.setQueryData<ClassroomNotification[]>(queryKey, (old) => {
+        return (old || []).map((n) => (n.id === id ? { ...n, is_read: true } : n));
+      });
       await supabase.from("notifications").update({ is_read: true }).eq("id", id);
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      queryClient.invalidateQueries({ queryKey: ["classroom-notifications", role] });
     } catch (err) {
       console.error("Failed to mark as read:", err);
     }
@@ -69,9 +67,13 @@ export function useClassroomNotifications(role: "kid" | "teacher", limit?: numbe
     try {
       const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
       if (unreadIds.length === 0) return;
+
+      // Optimistic update
+      queryClient.setQueryData<ClassroomNotification[]>(queryKey, (old) => {
+        return (old || []).map((n) => ({ ...n, is_read: true }));
+      });
       await supabase.from("notifications").update({ is_read: true }).in("id", unreadIds);
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      setUnreadCount(0);
+      queryClient.invalidateQueries({ queryKey: ["classroom-notifications", role] });
     } catch (err) {
       console.error("Failed to mark all as read:", err);
     }
@@ -80,35 +82,38 @@ export function useClassroomNotifications(role: "kid" | "teacher", limit?: numbe
   const deleteNotification = useCallback(
     async (id: string) => {
       try {
-        setNotifications((prev) => {
-          const deletedNotif = prev.find((n) => n.id === id);
-          if (deletedNotif && !deletedNotif.is_read) {
-            setUnreadCount((count) => Math.max(0, count - 1));
-          }
-          return prev.filter((n) => n.id !== id);
+        // Optimistic update
+        queryClient.setQueryData<ClassroomNotification[]>(queryKey, (old) => {
+          return (old || []).filter((n) => n.id !== id);
         });
 
         const { error } = await supabase.from("notifications").delete().eq("id", id);
         if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ["classroom-notifications", role] });
       } catch (err) {
         console.error("Failed to delete notification:", err);
-        fetchNotifications();
+        queryClient.invalidateQueries({ queryKey: queryKey });
       }
     },
-    [supabase, fetchNotifications]
+    [supabase, queryClient, queryKey, role]
   );
 
   const deleteAllNotifications = useCallback(async () => {
     try {
-      setNotifications([]);
-      setUnreadCount(0);
+      // Optimistic update
+      queryClient.setQueryData<ClassroomNotification[]>(queryKey, []);
       const { error } = await supabase.from("notifications").delete().eq("recipient_role", role);
       if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["classroom-notifications", role] });
     } catch (err) {
       console.error("Failed to delete all notifications:", err);
-      fetchNotifications();
+      queryClient.invalidateQueries({ queryKey: queryKey });
     }
-  }, [supabase, role, fetchNotifications]);
+  }, [supabase, role, queryClient, queryKey]);
+
+  const fetchNotifications = useCallback(async () => {
+    await queryClient.refetchQueries({ queryKey: queryKey });
+  }, [queryClient, queryKey]);
 
   return {
     notifications,

@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type {
@@ -12,6 +13,7 @@ import type {
 } from "@/types/kid";
 import type { ChatMessageRow } from "@/types/common";
 import { getDailyScreenTime, recoverStaleSessions } from "../shared/screentime.actions";
+import { preSignMessageUrls } from "../shared/chat.actions";
 import type { SearchHistoryItem, CacheData } from "@/types/parent";
 import {
   verifyUserRole,
@@ -102,7 +104,7 @@ function getErrorMessage(error: unknown): string {
   return String(error);
 }
 
-export async function getLinkedChildren(): Promise<LinkedChildProfile[]> {
+export const getLinkedChildren = cache(async (): Promise<LinkedChildProfile[]> => {
   const { userId } = await verifyUserRole("parent");
   const supabase = await createClient();
 
@@ -138,24 +140,31 @@ export async function getLinkedChildren(): Promise<LinkedChildProfile[]> {
   return ((data as Array<{ child_profile: LinkedChildProfile[] | null }> | null) ?? [])
     .flatMap((row) => row.child_profile ?? [])
     .filter((profile): profile is LinkedChildProfile => Boolean(profile));
-}
+});
 
-export async function getChildDetails(childUserId: string): Promise<ChildDetailsResult> {
-  const { userId: parentId } = await verifyUserRole("parent");
+export async function getChildDetails(
+  childUserId: string,
+  parentId?: string
+): Promise<ChildDetailsResult> {
   const supabase = await createClient();
 
-  // 1. Verify parent access to this specific child (via parent_child_link)
-  const { data: link, error: linkError } = await supabase
-    .from("parent_child_link")
-    .select("id")
-    .eq("parent_user_id", parentId)
-    .eq("child_user_id", childUserId)
-    .eq("is_approved", true)
-    .is("deleted_at", null)
-    .maybeSingle();
+  if (!parentId) {
+    const { userId: verifiedParentId } = await verifyUserRole("parent");
+    parentId = verifiedParentId;
 
-  if (linkError || !link) {
-    throw new Error("Unauthorized access to child profile");
+    // 1. Verify parent access to this specific child (via parent_child_link)
+    const { data: link, error: linkError } = await supabase
+      .from("parent_child_link")
+      .select("id")
+      .eq("parent_user_id", parentId)
+      .eq("child_user_id", childUserId)
+      .eq("is_approved", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (linkError || !link) {
+      throw new Error("Unauthorized access to child profile");
+    }
   }
 
   // 2. Fetch child profile
@@ -238,23 +247,28 @@ export async function getChildDetails(childUserId: string): Promise<ChildDetails
 }
 
 export async function getChildSafetyAndUsage(
-  childUserId: string
+  childUserId: string,
+  parentId?: string
 ): Promise<ChildSafetyAndUsageResult> {
-  const { userId: parentId } = await verifyUserRole("parent");
   const supabase = await createClient();
 
-  // 1. Verify parent access
-  const { data: link, error: linkError } = await supabase
-    .from("parent_child_link")
-    .select("id")
-    .eq("parent_user_id", parentId)
-    .eq("child_user_id", childUserId)
-    .eq("is_approved", true)
-    .is("deleted_at", null)
-    .maybeSingle();
+  if (!parentId) {
+    const { userId: verifiedParentId } = await verifyUserRole("parent");
+    parentId = verifiedParentId;
 
-  if (linkError || !link) {
-    throw new Error("Unauthorized access to child profile");
+    // 1. Verify parent access
+    const { data: link, error: linkError } = await supabase
+      .from("parent_child_link")
+      .select("id")
+      .eq("parent_user_id", parentId)
+      .eq("child_user_id", childUserId)
+      .eq("is_approved", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (linkError || !link) {
+      throw new Error("Unauthorized access to child profile");
+    }
   }
 
   // 2. Query safety alerts count
@@ -306,22 +320,29 @@ export async function getChildSafetyAndUsage(
   };
 }
 
-export async function getParentActivities(childUserId: string): Promise<ParentActivityItem[]> {
-  const { userId: parentId } = await verifyUserRole("parent");
+export async function getParentActivities(
+  childUserId: string,
+  parentId?: string
+): Promise<ParentActivityItem[]> {
   const supabase = await createClient();
 
-  // Verify parent access
-  const { data: link, error: linkError } = await supabase
-    .from("parent_child_link")
-    .select("id")
-    .eq("parent_user_id", parentId)
-    .eq("child_user_id", childUserId)
-    .eq("is_approved", true)
-    .is("deleted_at", null)
-    .maybeSingle();
+  if (!parentId) {
+    const { userId: verifiedParentId } = await verifyUserRole("parent");
+    parentId = verifiedParentId;
 
-  if (linkError || !link) {
-    throw new Error("Unauthorized access to child profile");
+    // Verify parent access
+    const { data: link, error: linkError } = await supabase
+      .from("parent_child_link")
+      .select("id")
+      .eq("parent_user_id", parentId)
+      .eq("child_user_id", childUserId)
+      .eq("is_approved", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (linkError || !link) {
+      throw new Error("Unauthorized access to child profile");
+    }
   }
 
   const { data, error } = await supabase
@@ -349,22 +370,26 @@ export async function getParentActivities(childUserId: string): Promise<ParentAc
   }));
 }
 
-export async function getParentSearchHistory(childUserId: string) {
-  const { userId: parentId } = await verifyUserRole("parent");
+export async function getParentSearchHistory(childUserId: string, parentId?: string) {
   const supabase = await createClient();
 
-  // Verify parent access
-  const { data: link, error: linkError } = await supabase
-    .from("parent_child_link")
-    .select("id")
-    .eq("parent_user_id", parentId)
-    .eq("child_user_id", childUserId)
-    .eq("is_approved", true)
-    .is("deleted_at", null)
-    .maybeSingle();
+  if (!parentId) {
+    const { userId: verifiedParentId } = await verifyUserRole("parent");
+    parentId = verifiedParentId;
 
-  if (linkError || !link) {
-    throw new Error("Unauthorized access to child profile");
+    // Verify parent access
+    const { data: link, error: linkError } = await supabase
+      .from("parent_child_link")
+      .select("id")
+      .eq("parent_user_id", parentId)
+      .eq("child_user_id", childUserId)
+      .eq("is_approved", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (linkError || !link) {
+      throw new Error("Unauthorized access to child profile");
+    }
   }
 
   // Call SECURITY DEFINER RPC to bypass child RLS
@@ -415,7 +440,8 @@ export async function getParentSessionMessages(
 
     if (!error && data) {
       const results = (data as ChatMessageRow[]) || [];
-      return results.slice(-limit);
+      const sliced = results.slice(-limit);
+      return preSignMessageUrls(sliced, supabase);
     }
   }
 
@@ -471,7 +497,8 @@ export async function getParentSessionMessages(
       return [];
     }
     const results = (fallbackMessages as ChatMessageRow[]) || [];
-    return [...results].reverse();
+    const reversed = [...results].reverse();
+    return preSignMessageUrls(reversed, supabase);
   } catch (fallbackErr) {
     console.error("Fallback messages query caught exception:", fallbackErr);
     return [];
@@ -614,7 +641,7 @@ export async function markAllNotificationsAsRead() {
   try {
     const linkedChildren = await getLinkedChildren();
     if (linkedChildren && linkedChildren.length > 0) {
-      const childIds = linkedChildren.map((c) => c.user_id);
+      const childIds = linkedChildren.map((c: LinkedChildProfile) => c.user_id);
       const { error } = await supabase
         .from("safety_alerts")
         .update({ resolved: true })
@@ -659,7 +686,7 @@ export async function getChildAiInsights(
 ) {
   const details = preloadedDetails || (await getChildDetails(childUserId));
   const children = await getLinkedChildren();
-  const childProfile = children.find((c) => c.user_id === childUserId);
+  const childProfile = children.find((c: LinkedChildProfile) => c.user_id === childUserId);
   const childName = childProfile?.first_name || "your child";
 
   const recommendations = [];
@@ -976,11 +1003,28 @@ export async function getChildComprehensiveData(childUserId: string): Promise<Ca
 }
 
 export async function getChildComprehensiveDataLegacy(childUserId: string): Promise<CacheData> {
+  const { userId: parentId } = await verifyUserRole("parent");
+  const supabase = await createClient();
+
+  // Verify parent access once
+  const { data: link, error: linkError } = await supabase
+    .from("parent_child_link")
+    .select("id")
+    .eq("parent_user_id", parentId)
+    .eq("child_user_id", childUserId)
+    .eq("is_approved", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (linkError || !link) {
+    throw new Error("Unauthorized access to child profile");
+  }
+
   const [details, safety, history, activities, screenTimeData] = await Promise.all([
-    getChildDetails(childUserId),
-    getChildSafetyAndUsage(childUserId),
-    getParentSearchHistory(childUserId),
-    getParentActivities(childUserId),
+    getChildDetails(childUserId, parentId),
+    getChildSafetyAndUsage(childUserId, parentId),
+    getParentSearchHistory(childUserId, parentId),
+    getParentActivities(childUserId, parentId),
     getDailyScreenTime(childUserId).catch(() => ({
       success: false,
       screenTimeSeconds: 0,

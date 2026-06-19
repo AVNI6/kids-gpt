@@ -1,13 +1,5 @@
 "use client";
-import {
-  UserRound,
-  Settings,
-  HelpCircle,
-  Sun,
-  Moon,
-  Monitor,
-  LogOut,
-} from "lucide-react";
+import { UserRound, Settings, HelpCircle, Sun, Moon, Monitor, LogOut } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -65,7 +57,10 @@ export default function Profile({ isCollapsed }: ProfileProps) {
 
   if (!isUserLoggedIn || !user || !userProfile) return null;
 
-  const displayName = `${userProfile.first_name ?? ""} ${userProfile.last_name ?? ""}`.trim() || user.email?.split("@")[0] || "User";
+  const displayName =
+    `${userProfile.first_name ?? ""} ${userProfile.last_name ?? ""}`.trim() ||
+    user.email?.split("@")[0] ||
+    "User";
   const avatarUrl = userProfile.avatar_url;
   const dashboardRole = userProfile.role ?? "kid";
 
@@ -190,7 +185,8 @@ export default function Profile({ isCollapsed }: ProfileProps) {
               Log Out?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground pt-2">
-              Are you sure you want to log out of your session? You will need to sign in again to access your learning adventure.
+              Are you sure you want to log out of your session? You will need to sign in again to
+              access your learning adventure.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">

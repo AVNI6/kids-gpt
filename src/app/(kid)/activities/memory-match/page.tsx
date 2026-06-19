@@ -640,14 +640,16 @@ export default function MemoryMatchPage() {
           memoryMatchWorldId={level.id}
           memoryMatchStepNumber={step.stepNumber}
           gameStartedAt={finalGameStartedAt}
-          reviewData={{
-            type: "memory-match",
-            world_id: level.id,
-            step_number: step.stepNumber,
-            total_pairs: step.pairCount,
-            matches_found: matches,
-            total_flips: flipsCount,
-          } satisfies MemoryMatchReviewData}
+          reviewData={
+            {
+              type: "memory-match",
+              world_id: level.id,
+              step_number: step.stepNumber,
+              total_pairs: step.pairCount,
+              matches_found: matches,
+              total_flips: flipsCount,
+            } satisfies MemoryMatchReviewData
+          }
           onClaimSuccess={async () => {
             await fetchProgress(false);
           }}

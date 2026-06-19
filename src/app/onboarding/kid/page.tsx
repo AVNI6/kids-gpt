@@ -106,7 +106,9 @@ export default function KidOnboardingPage() {
     const resolveInvite = async () => {
       const inviteToken = user.user_metadata?.invite_token;
       if (!inviteToken) {
-        setInviteError("Invitation token is missing. You must register using a parent's invitation link.");
+        setInviteError(
+          "Invitation token is missing. You must register using a parent's invitation link."
+        );
         return;
       }
 
@@ -161,9 +163,7 @@ export default function KidOnboardingPage() {
       <OnboardingLayout
         leftIcon={ShieldAlert}
         quote="“Oops! It looks like there's an issue with your invitation. Let's get that sorted out so we can start our adventure.”"
-        badges={[
-          { text: "Security Verification", icon: ShieldAlert },
-        ]}
+        badges={[{ text: "Security Verification", icon: ShieldAlert }]}
         title="Verification Required"
         description="We couldn't verify your invitation"
         footer={
@@ -178,9 +178,7 @@ export default function KidOnboardingPage() {
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-bold text-foreground">Invalid Invitation Link</h3>
-            <p className="text-sm font-semibold text-muted-foreground max-w-sm">
-              {inviteError}
-            </p>
+            <p className="text-sm font-semibold text-muted-foreground max-w-sm">{inviteError}</p>
           </div>
           <Button
             type="button"

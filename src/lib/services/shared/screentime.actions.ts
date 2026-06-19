@@ -492,21 +492,25 @@ export async function notifyParentLimitReached(
 
     const childName = childProfile?.first_name || "Your child";
 
-    // 4. Insert notifications for each linked parent
-    for (const link of links) {
-      const { error: insertError } = await supabase.from("parent_notifications").insert({
-        parent_id: link.parent_user_id,
-        child_id: childId,
-        type: "SCREEN_TIME_LIMIT",
-        title: "Daily Limit Reached",
-        message: `${childName} has reached their daily screen time limit and is currently locked out.`,
-        metadata: {
-          limit_minutes: limitMinutes,
-        },
-      });
+    // 4. Insert notifications for each linked parent in a single batch
+    const recordsToInsert = links.map((link) => ({
+      parent_id: link.parent_user_id,
+      child_id: childId,
+      type: "SCREEN_TIME_LIMIT",
+      title: "Daily Limit Reached",
+      message: `${childName} has reached their daily screen time limit and is currently locked out.`,
+      metadata: {
+        limit_minutes: limitMinutes,
+      },
+    }));
+
+    if (recordsToInsert.length > 0) {
+      const { error: insertError } = await supabase
+        .from("parent_notifications")
+        .insert(recordsToInsert);
 
       if (insertError) {
-        console.error("[notifyParentLimitReached] Insert error:", insertError.message);
+        console.error("[notifyParentLimitReached] Batch insert error:", insertError.message);
       }
     }
 

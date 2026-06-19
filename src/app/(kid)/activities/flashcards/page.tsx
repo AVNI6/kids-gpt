@@ -266,19 +266,21 @@ export default function FlashcardsPage({
         rewardsDescription={`${masteredIds.length}/${flashcards.length} Cards Mastered`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "flashcards",
-          title: deckTitle,
-          total_cards: flashcards.length,
-          mastered: masteredIds.map((i) => ({
-            question: flashcards[i]?.question ?? "",
-            answer: flashcards[i]?.answer ?? "",
-          })),
-          review: reviewIds.map((i) => ({
-            question: flashcards[i]?.question ?? "",
-            answer: flashcards[i]?.answer ?? "",
-          })),
-        } satisfies FlashcardReviewData}
+        reviewData={
+          {
+            type: "flashcards",
+            title: deckTitle,
+            total_cards: flashcards.length,
+            mastered: masteredIds.map((i) => ({
+              question: flashcards[i]?.question ?? "",
+              answer: flashcards[i]?.answer ?? "",
+            })),
+            review: reviewIds.map((i) => ({
+              question: flashcards[i]?.question ?? "",
+              answer: flashcards[i]?.answer ?? "",
+            })),
+          } satisfies FlashcardReviewData
+        }
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-currentCard`);

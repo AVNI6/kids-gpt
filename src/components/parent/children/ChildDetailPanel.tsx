@@ -69,7 +69,6 @@ export default function ChildDetailPanel({
     }
   };
 
-
   // URL state tab managers
   const subTabFromUrl = searchParams?.get("subTab") as "history" | "activities" | "progress" | null;
   const activeSubTab =
@@ -486,14 +485,14 @@ export default function ChildDetailPanel({
                 </div>
               </Card>
             </TabsContent>
-
             {/* SUB TAB 2: Completed Activities & Rewards */}
             <TabsContent value="activities" className="mt-3">
               <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-8 shadow-sm">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4">
                     <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                      <BookOpen className="w-5.5 h-5.5 text-emerald-500" />Completed Activities
+                      <BookOpen className="w-5.5 h-5.5 text-emerald-500" />
+                      Completed Activities
                     </h3>
                     <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 font-extrabold px-3 py-1 rounded-full text-xs shrink-0 border border-emerald-100/30">
                       {activities.length} Completed
@@ -524,7 +523,8 @@ export default function ChildDetailPanel({
                               : 100;
                         const isHigh = scoreVal >= 80;
 
-                        const activityTitle = act.activity_settings?.title ||
+                        const activityTitle =
+                          act.activity_settings?.title ||
                           (act.description
                             ? act.description.split(" (Score:")[0]
                             : "Completed Activity");
@@ -643,7 +643,6 @@ export default function ChildDetailPanel({
                     }
                   />
 
-
                   {activities.length > 0 && activitiesPagination.totalPages > 1 && (
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">
                       <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -674,7 +673,8 @@ export default function ChildDetailPanel({
                   )}
                 </div>
               </Card>
-            </TabsContent>            {/* SUB TAB 3: Progress & Classroom */}
+            </TabsContent>{" "}
+            {/* SUB TAB 3: Progress & Classroom */}
             <TabsContent value="progress" className="mt-3">
               <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-6 sm:p-8 shadow-sm">
                 <h4 className="text-sm font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-6">
@@ -684,9 +684,7 @@ export default function ChildDetailPanel({
                 {!activeChildCachedData?.classrooms ||
                 activeChildCachedData.classrooms.length === 0 ? (
                   <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-                    <p className="text-sm font-semibold">
-                      No active classroom enrollments found.
-                    </p>
+                    <p className="text-sm font-semibold">No active classroom enrollments found.</p>
                   </div>
                 ) : (
                   <div>
@@ -717,7 +715,10 @@ export default function ChildDetailPanel({
                                 )}
                               </h5>
                               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-                                Teacher: <span className="text-slate-800 dark:text-slate-350 font-bold">{teacherName}</span>
+                                Teacher:{" "}
+                                <span className="text-slate-800 dark:text-slate-350 font-bold">
+                                  {teacherName}
+                                </span>
                               </p>
                               <div className="flex flex-wrap items-center gap-2 mt-2.5 text-[10px] font-bold">
                                 <span className="text-amber-600 dark:text-amber-450 bg-amber-50 dark:bg-amber-950/20 px-2 py-0.5 rounded-md border border-amber-100/30">

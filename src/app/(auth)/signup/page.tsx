@@ -40,7 +40,9 @@ function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [activeModal, setActiveModal] = useState<"safety" | "privacy" | null>(null);
   const [isEmailLocked, setIsEmailLocked] = useState(false);
-  const [inviteStatus, setInviteStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
+  const [inviteStatus, setInviteStatus] = useState<"idle" | "validating" | "valid" | "invalid">(
+    "idle"
+  );
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   type FormValue = {
@@ -168,8 +170,8 @@ function SignupForm() {
           <Card className="relative border-2 border-border/50 rounded-[32px] bg-card p-2 shadow-xl overflow-visible">
             <CardContent className="p-8">
               <p className="text-xl text-muted-foreground italic leading-relaxed">
-                “Hi there! I’m Kidoza, your AI learning buddy. Let’s create your account and start exploring
-                fun adventures together!”
+                “Hi there! I’m Kidoza, your AI learning buddy. Let’s create your account and start
+                exploring fun adventures together!”
               </p>
 
               <div className="mt-8 flex gap-3 flex-wrap">
@@ -237,7 +239,9 @@ function SignupForm() {
                     type="email"
                     readOnly={isEmailLocked}
                     className={`pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground ${
-                      isEmailLocked ? "opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-900" : ""
+                      isEmailLocked
+                        ? "opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-900"
+                        : ""
                     }`}
                     placeholder="you@example.com"
                   />

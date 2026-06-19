@@ -12,8 +12,6 @@ import {
   NotificationsUpdatesSkeleton,
 } from "@/components/kid/dashboard";
 
-
-
 export default async function KidDashboardPage() {
   await checkDashboardAccess(["kid"]);
   const details = await getKidComprehensiveDetails();

@@ -438,7 +438,9 @@ export default function ClassroomOverview({ memberships }: Props) {
       {/* Leave Classroom Confirmation Dialog */}
       <AlertDialog
         open={leaveDialog.open}
-        onOpenChange={(open) => !open && !isLeaving && setLeaveDialog((prev) => ({ ...prev, open: false }))}
+        onOpenChange={(open) =>
+          !open && !isLeaving && setLeaveDialog((prev) => ({ ...prev, open: false }))
+        }
       >
         <AlertDialogContent>
           <AlertDialogHeader>

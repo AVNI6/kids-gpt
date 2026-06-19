@@ -49,7 +49,9 @@ const ChatMessageItem = React.memo(
     React.useEffect(() => {
       let active = true;
       if (message.uploadedImage) {
-        if (message.uploadedImage.includes("/object/public/materials/")) {
+        if (message.uploadedImage.startsWith("http") && message.uploadedImage.includes("token=")) {
+          setResolvedImageUrl(message.uploadedImage);
+        } else if (message.uploadedImage.includes("/object/public/materials/")) {
           const relativePath = message.uploadedImage.split("/object/public/materials/")[1];
           getSignedResourceUrl(relativePath)
             .then((res) => {
@@ -77,7 +79,9 @@ const ChatMessageItem = React.memo(
     React.useEffect(() => {
       let active = true;
       if (message.isImage && message.content) {
-        if (message.content.includes("/object/public/materials/")) {
+        if (message.content.startsWith("http") && message.content.includes("token=")) {
+          setResolvedGeneratedImageUrl(message.content);
+        } else if (message.content.includes("/object/public/materials/")) {
           const relativePath = message.content.split("/object/public/materials/")[1];
           getSignedResourceUrl(relativePath)
             .then((res) => {

@@ -41,7 +41,6 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
   const hasClaimedRef = useRef(false);
 
   const loadNextChallenge = () => {
- 
     const types: GameType[] = ["WhoAmI", "BrainTeaser", "FactFusion", "Riddle"];
     const rolledType = types[Math.floor(Math.random() * types.length)];
     setGameType(rolledType);
@@ -71,7 +70,7 @@ export default function QuickChallengeModal({ isOpen, onClose }: QuickChallengeM
         loadNextChallenge();
       }, 0);
       return () => clearTimeout(timer);
-    } 
+    }
   }, [isOpen]);
 
   const handleSelectString = async (ans: string) => {
