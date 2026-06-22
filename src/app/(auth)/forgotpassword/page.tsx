@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     setIsSubmitting(true);
-    
+
     try {
       const exists = await checkIfEmailExists(e.email);
       if (!exists) {
@@ -163,9 +163,7 @@ export default function ForgotPasswordPage() {
             </Link>
           </div>
 
-          <p className="mt-5 text-xs text-muted-foreground/50">
-            © 2026 Kidoza AI Learning Buddy
-          </p>
+          <p className="mt-5 text-xs text-muted-foreground/50">© 2026 Kidoza AI Learning Buddy</p>
         </footer>
       </div>
     </div>

@@ -85,7 +85,7 @@ export default function ClassroomAnnouncementsTab({
               </Button>
             }
           />
-          <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
+          <DialogContent className=" rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
             <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
               <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight">
                 Post Announcement
@@ -95,7 +95,7 @@ export default function ClassroomAnnouncementsTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCreateAnnouncement} className="space-y-4 py-6">
+            <form onSubmit={handleCreateAnnouncement} className="space-y-4 py-6 px-6">
               <div className="space-y-1.5">
                 <Label
                   htmlFor="annTitle"

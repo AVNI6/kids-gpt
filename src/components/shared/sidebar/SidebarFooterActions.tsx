@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { SidebarFooter } from "@/components/ui/sidebar";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Profile from "./Profile";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SidebarFooterActionsProps {
   isOpen: boolean;
@@ -87,6 +87,7 @@ export default function SidebarFooterActions({
           </Popover>
           <Link
             href={APP_ROUTES.Help}
+            prefetch={false}
             className={cn(
               buttonVariants({ variant: "ghost" }),
               "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-xl cursor-pointer flex items-center h-10",

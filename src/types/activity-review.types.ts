@@ -59,7 +59,7 @@ export interface ScienceLabReviewItem {
 
 export interface MatchConnectionReviewItem {
   left_text: string;
-  right_text: string;          // correct right match
+  right_text: string; // correct right match
   kid_right_text: string | null; // what the kid connected
   is_correct: boolean;
 }

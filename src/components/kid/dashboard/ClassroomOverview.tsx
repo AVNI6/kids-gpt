@@ -7,13 +7,8 @@ import {
   ArrowRight,
   Clock,
   LogOut,
-  BookOpen,
-  FolderOpen,
-  FileSpreadsheet,
-  Megaphone,
   School,
   Sparkles,
-  HelpCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -51,6 +45,7 @@ export default function ClassroomOverview({ memberships }: Props) {
   const [isLoading, setIsLoading] = useState(false);
 
   // Confirmation dialog for leaving a classroom
+  const [isLeaving, setIsLeaving] = useState(false);
   const [leaveDialog, setLeaveDialog] = useState<{
     open: boolean;
     classroomId: string;
@@ -101,23 +96,24 @@ export default function ClassroomOverview({ memberships }: Props) {
 
   const handleLeaveClass = (classroomId: string, className: string) => {
     setLeaveDialog({ open: true, classroomId, className });
+    setIsLeaving(false);
   };
 
   const confirmLeaveClass = async () => {
     const { classroomId, className } = leaveDialog;
-    setLeaveDialog((prev) => ({ ...prev, open: false }));
     try {
-      setIsLoading(true);
+      setIsLeaving(true);
       const result = await leaveClassroom(classroomId);
       if (result.success) {
         toast.success(`You left the classroom "${className}".`);
+        setLeaveDialog((prev) => ({ ...prev, open: false }));
       } else {
         toast.error(result.error || "Failed to leave classroom.");
       }
     } catch {
       toast.error("An unexpected error occurred.");
     } finally {
-      setIsLoading(false);
+      setIsLeaving(false);
     }
   };
 
@@ -139,7 +135,7 @@ export default function ClassroomOverview({ memberships }: Props) {
         {/* 1. Learning Community Hero Section */}
         <Card className="rounded-[32px] overflow-hidden border-0 relative shadow-md bg-white dark:bg-slate-900 transition-colors duration-300">
           {/* Slate / Purple Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-100/40 via-violet-50/20 to-slate-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pointer-events-none" />
+          <div className="absolute inset-0 bg-linear-to-r from-slate-100/40 via-violet-50/20 to-slate-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pointer-events-none" />
 
           {/* Decorative Spheres */}
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-slate-200/10 dark:bg-slate-800/10 rounded-full blur-3xl pointer-events-none" />
@@ -224,7 +220,7 @@ export default function ClassroomOverview({ memberships }: Props) {
                         className="block group"
                       >
                         <Card className="h-full rounded-[32px] border-slate-200/50 dark:border-slate-800/50 bg-white dark:bg-slate-900/40 shadow-sm hover:shadow-md hover:border-indigo-150 transition-all duration-300 relative overflow-hidden flex flex-col justify-between cursor-pointer">
-                          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500" />
+                          <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-blue-500 to-indigo-500" />
 
                           <CardContent className="p-6 pt-8 space-y-4">
                             <div className="flex items-start justify-between gap-3">
@@ -273,7 +269,7 @@ export default function ClassroomOverview({ memberships }: Props) {
                             <div className="flex items-center gap-3 pt-2">
                               <Avatar className="h-9 w-9 border border-slate-100 dark:border-slate-800 shadow-sm shrink-0">
                                 <AvatarImage src={cls.teacher?.avatar_url ?? undefined} />
-                                <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-indigo-600 text-white font-bold text-xs">
+                                <AvatarFallback className="bg-linear-to-br from-indigo-400 to-indigo-600 text-white font-bold text-xs">
                                   {getInitials(cls.teacher?.first_name, cls.teacher?.last_name)}
                                 </AvatarFallback>
                               </Avatar>
@@ -337,7 +333,7 @@ export default function ClassroomOverview({ memberships }: Props) {
             )}
 
             {/* Future Modules Placeholders */}
-            <div>
+            {/* <div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2 mb-4">
                 <HelpCircle className="h-5 w-5 text-slate-400" />
                 Classroom Modules
@@ -373,7 +369,7 @@ export default function ClassroomOverview({ memberships }: Props) {
                   );
                 })}
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Right Column (1/3) - Join Classroom Portal */}
@@ -437,7 +433,9 @@ export default function ClassroomOverview({ memberships }: Props) {
       {/* Leave Classroom Confirmation Dialog */}
       <AlertDialog
         open={leaveDialog.open}
-        onOpenChange={(open) => !open && setLeaveDialog((prev) => ({ ...prev, open: false }))}
+        onOpenChange={(open) =>
+          !open && !isLeaving && setLeaveDialog((prev) => ({ ...prev, open: false }))
+        }
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -451,10 +449,21 @@ export default function ClassroomOverview({ memberships }: Props) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setLeaveDialog((prev) => ({ ...prev, open: false }))}>
+            <AlertDialogCancel
+              onClick={() => setLeaveDialog((prev) => ({ ...prev, open: false }))}
+              disabled={isLeaving}
+            >
               Stay
             </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmLeaveClass}>Leave</AlertDialogAction>
+            <Button
+              variant="destructive"
+              loading={isLeaving}
+              loadingText="Leaving..."
+              onClick={confirmLeaveClass}
+              className="cursor-pointer px-4 rounded-lg"
+            >
+              Leave
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -468,25 +477,25 @@ export function ClassroomOverviewSkeleton() {
       <Card className="rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-8 shadow-sm">
         <CardContent className="p-0 flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-3 flex-1">
-            <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800" />
-            <Skeleton className="h-8 w-96 bg-slate-200 dark:bg-slate-800" />
-            <Skeleton className="h-4 w-64 bg-slate-200 dark:bg-slate-800" />
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-8 w-96" />
+            <Skeleton className="h-4 w-64" />
           </div>
-          <Skeleton className="h-20 w-64 rounded-[28px] bg-slate-200 dark:bg-slate-800" />
+          <Skeleton className="h-20 w-64 rounded-[28px]" />
         </CardContent>
       </Card>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800" />
+          <Skeleton className="h-6 w-48" />
           <div className="grid gap-6 sm:grid-cols-2">
-            <Skeleton className="h-32 rounded-[32px] bg-slate-100 dark:bg-slate-800" />
-            <Skeleton className="h-32 rounded-[32px] bg-slate-100 dark:bg-slate-800" />
+            <Skeleton className="h-32 rounded-[32px]" />
+            <Skeleton className="h-32 rounded-[32px]" />
           </div>
         </div>
         <div>
-          <Skeleton className="h-6 w-48 bg-slate-200 dark:bg-slate-800" />
-          <Skeleton className="h-64 rounded-[32px] bg-slate-100 dark:bg-slate-800 mt-4" />
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-64 rounded-[32px] mt-4" />
         </div>
       </div>
     </div>

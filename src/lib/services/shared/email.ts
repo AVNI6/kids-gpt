@@ -88,7 +88,6 @@ export async function sendInvitationEmail(
     </div>
   `;
 
-
   const transporter = nodemailer.createTransport({
     host,
     port: parseInt(port, 10),

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Suspense } from "react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getCurrentDashboardProfile } from "@/lib/services/kid/dashboard.actions";
@@ -6,86 +7,52 @@ import { createClient } from "@/lib/supabase/server";
 import TeacherClassrooms from "@/components/teacher/classrooms/TeacherClassrooms";
 import NeedsAttention from "@/components/teacher/home/NeedsAttention";
 import TeacherActivityFeed from "@/components/teacher/home/TeacherActivityFeed";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-
-function ClassroomsSkeleton() {
-  return (
-    <div className="flex flex-col gap-10">
-      {/* Classroom list Skeleton */}
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-5 w-48 rounded-full" />
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card
-              key={i}
-              className="rounded-[32px] border border-indigo-100/50 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
-            >
-              <CardContent className="p-6 flex flex-col gap-4">
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-4 w-56" />
-                <Skeleton className="h-12 w-full rounded-2xl" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Action Center Skeleton */}
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-5 w-48 rounded-full" />
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card
-              key={i}
-              className="rounded-[28px] border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs"
-            >
-              <CardContent className="p-5">
-                <Skeleton className="h-8 w-8 rounded-full mb-3" />
-                <Skeleton className="h-4 w-28 mb-2" />
-                <Skeleton className="h-3 w-40" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Activity Feed Skeleton */}
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-5 w-48 rounded-full" />
-        <Card className="rounded-[32px] border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-          <CardContent className="p-6 space-y-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 py-2 border-b last:border-0 border-slate-50 dark:border-slate-850"
-              >
-                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-1/3" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
+import { ClassroomsListSkeleton } from "@/components/shared/skeletonLoading";
 
 async function ClassroomsPageContent({ createOpen }: { createOpen: boolean }) {
   const profile = await getCurrentDashboardProfile();
-  const { classrooms, students, pendingRequests } = await getTeacherDashboardData();
   const supabase = await createClient();
 
-  // Fetch counts for classroom enrichment + pending grading count
+  // Fetch all dashboard data, activity feed, and classroom counts in parallel
   const [
+    dashboardData,
+    activityFeedResult,
     { data: assignmentsCountsData },
     { data: resourcesCountsData },
     { data: announcementsCountsData },
     { count: pendingGradingCount },
   ] = await Promise.all([
+    getTeacherDashboardData(),
+    (supabase.rpc("get_teacher_activity_feed") as any)
+      .then((res: any) => {
+        if (res.error) {
+          console.warn(
+            "RPC get_teacher_activity_feed failed, falling back to manual query.",
+            res.error
+          );
+          return supabase
+            .from("activity_events")
+            .select(
+              "id, event_type, actor_user_id, actor_role, source_type, source_id, metadata, created_at"
+            )
+            .order("created_at", { ascending: false })
+            .limit(20);
+        }
+        return res;
+      })
+      .catch((err: any) => {
+        console.warn(
+          "RPC get_teacher_activity_feed threw error, falling back to manual query.",
+          err
+        );
+        return supabase
+          .from("activity_events")
+          .select(
+            "id, event_type, actor_user_id, actor_role, source_type, source_id, metadata, created_at"
+          )
+          .order("created_at", { ascending: false })
+          .limit(20);
+      }),
     supabase
       .from("assignments")
       .select("classroom_id")
@@ -111,30 +78,33 @@ async function ClassroomsPageContent({ createOpen }: { createOpen: boolean }) {
       .is("assignments.deleted_at", null),
   ]);
 
+  const { classrooms, students, pendingRequests } = dashboardData;
+  const activityEvents = activityFeedResult.data || [];
+
   // Build count maps
   const studentsCountMap = new Map<string, Set<string>>();
-  students.forEach((s) => {
+  students.forEach((s: any) => {
     const set = studentsCountMap.get(s.classroom_id) || new Set<string>();
     set.add(s.user_id);
     studentsCountMap.set(s.classroom_id, set);
   });
 
   const assignmentsCountMap = new Map<string, number>();
-  (assignmentsCountsData || []).forEach((a) => {
+  (assignmentsCountsData || []).forEach((a: any) => {
     assignmentsCountMap.set(a.classroom_id, (assignmentsCountMap.get(a.classroom_id) || 0) + 1);
   });
 
   const resourcesCountMap = new Map<string, number>();
-  (resourcesCountsData || []).forEach((r) => {
+  (resourcesCountsData || []).forEach((r: any) => {
     resourcesCountMap.set(r.classroom_id, (resourcesCountMap.get(r.classroom_id) || 0) + 1);
   });
 
   const announcementsCountMap = new Map<string, number>();
-  (announcementsCountsData || []).forEach((a) => {
+  (announcementsCountsData || []).forEach((a: any) => {
     announcementsCountMap.set(a.classroom_id, (announcementsCountMap.get(a.classroom_id) || 0) + 1);
   });
 
-  const enrichedClassrooms = classrooms.map((c) => ({
+  const enrichedClassrooms = classrooms.map((c: any) => ({
     ...c,
     students_count: studentsCountMap.get(c.id)?.size || 0,
     assignments_count: assignmentsCountMap.get(c.id) || 0,
@@ -145,55 +115,8 @@ async function ClassroomsPageContent({ createOpen }: { createOpen: boolean }) {
   // Calculate Needs Attention properties
   const pendingGrading = pendingGradingCount || 0;
   const emptyAnnouncementClassroomsCount = enrichedClassrooms.filter(
-    (c) => c.announcements_count === 0
+    (c: any) => c.announcements_count === 0
   ).length;
-
-  // Fetch activity events feed (using RPC with fallback to raw query)
-  let activityEvents = [];
-  try {
-    const { data, error } = await supabase.rpc("get_teacher_activity_feed");
-    if (!error && data) {
-      activityEvents = data;
-    } else {
-      console.warn("RPC get_teacher_activity_feed failed, falling back to manual query.", error);
-      const { data: fallbackEvents } = await supabase
-        .from("activity_events")
-        .select(
-          `
-          id,
-          event_type,
-          actor_user_id,
-          actor_role,
-          source_type,
-          source_id,
-          metadata,
-          created_at
-        `
-        )
-        .order("created_at", { ascending: false })
-        .limit(20);
-      activityEvents = fallbackEvents || [];
-    }
-  } catch (err) {
-    console.warn("RPC get_teacher_activity_feed threw error, falling back to manual query.", err);
-    const { data: fallbackEvents } = await supabase
-      .from("activity_events")
-      .select(
-        `
-        id,
-        event_type,
-        actor_user_id,
-        actor_role,
-        source_type,
-        source_id,
-        metadata,
-        created_at
-      `
-      )
-      .order("created_at", { ascending: false })
-      .limit(20);
-    activityEvents = fallbackEvents || [];
-  }
 
   return (
     <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -218,7 +141,7 @@ export default async function TeacherClassroomsPage({
   const shouldOpenCreate = create === "true";
 
   return (
-    <Suspense fallback={<ClassroomsSkeleton />}>
+    <Suspense fallback={<ClassroomsListSkeleton />}>
       <ClassroomsPageContent createOpen={shouldOpenCreate} />
     </Suspense>
   );

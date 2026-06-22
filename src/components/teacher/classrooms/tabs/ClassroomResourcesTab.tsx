@@ -5,10 +5,6 @@ import {
   PlusCircle,
   FolderOpen,
   FileText,
-  Video,
-  LinkIcon,
-  Image as ImageIcon,
-  FileArchive,
   ExternalLink,
   Trash2,
   Upload,
@@ -19,7 +15,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -35,49 +37,14 @@ import { uploadResource } from "@/lib/services/kid/classroom.actions";
 import { uploadChatAttachment } from "@/lib/storage/attachments";
 import { createClient } from "@/lib/supabase/client";
 import type { ClassroomResource } from "@/types/classroom.types";
+import { getSignedResourceUrl } from "@/lib/services/shared/storage.actions";
+import { getResourceDisplay } from "@/hooks/useResourceDisplay";
 
 type Props = {
   classroomId: string;
   resources: ClassroomResource[];
   setResources: React.Dispatch<React.SetStateAction<ClassroomResource[]>>;
-  handleDeleteResource: (id: string) => Promise<void>;
-};
-
-// Extension type mapping
-const getResourceIcon = (type: string) => {
-  switch (type.toUpperCase()) {
-    case "PDF":
-      return <FileText className="h-5 w-5" />;
-    case "VIDEO":
-      return <Video className="h-5 w-5" />;
-    case "LINK":
-      return <LinkIcon className="h-5 w-5" />;
-    case "IMAGE":
-      return <ImageIcon className="h-5 w-5" />;
-    case "DOCUMENT":
-    case "WORD":
-      return <FileText className="h-5 w-5" />;
-    default:
-      return <FileArchive className="h-5 w-5" />;
-  }
-};
-
-const getResourceColor = (type: string) => {
-  switch (type.toUpperCase()) {
-    case "PDF":
-      return "bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-450";
-    case "VIDEO":
-      return "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-450";
-    case "LINK":
-      return "bg-sky-50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-450";
-    case "IMAGE":
-      return "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450";
-    case "DOCUMENT":
-    case "WORD":
-      return "bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-450";
-    default:
-      return "bg-slate-50 dark:bg-slate-950/20 text-slate-600 dark:text-slate-450";
-  }
+  handleDeleteResource: (id: string) => void;
 };
 
 export default function ClassroomResourcesTab({
@@ -128,7 +95,7 @@ export default function ClassroomResourcesTab({
         const ext = fileExtension.toUpperCase();
         if (ext === "PDF") {
           setResType("PDF");
-        } else if (["PNG", "JPG", "JPEG", "GIF", "WEBP"].includes(ext)) {
+        } else if (["PNG", "JPG", "JPEG", "GIF", "WEBP", "SVG"].includes(ext)) {
           setResType("IMAGE");
         } else if (["DOC", "DOCX"].includes(ext)) {
           setResType("WORD");
@@ -207,14 +174,55 @@ export default function ClassroomResourcesTab({
   const handleAccessResource = async (res: ClassroomResource) => {
     if (res.storage_path) {
       try {
-        const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
-        const url = await getSignedResourceUrl(res.storage_path);
-        window.open(url, "_blank");
+        const result = await getSignedResourceUrl(res.storage_path);
+        if (!result.success || !result.url) {
+          toast.error(result.error || "Failed to generate secure link. Please try again.");
+          return;
+        }
+        const url = result.url;
+
+        // If it is an SVG, fetch and open as an inline blob URL to prevent direct download
+        if (res.storage_path.toLowerCase().endsWith(".svg")) {
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Failed to fetch SVG resource");
+            const blob = await response.blob();
+            const svgBlob = new Blob([blob], { type: "image/svg+xml" });
+            const blobUrl = URL.createObjectURL(svgBlob);
+            window.open(blobUrl, "_blank");
+            return;
+          } catch (fetchErr) {
+            console.error(
+              "Failed to fetch SVG for inline preview, falling back to direct URL open:",
+              fetchErr
+            );
+          }
+        }
+
+        // Open in new tab — inline display works because the file was uploaded
+        // with the correct Content-Type (e.g. image/svg+xml, application/pdf)
+        window.open(url, "_blank", "noopener,noreferrer");
       } catch {
-        toast.error("Failed to generate secure download link.");
+        toast.error("Failed to generate secure link. Please try again.");
       }
-    } else {
-      window.open(res.resource_url, "_blank");
+    } else if (res.resource_url) {
+      if (res.resource_url.toLowerCase().endsWith(".svg")) {
+        try {
+          const response = await fetch(res.resource_url);
+          if (!response.ok) throw new Error("Failed to fetch SVG resource URL");
+          const blob = await response.blob();
+          const svgBlob = new Blob([blob], { type: "image/svg+xml" });
+          const blobUrl = URL.createObjectURL(svgBlob);
+          window.open(blobUrl, "_blank");
+          return;
+        } catch (fetchErr) {
+          console.error(
+            "Failed to fetch SVG URL for inline preview, falling back to direct URL open:",
+            fetchErr
+          );
+        }
+      }
+      window.open(res.resource_url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -250,7 +258,7 @@ export default function ClassroomResourcesTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleUploadResource} className="space-y-4 py-6">
+            <form onSubmit={handleUploadResource} className="space-y-4 py-6 px-6">
               {/* Method Switcher */}
               <div className="flex gap-2 bg-slate-100 dark:bg-slate-950/40 p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800">
                 <button
@@ -331,7 +339,7 @@ export default function ClassroomResourcesTab({
                     <div className="flex flex-col items-center justify-center gap-2 py-2">
                       <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
                       <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
-                        Uploading file to storage...
+                        Uploading file...
                       </p>
                     </div>
                   ) : (
@@ -353,7 +361,7 @@ export default function ClassroomResourcesTab({
                         type="file"
                         onChange={handleFileChange}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                        accept="image/*,image/svg+xml,.svg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                       />
                     </>
                   )}
@@ -361,7 +369,7 @@ export default function ClassroomResourcesTab({
                     <div className="mt-4 w-full bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-100/50 dark:border-emerald-900/40 rounded-xl p-2.5 flex items-center justify-between text-left">
                       <div className="flex items-center gap-2 min-w-0">
                         <FileText className="h-4 w-4 text-emerald-650 shrink-0" />
-                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[200px]">
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-50">
                           {resUrl.substring(resUrl.lastIndexOf("/") + 1)}
                         </span>
                       </div>
@@ -442,9 +450,9 @@ export default function ClassroomResourcesTab({
                 </Button>
                 <Button
                   type="submit"
-                  loading={isLoading || isUploadingFile}
-                  loadingText={isUploadingFile ? "Uploading..." : "Saving..."}
-                  disabled={!resUrl}
+                  loading={isLoading}
+                  loadingText="Saving..."
+                  disabled={!resUrl || isUploadingFile || isLoading}
                   className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
                 >
                   Save Resource
@@ -474,6 +482,8 @@ export default function ClassroomResourcesTab({
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {resources.map((res) => {
+            const { displayType, icon, colorClass } = getResourceDisplay(res);
+
             return (
               <Card
                 key={res.id}
@@ -485,14 +495,14 @@ export default function ClassroomResourcesTab({
                       <div
                         className={cn(
                           "h-10 w-10 rounded-2xl flex items-center justify-center shrink-0",
-                          getResourceColor(res.resource_type)
+                          colorClass
                         )}
                       >
-                        {getResourceIcon(res.resource_type)}
+                        {icon}
                       </div>
                       <div>
                         <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                          {res.resource_type}
+                          {displayType}
                         </span>
                         <h4 className="text-sm font-black text-slate-950 dark:text-white leading-tight line-clamp-1">
                           {res.title}

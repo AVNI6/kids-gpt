@@ -20,10 +20,10 @@ export function NotificationsUpdatesSkeleton() {
   return (
     <Card className="rounded-[36px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm h-full">
       <CardContent className="p-6 space-y-4">
-        <Skeleton className="h-8 w-32 bg-slate-100 dark:bg-slate-800" />
+        <Skeleton className="h-8 w-32" />
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-16 w-full rounded-2xl bg-slate-100 dark:bg-slate-800" />
+            <Skeleton key={i} className="h-16 w-full rounded-2xl" />
           ))}
         </div>
       </CardContent>
@@ -32,7 +32,7 @@ export function NotificationsUpdatesSkeleton() {
 }
 
 export default function NotificationsUpdates() {
-  const { notifications, isLoading } = useClassroomNotifications("kid", 10);
+  const { notifications, isLoading, markAsRead } = useClassroomNotifications("kid", { limit: 10 });
 
   const getNotifIcon = (type: string) => {
     switch (type) {
@@ -77,7 +77,7 @@ export default function NotificationsUpdates() {
   }
 
   return (
-    <Card className="rounded-[36px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm h-full flex flex-col overflow-hidden relative min-h-[280px]">
+    <Card className="rounded-[36px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm h-full flex flex-col overflow-hidden relative min-h-70">
       <div className="absolute top-0 right-0 p-8 opacity-[0.06]">
         <BellRing className="w-32 h-32 text-slate-900 dark:text-slate-100" />
       </div>
@@ -89,7 +89,7 @@ export default function NotificationsUpdates() {
           </h2>
         </div>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4 max-h-[300px]">
+        <ScrollArea className="flex-1 pr-4 -mr-4 max-h-81">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center text-slate-500 dark:text-slate-400">
               <Bell className="w-8 h-8 text-slate-400 dark:text-slate-600 mb-2 opacity-50" />
@@ -104,12 +104,21 @@ export default function NotificationsUpdates() {
                 return (
                   <div
                     key={notif.id}
+                    onClick={() => !notif.is_read && markAsRead(notif.id)}
                     className={`flex gap-3 items-start p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 shadow-sm hover:bg-slate-100/80 transition-colors dark:bg-slate-950 dark:border-slate-800/80 dark:hover:bg-slate-900/60 ${
-                      !notif.is_read ? "ring-1 ring-sky-500/30 bg-white dark:bg-slate-900" : ""
+                      !notif.is_read
+                        ? "ring-1 ring-sky-500/30 bg-white dark:bg-slate-900 cursor-pointer"
+                        : "cursor-default"
                     }`}
                   >
-                    <div className={`p-2 rounded-full ${colorClass} shrink-0`}>
-                      <Icon className="w-4.5 h-4.5" />
+                    {/* Icon with unread dot badge on top-right */}
+                    <div className="relative shrink-0">
+                      <div className={`p-2 rounded-full ${colorClass}`}>
+                        <Icon className="w-4.5 h-4.5" />
+                      </div>
+                      {!notif.is_read && (
+                        <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-sky-500 ring-2 ring-white dark:ring-slate-950" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex justify-between items-baseline gap-2">
@@ -123,13 +132,10 @@ export default function NotificationsUpdates() {
                           {getRelativeTime(notif.created_at)}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed break-words">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed wrap-break-word">
                         {notif.message}
                       </p>
                     </div>
-                    {!notif.is_read && (
-                      <div className="w-2 h-2 rounded-full bg-sky-500 shrink-0 self-center" />
-                    )}
                   </div>
                 );
               })}

@@ -9,7 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as ShadcnCalendar } from "@/components/ui/calendar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format } from "date-fns";
 import { parseLocalDate, formatLocalDate } from "@/lib/utils/kid/childAge";
 import {
@@ -32,6 +38,7 @@ type Props = {
   handlePublishAssignment: (id: string) => Promise<void>;
   handleDeleteAssignment: (id: string, title: string) => void;
   handleOpenGrading: (assignment: ClassroomAssignment) => Promise<void>;
+  publishingAssignmentId?: string | null;
 };
 
 export default function ClassroomAssignmentsTab({
@@ -41,6 +48,7 @@ export default function ClassroomAssignmentsTab({
   handlePublishAssignment,
   handleDeleteAssignment,
   handleOpenGrading,
+  publishingAssignmentId,
 }: Props) {
   const [assignmentOpen, setAssignmentOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -271,8 +279,11 @@ export default function ClassroomAssignmentsTab({
                   >
                     Activity Type
                   </Label>
-                  <Select value={assignActivityType} onValueChange={(val) => setAssignActivityType(val || "")}>
-                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <Select
+                    value={assignActivityType}
+                    onValueChange={(val) => setAssignActivityType(val || "")}
+                  >
+                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11! w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                       <SelectValue placeholder="Select activity type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -327,8 +338,11 @@ export default function ClassroomAssignmentsTab({
                   >
                     Difficulty
                   </Label>
-                  <Select value={assignDifficulty} onValueChange={(val) => setAssignDifficulty(val || "")}>
-                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <Select
+                    value={assignDifficulty}
+                    onValueChange={(val) => setAssignDifficulty(val || "")}
+                  >
+                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11! w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                       <SelectValue placeholder="Select difficulty" />
                     </SelectTrigger>
                     <SelectContent>
@@ -541,6 +555,8 @@ export default function ClassroomAssignmentsTab({
                     <div className="flex gap-2 w-full pt-1">
                       {isDraft ? (
                         <Button
+                          loading={publishingAssignmentId === assign.id}
+                          loadingText="Publishing..."
                           onClick={() => handlePublishAssignment(assign.id)}
                           className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-9 text-xs px-4 flex-1 cursor-pointer"
                         >
@@ -680,7 +696,7 @@ export default function ClassroomAssignmentsTab({
                     editingAssignment?.status === "CLOSED"
                   }
                 >
-                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11! w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                     <SelectValue placeholder="Select activity type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -751,7 +767,7 @@ export default function ClassroomAssignmentsTab({
                     editingAssignment?.status === "CLOSED"
                   }
                 >
-                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11! w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
                   <SelectContent>

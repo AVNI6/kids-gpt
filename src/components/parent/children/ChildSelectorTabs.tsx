@@ -85,7 +85,10 @@ export default function ChildSelectorTabs({ linkedChildren }: ChildSelectorTabsP
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Avatar className="h-7 w-7 border border-slate-100 dark:border-slate-800 shadow-sm shrink-0">
-                          <AvatarImage src={child.avatar_url ?? undefined} className="object-cover" />
+                          <AvatarImage
+                            src={child.avatar_url ?? undefined}
+                            className="object-cover"
+                          />
                           <AvatarFallback className="text-[10px] font-extrabold bg-gradient-to-br from-sky-400 to-sky-600 text-white">
                             {getInitials(child.first_name, child.last_name)}
                           </AvatarFallback>

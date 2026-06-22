@@ -51,7 +51,7 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
           className={`rounded-[28px] border border-slate-200/60 bg-white/90 p-4 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/40 dark:shadow-none ${className}`}
         >
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-400">
-            <Flame className="h-8 w-8 text-sky-700 shrink-0 dark:text-sky-400 animate-pulse" />
+            <Flame className="h-4 w-4 sm:h-8 sm:w-8 text-sky-700 shrink-0 dark:text-sky-400 animate-pulse" />
             Learning streak
           </div>
           <div className="mt-3 flex items-end gap-2">
@@ -109,7 +109,7 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
         <div
           className={`flex-1 md:flex-none flex flex-col items-center justify-center bg-white/60 dark:bg-slate-900/60 border border-orange-200/50 dark:border-orange-500/20 rounded-3xl p-5 md:px-8 shadow-sm backdrop-blur-md relative overflow-hidden group ${className}`}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="flex items-center gap-2 mb-2 text-orange-600 dark:text-orange-400 font-black text-[11px] uppercase tracking-widest relative z-10">
             <Flame className="w-5 h-5 fill-orange-500 text-orange-500 animate-pulse" />
             <span>Streak</span>

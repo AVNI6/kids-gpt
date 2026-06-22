@@ -7,9 +7,6 @@ import {
   BookOpen,
   FolderOpen,
   Megaphone,
-  FileText,
-  LinkIcon,
-  Video,
   Calendar,
   Clock,
   ExternalLink,
@@ -43,6 +40,8 @@ import type {
   ClassroomAnnouncement,
   Classroom,
 } from "@/types/classroom.types";
+import { getSignedResourceUrl } from "@/lib/services/shared/storage.actions";
+import { getResourceDisplay } from "@/hooks/useResourceDisplay";
 
 type Props = {
   classroomId: string;
@@ -104,13 +103,13 @@ export default function KidClassroomWorkspaceClient({
           assignments.map((a) =>
             a.id === selectedAssignment.id
               ? {
-                ...a,
-                submission_id: result.submission.id,
-                submission_type: result.submission.submission_type,
-                submission_text: result.submission.submission_text,
-                submission_url: result.submission.submission_url,
-                submitted_at: result.submission.submitted_at,
-              }
+                  ...a,
+                  submission_id: result.submission.id,
+                  submission_type: result.submission.submission_type,
+                  submission_text: result.submission.submission_text,
+                  submission_url: result.submission.submission_url,
+                  submitted_at: result.submission.submitted_at,
+                }
               : a
           )
         );
@@ -147,14 +146,55 @@ export default function KidClassroomWorkspaceClient({
   const handleAccessResource = async (res: ClassroomResource) => {
     if (res.storage_path) {
       try {
-        const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
-        const url = await getSignedResourceUrl(res.storage_path);
-        window.open(url, "_blank");
+        const result = await getSignedResourceUrl(res.storage_path);
+        if (!result.success || !result.url) {
+          toast.error(result.error || "Failed to generate secure link. Please try again.");
+          return;
+        }
+        const url = result.url;
+
+        // If it is an SVG, fetch and open as an inline blob URL to prevent direct download
+        if (res.storage_path.toLowerCase().endsWith(".svg")) {
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Failed to fetch SVG resource");
+            const blob = await response.blob();
+            const svgBlob = new Blob([blob], { type: "image/svg+xml" });
+            const blobUrl = URL.createObjectURL(svgBlob);
+            window.open(blobUrl, "_blank");
+            return;
+          } catch (fetchErr) {
+            console.error(
+              "Failed to fetch SVG for inline preview, falling back to direct URL open:",
+              fetchErr
+            );
+          }
+        }
+
+        // Open in new tab — inline display works because the file was uploaded
+        // with the correct Content-Type (e.g. image/svg+xml, application/pdf)
+        window.open(url, "_blank", "noopener,noreferrer");
       } catch {
-        toast.error("Failed to generate secure download link.");
+        toast.error("Failed to generate secure link. Please try again.");
       }
-    } else {
-      window.open(res.resource_url, "_blank");
+    } else if (res.resource_url) {
+      if (res.resource_url.toLowerCase().endsWith(".svg")) {
+        try {
+          const response = await fetch(res.resource_url);
+          if (!response.ok) throw new Error("Failed to fetch SVG resource URL");
+          const blob = await response.blob();
+          const svgBlob = new Blob([blob], { type: "image/svg+xml" });
+          const blobUrl = URL.createObjectURL(svgBlob);
+          window.open(blobUrl, "_blank");
+          return;
+        } catch (fetchErr) {
+          console.error(
+            "Failed to fetch SVG URL for inline preview, falling back to direct URL open:",
+            fetchErr
+          );
+        }
+      }
+      window.open(res.resource_url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -191,9 +231,9 @@ export default function KidClassroomWorkspaceClient({
       </div>
 
       {/* Tab Controls */}
-      <div className="w-full bg-muted dark:bg-slate-900 rounded-full p-1 overflow-hidden">
+      <div className="w-full bg-muted dark:bg-slate-900 rounded-full px-1 overflow-hidden">
         <div className="overflow-x-auto scrollbar-none w-full">
-          <div className="flex !h-auto min-w-full w-max">
+          <div className="flex h-auto! min-w-full w-max my-1">
             {[
               { id: "overview", label: "Overview", icon: School },
               { id: "assignments", label: "Assignments", icon: BookOpen, count: getPendingCount() },
@@ -206,7 +246,9 @@ export default function KidClassroomWorkspaceClient({
                 <button
                   key={tab.id}
                   onClick={() =>
-                    setActiveTab(tab.id as "overview" | "assignments" | "resources" | "announcements")
+                    setActiveTab(
+                      tab.id as "overview" | "assignments" | "resources" | "announcements"
+                    )
                   }
                   className={`flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 transition-all select-none whitespace-nowrap shrink-0 border-none bg-transparent ${
                     active
@@ -241,7 +283,7 @@ export default function KidClassroomWorkspaceClient({
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16 border-2 border-indigo-100 shadow-sm shrink-0 dark:border-slate-850">
                     <AvatarImage src={classroom.teacher?.avatar_url ?? undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-indigo-650 text-white font-extrabold text-lg">
+                    <AvatarFallback className="bg-linear-to-br from-indigo-400 to-indigo-650 text-white font-extrabold text-lg">
                       {getInitials(classroom.teacher?.first_name, classroom.teacher?.last_name)}
                     </AvatarFallback>
                   </Avatar>
@@ -433,9 +475,9 @@ export default function KidClassroomWorkspaceClient({
 
                 const formattedDate = assign.due_date
                   ? new Date(assign.due_date).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                  })
+                      month: "short",
+                      day: "numeric",
+                    })
                   : "No due date";
 
                 return (
@@ -513,10 +555,11 @@ export default function KidClassroomWorkspaceClient({
                               </div>
                               <Link
                                 href={`/activities/launcher?assignment_id=${assign.id}`}
-                                className={`w-full rounded-full font-bold h-10 text-xs px-4 flex items-center justify-center cursor-pointer transition-colors ${isInProgress
+                                className={`w-full rounded-full font-bold h-10 text-xs px-4 flex items-center justify-center cursor-pointer transition-colors ${
+                                  isInProgress
                                     ? "bg-amber-500 hover:bg-amber-600 text-white"
                                     : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                  }`}
+                                }`}
                               >
                                 {isInProgress ? "Resume Activity" : "Launch Activity"}
                               </Link>
@@ -591,7 +634,7 @@ export default function KidClassroomWorkspaceClient({
                                     </DialogDescription>
                                   </DialogHeader>
 
-                                  <form onSubmit={handleSubmit} className="space-y-4 py-6">
+                                  <form onSubmit={handleSubmit} className="space-y-4 py-6 px-6">
                                     <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50 space-y-1 dark:bg-slate-950">
                                       <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block">
                                         Instructions
@@ -734,9 +777,7 @@ export default function KidClassroomWorkspaceClient({
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {resources.map((res) => {
-                const isPdf = res.resource_type === "PDF";
-                const isVideo = res.resource_type === "VIDEO";
-                const isLink = res.resource_type === "LINK";
+                const { displayType, icon, colorClass } = getResourceDisplay(res);
 
                 return (
                   <Card
@@ -746,23 +787,13 @@ export default function KidClassroomWorkspaceClient({
                     <CardContent className="p-6 md:p-7 space-y-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 ${isPdf
-                              ? "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400"
-                              : isVideo
-                                ? "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
-                                : isLink
-                                  ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
-                                  : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400"
-                            }`}
+                          className={`h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 ${colorClass}`}
                         >
-                          {isPdf && <FileText className="h-5 w-5" />}
-                          {isVideo && <Video className="h-5 w-5" />}
-                          {isLink && <LinkIcon className="h-5 w-5" />}
-                          {!isPdf && !isVideo && !isLink && <FolderOpen className="h-5 w-5" />}
+                          {icon}
                         </div>
                         <div>
                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                            {res.resource_type}
+                            {displayType}
                           </span>
                           <h4 className="text-sm font-black text-slate-950 dark:text-white leading-tight line-clamp-1">
                             {res.title}

@@ -4,6 +4,7 @@ import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { calculateActivityAnalytics } from "@/lib/utils/activity-analytics";
 import { createChildInvitation } from "@/lib/services/shared/invitations";
+import { getFullActivitySettings } from "./activities/xp-settings.actions";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
@@ -219,7 +220,10 @@ export async function linkByEmail(targetEmail: string): Promise<EmailLinkResult>
   if (result.status === "pending" && profile.role === "parent") {
     const inviteResult = await createChildInvitation(email, profile.user_id);
     if (!inviteResult.success) {
-      return { status: "error", message: inviteResult.error || "Failed to create invitation link." };
+      return {
+        status: "error",
+        message: inviteResult.error || "Failed to create invitation link.",
+      };
     }
     revalidatePath("/dashboard/parent");
     return { status: "pending", message: inviteResult.message || "Invitation sent successfully." };
@@ -301,8 +305,7 @@ export async function getKidComprehensiveDetails(): Promise<ChildDetailsResult> 
   // 3. Calculate metrics and subject focus using the activity-analytics utility
   let settingsList: { title: string; minutes: number }[] = [];
   try {
-    const { data: settings } = await supabase.from("activity_settings").select("title, minutes");
-    settingsList = (settings ?? []) as { title: string; minutes: number }[];
+    settingsList = await getFullActivitySettings();
   } catch {
     // fallback empty
   }

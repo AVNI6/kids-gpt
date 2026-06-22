@@ -17,10 +17,10 @@ type DailyOverviewProfile = {
 export function DailyOverviewSkeleton() {
   return (
     <div className="space-y-4">
-      <Skeleton className="h-8 w-48 bg-slate-100" />
+      <Skeleton className="h-8 w-48" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-36 rounded-[28px] bg-slate-100" />
+          <Skeleton key={i} className="h-36 rounded-[28px]" />
         ))}
       </div>
     </div>

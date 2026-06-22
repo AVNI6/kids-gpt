@@ -30,7 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePathname, useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { getSessionManager } from "@/lib/ai/session-manager";
 import {
   Sidebar as ShadcnSidebar,
@@ -363,7 +363,7 @@ export default function Sidebar() {
       <Dialog
         open={sessionToDelete !== null}
         onOpenChange={(open) => {
-          if (!open) setSessionToDelete(null);
+          if (!open && !isDeleting) setSessionToDelete(null);
         }}
       >
         <DialogContent className="sm:max-w-106.25 rounded-2xl border-border bg-background">
@@ -386,10 +386,11 @@ export default function Sidebar() {
             <Button
               variant="destructive"
               onClick={handleConfirmDelete}
-              disabled={isDeleting}
+              loading={isDeleting}
+              loadingText="Deleting..."
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm cursor-pointer"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

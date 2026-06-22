@@ -64,7 +64,7 @@ export default function DashboardNavbarBase({
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-md">
-      <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 w-full">
+      <div className="px-4 md:px-6 lg:px-8 w-full">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Left Section: Mobile Sidebar Hamburger & Brand */}
           <div className="flex items-center shrink-0 gap-3">
@@ -133,16 +133,18 @@ export default function DashboardNavbarBase({
               )}
 
               {/* Mobile Navigation Drawer Toggle */}
-              <button
-                className={cn(
-                  "lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 cursor-pointer",
-                  toggleSidebarRing
-                )}
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label="Toggle navigation menu"
-              >
-                <Menu className="size-5" />
-              </button>
+              {pathname.startsWith("/dashboard") && navItems && navItems.length > 0 && (
+                <button
+                  className={cn(
+                    "lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 cursor-pointer",
+                    toggleSidebarRing
+                  )}
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label="Toggle navigation menu"
+                >
+                  <Menu className="size-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>

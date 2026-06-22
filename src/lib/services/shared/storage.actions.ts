@@ -2,105 +2,137 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-export async function getSignedResourceUrl(filePath: string): Promise<string> {
-  const supabase = await createClient();
+export type SignedUrlResult =
+  | { success: true; url: string; error?: never }
+  | { success: false; url?: never; error: string };
 
-  // 1. Retrieve the authenticated user session
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-  if (authError || !user) {
-    throw new Error("Unauthorized");
-  }
+export async function getSignedResourceUrl(filePath: string): Promise<SignedUrlResult> {
+  try {
+    const supabase = await createClient();
 
-  // 2. Get profile to check user role
-  const { data: profile } = await supabase
-    .from("profile")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
+    // 1. Retrieve the authenticated user session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error("getSignedResourceUrl: Auth error or user not found:", authError);
+      return { success: false, error: "Unauthorized" };
+    }
 
-  const role = profile?.role;
+    // 2. Get profile to check user role
+    const { data: profile, error: profileError } = await supabase
+      .from("profile")
+      .select("role")
+      .eq("user_id", user.id)
+      .single();
 
-  // Clean the file path (remove leading materials/ if present)
-  let cleanPath = filePath;
-  if (filePath.startsWith("materials/")) {
-    cleanPath = filePath.substring("materials/".length);
-  }
+    if (profileError) {
+      console.error("getSignedResourceUrl: Profile fetch error:", profileError);
+    }
 
-  const parts = cleanPath.split("/");
-  const fileOwnerId = parts[0];
+    const role = profile?.role;
 
-  if (!fileOwnerId) {
-    throw new Error("Invalid resource path structure.");
-  }
+    // Clean the file path (remove leading materials/ if present)
+    let cleanPath = filePath;
+    if (filePath.startsWith("materials/")) {
+      cleanPath = filePath.substring("materials/".length);
+    }
 
-  // 1. Owner can always access own uploads
-  if (user.id === fileOwnerId) {
-    const { data, error } = await supabase.storage
-      .from("materials")
-      .createSignedUrl(cleanPath, 900);
-    if (error) throw error;
-    return data.signedUrl;
-  }
+    const parts = cleanPath.split("/");
+    const fileOwnerId = parts[0];
 
-  // 2. Parent can access linked children's uploads
-  if (role === "parent") {
-    const { data: isLinked } = await supabase
-      .from("parent_child_link")
-      .select("id")
-      .eq("parent_user_id", user.id)
-      .eq("child_user_id", fileOwnerId)
-      .eq("is_approved", true)
-      .eq("is_active", true)
-      .is("deleted_at", null)
-      .maybeSingle();
+    if (!fileOwnerId) {
+      return { success: false, error: "Invalid resource path structure." };
+    }
 
-    if (isLinked) {
+    // 1. Owner can always access own uploads
+    if (user.id === fileOwnerId) {
       const { data, error } = await supabase.storage
         .from("materials")
-        .createSignedUrl(cleanPath, 900);
-      if (error) throw error;
-      return data.signedUrl;
+        .createSignedUrl(cleanPath, 900, { download: false });
+      if (error) {
+        console.error("getSignedResourceUrl: Storage signed url error (owner):", error);
+        return { success: false, error: error.message };
+      }
+      return { success: true, url: data.signedUrl };
     }
-  }
 
-  // 3. Teacher can access students' uploads
-  if (role === "teacher") {
-    const { data: isStudent } = await supabase
-      .from("teacher_student_links")
-      .select("id")
-      .eq("teacher_user_id", user.id)
-      .eq("student_user_id", fileOwnerId)
-      .maybeSingle();
+    // 2. Parent can access linked children's uploads
+    if (role === "parent") {
+      const { data: isLinked } = await supabase
+        .from("parent_child_link")
+        .select("id")
+        .eq("parent_user_id", user.id)
+        .eq("child_user_id", fileOwnerId)
+        .eq("is_approved", true)
+        .eq("is_active", true)
+        .is("deleted_at", null)
+        .maybeSingle();
 
-    if (isStudent) {
-      const { data, error } = await supabase.storage
-        .from("materials")
-        .createSignedUrl(cleanPath, 900);
-      if (error) throw error;
-      return data.signedUrl;
+      if (isLinked) {
+        const { data, error } = await supabase.storage
+          .from("materials")
+          .createSignedUrl(cleanPath, 900, { download: false });
+        if (error) {
+          console.error("getSignedResourceUrl: Storage signed url error (parent):", error);
+          return { success: false, error: error.message };
+        }
+        return { success: true, url: data.signedUrl };
+      }
     }
-  }
 
-  // 4. Kid can access classroom teacher's uploads
-  if (role === "kid") {
-    const { data: isTeacher } = await supabase
-      .from("teacher_student_links")
-      .select("id")
-      .eq("teacher_user_id", fileOwnerId)
-      .eq("student_user_id", user.id)
-      .maybeSingle();
+    // 3. Teacher can access students' uploads
+    if (role === "teacher") {
+      const { data: isStudent } = await supabase
+        .from("teacher_student_links")
+        .select("id")
+        .eq("teacher_user_id", user.id)
+        .eq("student_user_id", fileOwnerId)
+        .maybeSingle();
 
-    if (isTeacher) {
-      const { data, error } = await supabase.storage
-        .from("materials")
-        .createSignedUrl(cleanPath, 900);
-      if (error) throw error;
-      return data.signedUrl;
+      if (isStudent) {
+        const { data, error } = await supabase.storage
+          .from("materials")
+          .createSignedUrl(cleanPath, 900, { download: false });
+        if (error) {
+          console.error("getSignedResourceUrl: Storage signed url error (teacher):", error);
+          return { success: false, error: error.message };
+        }
+        return { success: true, url: data.signedUrl };
+      }
     }
-  }
 
-  throw new Error("Access denied. You do not have permission to view this resource.");
+    // 4. Kid can access classroom teacher's uploads
+    if (role === "kid") {
+      const { data: isTeacher } = await supabase
+        .from("teacher_student_links")
+        .select("id")
+        .eq("teacher_user_id", fileOwnerId)
+        .eq("student_user_id", user.id)
+        .maybeSingle();
+
+      if (isTeacher) {
+        const { data, error } = await supabase.storage
+          .from("materials")
+          .createSignedUrl(cleanPath, 900, { download: false });
+        if (error) {
+          console.error("getSignedResourceUrl: Storage signed url error (kid):", error);
+          return { success: false, error: error.message };
+        }
+        return { success: true, url: data.signedUrl };
+      }
+    }
+
+    return {
+      success: false,
+      error: "Access denied. You do not have permission to view this resource.",
+    };
+  } catch (err) {
+    console.error("getSignedResourceUrl: Error occurred:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to sign resource URL",
+    };
+  }
 }

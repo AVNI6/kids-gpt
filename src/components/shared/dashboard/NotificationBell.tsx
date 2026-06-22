@@ -135,11 +135,7 @@ export default function NotificationBell({
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger
-        className={cn(
-          "relative p-2 text-slate-500 cursor-pointer",
-        )}
-      >
+      <DropdownMenuTrigger className={cn("relative p-2 text-slate-500 cursor-pointer")}>
         <Bell className="size-5" />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-950">

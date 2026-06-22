@@ -1,6 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { Suspense } from "react";
+import { AuthSkeleton } from "@/components/shared/skeletonLoading";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,7 @@ import GoogleSignInButton from "@/components/shared/forms/GoogleSignInButton";
 import { Mail, Lock, CheckCircle, BookOpen, Brain } from "lucide-react";
 import Link from "next/link";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -18,25 +19,38 @@ import { APP_ROUTES } from "@/lib/constants/common";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { useState, useEffect } from "react";
 import Logo from "@/components/shared/logo/Logo";
+import { useAuth } from "@/hooks/useAuth";
 
 const supabase = createClient();
 
-function setKeepSignedInCookie(keep: boolean) {
-  if (typeof document !== "undefined") {
-    if (keep) {
-      document.cookie = "keep_signed_in=true; path=/; max-age=31536000; SameSite=Lax; Secure";
-    } else {
-      document.cookie = "keep_signed_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure";
-    }
-  }
-}
-
 function LoginPageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams?.get("from");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  const { isUserLoggedIn, userProfile } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isUserLoggedIn && userProfile) {
+      if (userProfile.is_onboarded) {
+        const role = userProfile.role;
+        if (role) {
+          const roleRedirectMap: Record<string, string> = {
+            kid: "/dashboard/kid",
+            parent: "/dashboard/parent",
+            teacher: "/dashboard/teacher",
+          };
+          router.replace(roleRedirectMap[role] || "/");
+        }
+      } else {
+        router.replace("/onboarding");
+      }
+    }
+  }, [isUserLoggedIn, userProfile, router]);
 
   type FormValue = {
     email: string;
@@ -87,7 +101,7 @@ function LoginPageContent() {
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");
         localStorage.setItem("rememberedEmail", e.email);
-        
+
         try {
           const { encryptPassword } = await import("@/lib/utils/crypto");
           const encrypted = await encryptPassword(e.password);
@@ -97,15 +111,10 @@ function LoginPageContent() {
         } catch (err) {
           console.error("Failed to encrypt password for remember me:", err);
         }
-        
-        // Set helper cookie for SSR middleware
-        setKeepSignedInCookie(true);
       } else {
         localStorage.setItem("rememberMe", "false");
         localStorage.removeItem("rememberedEmail");
         localStorage.removeItem("rememberedPassword");
-        // Clear helper cookie for SSR middleware
-        setKeepSignedInCookie(false);
       }
 
       // Attempt to read profile and route first-time users to onboarding.
@@ -244,7 +253,20 @@ function LoginPageContent() {
                   {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                 </button>
               </div>
-              <div className="flex justify-end mt-1">
+              <div className="flex justify-between mt-1">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
+                  <label
+                    htmlFor="remember-me"
+                    className="text-sm text-muted-foreground cursor-pointer select-none"
+                  >
+                    Remember Me
+                  </label>
+                </div>
                 <Link
                   href={APP_ROUTES.ForgotPassword}
                   className="text-sm font-semibold text-sky-500 hover:underline"
@@ -252,20 +274,6 @@ function LoginPageContent() {
                   Forgot Password?
                 </Link>
               </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="remember-me"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked === true)}
-              />
-              <label
-                htmlFor="remember-me"
-                className="text-sm text-muted-foreground cursor-pointer select-none"
-              >
-                Remember Me
-              </label>
             </div>
 
             <Button
@@ -297,41 +305,6 @@ function LoginPageContent() {
               Create account
             </Link>
           </p>
-        </div>
-      </div>
-    </main>
-  );
-}
-
-function AuthSkeleton() {
-  return (
-    <main className="min-h-screen flex flex-col px-6 font-sans bg-background relative overflow-hidden">
-      <div className="my-auto mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2 relative z-10">
-        <div className="hidden flex-col gap-8 lg:flex animate-pulse">
-          <div className="h-8 w-24 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl space-y-4">
-            <div className="h-6 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-4 w-64 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-4 w-48 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          </div>
-        </div>
-        <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl md:p-10 space-y-6 animate-pulse w-full">
-          <div className="space-y-2">
-            <div className="h-8 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-4 w-48 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="h-4 w-16 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-              <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 w-16 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-              <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            </div>
-            <div className="h-4 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          </div>
         </div>
       </div>
     </main>

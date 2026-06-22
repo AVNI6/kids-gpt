@@ -9,7 +9,7 @@ import {
 import { Clock, Sun, Sparkles, Moon, EyeOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getLocalDateString } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ScreenTimeContextType {
   screenTimeSeconds: number;

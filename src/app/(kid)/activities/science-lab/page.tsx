@@ -110,8 +110,8 @@ export default function ScienceLabPage({
   // Render normal game view; VictoryModal handles completion celebrate state
 
   return (
-    <div className="h-full bg-background overflow-hidden flex flex-col">
-      <main className="flex-1 px-4 py-4 md:px-8 md:py-5 overflow-hidden flex flex-col min-h-0">
+    <div className="h-full bg-background flex flex-col relative min-h-screen overflow-y-auto md:overflow-hidden">
+      <main className="flex-1 px-4 py-4 md:px-8 md:py-5 flex flex-col min-h-0 overflow-y-auto md:overflow-hidden">
         <div className="mx-auto max-w-4xl w-full h-full flex flex-col justify-between gap-3 min-h-0">
           <Link
             href={APP_ROUTES.Activities}
@@ -134,7 +134,7 @@ export default function ScienceLabPage({
             />
           </div>
 
-          <Card className="border-4 border-emerald-500/20 shadow-md rounded-[1.5rem] overflow-hidden bg-card flex-1 flex flex-col min-h-0">
+          <Card className="border-4 border-emerald-500/20 shadow-md rounded-[1.5rem] overflow-hidden bg-card flex-1 flex flex-col min-h-[160px] md:min-h-[220px]">
             <div className="bg-emerald-500 p-2.5 flex justify-center shrink-0">
               <div className="bg-white p-2 rounded-full shadow-inner animate-pulse">
                 <Beaker
@@ -228,13 +228,15 @@ export default function ScienceLabPage({
         rewardsDescription={`${correctCount}/${safeExperiments.length} Correct Experiments`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "science-lab",
-          title: labTitle,
-          items: finalReviewItems,
-          total_questions: safeExperiments.length,
-          correct_count: correctCount,
-        } satisfies QuizReviewData}
+        reviewData={
+          {
+            type: "science-lab",
+            title: labTitle,
+            items: finalReviewItems,
+            total_questions: safeExperiments.length,
+            correct_count: correctCount,
+          } satisfies QuizReviewData
+        }
       />
     </div>
   );

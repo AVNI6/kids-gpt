@@ -5,7 +5,7 @@ import { Trophy, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -14,7 +14,10 @@ import { APP_ROUTES } from "@/lib/constants/common";
 
 import { type MathChallengeItem } from "@/types/activities.type";
 import VictoryModal from "@/components/shared/VictoryModal";
-import type { MathChallengeReviewData, MathChallengeReviewItem } from "@/types/activity-review.types";
+import type {
+  MathChallengeReviewData,
+  MathChallengeReviewItem,
+} from "@/types/activity-review.types";
 
 interface MathChallengesPageProps {
   challengeTitle?: string;
@@ -122,11 +125,11 @@ export default function MathChallengesPage({
   };
 
   return (
-    <div className="h-full bg-background overflow-hidden flex flex-col relative min-h-screen">
+    <div className="h-full bg-background flex flex-col relative min-h-screen overflow-y-auto md:overflow-hidden">
       <div className="absolute top-20 left-10 h-32 w-32 rounded-full bg-blue-500/5 blur-3xl pointer-events-none" />
       <div className="absolute bottom-20 right-10 h-48 w-48 rounded-full bg-orange-500/5 blur-3xl pointer-events-none" />
 
-      <main className="relative z-10 flex-1 px-4 py-4 md:px-8 md:py-5 overflow-hidden flex flex-col min-h-0">
+      <main className="relative z-10 flex-1 px-4 py-4 md:px-8 md:py-5 flex flex-col min-h-0 overflow-y-auto md:overflow-hidden">
         <div className="mx-auto max-w-4xl w-full h-full flex flex-col justify-between gap-3 min-h-0">
           <div className="flex items-center justify-between shrink-0">
             <Link
@@ -154,7 +157,7 @@ export default function MathChallengesPage({
             />
           </div>
 
-          <Card className="border-4 border-blue-500/20 shadow-md rounded-[1.5rem] bg-card overflow-hidden flex-1 flex flex-col min-h-0 mt-1">
+          <Card className="border-4 border-blue-500/20 shadow-md rounded-[1.5rem] bg-card overflow-hidden flex-1 flex flex-col min-h-[160px] md:min-h-[220px] mt-1">
             <div className="bg-blue-500 p-2.5 text-center shrink-0">
               <h2 className="text-white font-black text-sm uppercase tracking-widest animate-pulse">
                 Solve the Equation
@@ -224,13 +227,15 @@ export default function MathChallengesPage({
         rewardsDescription={`${correctCount}/${safeEquations.length} Correct Answers`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "math-challenges",
-          title: challengeTitle,
-          items: finalReviewItems,
-          total_questions: safeEquations.length,
-          correct_count: correctCount,
-        } satisfies MathChallengeReviewData}
+        reviewData={
+          {
+            type: "math-challenges",
+            title: challengeTitle,
+            items: finalReviewItems,
+            total_questions: safeEquations.length,
+            correct_count: correctCount,
+          } satisfies MathChallengeReviewData
+        }
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-current`);

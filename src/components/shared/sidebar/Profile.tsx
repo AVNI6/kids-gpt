@@ -1,20 +1,12 @@
 "use client";
-import {
-  UserRound,
-  Settings,
-  HelpCircle,
-  Sun,
-  Moon,
-  Monitor,
-  LogOut,
-} from "lucide-react";
+import { UserRound, Settings, HelpCircle, Sun, Moon, Monitor, LogOut } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { APP_ROUTES } from "@/lib/constants/common";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -28,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProfileSkeleton } from "@/components/shared/skeletonLoading";
 
 interface ProfileProps {
   isCollapsed?: boolean;
@@ -60,27 +52,15 @@ export default function Profile({ isCollapsed }: ProfileProps) {
   const isProfileLoading = isInitializing || (isUserLoggedIn && isLoading && !userProfile);
 
   if (isProfileLoading) {
-    if (isCollapsed) {
-      return (
-        <div className="w-full flex justify-center p-0! h-10! w-10! mx-auto items-center">
-          <Skeleton className="h-10 w-10 rounded-full" />
-        </div>
-      );
-    }
-    return (
-      <div className="w-full flex items-center gap-3 p-2 rounded-2xl">
-        <Skeleton className="h-12 w-12 rounded-full shrink-0" />
-        <div className="flex flex-col gap-1.5 flex-1 min-w-0 text-left">
-          <Skeleton className="h-4 w-28 rounded-md" />
-          <Skeleton className="h-3 w-16 rounded-md" />
-        </div>
-      </div>
-    );
+    return <ProfileSkeleton isCollapsed={isCollapsed} />;
   }
 
   if (!isUserLoggedIn || !user || !userProfile) return null;
 
-  const displayName = `${userProfile.first_name ?? ""} ${userProfile.last_name ?? ""}`.trim() || user.email?.split("@")[0] || "User";
+  const displayName =
+    `${userProfile.first_name ?? ""} ${userProfile.last_name ?? ""}`.trim() ||
+    user.email?.split("@")[0] ||
+    "User";
   const avatarUrl = userProfile.avatar_url;
   const dashboardRole = userProfile.role ?? "kid";
 
@@ -128,6 +108,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
             <Link
               href={`/dashboard/${dashboardRole}`}
               onClick={() => setOpenPath(null)}
+              prefetch={false}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
             >
               <UserRound className="h-4 w-4" />
@@ -137,6 +118,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
             <Link
               href={APP_ROUTES.Help}
               onClick={() => setOpenPath(null)}
+              prefetch={false}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
             >
               <HelpCircle className="h-4 w-4" />
@@ -203,7 +185,8 @@ export default function Profile({ isCollapsed }: ProfileProps) {
               Log Out?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground pt-2">
-              Are you sure you want to log out of your session? You will need to sign in again to access your learning adventure.
+              Are you sure you want to log out of your session? You will need to sign in again to
+              access your learning adventure.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">

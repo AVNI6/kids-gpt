@@ -5,38 +5,10 @@ import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getTeacherClassroomWorkspace } from "@/lib/services/kid/classroom.actions";
 import type { TeacherWorkspaceData } from "@/types/classroom.types";
 import TeacherClassroomWorkspaceClient from "@/components/teacher/classrooms/TeacherClassroomWorkspaceClient";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ClassroomWorkspaceSkeleton } from "@/components/shared/skeletonLoading";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-function WorkspaceSkeleton() {
-  return (
-    <div className="mx-auto space-y-6">
-      <div className="flex items-center gap-4">
-        <Skeleton className="h-10 w-24 rounded-full" />
-        <div className="space-y-2 flex-1">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-      </div>
-      <Card className="rounded-[32px] border border-slate-200/50 dark:border-slate-800/50 bg-slate-100/50 dark:bg-slate-900/50 p-6 shadow-sm">
-        <CardContent className="p-0 space-y-4">
-          <div className="flex gap-4 border-b pb-4">
-            <Skeleton className="h-8 w-24 rounded-md" />
-            <Skeleton className="h-8 w-24 rounded-md" />
-            <Skeleton className="h-8 w-24 rounded-md" />
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Skeleton className="h-32 rounded-[28px]" />
-            <Skeleton className="h-32 rounded-[28px]" />
-            <Skeleton className="h-32 rounded-[28px]" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
 
 async function WorkspaceLoader({ classroomId }: { classroomId: string }) {
   const result = await getTeacherClassroomWorkspace(classroomId);
@@ -90,8 +62,8 @@ export default async function TeacherClassroomDetailsPage({
   const classroomId = resolvedParams.id;
 
   return (
-    <main className="min-h-full text-slate-900 dark:text-slate-50">
-      <Suspense fallback={<WorkspaceSkeleton />}>
+    <main className="min-h-full bg-background text-slate-900 dark:text-slate-50">
+      <Suspense fallback={<ClassroomWorkspaceSkeleton />}>
         <WorkspaceLoader classroomId={classroomId} />
       </Suspense>
     </main>

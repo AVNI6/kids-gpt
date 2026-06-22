@@ -5,7 +5,7 @@ import { Type, Sparkles, CheckCircle2, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -151,7 +151,7 @@ export default function WordScramblesPage({
           />
         </div>
 
-        <Card className="border-4 border-pink-500/20 dark:border-pink-500/10 shadow-md rounded-[1.5rem] bg-card flex-1 flex flex-col min-h-0 overflow-hidden mt-1">
+        <Card className="border-4 border-pink-500/20 dark:border-pink-500/10 shadow-md rounded-[1.5rem] bg-card flex-1 flex flex-col min-h-[160px] md:min-h-[220px] overflow-hidden mt-1">
           <CardContent className="p-4 md:p-6 text-center flex-1 flex flex-col justify-center gap-5 min-h-0 overflow-y-auto">
             <div className="mx-auto bg-pink-500/10 w-16 h-16 rounded-full flex items-center justify-center shrink-0">
               <Type className="h-8 w-8 text-pink-600 dark:text-pink-400" />
@@ -233,13 +233,15 @@ export default function WordScramblesPage({
         rewardsDescription={`${correctCount}/${safeWords.length} Correct Words`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "word-scrambles",
-          title: scrambleTitle,
-          items: finalReviewItems,
-          total_words: safeWords.length,
-          correct_count: correctCount,
-        } satisfies WordScrambleReviewData}
+        reviewData={
+          {
+            type: "word-scrambles",
+            title: scrambleTitle,
+            items: finalReviewItems,
+            total_words: safeWords.length,
+            correct_count: correctCount,
+          } satisfies WordScrambleReviewData
+        }
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-current`);

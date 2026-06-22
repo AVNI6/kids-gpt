@@ -49,7 +49,7 @@ export default function ChildSettingsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-[calc(100%-2rem)] sm:max-w-212.5 p-0 overflow-hidden rounded-[32px] border border-slate-200 dark:border-background bg-white dark:bg-slate-900 shadow-2xl h-150 sm:h-140 flex flex-col sm:flex-row">
+      <DialogContent className=" sm:w-full max-w-[calc(100%-2rem)]  p-0 overflow-hidden rounded-[32px] border border-slate-200 dark:border-background bg-white dark:bg-slate-900 shadow-2xl h-150 sm:h-140 flex flex-col sm:flex-row">
         {/* Left Side Tab Navigation Panel */}
         <div className="w-full sm:w-60 bg-slate-50/70 dark:bg-black/20 border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-slate-800/80 p-5 flex flex-col shrink-0">
           <div className="flex items-center gap-2 mb-6 px-1">
@@ -99,7 +99,7 @@ export default function ChildSettingsModal({
 
         {/* Right Side Content Panel */}
         <ScrollArea className="flex-1 h-full bg-white dark:bg-slate-900">
-          <div className="p-6 sm:p-8 flex flex-col min-h-full justify-between">
+          <div className="px-2 sm:p-8 flex flex-col min-h-full justify-between">
             <div className="flex-1">
               {activeTab === "profile" && <EditProfileTab child={child} onSuccess={handleClose} />}
               {activeTab === "screentime" && <ScreenTimeTab child={child} />}

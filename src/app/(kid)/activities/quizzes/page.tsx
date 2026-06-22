@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { CheckCircle2, Timer, ArrowLeft, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 
 import { Button } from "@/components/ui/button";
@@ -211,11 +211,11 @@ export default function QuizzesPage({
   }
 
   return (
-    <div className="h-full bg-background overflow-hidden flex flex-col relative min-h-screen">
+    <div className="h-full bg-background flex flex-col relative min-h-screen overflow-y-auto md:overflow-hidden">
       <div className="absolute top-20 left-10 h-32 w-32 rounded-full bg-green-500/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-20 right-10 h-48 w-48 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
 
-      <main className="relative z-10 flex-1 px-4 py-4 md:px-8 md:py-5 overflow-hidden flex flex-col min-h-0">
+      <main className="relative z-10 flex-1 px-4 py-4 md:px-8 md:py-5 flex flex-col min-h-0 overflow-y-auto md:overflow-hidden">
         <div className="mx-auto max-w-4xl w-full h-full flex flex-col justify-between gap-3 min-h-0">
           <div className="flex items-center justify-between shrink-0">
             <Link
@@ -252,7 +252,7 @@ export default function QuizzesPage({
             />
           </div>
 
-          <Card className="border-4 border-green-500/20 shadow-md bg-card flex-1 flex flex-col min-h-0 justify-center my-4 rounded-2xl">
+          <Card className="border-4 border-green-500/20 shadow-md bg-card flex-1 flex flex-col min-h-[160px] md:min-h-[220px] justify-center my-4 rounded-2xl">
             <CardContent className="p-6 flex flex-col justify-center min-h-0 overflow-y-auto text-center space-y-4">
               <div className="h-14 w-14 rounded-2xl bg-green-500/10 text-green-600 flex items-center justify-center mx-auto shrink-0">
                 <Star className="h-7 w-7" />
@@ -374,13 +374,15 @@ export default function QuizzesPage({
         rewardsDescription={`${correctCount}/${safeQuestions.length} Correct Answers`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "quizzes",
-          title: quizTitle,
-          items: finalReviewItems,
-          total_questions: safeQuestions.length,
-          correct_count: correctCount,
-        } satisfies QuizReviewData}
+        reviewData={
+          {
+            type: "quizzes",
+            title: quizTitle,
+            items: finalReviewItems,
+            total_questions: safeQuestions.length,
+            correct_count: correctCount,
+          } satisfies QuizReviewData
+        }
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-current`);

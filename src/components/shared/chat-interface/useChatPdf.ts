@@ -67,7 +67,12 @@ export function useChatPdf({
           if (targetUrl.includes("/object/public/materials/")) {
             const relativePath = targetUrl.split("/object/public/materials/")[1];
             const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
-            targetUrl = await getSignedResourceUrl(relativePath);
+            const result = await getSignedResourceUrl(relativePath);
+            if (result.success && result.url) {
+              targetUrl = result.url;
+            } else {
+              throw new Error(result.error || "Failed to generate signed URL");
+            }
           }
           await downloadPdfFromUrl(targetUrl, downloadFileName);
           setPdfStates((prev) => ({ ...prev, [messageId]: "success" }));
@@ -83,7 +88,10 @@ export function useChatPdf({
               const relativePath = targetUrl.split("/object/public/materials/")[1];
               const { getSignedResourceUrl } =
                 await import("@/lib/services/shared/storage.actions");
-              targetUrl = await getSignedResourceUrl(relativePath);
+              const result = await getSignedResourceUrl(relativePath);
+              if (result.success && result.url) {
+                targetUrl = result.url;
+              }
             } catch {
               // fallback to original if signed request fails
             }

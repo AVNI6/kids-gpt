@@ -3,11 +3,26 @@
 import { Button } from "@/components/ui/button";
 import { APP_ROUTES } from "@/lib/constants/common";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from "react";
 
 const Navbar = () => {
   const { isUserLoggedIn, isInitializing } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-9 w-20 rounded-lg" />
+        <Skeleton className="h-9 w-24 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2">

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
  * Standalone client-side function to trigger side confetti cannons for 3 seconds.
  */
 export function triggerConfettiSideCannons() {
-  const end = Date.now() + 2 * 1000; // 
+  const end = Date.now() + 2 * 1000; //
   const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
   const frame = () => {
     if (Date.now() > end) return;

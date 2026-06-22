@@ -104,13 +104,13 @@ export default function HelpPage() {
           </Badge>
 
           <div className="space-y-4">
-            <h1 className="text-5xl md:text-7xl font-black tracking-tight text-foreground">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
               How can we <span className="text-sky-600">help?</span>
             </h1>
 
             <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium">
-              Find guides for students, parents, and teachers. Learn how to use Kidoza safely
-              and effectively.
+              Find guides for students, parents, and teachers. Learn how to use Kidoza safely and
+              effectively.
             </p>
           </div>
         </section>

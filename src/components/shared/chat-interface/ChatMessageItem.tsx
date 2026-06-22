@@ -49,11 +49,17 @@ const ChatMessageItem = React.memo(
     React.useEffect(() => {
       let active = true;
       if (message.uploadedImage) {
-        if (message.uploadedImage.includes("/object/public/materials/")) {
+        if (message.uploadedImage.startsWith("http") && message.uploadedImage.includes("token=")) {
+          setResolvedImageUrl(message.uploadedImage);
+        } else if (message.uploadedImage.includes("/object/public/materials/")) {
           const relativePath = message.uploadedImage.split("/object/public/materials/")[1];
           getSignedResourceUrl(relativePath)
-            .then((url) => {
-              if (active) setResolvedImageUrl(url);
+            .then((res) => {
+              if (active && res.success && res.url) {
+                setResolvedImageUrl(res.url);
+              } else if (active) {
+                setResolvedImageUrl(message.uploadedImage!);
+              }
             })
             .catch((err) => {
               console.error("Failed to sign user image:", err);
@@ -73,11 +79,17 @@ const ChatMessageItem = React.memo(
     React.useEffect(() => {
       let active = true;
       if (message.isImage && message.content) {
-        if (message.content.includes("/object/public/materials/")) {
+        if (message.content.startsWith("http") && message.content.includes("token=")) {
+          setResolvedGeneratedImageUrl(message.content);
+        } else if (message.content.includes("/object/public/materials/")) {
           const relativePath = message.content.split("/object/public/materials/")[1];
           getSignedResourceUrl(relativePath)
-            .then((url) => {
-              if (active) setResolvedGeneratedImageUrl(url);
+            .then((res) => {
+              if (active && res.success && res.url) {
+                setResolvedGeneratedImageUrl(res.url);
+              } else if (active) {
+                setResolvedGeneratedImageUrl(message.content);
+              }
             })
             .catch((err) => {
               console.error("Failed to sign generated image:", err);
@@ -116,9 +128,9 @@ const ChatMessageItem = React.memo(
     return (
       <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
         <div
-          className={`flex items-end gap-3 max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}
+          className={`flex items-end gap-2 sm:gap-3 max-w-[95%] sm:max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}
         >
-          <Avatar size={"sm"} className="shrink-0 mb-1">
+          <Avatar size={"sm"} className="hidden sm:flex shrink-0 mb-1">
             {isUser ? (
               <>
                 {isUserLoggedIn && resolvedProfile?.avatar_url ? (

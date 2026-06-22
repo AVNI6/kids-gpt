@@ -19,14 +19,14 @@
 //   const initialPlans = (data as SubscriptionPlanRow[]) || [];
 //   return <SubscriptionClient initialPlans={initialPlans} />;
 // }
-import React from 'react'
+import React from "react";
 
 const page = () => {
   return (
     <div className="flex items-center justify-center min-h-screen text-center text-3xl font-semibold text-muted-foreground">
       Coming soon...
     </div>
-  )
-}
+  );
+};
 
-export default page
+export default page;

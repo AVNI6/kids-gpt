@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { RefreshCcw, CheckCircle2, RotateCcw, Sparkles, Rocket, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -130,11 +130,11 @@ export default function FlashcardsPage({
   };
 
   return (
-    <div className="h-full bg-background overflow-hidden flex flex-col relative min-h-screen">
+    <div className="h-full bg-background flex flex-col relative min-h-screen overflow-y-auto md:overflow-hidden">
       <div className="absolute top-20 left-10 h-32 w-32 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-20 right-10 h-48 w-48 rounded-full bg-green-500/10 blur-3xl pointer-events-none" />
 
-      <main className="relative z-10 flex-1 px-4 py-4 md:px-8 md:py-5 overflow-hidden flex flex-col min-h-0">
+      <main className="relative z-10 flex-1 px-4 py-4 md:px-8 md:py-5 flex flex-col min-h-0 overflow-y-auto md:overflow-hidden">
         <div className="mx-auto max-w-4xl w-full h-full flex flex-col justify-between gap-3 min-h-0">
           <div className="flex items-center justify-between shrink-0">
             <Link
@@ -169,7 +169,7 @@ export default function FlashcardsPage({
               </div>
             </div>
 
-            <Card className="border-4 border-sky-500 shadow-md rounded-[20px] bg-card flex-1 flex flex-col min-h-0 overflow-hidden mt-6">
+            <Card className="border-4 border-sky-500 shadow-md rounded-[20px] bg-card flex-1 flex flex-col min-h-40 md:min-h-55 overflow-hidden mt-6">
               <CardContent className="flex flex-col items-center justify-center p-6 text-center flex-1 min-h-0 overflow-y-auto">
                 {!flipped ? (
                   <>
@@ -266,19 +266,21 @@ export default function FlashcardsPage({
         rewardsDescription={`${masteredIds.length}/${flashcards.length} Cards Mastered`}
         assignmentId={assignmentId}
         gameStartedAt={finalGameStartedAt}
-        reviewData={{
-          type: "flashcards",
-          title: deckTitle,
-          total_cards: flashcards.length,
-          mastered: masteredIds.map((i) => ({
-            question: flashcards[i]?.question ?? "",
-            answer: flashcards[i]?.answer ?? "",
-          })),
-          review: reviewIds.map((i) => ({
-            question: flashcards[i]?.question ?? "",
-            answer: flashcards[i]?.answer ?? "",
-          })),
-        } satisfies FlashcardReviewData}
+        reviewData={
+          {
+            type: "flashcards",
+            title: deckTitle,
+            total_cards: flashcards.length,
+            mastered: masteredIds.map((i) => ({
+              question: flashcards[i]?.question ?? "",
+              answer: flashcards[i]?.answer ?? "",
+            })),
+            review: reviewIds.map((i) => ({
+              question: flashcards[i]?.question ?? "",
+              answer: flashcards[i]?.answer ?? "",
+            })),
+          } satisfies FlashcardReviewData
+        }
         onClaimSuccess={() => {
           if (storageKey) {
             sessionStorage.removeItem(`${storageKey}-currentCard`);

@@ -95,7 +95,7 @@ export default function DeleteAccountTab({ child, onSuccess }: DeleteAccountTabP
             type="button"
             onClick={handleDelete}
             loading={isPending}
-            loadingText="Removeing..."
+            loadingText="Removing..."
             disabled={typedConfirm.toLowerCase() !== child.first_name?.toLowerCase()}
             className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold h-11 px-6 text-xs cursor-pointer shadow-md hover:shadow-lg focus:ring-rose-500 disabled:opacity-50"
           >

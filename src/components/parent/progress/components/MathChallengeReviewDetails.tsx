@@ -1,7 +1,10 @@
 "use client";
 
 import React from "react";
-import type { MathChallengeReviewData, MathChallengeReviewItem } from "@/types/activity-review.types";
+import type {
+  MathChallengeReviewData,
+  MathChallengeReviewItem,
+} from "@/types/activity-review.types";
 
 interface MathChallengeReviewDetailsProps {
   data: MathChallengeReviewData;
@@ -59,9 +62,7 @@ export default function MathChallengeReviewDetails({ data }: MathChallengeReview
                 </span>
                 <span
                   className={`font-black ${
-                    item.is_correct
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-500"
+                    item.is_correct ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"
                   }`}
                 >
                   {item.kid_answer !== null ? item.kid_answer : "Skipped"}

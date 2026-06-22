@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Spinner } from "@/components/ui/spinner";
 import { Message } from "@/types/common";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import ChatMessageItem from "./ChatMessageItem";
 import { UserProfile } from "@/types/user";
 
@@ -87,7 +87,7 @@ const ChatMessageList = memo(function ChatMessageList({
   return (
     <div className="flex-1 min-h-0 overflow-hidden relative">
       <ScrollArea viewportRef={viewportRef} onScroll={handleScroll} className="h-full w-full">
-        <div className="w-full max-w-3xl mx-auto space-y-6 pb-6 p-3 sm:p-0 sm:py-6 md:py-8">
+        <div className="w-full max-w-3xl mx-auto space-y-6 pb-6 px-2 py-4 sm:p-0 sm:py-6 md:py-8">
           {isLoadingMore && (
             <div className="flex justify-center py-2 text-xs font-semibold text-muted-foreground gap-2 items-center">
               <Spinner className="w-4 h-4 animate-spin text-sky-500" />

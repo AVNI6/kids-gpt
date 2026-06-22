@@ -408,6 +408,65 @@ export async function trackDailyUsage(
   }
 }
 
+// Helper to pre-sign URLs in bulk on the server
+export async function preSignMessageUrls(
+  messages: ChatMessageRow[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabaseClient: any
+): Promise<ChatMessageRow[]> {
+  const pathsToSign: string[] = [];
+  const msgMap = new Map<string, Array<{ type: "content" | "attachment"; index: number }>>();
+
+  messages.forEach((msg, idx) => {
+    // 1. Check attachment URL
+    if (msg.attachment_url && msg.attachment_url.includes("/object/public/materials/")) {
+      const path = msg.attachment_url.split("/object/public/materials/")[1];
+      if (path) {
+        pathsToSign.push(path);
+        const list = msgMap.get(path) || [];
+        list.push({ type: "attachment", index: idx });
+        msgMap.set(path, list);
+      }
+    }
+    // 2. Check content (if message content contains a materials URL)
+    if (msg.content && msg.content.includes("/object/public/materials/")) {
+      const path = msg.content.split("/object/public/materials/")[1];
+      if (path) {
+        pathsToSign.push(path);
+        const list = msgMap.get(path) || [];
+        list.push({ type: "content", index: idx });
+        msgMap.set(path, list);
+      }
+    }
+  });
+
+  if (pathsToSign.length > 0) {
+    try {
+      const { data: signedUrls, error } = await supabaseClient.storage
+        .from("materials")
+        .createSignedUrls(pathsToSign, 900);
+      if (!error && signedUrls) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        signedUrls.forEach((item: any) => {
+          const list = msgMap.get(item.path);
+          if (list && item.signedUrl) {
+            list.forEach((mapping) => {
+              if (mapping.type === "attachment") {
+                messages[mapping.index].attachment_url = item.signedUrl;
+              } else {
+                messages[mapping.index].content = item.signedUrl;
+              }
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Bulk pre-signing failed:", err);
+    }
+  }
+  return messages;
+}
+
 export async function fetchSessionMessages(
   sessionId: string,
   cursorCreatedAt?: string,
@@ -440,7 +499,8 @@ export async function fetchSessionMessages(
   }
 
   const results = (data as ChatMessageRow[]) || [];
-  return [...results].reverse();
+  const reversed = [...results].reverse();
+  return preSignMessageUrls(reversed, supabase);
 }
 
 export async function updateSessionTitle(sessionId: string, title: string) {

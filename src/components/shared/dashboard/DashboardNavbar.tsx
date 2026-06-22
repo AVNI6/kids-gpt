@@ -24,7 +24,7 @@ interface DashboardNavbarProps {
 function KidNavbarWrapper({ pathname }: { pathname: string }) {
   const [dueCount, setDueCount] = useState(0);
   const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } =
-    useClassroomNotifications("kid", 10);
+    useClassroomNotifications("kid", { limit: 10 });
 
   useEffect(() => {
     getKidPendingAssignmentsCount().then(setDueCount);
@@ -95,7 +95,7 @@ function ParentNavbarWrapper({ pathname }: { pathname: string }) {
 
 function TeacherNavbarWrapper({ pathname }: { pathname: string }) {
   const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } =
-    useClassroomNotifications("teacher", 10);
+    useClassroomNotifications("teacher", { limit: 10 });
 
   const isLinkActive = (item: NavItemConfig) => {
     if (item.exact) return pathname === item.href;

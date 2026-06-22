@@ -20,7 +20,9 @@ import { validatePassword } from "@/lib/utils";
 
 interface ChangePasswordModalProps {
   email: string;
-  changePasswordAction: (password: string) => Promise<{ success: boolean; error?: string; message?: string }>;
+  changePasswordAction: (
+    password: string
+  ) => Promise<{ success: boolean; error?: string; message?: string }>;
   role: "kid" | "parent" | "teacher";
 }
 
@@ -73,8 +75,8 @@ export default function ChangePasswordModal({
   const confirmError = !confirmPassword
     ? "Confirm password is required."
     : confirmPassword !== newPassword
-    ? "Passwords do not match."
-    : "";
+      ? "Passwords do not match."
+      : "";
 
   const isFormValid =
     currentPassword.length > 0 &&
@@ -89,7 +91,7 @@ export default function ChangePasswordModal({
     startTransition(async () => {
       try {
         const supabase = createClient();
-        
+
         // 1. Verify current password
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,

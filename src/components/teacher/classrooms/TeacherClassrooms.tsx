@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { School, Trash2, Plus, CopyIcon, CheckIcon } from "lucide-react";
 import { toast } from "sonner";
 import { createClassroom, deleteClassroom } from "@/lib/services/kid/classroom.actions";
@@ -44,6 +45,8 @@ type Props = {
 };
 
 export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpen }: Props) {
+  const router = useRouter();
+  const [loadingClassroomId, setLoadingClassroomId] = useState<string | null>(null);
   const [localOpen, setLocalOpen] = useState(createOpen || false);
   const isOpen = setCreateOpen ? createOpen || false : localOpen;
   const setIsOpen = setCreateOpen || setLocalOpen;
@@ -241,10 +244,10 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
         <AlertDialog
           open={deleteClassroomTarget !== null}
           onOpenChange={(open) => {
-            if (!open) setDeleteClassroomTarget(null);
+            if (!open && !isLoading) setDeleteClassroomTarget(null);
           }}
         >
-          <AlertDialogContent className="sm:max-w-[400px] rounded-[24px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl">
+          <AlertDialogContent className="sm:max-w-100 rounded-[24px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-xl font-black text-slate-900 dark:text-white">
                 Delete Classroom?
@@ -255,7 +258,9 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-2 pt-4">
-              <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="rounded-full" disabled={isLoading}>
+                Cancel
+              </AlertDialogCancel>
               <Button
                 variant="destructive"
                 loading={isLoading}
@@ -263,12 +268,12 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                 onClick={async () => {
                   if (!deleteClassroomTarget) return;
                   const target = deleteClassroomTarget;
-                  setDeleteClassroomTarget(null);
                   try {
                     setIsLoading(true);
                     const result = await deleteClassroom(target.id);
                     if (result.success) {
                       toast.success(`Classroom "${target.name}" deleted.`);
+                      setDeleteClassroomTarget(null);
                     } else {
                       toast.error(result.error || "Failed to delete classroom.");
                     }
@@ -278,7 +283,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                     setIsLoading(false);
                   }
                 }}
-                className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm font-bold px-5"
+                className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm font-bold px-5 cursor-pointer"
               >
                 Delete
               </Button>
@@ -327,7 +332,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                 className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md hover:border-indigo-200/80 dark:hover:border-slate-700 transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
               >
                 {/* Visual indicator top border */}
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 to-sky-500" />
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-indigo-500 to-sky-500" />
 
                 <CardContent className="p-6 md:p-7 pt-8 flex flex-col gap-5 h-full justify-between">
                   <div className="space-y-4">
@@ -434,7 +439,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                           Class Code
                         </span>
-                        <p className="text-md font-black text-slate-900 dark:text-white tracking-widest font-mono truncate">
+                        <p className="text-md text-slate-900 dark:text-white tracking-widest font-bold truncate">
                           {cls.class_code}
                         </p>
                       </div>
@@ -464,11 +469,11 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                       </Button>
                     </div>
 
-                    {/* Open Classroom Workspace Button */}
-                    {/* Open Classroom Workspace Link */}
-                    <Link
-                      href={`/dashboard/teacher/classrooms/${cls.id}`}
+                    <Button
+                      loading={loadingClassroomId === cls.id}
+                      loadingText="Opening..."
                       onClick={() => {
+                        setLoadingClassroomId(cls.id);
                         // Track access in client storage
                         try {
                           const stored = localStorage.getItem("teacher_recent_classrooms");
@@ -478,11 +483,12 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         } catch (e) {
                           console.error(e);
                         }
+                        router.push(`/dashboard/teacher/classrooms/${cls.id}`);
                       }}
-                      className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 text-white dark:text-slate-950 font-bold h-11 flex items-center justify-center text-sm transition-colors"
+                      className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-950 font-bold h-11 flex items-center justify-center text-sm transition-colors cursor-pointer"
                     >
                       Open Workspace
-                    </Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

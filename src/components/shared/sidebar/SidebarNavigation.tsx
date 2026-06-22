@@ -124,7 +124,13 @@ export default function SidebarNavigation({
 
         if (item.href) {
           return (
-            <Link key={item.label} href={item.href} onClick={item.onClick} className={buttonClass}>
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={item.onClick}
+              prefetch={false}
+              className={buttonClass}
+            >
               {itemContent}
             </Link>
           );
@@ -243,7 +249,7 @@ export default function SidebarNavigation({
                 <SidebarMenuButton
                   isActive={showActiveStyle}
                   tooltip={item.label}
-                  render={<Link href={item.href} onClick={item.onClick} />}
+                  render={<Link href={item.href} onClick={item.onClick} prefetch={false} />}
                   className={cn(
                     "flex items-center justify-center rounded-xl transition-colors cursor-pointer w-10 h-10 mx-auto p-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                     showActiveStyle

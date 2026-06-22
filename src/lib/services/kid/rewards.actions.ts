@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getLocalDateString } from "@/lib/utils";
 import { createParentNotification } from "@/lib/services/kid/dashboard.actions";
 import { calculateUpdatedStreak } from "@/lib/utils/streak-helper";
+import { getActivityXp, getFullActivitySettings } from "./activities/xp-settings.actions";
 
 export interface CompletionOptions {
   activitySlug: string;
@@ -113,17 +114,9 @@ export async function processActivityCompletion({
         return { success: true, message: "Replay completed. Progress preserved.", rewardId: null };
       }
 
-      // Securely query dynamic XP setting, default to 80 XP if missing
-      let actualXp = 80;
-      const { data: activitySetting } = await supabase
-        .from("activity_settings")
-        .select("xp_reward")
-        .eq("slug", "memory-match")
-        .maybeSingle();
-
-      if (activitySetting?.xp_reward) {
-        actualXp = activitySetting.xp_reward;
-      }
+      // Securely query dynamic XP setting from cache, default to 80 XP if missing
+      const dbXp = await getActivityXp("memory-match");
+      const actualXp = dbXp === 100 ? 80 : dbXp;
 
       // Query latest rewards row to compute streak
       const { data: lastRewards, error: lastRewardsError } = await supabase
@@ -203,16 +196,10 @@ export async function processActivityCompletion({
     // CASE B: Jigsaw Puzzle Completion
     // =========================================================================
     if (activitySlug === "jigsaw-puzzle") {
-      let actualXp = 120; // Default fallback
-      const { data: activitySetting } = await supabase
-        .from("activity_settings")
-        .select("id, slug, title, xp_reward")
-        .eq("slug", "jigsaw-puzzle")
-        .maybeSingle();
-
-      if (activitySetting?.xp_reward) {
-        actualXp = activitySetting.xp_reward;
-      }
+      const allSettings = await getFullActivitySettings();
+      const activitySetting = allSettings.find((s) => s.slug === "jigsaw-puzzle");
+      const dbXp = activitySetting?.xp_reward || 100;
+      let actualXp = dbXp === 100 ? 120 : dbXp;
 
       // Scale XP based on grid difficulty multiplier
       if (jigsawGridSize) {
@@ -387,12 +374,9 @@ export async function processActivityCompletion({
     }
 
     // 2. Client-side Fallback
+    // Securely retrieve settings from cache
     let actualXp = 100; // generic fallback default
-    const { data: allSettings } = await supabase
-      .from("activity_settings")
-      .select("id, slug, title, xp_reward");
-
-    const settingsList = allSettings ?? [];
+    const settingsList = await getFullActivitySettings();
     const activitySetting = settingsList.find((s) => {
       const slug = s.slug.toLowerCase();
       const input = activitySlug.toLowerCase();

@@ -15,16 +15,25 @@ export const createClient = (request: NextRequest) => {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          request.cookies.set({ name, value, ...options });
+        cookiesToSet.forEach(({ name, value }) => {
+          request.cookies.set(name, value);
         });
+
+        const requestHeaders = new Headers(request.headers);
+        const cookieString = request.cookies
+          .getAll()
+          .map(({ name, value }) => `${name}=${value}`)
+          .join("; ");
+        requestHeaders.set("Cookie", cookieString);
 
         response = NextResponse.next({
-          request,
+          request: {
+            headers: requestHeaders,
+          },
         });
 
         cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set({ name, value, ...options });
+          response.cookies.set(name, value, options);
         });
       },
     },

@@ -18,6 +18,7 @@ import {
 
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useState, useEffect, Suspense } from "react";
+import { AuthSkeleton } from "@/components/shared/skeletonLoading";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/lib/constants/common";
@@ -27,11 +28,32 @@ import { validatePassword } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { validateInviteToken } from "@/lib/services/shared/invitations";
 import { checkIfEmailExists } from "@/lib/services/shared/profile.actions";
+import { useAuth } from "@/hooks/useAuth";
 
 const supabase = createClient();
 
 function SignupForm() {
   const router = useRouter();
+  const { isUserLoggedIn, userProfile } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isUserLoggedIn && userProfile) {
+      if (userProfile.is_onboarded) {
+        const role = userProfile.role;
+        if (role) {
+          const roleRedirectMap: Record<string, string> = {
+            kid: "/dashboard/kid",
+            parent: "/dashboard/parent",
+            teacher: "/dashboard/teacher",
+          };
+          router.replace(roleRedirectMap[role] || "/");
+        }
+      } else {
+        router.replace("/onboarding");
+      }
+    }
+  }, [isUserLoggedIn, userProfile, router]);
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("invite_token");
 
@@ -39,7 +61,9 @@ function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [activeModal, setActiveModal] = useState<"safety" | "privacy" | null>(null);
   const [isEmailLocked, setIsEmailLocked] = useState(false);
-  const [inviteStatus, setInviteStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
+  const [inviteStatus, setInviteStatus] = useState<"idle" | "validating" | "valid" | "invalid">(
+    "idle"
+  );
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   type FormValue = {
@@ -167,8 +191,8 @@ function SignupForm() {
           <Card className="relative border-2 border-border/50 rounded-[32px] bg-card p-2 shadow-xl overflow-visible">
             <CardContent className="p-8">
               <p className="text-xl text-muted-foreground italic leading-relaxed">
-                “Hi there! I’m Kidoza, your AI learning buddy. Let’s create your account and start exploring
-                fun adventures together!”
+                “Hi there! I’m Kidoza, your AI learning buddy. Let’s create your account and start
+                exploring fun adventures together!”
               </p>
 
               <div className="mt-8 flex gap-3 flex-wrap">
@@ -236,7 +260,9 @@ function SignupForm() {
                     type="email"
                     readOnly={isEmailLocked}
                     className={`pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground ${
-                      isEmailLocked ? "opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-900" : ""
+                      isEmailLocked
+                        ? "opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-900"
+                        : ""
                     }`}
                     placeholder="you@example.com"
                   />
@@ -442,41 +468,6 @@ function SignupForm() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
-  );
-}
-
-function AuthSkeleton() {
-  return (
-    <main className="min-h-screen flex flex-col px-6 font-sans bg-background relative overflow-hidden">
-      <div className="my-auto mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2 relative z-10">
-        <div className="hidden flex-col gap-8 lg:flex animate-pulse">
-          <div className="h-8 w-24 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl space-y-4">
-            <div className="h-6 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-4 w-64 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-4 w-48 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          </div>
-        </div>
-        <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl md:p-10 space-y-6 animate-pulse w-full">
-          <div className="space-y-2">
-            <div className="h-8 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-4 w-48 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="h-4 w-16 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-              <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 w-16 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-              <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            </div>
-            <div className="h-4 w-32 bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-            <div className="h-14 w-full bg-slate-200/60 dark:bg-slate-800/80 rounded-full" />
-          </div>
-        </div>
-      </div>
     </main>
   );
 }
