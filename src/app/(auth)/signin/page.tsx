@@ -11,7 +11,7 @@ import GoogleSignInButton from "@/components/shared/forms/GoogleSignInButton";
 import { Mail, Lock, CheckCircle, BookOpen, Brain } from "lucide-react";
 import Link from "next/link";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -19,15 +19,38 @@ import { APP_ROUTES } from "@/lib/constants/common";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { useState, useEffect } from "react";
 import Logo from "@/components/shared/logo/Logo";
+import { useAuth } from "@/hooks/useAuth";
 
 const supabase = createClient();
 
 function LoginPageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams?.get("from");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  const { isUserLoggedIn, userProfile } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isUserLoggedIn && userProfile) {
+      if (userProfile.is_onboarded) {
+        const role = userProfile.role;
+        if (role) {
+          const roleRedirectMap: Record<string, string> = {
+            kid: "/dashboard/kid",
+            parent: "/dashboard/parent",
+            teacher: "/dashboard/teacher",
+          };
+          router.replace(roleRedirectMap[role] || "/");
+        }
+      } else {
+        router.replace("/onboarding");
+      }
+    }
+  }, [isUserLoggedIn, userProfile, router]);
 
   type FormValue = {
     email: string;

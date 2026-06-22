@@ -28,11 +28,32 @@ import { validatePassword } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { validateInviteToken } from "@/lib/services/shared/invitations";
 import { checkIfEmailExists } from "@/lib/services/shared/profile.actions";
+import { useAuth } from "@/hooks/useAuth";
 
 const supabase = createClient();
 
 function SignupForm() {
   const router = useRouter();
+  const { isUserLoggedIn, userProfile } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isUserLoggedIn && userProfile) {
+      if (userProfile.is_onboarded) {
+        const role = userProfile.role;
+        if (role) {
+          const roleRedirectMap: Record<string, string> = {
+            kid: "/dashboard/kid",
+            parent: "/dashboard/parent",
+            teacher: "/dashboard/teacher",
+          };
+          router.replace(roleRedirectMap[role] || "/");
+        }
+      } else {
+        router.replace("/onboarding");
+      }
+    }
+  }, [isUserLoggedIn, userProfile, router]);
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("invite_token");
 

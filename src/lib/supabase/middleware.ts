@@ -19,8 +19,17 @@ export const createClient = (request: NextRequest) => {
           request.cookies.set(name, value);
         });
 
+        const requestHeaders = new Headers(request.headers);
+        const cookieString = request.cookies
+          .getAll()
+          .map(({ name, value }) => `${name}=${value}`)
+          .join("; ");
+        requestHeaders.set("Cookie", cookieString);
+
         response = NextResponse.next({
-          request,
+          request: {
+            headers: requestHeaders,
+          },
         });
 
         cookiesToSet.forEach(({ name, value, options }) => {

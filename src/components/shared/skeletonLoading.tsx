@@ -404,3 +404,66 @@ export function ProfileSkeleton({ isCollapsed }: { isCollapsed?: boolean }) {
     </div>
   );
 }
+
+/**
+ * ParentChildrenSkeleton - Loader for parent's child management page (dashboard/parent/children)
+ */
+export function ParentChildrenSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      {/* Top Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-9 w-48 rounded-xl" />
+          <Skeleton className="h-4 w-96 rounded-lg" />
+        </div>
+        <Skeleton className="h-11 w-32 rounded-full shrink-0" />
+      </div>
+
+      {/* Children Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, idx) => (
+          <Card
+            key={idx}
+            className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm relative overflow-hidden"
+          >
+            <CardContent className="p-8 flex flex-col h-full justify-between gap-6">
+              <div>
+                <div className="flex justify-between items-start mb-6">
+                  <Skeleton className="w-20 h-20 rounded-full shrink-0" />
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                </div>
+                <div className="space-y-2 mb-6">
+                  <Skeleton className="h-6 w-32 rounded-lg" />
+                  <Skeleton className="h-4 w-24 rounded-md" />
+                </div>
+                <div className="space-y-3 mb-8">
+                  <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-slate-800/50">
+                    <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <Skeleton className="h-3 w-16 rounded" />
+                      <Skeleton className="h-4 w-28 rounded" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-slate-800/50">
+                    <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <Skeleton className="h-3 w-16 rounded" />
+                      <Skeleton className="h-4 w-28 rounded" />
+                    </div>
+                  </div>
+                </div>
+                {/* Actions Grid */}
+                <div className="grid grid-cols-1 min-[340px]:grid-cols-2 gap-3">
+                  <Skeleton className="h-11 rounded-2xl" />
+                  <Skeleton className="h-11 rounded-2xl" />
+                  <Skeleton className="h-11 rounded-2xl min-[340px]:col-span-2" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
