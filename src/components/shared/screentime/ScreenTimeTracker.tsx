@@ -10,6 +10,12 @@ import { Clock, Sun, Sparkles, Moon, EyeOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getLocalDateString } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
+import {
+  SCREENTIME_HEARTBEAT_INTERVALS,
+  SCREENTIME_THRESHOLDS,
+  FEATURE_FLAGS,
+} from "@/lib/constants/screentime";
 
 interface ScreenTimeContextType {
   screenTimeSeconds: number;
@@ -110,13 +116,26 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       const totalToSync = seconds + unsynced;
 
       try {
+        if (process.env.NODE_ENV !== "production") {
+          console.log(
+            `[ScreenTimeTracker] Dev Monitor - Attempting sync: ${seconds}s (total with unsynced: ${totalToSync}s)`
+          );
+        }
         const result = await logScreenTimeSession(childId, totalToSync, tz);
         if (result.success) {
           // Success -> Clear unsynced queue
           localStorage.removeItem("screen_time_unsynced");
+          if (process.env.NODE_ENV !== "production") {
+            console.log(`[ScreenTimeTracker] Dev Monitor - Sync successful. Unsynced queue cleared.`);
+          }
         } else {
           // Failure -> Queue it locally
           localStorage.setItem("screen_time_unsynced", String(totalToSync));
+          if (process.env.NODE_ENV !== "production") {
+            console.warn(
+              `[ScreenTimeTracker] Dev Monitor - Sync failed: ${result.error}. Queued offline.`
+            );
+          }
         }
       } catch (err) {
         console.warn("[ScreenTimeTracker] Network error, queuing screen time offline:", err);
@@ -151,6 +170,57 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata";
     void fetchScreenTime(tz);
   }, [fetchScreenTime, childId]);
+
+  // Effect: Listen to real-time updates for parent limit settings (Task 8 & 9)
+  useEffect(() => {
+    if (!childId) return;
+
+    const supabase = createClient();
+    const channelName = `screentime-limit-sync-${childId}`;
+    
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[ScreenTimeTracker] Dev Monitor - Subscribing to real-time parent_child_link for child: ${childId}`);
+    }
+
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "parent_child_link",
+          filter: `child_user_id=eq.${childId}`,
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (payload: any) => {
+          if (process.env.NODE_ENV !== "production") {
+            console.log("[ScreenTimeTracker] Dev Monitor - Real-time link update payload:", payload);
+          }
+          const record = payload.new as {
+            daily_limit_minutes?: number;
+            is_screen_time_limit_enabled?: boolean;
+            is_active?: boolean;
+            deleted_at?: string | null;
+          };
+
+          // Update local state reactively if it is an active approved connection
+          if (record && record.is_active !== false && !record.deleted_at) {
+            if (record.daily_limit_minutes !== undefined) {
+              setDailyLimitMinutes(record.daily_limit_minutes);
+            }
+            if (record.is_screen_time_limit_enabled !== undefined) {
+              setIsLimitEnabled(record.is_screen_time_limit_enabled);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [childId]);
 
   // Effect 1: Core Lifecycle Tracking, Multi-Tab Election, Inactivity & Drift Safety
   // Core lifecycle effect: runs once on mount. Uses refs for mutable values.
@@ -211,6 +281,11 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       const elapsedSecs = Math.floor(elapsedMs / 1000);
       lastTickRef.current = now;
 
+      // Pause tracking if tab is hidden (Task 3 & 7 requirement)
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        return;
+      }
+
       // Midnight Day Rollover (The "Tab Left Open" Edge Case)
       const todayString = new Date().toDateString();
       if (todayString !== currentDayRef.current) {
@@ -247,6 +322,18 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       const currentLocked = stateRefs.current.isLimitEnabled && currentTotalMins >= currentLimit;
 
       if (currentLocked) {
+        // Immediate flush of any remaining unsynced seconds on screen lock activation (Task 3)
+        if (stateRefs.current.isLeader && syncTimerRef.current > 0) {
+          const finalSession = syncTimerRef.current;
+          syncTimerRef.current = 0;
+          if (process.env.NODE_ENV !== "production") {
+            console.log(
+              `[ScreenTimeTracker] Dev Monitor - Limit reached! Flushing final ${finalSession}s immediately.`
+            );
+          }
+          void saveScreenTime(finalSession, tz);
+        }
+
         if (childId && typeof window !== "undefined") {
           const todayString = new Date().toDateString();
           const storageKey = `notified_limit_${childId}`;
@@ -327,9 +414,39 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
           setLocalElapsedSeconds(elapsedAccumulatedRef.current);
         }
 
-        // Periodically sync heartbeat log to database every 15 seconds to prevent loss
+        // Calculate dynamic/adaptive heartbeat interval using configuration (Task 2 & 9)
+        let targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.DEFAULT;
+
+        if (FEATURE_FLAGS.ENABLE_ADAPTIVE_HEARTBEAT) {
+          if (!stateRefs.current.isLimitEnabled) {
+            targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.SAFE;
+          } else {
+            const totalElapsedSecs = stateRefs.current.dbScreenTimeSeconds + elapsedAccumulatedRef.current;
+            const limitSecs = stateRefs.current.dailyLimitMinutes * 60;
+            const remainingSecs = Math.max(0, limitSecs - totalElapsedSecs);
+            const remainingMins = remainingSecs / 60;
+
+            if (remainingMins <= SCREENTIME_THRESHOLDS.WARNING_MINUTES) {
+              targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.DANGER; // <= 5 mins -> 15s
+            } else if (remainingMins <= SCREENTIME_THRESHOLDS.MEDIUM_MINUTES) {
+              targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.WARNING; // 5-10 mins -> 30s
+            } else if (remainingMins <= SCREENTIME_THRESHOLDS.SAFE_MINUTES) {
+              targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.MEDIUM;  // 10-20 mins -> 45s
+            } else {
+              targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.SAFE;    // > 20 mins -> 90s
+            }
+          }
+        }
+
+        if (process.env.NODE_ENV !== "production" && syncTimerRef.current === 0) {
+          console.log(
+            `[ScreenTimeTracker] Dev Monitor - Leader active. Selected dynamic interval: ${targetInterval}s.`
+          );
+        }
+
+        // Periodically sync heartbeat log to database
         syncTimerRef.current += elapsedSecs;
-        if (syncTimerRef.current >= 15) {
+        if (syncTimerRef.current >= targetInterval) {
           const secondsToSync = syncTimerRef.current;
           syncTimerRef.current = 0;
           void saveScreenTime(secondsToSync, tz);
@@ -345,6 +462,11 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
           const sessionElapsed = syncTimerRef.current;
           syncTimerRef.current = 0;
           if (sessionElapsed > 0) {
+            if (process.env.NODE_ENV !== "production") {
+              console.log(
+                `[ScreenTimeTracker] Dev Monitor - Tab hidden. Flushing unsynced ${sessionElapsed}s.`
+              );
+            }
             void saveScreenTime(sessionElapsed, tz);
           }
         }
@@ -361,6 +483,11 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
         const finalSessionElapsed = syncTimerRef.current;
         syncTimerRef.current = 0;
         if (finalSessionElapsed > 0) {
+          if (process.env.NODE_ENV !== "production") {
+            console.log(
+              `[ScreenTimeTracker] Dev Monitor - Tab closing/refreshing. Flushing final ${finalSessionElapsed}s.`
+            );
+          }
           void saveScreenTime(finalSessionElapsed, tz);
         }
       }
@@ -385,6 +512,11 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
       if (stateRefs.current.isLeader && syncTimerRef.current > 0) {
         const finalSession = syncTimerRef.current;
         syncTimerRef.current = 0;
+        if (process.env.NODE_ENV !== "production") {
+          console.log(
+            `[ScreenTimeTracker] Dev Monitor - Tracker unmounting. Flushing final ${finalSession}s.`
+          );
+        }
         void saveScreenTime(finalSession, tz);
       }
 
