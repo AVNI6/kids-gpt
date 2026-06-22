@@ -56,7 +56,9 @@ export function useClassroomNotifications(
         unreadCount: dbUnreadCount || 0,
       };
     },
-    staleTime: 5000, // deduplicate and cache for 5 seconds
+    staleTime: Infinity, // Match global QueryClient config — rely on explicit invalidation
+    refetchOnWindowFocus: false, // Prevent refetch on every browser-window focus event
+
   });
 
   const notifications = data?.items || [];

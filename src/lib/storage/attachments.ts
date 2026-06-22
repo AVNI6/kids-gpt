@@ -24,7 +24,7 @@ export async function uploadChatAttachment(
     // 2. Upload to the materials bucket with explicit content type for inline browser viewing
     let contentType = "application/octet-stream";
     if (file && typeof file === "object") {
-      const fileName = (file as any).name;
+      const fileName = file instanceof File ? file.name : "";
       if (fileName && typeof fileName === "string") {
         const ext = fileName.split(".").pop()?.toLowerCase();
         const mimeTypes: Record<string, string> = {
@@ -49,10 +49,10 @@ export async function uploadChatAttachment(
         if (ext && mimeTypes[ext]) {
           contentType = mimeTypes[ext];
         } else {
-          contentType = (file as any).type || "application/octet-stream";
+          contentType = file.type || "application/octet-stream";
         }
       } else {
-        contentType = (file as any).type || "application/octet-stream";
+        contentType = file.type || "application/octet-stream";
       }
     }
 
