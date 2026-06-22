@@ -104,7 +104,7 @@ export default function HelpPage() {
           </Badge>
 
           <div className="space-y-4">
-            <h1 className="text-5xl md:text-7xl font-black tracking-tight text-foreground">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
               How can we <span className="text-sky-600">help?</span>
             </h1>
 

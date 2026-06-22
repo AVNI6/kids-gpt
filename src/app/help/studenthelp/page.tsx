@@ -116,7 +116,7 @@ export default function StudentHelpPage() {
           </Accordion>
         </section>
 
-        <Card className="p-8 md:p-10 bg-gradient-to-r from-sky-600 to-sky-700 text-white border-0 rounded-3xl overflow-hidden shadow-xl shadow-sky-500/20">
+        <Card className="p-8 md:p-10 bg-linear-to-r from-sky-600 to-sky-700 text-white border-0 rounded-3xl overflow-hidden shadow-xl shadow-sky-500/20">
           <CardContent className="p-0 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="space-y-2 text-center md:text-left">
               <h3 className="text-3xl font-black">Need more help?</h3>

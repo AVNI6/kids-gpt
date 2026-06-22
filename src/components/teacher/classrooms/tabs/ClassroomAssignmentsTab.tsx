@@ -283,7 +283,7 @@ export default function ClassroomAssignmentsTab({
                     value={assignActivityType}
                     onValueChange={(val) => setAssignActivityType(val || "")}
                   >
-                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11! w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                       <SelectValue placeholder="Select activity type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -342,7 +342,7 @@ export default function ClassroomAssignmentsTab({
                     value={assignDifficulty}
                     onValueChange={(val) => setAssignDifficulty(val || "")}
                   >
-                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11! w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                       <SelectValue placeholder="Select difficulty" />
                     </SelectTrigger>
                     <SelectContent>
@@ -696,7 +696,7 @@ export default function ClassroomAssignmentsTab({
                     editingAssignment?.status === "CLOSED"
                   }
                 >
-                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11! w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                     <SelectValue placeholder="Select activity type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -767,7 +767,7 @@ export default function ClassroomAssignmentsTab({
                     editingAssignment?.status === "CLOSED"
                   }
                 >
-                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11! w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
                   <SelectContent>

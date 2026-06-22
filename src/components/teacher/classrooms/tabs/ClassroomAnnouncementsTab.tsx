@@ -85,7 +85,7 @@ export default function ClassroomAnnouncementsTab({
               </Button>
             }
           />
-          <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
+          <DialogContent className=" rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
             <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
               <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight">
                 Post Announcement

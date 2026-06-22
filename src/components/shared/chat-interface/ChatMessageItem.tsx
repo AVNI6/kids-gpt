@@ -128,9 +128,9 @@ const ChatMessageItem = React.memo(
     return (
       <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
         <div
-          className={`flex items-end gap-3 max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}
+          className={`flex items-end gap-2 sm:gap-3 max-w-[95%] sm:max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}
         >
-          <Avatar size={"sm"} className="shrink-0 mb-1">
+          <Avatar size={"sm"} className="hidden sm:flex shrink-0 mb-1">
             {isUser ? (
               <>
                 {isUserLoggedIn && resolvedProfile?.avatar_url ? (

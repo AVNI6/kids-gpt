@@ -77,7 +77,7 @@ export default function NotificationsUpdates() {
   }
 
   return (
-    <Card className="rounded-[36px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm h-full flex flex-col overflow-hidden relative min-h-[280px]">
+    <Card className="rounded-[36px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm h-full flex flex-col overflow-hidden relative min-h-70">
       <div className="absolute top-0 right-0 p-8 opacity-[0.06]">
         <BellRing className="w-32 h-32 text-slate-900 dark:text-slate-100" />
       </div>
@@ -132,7 +132,7 @@ export default function NotificationsUpdates() {
                           {getRelativeTime(notif.created_at)}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed break-words">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed wrap-break-word">
                         {notif.message}
                       </p>
                     </div>

@@ -4,11 +4,10 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, Check, Trash2 } from "lucide-react";
-import { getRelativeTime } from "@/hooks/shared/timeUtils";
 import type { ClassroomNotification } from "@/types/classroom.types";
 import { usePagination } from "@/hooks/shared/use-pagination";
 import { useClassroomNotifications } from "@/hooks/shared/useClassroomNotifications";
-import { getNotifIcon, getNotifBg } from "@/utils/teacherNotificationHelpers";
+import NotificationCard from "@/components/shared/notifications/NotificationCard";
 
 export default function TeacherNotificationsSection() {
   const [pageState, setPageState] = useState(1);
@@ -94,82 +93,20 @@ export default function TeacherNotificationsSection() {
               </CardContent>
             </Card>
           ) : (
-            currentItems.map((notif: ClassroomNotification) => {
-              const icon = getNotifIcon(notif.type);
-              const bg = getNotifBg(notif.type);
-
-              return (
-                <Card
-                  key={notif.id}
-                  className={`rounded-[24px] border-slate-200/60 dark:border-slate-800/60 transition-colors shadow-sm hover:shadow-md ${
-                    !notif.is_read
-                      ? "bg-white dark:bg-slate-900/80 ring-1 ring-indigo-150 dark:ring-indigo-950/30"
-                      : "bg-slate-50/50 dark:bg-slate-900/40"
-                  }`}
-                >
-                  <CardContent className="p-6 flex gap-4 md:gap-6 items-start">
-                    <div
-                      className={`w-12 h-12 rounded-full ${bg} flex items-center justify-center shrink-0`}
-                    >
-                      {icon}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-1">
-                        <h3
-                          className={`text-base font-black ${
-                            !notif.is_read
-                              ? "text-slate-900 dark:text-white"
-                              : "text-slate-700 dark:text-slate-300"
-                          }`}
-                        >
-                          {notif.title}
-                        </h3>
-                        <div className="flex items-center gap-3 shrink-0 self-end sm:self-start">
-                          <span
-                            suppressHydrationWarning
-                            className="text-xs font-bold text-slate-400"
-                          >
-                            {getRelativeTime(notif.created_at)}
-                          </span>
-                          <div className="flex items-center gap-1.5 border-l border-slate-100 dark:border-slate-800 pl-3">
-                            {!notif.is_read && (
-                              <button
-                                onClick={() => markAsRead(notif.id)}
-                                title="Mark as read"
-                                className="p-1 rounded-lg text-slate-400 hover:text-indigo-650 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-none bg-transparent"
-                              >
-                                <Check className="w-4 h-4" />
-                              </button>
-                            )}
-                            <button
-                              onClick={() => deleteNotification(notif.id)}
-                              title="Delete notification"
-                              className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-none bg-transparent"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                      <p
-                        className={`text-sm leading-relaxed ${
-                          !notif.is_read
-                            ? "text-slate-600 dark:text-slate-300 font-semibold"
-                            : "text-slate-500 dark:text-slate-500"
-                        }`}
-                      >
-                        {notif.message}
-                      </p>
-                    </div>
-
-                    {!notif.is_read && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0 mt-2" />
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })
+            currentItems.map((notif: ClassroomNotification) => (
+              <NotificationCard
+                key={notif.id}
+                id={notif.id}
+                title={notif.title}
+                message={notif.message ?? ""}
+                created_at={notif.created_at}
+                is_read={notif.is_read}
+                type={notif.type}
+                role="teacher"
+                onMarkAsRead={markAsRead}
+                onDelete={deleteNotification}
+              />
+            ))
           )}
 
           {/* Pagination Controls */}

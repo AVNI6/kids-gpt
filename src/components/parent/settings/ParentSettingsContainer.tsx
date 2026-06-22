@@ -82,7 +82,7 @@ export default function ParentSettingsContainer({ profile }: ParentSettingsConta
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="overflow-x-auto p-1 pb-2 -mb-2 w-full">
-          <TabsList className="flex !h-auto p-1 bg-muted dark:bg-slate-900 rounded-full w-full">
+          <TabsList className="flex h-auto! p-1 bg-muted dark:bg-slate-900 rounded-full w-full">
             <TabsTrigger
               value="profile"
               className="flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0"

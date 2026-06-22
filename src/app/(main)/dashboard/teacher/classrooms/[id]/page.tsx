@@ -62,7 +62,7 @@ export default async function TeacherClassroomDetailsPage({
   const classroomId = resolvedParams.id;
 
   return (
-    <main className="min-h-full bg-background px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8 dark:text-slate-50">
+    <main className="min-h-full bg-background text-slate-900 dark:text-slate-50">
       <Suspense fallback={<ClassroomWorkspaceSkeleton />}>
         <WorkspaceLoader classroomId={classroomId} />
       </Suspense>

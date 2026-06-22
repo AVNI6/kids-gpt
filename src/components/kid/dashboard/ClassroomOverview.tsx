@@ -7,13 +7,8 @@ import {
   ArrowRight,
   Clock,
   LogOut,
-  BookOpen,
-  FolderOpen,
-  FileSpreadsheet,
-  Megaphone,
   School,
   Sparkles,
-  HelpCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -140,7 +135,7 @@ export default function ClassroomOverview({ memberships }: Props) {
         {/* 1. Learning Community Hero Section */}
         <Card className="rounded-[32px] overflow-hidden border-0 relative shadow-md bg-white dark:bg-slate-900 transition-colors duration-300">
           {/* Slate / Purple Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-100/40 via-violet-50/20 to-slate-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pointer-events-none" />
+          <div className="absolute inset-0 bg-linear-to-r from-slate-100/40 via-violet-50/20 to-slate-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pointer-events-none" />
 
           {/* Decorative Spheres */}
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-slate-200/10 dark:bg-slate-800/10 rounded-full blur-3xl pointer-events-none" />
@@ -225,7 +220,7 @@ export default function ClassroomOverview({ memberships }: Props) {
                         className="block group"
                       >
                         <Card className="h-full rounded-[32px] border-slate-200/50 dark:border-slate-800/50 bg-white dark:bg-slate-900/40 shadow-sm hover:shadow-md hover:border-indigo-150 transition-all duration-300 relative overflow-hidden flex flex-col justify-between cursor-pointer">
-                          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500" />
+                          <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-blue-500 to-indigo-500" />
 
                           <CardContent className="p-6 pt-8 space-y-4">
                             <div className="flex items-start justify-between gap-3">
@@ -274,7 +269,7 @@ export default function ClassroomOverview({ memberships }: Props) {
                             <div className="flex items-center gap-3 pt-2">
                               <Avatar className="h-9 w-9 border border-slate-100 dark:border-slate-800 shadow-sm shrink-0">
                                 <AvatarImage src={cls.teacher?.avatar_url ?? undefined} />
-                                <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-indigo-600 text-white font-bold text-xs">
+                                <AvatarFallback className="bg-linear-to-br from-indigo-400 to-indigo-600 text-white font-bold text-xs">
                                   {getInitials(cls.teacher?.first_name, cls.teacher?.last_name)}
                                 </AvatarFallback>
                               </Avatar>

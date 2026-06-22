@@ -247,7 +247,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
             if (!open && !isLoading) setDeleteClassroomTarget(null);
           }}
         >
-          <AlertDialogContent className="sm:max-w-[400px] rounded-[24px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl">
+          <AlertDialogContent className="sm:max-w-100 rounded-[24px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-xl font-black text-slate-900 dark:text-white">
                 Delete Classroom?
@@ -332,7 +332,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                 className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md hover:border-indigo-200/80 dark:hover:border-slate-700 transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
               >
                 {/* Visual indicator top border */}
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 to-sky-500" />
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-indigo-500 to-sky-500" />
 
                 <CardContent className="p-6 md:p-7 pt-8 flex flex-col gap-5 h-full justify-between">
                   <div className="space-y-4">
@@ -439,7 +439,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                           Class Code
                         </span>
-                        <p className="text-md font-black text-slate-900 dark:text-white tracking-widest font-bold truncate">
+                        <p className="text-md text-slate-900 dark:text-white tracking-widest font-bold truncate">
                           {cls.class_code}
                         </p>
                       </div>
@@ -485,7 +485,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         }
                         router.push(`/dashboard/teacher/classrooms/${cls.id}`);
                       }}
-                      className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 text-white dark:text-slate-950 font-bold h-11 flex items-center justify-center text-sm transition-colors cursor-pointer"
+                      className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-950 font-bold h-11 flex items-center justify-center text-sm transition-colors cursor-pointer"
                     >
                       Open Workspace
                     </Button>

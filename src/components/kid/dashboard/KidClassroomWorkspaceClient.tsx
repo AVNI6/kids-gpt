@@ -14,7 +14,6 @@ import {
   Award,
   School,
   Trophy,
-  Image as ImageIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -234,7 +233,7 @@ export default function KidClassroomWorkspaceClient({
       {/* Tab Controls */}
       <div className="w-full bg-muted dark:bg-slate-900 rounded-full px-1 overflow-hidden">
         <div className="overflow-x-auto scrollbar-none w-full">
-          <div className="flex !h-auto min-w-full w-max my-1">
+          <div className="flex h-auto! min-w-full w-max my-1">
             {[
               { id: "overview", label: "Overview", icon: School },
               { id: "assignments", label: "Assignments", icon: BookOpen, count: getPendingCount() },
@@ -253,7 +252,7 @@ export default function KidClassroomWorkspaceClient({
                   }
                   className={`flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 transition-all select-none whitespace-nowrap shrink-0 border-none bg-transparent ${
                     active
-                      ? "bg-background bg-white text-foreground dark:bg-input/50 shadow-sm"
+                      ? "bg-background text-foreground dark:bg-input/50 shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -284,7 +283,7 @@ export default function KidClassroomWorkspaceClient({
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16 border-2 border-indigo-100 shadow-sm shrink-0 dark:border-slate-850">
                     <AvatarImage src={classroom.teacher?.avatar_url ?? undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-indigo-650 text-white font-extrabold text-lg">
+                    <AvatarFallback className="bg-linear-to-br from-indigo-400 to-indigo-650 text-white font-extrabold text-lg">
                       {getInitials(classroom.teacher?.first_name, classroom.teacher?.last_name)}
                     </AvatarFallback>
                   </Avatar>

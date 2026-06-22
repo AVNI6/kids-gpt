@@ -5,10 +5,6 @@ import {
   PlusCircle,
   FolderOpen,
   FileText,
-  Video,
-  LinkIcon,
-  Image as ImageIcon,
-  FileArchive,
   ExternalLink,
   Trash2,
   Upload,
@@ -373,7 +369,7 @@ export default function ClassroomResourcesTab({
                     <div className="mt-4 w-full bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-100/50 dark:border-emerald-900/40 rounded-xl p-2.5 flex items-center justify-between text-left">
                       <div className="flex items-center gap-2 min-w-0">
                         <FileText className="h-4 w-4 text-emerald-650 shrink-0" />
-                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[200px]">
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-50">
                           {resUrl.substring(resUrl.lastIndexOf("/") + 1)}
                         </span>
                       </div>

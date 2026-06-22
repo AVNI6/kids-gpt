@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -247,7 +246,7 @@ export default function TeacherClassroomWorkspaceClient({
       {/* Tab Controls (driven by Next.js router query param/href via TabsList) */}
       <div className="w-full bg-muted dark:bg-slate-900 rounded-full px-1.5 overflow-hidden">
         <div className="overflow-x-auto overflow-y-hidden scrollbar-none w-full">
-          <TabsList className="flex items-center !h-auto p-0 bg-transparent dark:bg-transparent rounded-none min-w-full my-1 w-max">
+          <TabsList className="flex items-center h-auto! p-0 bg-transparent dark:bg-transparent rounded-none min-w-full my-1 w-max">
             {[
               { id: "assignments", label: "Assignments", icon: BookOpen },
               { id: "resources", label: "Resources", icon: FolderOpen },

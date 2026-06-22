@@ -5,19 +5,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Bell,
-  AlertTriangle,
-  Trophy,
-  BookOpen,
-  CheckCircle2,
-  Check,
-  Clock,
-  Trash2,
-} from "lucide-react";
+import NotificationCard from "@/components/shared/notifications/NotificationCard";
+import { Bell, Check, Trash2 } from "lucide-react";
 import { useNotifications } from "@/hooks/parent/useNotifications";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
-import { getRelativeTime } from "@/hooks/shared/timeUtils";
 import type { NotificationItem } from "@/types/parent";
 import { usePagination } from "@/hooks/shared/use-pagination";
 
@@ -30,7 +21,6 @@ export default function NotificationsSection() {
   const {
     markAsRead,
     markAllAsRead,
-    deleteNotification,
     deleteAllNotifications,
   } = useNotifications();
 
@@ -134,7 +124,7 @@ export default function NotificationsSection() {
         };
       }
     );
-    await deleteNotification(id);
+    await handleDelete(id);
     // Invalidate after delete — total count and page structure changed
     queryClient.invalidateQueries({ queryKey: ["parent-dashboard", "notifications-paginated"] });
     queryClient.invalidateQueries({ queryKey: ["parent-dashboard", "notifications"] });
@@ -143,14 +133,14 @@ export default function NotificationsSection() {
   const handleDeleteAll = async () => {
     queryClient.setQueryData(
       ["parent-dashboard", "notifications-paginated", profile.user_id, pageState, pageSize],
-      (_old: { items: NotificationItem[]; totalCount: number } | undefined) => ({
+      () => ({
         items: [],
         totalCount: 0,
       })
     );
     queryClient.setQueryData(
       ["parent-dashboard", "notifications"],
-      (_old: { items: NotificationItem[]; unreadCount: number } | undefined) => ({
+      () => ({
         items: [],
         unreadCount: 0,
       })
@@ -223,87 +213,20 @@ export default function NotificationsSection() {
                 </CardContent>
               </Card>
             ) : (
-              currentItems.map((notif: NotificationItem) => {
-                let icon = <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
-                let bg = "bg-emerald-100 dark:bg-emerald-900/50";
-
-                if (notif.type === "safety_alert") {
-                  icon = <AlertTriangle className="w-5 h-5 text-rose-500" />;
-                  bg = "bg-rose-100 dark:bg-rose-900/50";
-                } else if (notif.type === "SCREEN_TIME_LIMIT") {
-                  icon = <Clock className="w-5 h-5 text-rose-500" />;
-                  bg = "bg-rose-100 dark:bg-rose-900/50";
-                } else if (notif.type === "quiz_completed") {
-                  icon = <BookOpen className="w-5 h-5 text-purple-500" />;
-                  bg = "bg-purple-100 dark:bg-purple-900/50";
-                } else if (notif.type === "streak_milestone" || notif.type === "milestone") {
-                  icon = <Trophy className="w-5 h-5 text-amber-500" />;
-                  bg = "bg-amber-100 dark:bg-amber-900/50";
-                }
-
-                return (
-                  <Card
-                    key={notif.id}
-                    className={`rounded-[24px] border-slate-200/60 dark:border-slate-800/60 transition-colors shadow-sm hover:shadow-md ${
-                      !notif.is_read
-                        ? "bg-white dark:bg-slate-900/80 ring-1 ring-purple-100 dark:ring-purple-950/30"
-                        : "bg-slate-50/50 dark:bg-slate-900/40"
-                    }`}
-                  >
-                    <CardContent className="p-6 flex gap-4 md:gap-6 items-start">
-                      <div
-                        className={`relative w-12 h-12 rounded-full ${bg} flex items-center justify-center shrink-0`}
-                      >
-                        {icon}
-                        {!notif.is_read && (
-                          <div className="absolute -top-0.5 -right-0.5 z-10 w-3 h-3 rounded-full bg-purple-500 ring-2 ring-white dark:ring-slate-900 shrink-0" />
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-1">
-                          <h3
-                            className={`text-base font-black ${!notif.is_read ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-300"}`}
-                          >
-                            {notif.title}
-                          </h3>
-                          <div className="flex items-center gap-3 shrink-0 self-end sm:self-start">
-                            <span
-                              suppressHydrationWarning
-                              className="text-xs font-bold text-slate-400"
-                            >
-                              {getRelativeTime(notif.created_at)}
-                            </span>
-                            <div className="flex items-center gap-1.5 border-l border-slate-100 dark:border-slate-800 pl-3">
-                              {!notif.is_read && (
-                                <button
-                                  onClick={() => handleMarkAsRead(notif.id)}
-                                  title="Mark as read"
-                                  className="p-1 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-none bg-transparent"
-                                >
-                                  <Check className="w-4 h-4" />
-                                </button>
-                              )}
-                              <button
-                                onClick={() => handleDelete(notif.id)}
-                                title="Delete notification"
-                                className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-none bg-transparent"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        <p
-                          className={`text-sm leading-relaxed ${!notif.is_read ? "text-slate-600 dark:text-slate-300 font-semibold" : "text-slate-500 dark:text-slate-500"}`}
-                        >
-                          {notif.message}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
+              currentItems.map((notif: NotificationItem) => (
+                <NotificationCard
+                  key={notif.id}
+                  id={notif.id}
+                  title={notif.title}
+                  message={notif.message ?? ""}
+                  created_at={notif.created_at ?? ""}
+                  is_read={notif.is_read}
+                  type={notif.type}
+                  role="parent"
+                  onMarkAsRead={handleMarkAsRead}
+                  onDelete={handleDelete}
+                />
+              ))
             )}
           </div>
 
