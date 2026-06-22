@@ -61,7 +61,7 @@ export default function ActivitiesPage() {
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
-              className="md:hidden h-12 w-12 rounded-2xl border-2 border-border bg-card hover:bg-accent hover:border-sky-500/30 text-foreground shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
+              className="md:hidden h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl border-2 border-border bg-card hover:bg-accent hover:border-sky-500/30 text-foreground shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
               aria-label="Go back"
             >
               <ArrowLeft className="w-6 h-6" />

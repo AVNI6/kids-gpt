@@ -133,16 +133,18 @@ export default function DashboardNavbarBase({
               )}
 
               {/* Mobile Navigation Drawer Toggle */}
-              <button
-                className={cn(
-                  "lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 cursor-pointer",
-                  toggleSidebarRing
-                )}
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label="Toggle navigation menu"
-              >
-                <Menu className="size-5" />
-              </button>
+              {pathname.startsWith("/dashboard") && navItems && navItems.length > 0 && (
+                <button
+                  className={cn(
+                    "lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 cursor-pointer",
+                    toggleSidebarRing
+                  )}
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label="Toggle navigation menu"
+                >
+                  <Menu className="size-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
