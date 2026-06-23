@@ -302,6 +302,20 @@ export async function handleEnrollmentRequest(memberLinkId: string, action: "APP
       return { success: false, error: updateError.message };
     }
 
+    if (action === "APPROVE") {
+      // Establish direct teacher-student link for other permissions/activities
+      const { error: linkError } = await supabase
+        .from("teacher_student_links")
+        .insert({
+          teacher_user_id: classroomData.teacher_user_id,
+          student_user_id: memberRequest.student_user_id,
+        });
+
+      if (linkError && linkError.code !== "23505") {
+        console.error("[handleEnrollmentRequest] Failed to insert teacher_student_link:", linkError);
+      }
+    }
+
     // Send a secure notification to the student
     await supabase.from("notifications").insert({
       recipient_user_id: memberRequest.student_user_id,

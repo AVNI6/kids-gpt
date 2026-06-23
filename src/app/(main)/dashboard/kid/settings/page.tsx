@@ -22,7 +22,7 @@ async function SettingsContent() {
 export default function KidSettingsPage() {
   return (
     <main>
-      <div className="max-w-400">
+      <div className="max-w-400 mx-auto">
         <Suspense fallback={<ProfileSettingsSkeleton />}>
           <SettingsContent />
         </Suspense>

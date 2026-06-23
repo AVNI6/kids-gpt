@@ -57,7 +57,7 @@ export default function ChatInterface() {
         const supabase = createClient();
         const { data: sessionData, error: sessionError } = await supabase
           .from("chat_sessions")
-          .select("user_id, profile:profile(*)")
+          .select("user_id, profile:profile(first_name, last_name, avatar_url, role)")
           .eq("id", currentSessionId)
           .maybeSingle();
 

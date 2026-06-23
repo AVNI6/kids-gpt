@@ -62,49 +62,35 @@ export async function logScreenTimeSession(
   timezone: string = "Asia/Kolkata"
 ): Promise<{ success: boolean; error?: string | null }> {
   try {
-    const { userId, role } = await getAuthenticatedUser();
     const supabase = await createClient();
-
-    let targetChildId = childId;
-
-    if (role === "kid") {
-      targetChildId = userId;
-    } else if (role === "parent") {
-      // Verify parent connection
-      const { data: link, error: linkError } = await supabase
-        .from("parent_child_link")
-        .select("id")
-        .eq("parent_user_id", userId)
-        .eq("child_user_id", childId)
-        .eq("is_active", true)
-        .eq("is_approved", true)
-        .is("deleted_at", null)
-        .maybeSingle();
-
-      if (linkError || !link) {
-        return { success: false, error: "Access denied. Parent is not connected to this child." };
-      }
-    } else {
-      return { success: false, error: "Only kids or parents can update screen time." };
-    }
 
     // Capture local date string using getLocalDateString
     const todayStr = getLocalDateString(new Date(), timezone);
 
     // Call atomic PostgreSQL function increment_screen_time
+    // The database RPC verifies permissions natively using auth.uid() and current profile role.
+    const startTime = Date.now();
     const { error: rpcError } = await supabase.rpc("increment_screen_time", {
-      p_child_id: targetChildId,
+      p_child_id: childId,
       p_date: todayStr,
       p_seconds: activeSeconds,
     });
+    const duration = Date.now() - startTime;
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(
+        `[logScreenTimeSession] Dev Monitor - Syncing ${activeSeconds}s for child ${childId}. RPC took ${duration}ms.`
+      );
+      if (rpcError) {
+        console.error(`[logScreenTimeSession] Dev Monitor - RPC Failure:`, rpcError);
+      }
+    }
 
     if (rpcError) {
       console.error("[logScreenTimeSession] Postgres RPC Error:", rpcError);
       return { success: false, error: rpcError.message };
     }
 
-    // FIXED: Removed revalidatePath to prevent heavy Next.js
-    // Server Component re-renders every 15 seconds.
     return { success: true };
   } catch (err) {
     return {
@@ -123,9 +109,7 @@ export async function getDailyScreenTime(
   timezone: string = "Asia/Kolkata"
 ): Promise<ScreenTimeData> {
   try {
-    // 1. Recover any stale/ghost sessions to flush their duration before querying totals
-    await recoverStaleSessions();
-
+    // 1. Read-only path: Stale session recovery has been decoupled from user read operations.
     const { userId, role } = await getAuthenticatedUser();
     const supabase = await createClient();
 
@@ -535,43 +519,19 @@ export async function recoverStaleSessions(): Promise<{
   try {
     const supabase = await createClient();
 
-    // Find ACTIVE sessions where last_seen_at is older than 2 minutes
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-    const { data: staleSessions, error: queryError } = await supabase
-      .from("screen_time_sessions")
-      .select("id, last_seen_at")
-      .eq("status", "ACTIVE")
-      .lt("last_seen_at", twoMinutesAgo);
+    // Invoke the single-query database RPC to bulk-complete stale sessions (eliminates N+1 loops)
+    const { data: count, error: rpcError } = await supabase.rpc("recover_stale_screen_time_sessions");
 
-    if (queryError) {
-      console.error("[recoverStaleSessions] Query error:", queryError);
-      return { success: false, error: queryError.message };
+    if (rpcError) {
+      console.error("[recoverStaleSessions] RPC Error:", rpcError);
+      return { success: false, error: rpcError.message };
     }
 
-    if (!staleSessions || staleSessions.length === 0) {
-      return { success: true, recoveredCount: 0 };
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[recoverStaleSessions] Dev Monitor - Stale sessions recovered: ${count}`);
     }
 
-    const updatePromises = staleSessions.map(async (session) => {
-      const { error: updateError } = await supabase
-        .from("screen_time_sessions")
-        .update({
-          ended_at: session.last_seen_at,
-          status: "COMPLETED",
-        })
-        .eq("id", session.id);
-
-      if (updateError) {
-        console.error(`[recoverStaleSessions] Failed to close session ${session.id}:`, updateError);
-        return false;
-      }
-      return true;
-    });
-
-    const results = await Promise.all(updatePromises);
-    const count = results.filter(Boolean).length;
-
-    return { success: true, recoveredCount: count };
+    return { success: true, recoveredCount: count ?? 0 };
   } catch (err) {
     console.error("[recoverStaleSessions] Exception:", err);
     return { success: false, error: err instanceof Error ? err.message : String(err) };

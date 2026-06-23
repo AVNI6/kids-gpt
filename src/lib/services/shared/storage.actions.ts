@@ -1,5 +1,6 @@
 "use server";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export type SignedUrlResult =
@@ -104,15 +105,38 @@ export async function getSignedResourceUrl(filePath: string): Promise<SignedUrlR
     }
 
     // 4. Kid can access classroom teacher's uploads
+    // Use admin client to bypass RLS — same pattern as getStudentClassroomWorkspace.
     if (role === "kid") {
-      const { data: isTeacher } = await supabase
+      const adminClient = createAdminClient();
+
+      // Check direct teacher_student_links first
+      const { data: directLink } = await adminClient
         .from("teacher_student_links")
         .select("id")
         .eq("teacher_user_id", fileOwnerId)
         .eq("student_user_id", user.id)
         .maybeSingle();
 
-      if (isTeacher) {
+      let hasAccess = !!directLink;
+
+      if (!hasAccess) {
+        // Use the SECURITY DEFINER DB function — checks if the kid is an
+        // APPROVED student of the teacher via any classroom (bypasses all RLS)
+        const { data: isApprovedStudent, error: rpcError } = await adminClient.rpc(
+          "is_approved_classroom_student_of_teacher",
+          { p_student_id: user.id, p_teacher_id: fileOwnerId }
+        );
+
+        if (rpcError) {
+          console.error("getSignedResourceUrl: RPC error during kid access check:", rpcError);
+        }
+
+        if (isApprovedStudent === true) {
+          hasAccess = true;
+        }
+      }
+
+      if (hasAccess) {
         const { data, error } = await supabase.storage
           .from("materials")
           .createSignedUrl(cleanPath, 900, { download: false });

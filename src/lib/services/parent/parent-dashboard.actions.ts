@@ -1100,11 +1100,7 @@ export async function getChildComprehensiveData(childUserId: string): Promise<Ca
   const { userId: parentId } = await verifyUserRole("parent");
   const supabase = await createClient();
 
-  // Fire-and-forget stale session recovery in the background (no transaction blocking)
-  recoverStaleSessions().catch((err) => {
-    console.error("[getChildComprehensiveData] Stale session recovery error:", err);
-  });
-
+  // Read-only path: Stale session recovery has been decoupled from parent dashboard loads.
   try {
     const { data: rpcData, error: rpcError } = await supabase.rpc("get_child_comprehensive_data", {
       p_parent_id: parentId,

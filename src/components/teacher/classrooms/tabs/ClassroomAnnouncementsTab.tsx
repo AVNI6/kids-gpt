@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { createAnnouncement } from "@/lib/services/kid/classroom.actions";
 import type { ClassroomAnnouncement } from "@/types/classroom.types";
 
@@ -85,8 +86,8 @@ export default function ClassroomAnnouncementsTab({
               </Button>
             }
           />
-          <DialogContent className=" rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
-            <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
+          <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] flex flex-col">
+            <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4 shrink-0">
               <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight">
                 Post Announcement
               </DialogTitle>
@@ -95,42 +96,46 @@ export default function ClassroomAnnouncementsTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCreateAnnouncement} className="space-y-4 py-6 px-6">
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="annTitle"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Subject / Title*
-                </Label>
-                <Input
-                  id="annTitle"
-                  value={annTitle}
-                  onChange={(e) => setAnnTitle(e.target.value)}
-                  required
-                  placeholder="e.g. Science Lab Rescheduled"
-                  className="rounded-xl h-11 text-sm font-semibold"
-                />
-              </div>
+            <form onSubmit={handleCreateAnnouncement} className="flex-1 min-h-0 flex flex-col">
+              <ScrollArea className="flex-1 h-full max-h-[50vh] sm:max-h-[60vh]">
+                <div className="space-y-4 px-5 pb-4">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="annTitle"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Subject / Title*
+                    </Label>
+                    <Input
+                      id="annTitle"
+                      value={annTitle}
+                      onChange={(e) => setAnnTitle(e.target.value)}
+                      required
+                      placeholder="e.g. Science Lab Rescheduled"
+                      className="rounded-xl h-11 text-sm font-semibold"
+                    />
+                  </div>
 
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="annMessage"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Announcement Message*
-                </Label>
-                <textarea
-                  id="annMessage"
-                  value={annMessage}
-                  onChange={(e) => setAnnMessage(e.target.value)}
-                  required
-                  placeholder="Write your note to the class here..."
-                  className="rounded-xl w-full border border-slate-200 dark:border-slate-800 p-3 bg-background text-xs font-semibold focus:border-indigo-500 focus:ring-0 resize-none h-28"
-                />
-              </div>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="annMessage"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Announcement Message*
+                    </Label>
+                    <textarea
+                      id="annMessage"
+                      value={annMessage}
+                      onChange={(e) => setAnnMessage(e.target.value)}
+                      required
+                      placeholder="Write your note to the class here..."
+                      className="rounded-xl w-full border border-slate-200 dark:border-slate-800 p-3 bg-background text-xs font-semibold focus:border-indigo-500 focus:ring-0 resize-none h-28"
+                    />
+                  </div>
+                </div>
+              </ScrollArea>
 
-              <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 -mx-6 -mb-6 flex gap-2 rounded-b-[32px]">
+              <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 mx-0 mb-0 flex gap-2 rounded-b-[32px] shrink-0">
                 <Button
                   type="button"
                   variant="outline"

@@ -21,13 +21,31 @@ interface DashboardNavbarProps {
   role: "kid" | "parent" | "teacher";
 }
 
+let pendingAssignmentsPromise: Promise<number> | null = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 8000; // 8 seconds cache window
+
+function getKidPendingAssignmentsCountCached(): Promise<number> {
+  const now = Date.now();
+  if (pendingAssignmentsPromise && now - lastFetchTime < CACHE_DURATION) {
+    return pendingAssignmentsPromise;
+  }
+
+  lastFetchTime = now;
+  pendingAssignmentsPromise = getKidPendingAssignmentsCount().catch((err) => {
+    pendingAssignmentsPromise = null;
+    throw err;
+  });
+  return pendingAssignmentsPromise;
+}
+
 function KidNavbarWrapper({ pathname }: { pathname: string }) {
   const [dueCount, setDueCount] = useState(0);
   const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } =
     useClassroomNotifications("kid", { limit: 10 });
 
   useEffect(() => {
-    getKidPendingAssignmentsCount().then(setDueCount);
+    getKidPendingAssignmentsCountCached().then(setDueCount);
   }, [pathname]);
 
   const isLinkActive = (item: NavItemConfig) => {

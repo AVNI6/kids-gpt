@@ -45,7 +45,7 @@ export default function SearchChatModal({
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
         <DialogOverlay />
-        <DialogPrimitive.Popup className="fixed top-1/2 left-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-card border border-sidebar-border shadow-2xl overflow-hidden outline-none duration-100 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95">
+        <DialogPrimitive.Popup className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] sm:w-full max-w-[calc(100%-2rem)] sm:max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-card border border-sidebar-border shadow-2xl overflow-hidden outline-none duration-100 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95">
           <DialogTitle className="sr-only">Search Chats</DialogTitle>
 
           {/* Search Input */}

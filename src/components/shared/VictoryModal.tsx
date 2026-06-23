@@ -42,6 +42,8 @@ interface VictoryModalProps {
   gameStartedAt?: number;
 }
 
+const claimedActivitiesSet = new Set<string>();
+
 export default function VictoryModal({
   isOpen,
   onReplay,
@@ -72,8 +74,18 @@ export default function VictoryModal({
   // Background Auto-Claim XP Trigger
   useEffect(() => {
     if (isOpen && !claimCompleted && !isClaiming && !hasClaimed.current) {
+      const claimKey = assignmentId
+        ? `assignment_${assignmentId}`
+        : `activity_${activitySlug}_${memoryMatchWorldId ?? ""}_${memoryMatchStepNumber ?? ""}_${jigsawGridSize ?? ""}_${jigsawThemeName ?? ""}_${score ?? ""}`;
+
+      if (claimedActivitiesSet.has(claimKey)) {
+        setClaimCompleted(true);
+        return;
+      }
+
       hasClaimed.current = true;
       setIsClaiming(true);
+      claimedActivitiesSet.add(claimKey);
 
       const triggerAutoClaim = async () => {
         try {
