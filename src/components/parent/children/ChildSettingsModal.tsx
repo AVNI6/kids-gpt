@@ -49,7 +49,7 @@ export default function ChildSettingsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className=" sm:w-full max-w-[calc(100%-2rem)]  p-0 overflow-hidden rounded-[32px] border border-slate-200 dark:border-background bg-white dark:bg-slate-900 shadow-2xl h-150 sm:h-140 flex flex-col sm:flex-row">
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-[calc(100%-2rem)] sm:max-w-212.5 p-0 overflow-hidden rounded-[32px] border border-slate-200 dark:border-background bg-white dark:bg-slate-900 shadow-2xl h-150 sm:h-140 flex flex-col sm:flex-row">
         {/* Left Side Tab Navigation Panel */}
         <div className="w-full sm:w-60 bg-slate-50/70 dark:bg-black/20 border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-slate-800/80 p-5 flex flex-col shrink-0">
           <div className="flex items-center gap-2 mb-6 px-1">

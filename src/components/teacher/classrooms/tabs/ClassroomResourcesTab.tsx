@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { uploadResource } from "@/lib/services/kid/classroom.actions";
 import { uploadChatAttachment } from "@/lib/storage/attachments";
 import { createClient } from "@/lib/supabase/client";
@@ -247,9 +248,8 @@ export default function ClassroomResourcesTab({
                 Upload Resource
               </Button>
             }
-          />
-          <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
-            <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
+          />          <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] flex flex-col">
+            <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4 shrink-0">
               <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight">
                 Upload Resource
               </DialogTitle>
@@ -258,188 +258,192 @@ export default function ClassroomResourcesTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleUploadResource} className="space-y-4 py-6 px-6">
-              {/* Method Switcher */}
-              <div className="flex gap-2 bg-slate-100 dark:bg-slate-950/40 p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUploadMethod("FILE");
-                    setResUrl("");
-                    setResStoragePath("");
-                  }}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-black rounded-xl cursor-pointer transition-all",
-                    uploadMethod === "FILE"
-                      ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-350"
-                  )}
-                >
-                  <Upload className="h-3.5 w-3.5" />
-                  <span>Upload File</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUploadMethod("LINK");
-                    setResUrl("");
-                    setResStoragePath("");
-                  }}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-black rounded-xl cursor-pointer transition-all",
-                    uploadMethod === "LINK"
-                      ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-350"
-                  )}
-                >
-                  <LinkSymbol className="h-3.5 w-3.5" />
-                  <span>Share URL Link</span>
-                </button>
-              </div>
-
-              {/* Title */}
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="resTitle"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Resource Title*
-                </Label>
-                <Input
-                  id="resTitle"
-                  value={resTitle}
-                  onChange={(e) => setResTitle(e.target.value)}
-                  required
-                  placeholder="e.g. Solar System Chart"
-                  className="rounded-xl h-11 text-sm font-semibold"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="resDesc"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Description
-                </Label>
-                <Input
-                  id="resDesc"
-                  value={resDesc}
-                  onChange={(e) => setResDesc(e.target.value)}
-                  placeholder="Provide short details about the file..."
-                  className="rounded-xl h-11 text-sm font-semibold"
-                />
-              </div>
-
-              {/* Dynamic Action Selector based on uploadMethod */}
-              {uploadMethod === "FILE" ? (
-                <div className="space-y-2 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-950/20 relative">
-                  {isUploadingFile ? (
-                    <div className="flex flex-col items-center justify-center gap-2 py-2">
-                      <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                      <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
-                        Uploading file...
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="h-10 w-10 bg-indigo-50 dark:bg-slate-800 text-indigo-550 dark:text-indigo-400 rounded-full flex items-center justify-center mb-2">
-                        <Upload className="h-5 w-5" />
-                      </div>
-                      <div className="text-xs text-slate-650 dark:text-slate-350">
-                        <span className="font-black text-indigo-600 dark:text-indigo-400">
-                          Click to upload
-                        </span>{" "}
-                        or drag document here
-                      </div>
-                      <p className="text-[10px] text-slate-400 mt-1 font-semibold">
-                        PDF, Word, Images, or Documents (Max 50MB)
-                      </p>
-
-                      <input
-                        type="file"
-                        onChange={handleFileChange}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        accept="image/*,image/svg+xml,.svg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
-                      />
-                    </>
-                  )}
-                  {resUrl && (
-                    <div className="mt-4 w-full bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-100/50 dark:border-emerald-900/40 rounded-xl p-2.5 flex items-center justify-between text-left">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <FileText className="h-4 w-4 text-emerald-650 shrink-0" />
-                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-50">
-                          {resUrl.substring(resUrl.lastIndexOf("/") + 1)}
-                        </span>
-                      </div>
-                      <span className="text-[9px] bg-emerald-100/50 text-emerald-700 px-2 py-0.5 rounded-md font-black">
-                        READY
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label
-                        htmlFor="resType"
-                        className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                      >
-                        Resource Type
-                      </Label>
-                      <Select value={resType} onValueChange={(val) => setResType(val || "")}>
-                        <SelectTrigger className="w-full rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-850 px-3.5 h-11 bg-background text-sm font-semibold focus:border-indigo-500 focus:ring-0">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="PDF">PDF File</SelectItem>
-                          <SelectItem value="VIDEO">Video Link</SelectItem>
-                          <SelectItem value="LINK">Website Link</SelectItem>
-                          <SelectItem value="DOCUMENT">Document</SelectItem>
-                          <SelectItem value="WORD">Word Document</SelectItem>
-                          <SelectItem value="IMAGE">Image File</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label
-                        htmlFor="resStoragePath"
-                        className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                      >
-                        Storage Path (Optional)
-                      </Label>
-                      <Input
-                        id="resStoragePath"
-                        value={resStoragePath}
-                        onChange={(e) => setResStoragePath(e.target.value)}
-                        placeholder="Storage key..."
-                        className="rounded-xl h-11 text-sm font-semibold"
-                      />
-                    </div>
+            <form onSubmit={handleUploadResource} className="flex-1 min-h-0 flex flex-col">
+              <ScrollArea className="flex-1 h-full max-h-[50vh] sm:max-h-[60vh]">
+                <div className="space-y-4 px-5 pb-4">
+                  {/* Method Switcher */}
+                  <div className="flex gap-2 bg-slate-100 dark:bg-slate-950/40 p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUploadMethod("FILE");
+                        setResUrl("");
+                        setResStoragePath("");
+                      }}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-black rounded-xl cursor-pointer transition-all",
+                        uploadMethod === "FILE"
+                          ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-350"
+                      )}
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      <span>Upload File</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUploadMethod("LINK");
+                        setResUrl("");
+                        setResStoragePath("");
+                      }}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-black rounded-xl cursor-pointer transition-all",
+                        uploadMethod === "LINK"
+                          ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-350"
+                      )}
+                    >
+                      <LinkSymbol className="h-3.5 w-3.5" />
+                      <span>Share URL Link</span>
+                    </button>
                   </div>
 
+                  {/* Title */}
                   <div className="space-y-1.5">
                     <Label
-                      htmlFor="resUrl"
-                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                      htmlFor="resTitle"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-350 ml-1"
                     >
-                      Resource URL / Link*
+                      Resource Title*
                     </Label>
                     <Input
-                      id="resUrl"
-                      value={resUrl}
-                      onChange={(e) => setResUrl(e.target.value)}
+                      id="resTitle"
+                      value={resTitle}
+                      onChange={(e) => setResTitle(e.target.value)}
                       required
-                      placeholder="https://example.com/file"
+                      placeholder="e.g. Solar System Chart"
                       className="rounded-xl h-11 text-sm font-semibold"
                     />
                   </div>
-                </div>
-              )}
 
-              <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 -mx-6 -mb-6 flex gap-2 rounded-b-[32px]">
+                  {/* Description */}
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="resDesc"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Description
+                    </Label>
+                    <Input
+                      id="resDesc"
+                      value={resDesc}
+                      onChange={(e) => setResDesc(e.target.value)}
+                      placeholder="Provide short details about the file..."
+                      className="rounded-xl h-11 text-sm font-semibold"
+                    />
+                  </div>
+
+                  {/* Dynamic Action Selector based on uploadMethod */}
+                  {uploadMethod === "FILE" ? (
+                    <div className="space-y-2 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-950/20 relative">
+                      {isUploadingFile ? (
+                        <div className="flex flex-col items-center justify-center gap-2 py-2">
+                          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                          <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                            Uploading file...
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="h-10 w-10 bg-indigo-50 dark:bg-slate-800 text-indigo-555 dark:text-indigo-400 rounded-full flex items-center justify-center mb-2">
+                            <Upload className="h-5 w-5" />
+                          </div>
+                          <div className="text-xs text-slate-650 dark:text-slate-350">
+                            <span className="font-black text-indigo-600 dark:text-indigo-400">
+                              Click to upload
+                            </span>{" "}
+                            or drag document here
+                          </div>
+                          <p className="text-[10px] text-slate-400 mt-1 font-semibold">
+                            PDF, Word, Images, or Documents (Max 50MB)
+                          </p>
+
+                          <input
+                            type="file"
+                            onChange={handleFileChange}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            accept="image/*,image/svg+xml,.svg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                          />
+                        </>
+                      )}
+                      {resUrl && (
+                        <div className="mt-4 w-full bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-100/50 dark:border-emerald-900/40 rounded-xl p-2.5 flex items-center justify-between text-left">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileText className="h-4 w-4 text-emerald-650 shrink-0" />
+                            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[200px]">
+                              {resUrl.substring(resUrl.lastIndexOf("/") + 1)}
+                            </span>
+                          </div>
+                          <span className="text-[9px] bg-emerald-100/50 text-emerald-700 px-2 py-0.5 rounded-md font-black">
+                            READY
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="resType"
+                            className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                          >
+                            Resource Type
+                          </Label>
+                          <Select value={resType} onValueChange={(val) => setResType(val || "")}>
+                            <SelectTrigger className="w-full rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-850 px-3.5 h-11 bg-background text-sm font-semibold focus:border-indigo-500 focus:ring-0">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="PDF">PDF File</SelectItem>
+                              <SelectItem value="VIDEO">Video Link</SelectItem>
+                              <SelectItem value="LINK">Website Link</SelectItem>
+                              <SelectItem value="DOCUMENT">Document</SelectItem>
+                              <SelectItem value="WORD">Word Document</SelectItem>
+                              <SelectItem value="IMAGE">Image File</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="resStoragePath"
+                            className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                          >
+                            Storage Path (Optional)
+                          </Label>
+                          <Input
+                            id="resStoragePath"
+                            value={resStoragePath}
+                            onChange={(e) => setResStoragePath(e.target.value)}
+                            placeholder="Storage key..."
+                            className="rounded-xl h-11 text-sm font-semibold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label
+                          htmlFor="resUrl"
+                          className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                        >
+                          Resource URL / Link*
+                        </Label>
+                        <Input
+                          id="resUrl"
+                          value={resUrl}
+                          onChange={(e) => setResUrl(e.target.value)}
+                          required
+                          placeholder="https://example.com/file"
+                          className="rounded-xl h-11 text-sm font-semibold"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+
+              <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 mx-0 mb-0 flex gap-2 rounded-b-[32px] shrink-0">
                 <Button
                   type="button"
                   variant="outline"
