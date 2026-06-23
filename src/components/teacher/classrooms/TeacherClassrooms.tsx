@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { Classroom } from "@/types/classroom.types";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface EnrichedClassroom extends Classroom {
   students_count?: number;
@@ -135,8 +136,8 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
             }
           />
 
-          <DialogContent className="max-w-md rounded-[24px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
-            <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
+          <DialogContent className="max-w-md rounded-[24px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] flex flex-col">
+            <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4 shrink-0">
               <DialogTitle className="text-lg font-black text-slate-950 dark:text-white tracking-tight">
                 Create New Classroom
               </DialogTitle>
@@ -145,81 +146,85 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-5 px-6 pb-5">
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="className"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Classroom Name*
-                </Label>
-                <Input
-                  id="className"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Science Explorers"
-                  required
-                  className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
-                />
-              </div>
+            <form onSubmit={handleCreateSubmit} className="flex-1 min-h-0 flex flex-col">
+              <ScrollArea className="flex-1 h-full max-h-[50vh] sm:max-h-[60vh]">
+                <div className="space-y-5 px-6 py-5">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="className"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Classroom Name*
+                    </Label>
+                    <Input
+                      id="className"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Science Explorers"
+                      required
+                      className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
+                    />
+                  </div>
 
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="classDesc"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Description
-                </Label>
-                <Input
-                  id="classDesc"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g. Hands-on physics & chemistry activities"
-                  className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
-                />
-              </div>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="classDesc"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Description
+                    </Label>
+                    <Input
+                      id="classDesc"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="e.g. Hands-on physics & chemistry activities"
+                      className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="classSubject"
-                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                  >
-                    Subject
-                  </Label>
-                  <Input
-                    id="classSubject"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="e.g. Science"
-                    className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="classSubject"
+                        className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                      >
+                        Subject
+                      </Label>
+                      <Input
+                        id="classSubject"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder="e.g. Science"
+                        className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="classGrade"
+                        className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                      >
+                        Grade / Level
+                      </Label>
+                      <Input
+                        id="classGrade"
+                        value={grade}
+                        onChange={(e) => setGrade(e.target.value)}
+                        placeholder="e.g. Grade 5"
+                        className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-xs font-bold text-rose-600 dark:border-rose-950/20 dark:bg-rose-950/30 dark:text-rose-400">
+                      {error}
+                    </div>
+                  )}
                 </div>
+              </ScrollArea>
 
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="classGrade"
-                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                  >
-                    Grade / Level
-                  </Label>
-                  <Input
-                    id="classGrade"
-                    value={grade}
-                    onChange={(e) => setGrade(e.target.value)}
-                    placeholder="e.g. Grade 5"
-                    className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <div className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-xs font-bold text-rose-600 dark:border-rose-950/20 dark:bg-rose-950/30 dark:text-rose-400">
-                  {error}
-                </div>
-              )}
-
-              <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 -mx-6 -mb-6 flex gap-2 rounded-b-[24px]">
+              <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 mx-0 mb-0 flex gap-2 rounded-b-[24px] shrink-0">
                 <Button
                   type="button"
                   variant="outline"

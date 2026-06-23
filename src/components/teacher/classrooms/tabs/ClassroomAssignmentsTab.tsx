@@ -28,6 +28,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { createAssignment, updateAssignment } from "@/lib/services/kid/classroom.actions";
 import type { ClassroomAssignment } from "@/types/classroom.types";
 
@@ -193,8 +194,8 @@ export default function ClassroomAssignmentsTab({
               </Button>
             }
           />
-          <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
-            <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
+          <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] flex flex-col">
+            <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4 shrink-0">
               <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight">
                 Create Assignment
               </DialogTitle>
@@ -203,194 +204,198 @@ export default function ClassroomAssignmentsTab({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCreateAssignment} className="space-y-4 px-6 pb-5">
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="assignTitle"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Assignment Title*
-                </Label>
-                <Input
-                  id="assignTitle"
-                  value={assignTitle}
-                  onChange={(e) => setAssignTitle(e.target.value)}
-                  required
-                  placeholder="e.g. Science Lab Project"
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="assignDesc"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Instructions / Description
-                </Label>
-                <Input
-                  id="assignDesc"
-                  value={assignDesc}
-                  onChange={(e) => setAssignDesc(e.target.value)}
-                  placeholder="Describe submission format, resources, details..."
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="assignSubject"
-                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                  >
-                    Subject
-                  </Label>
-                  <Input
-                    id="assignSubject"
-                    value={assignSubject}
-                    onChange={(e) => setAssignSubject(e.target.value)}
-                    placeholder="e.g. Physics"
-                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="assignPoints"
-                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                  >
-                    Total Points
-                  </Label>
-                  <Input
-                    id="assignPoints"
-                    type="number"
-                    value={assignPoints}
-                    onChange={(e) => setAssignPoints(Number(e.target.value))}
-                    required
-                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="assignActivityType"
-                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                  >
-                    Activity Type
-                  </Label>
-                  <Select
-                    value={assignActivityType}
-                    onValueChange={(val) => setAssignActivityType(val || "")}
-                  >
-                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
-                      <SelectValue placeholder="Select activity type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="quizzes">Quiz</SelectItem>
-                      <SelectItem value="flashcards">Flashcards</SelectItem>
-                      <SelectItem value="math-challenges">Math Challenge</SelectItem>
-                      <SelectItem value="word-scrambles">Spelling Scramble</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="assignQuestionCount"
-                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                  >
-                    Question Count
-                  </Label>
-                  <Input
-                    id="assignQuestionCount"
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={assignQuestionCount}
-                    onChange={(e) => setAssignQuestionCount(Number(e.target.value))}
-                    required
-                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="assignTopic"
-                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                  >
-                    Topic*
-                  </Label>
-                  <Input
-                    id="assignTopic"
-                    value={assignTopic}
-                    onChange={(e) => setAssignTopic(e.target.value)}
-                    required
-                    placeholder="e.g. Addition, Dinosaurs"
-                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="assignDifficulty"
-                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                  >
-                    Difficulty
-                  </Label>
-                  <Select
-                    value={assignDifficulty}
-                    onValueChange={(val) => setAssignDifficulty(val || "")}
-                  >
-                    <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
-                      <SelectValue placeholder="Select difficulty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Grade 1">Grade 1</SelectItem>
-                      <SelectItem value="Grade 2">Grade 2</SelectItem>
-                      <SelectItem value="Grade 3">Grade 3</SelectItem>
-                      <SelectItem value="Grade 4">Grade 4</SelectItem>
-                      <SelectItem value="Grade 5">Grade 5</SelectItem>
-                      <SelectItem value="Grade 6">Grade 6</SelectItem>
-                      <SelectItem value="Grade 7">Grade 7</SelectItem>
-                      <SelectItem value="Grade 8">Grade 8</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="assignDueDate"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Due Date
-                </Label>
-                <Popover>
-                  <PopoverTrigger
-                    type="button"
-                    id="assignDueDate"
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 text-left justify-start flex items-center gap-2 hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-                    {assignDueDate ? (
-                      format(parseLocalDate(assignDueDate), "PPP")
-                    ) : (
-                      <span className="text-muted-foreground/50">Select due date</span>
-                    )}
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
-                    <ShadcnCalendar
-                      mode="single"
-                      selected={assignDueDate ? parseLocalDate(assignDueDate) : undefined}
-                      onSelect={(d) => setAssignDueDate(d ? formatLocalDate(d) : "")}
-                      disabled={{ before: new Date() }}
+            <form onSubmit={handleCreateAssignment} className="flex-1 min-h-0 flex flex-col">
+              <ScrollArea className="flex-1 h-full max-h-[50vh] sm:max-h-[60vh]">
+                <div className="space-y-4 px-5 pb-4">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="assignTitle"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Assignment Title*
+                    </Label>
+                    <Input
+                      id="assignTitle"
+                      value={assignTitle}
+                      onChange={(e) => setAssignTitle(e.target.value)}
+                      required
+                      placeholder="e.g. Science Lab Project"
+                      className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
-                  </PopoverContent>
-                </Popover>
-              </div>
+                  </div>
 
-              <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 -mx-6 -mb-6 flex gap-2 rounded-b-[32px]">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="assignDesc"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Instructions / Description
+                    </Label>
+                    <Input
+                      id="assignDesc"
+                      value={assignDesc}
+                      onChange={(e) => setAssignDesc(e.target.value)}
+                      placeholder="Describe submission format, resources, details..."
+                      className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="assignSubject"
+                        className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                      >
+                        Subject
+                      </Label>
+                      <Input
+                        id="assignSubject"
+                        value={assignSubject}
+                        onChange={(e) => setAssignSubject(e.target.value)}
+                        placeholder="e.g. Physics"
+                        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="assignPoints"
+                        className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                      >
+                        Total Points
+                      </Label>
+                      <Input
+                        id="assignPoints"
+                        type="number"
+                        value={assignPoints}
+                        onChange={(e) => setAssignPoints(Number(e.target.value))}
+                        required
+                        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="assignActivityType"
+                        className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                      >
+                        Activity Type
+                      </Label>
+                      <Select
+                        value={assignActivityType}
+                        onValueChange={(val) => setAssignActivityType(val || "")}
+                      >
+                        <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                          <SelectValue placeholder="Select activity type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="quizzes">Quiz</SelectItem>
+                          <SelectItem value="flashcards">Flashcards</SelectItem>
+                          <SelectItem value="math-challenges">Math Challenge</SelectItem>
+                          <SelectItem value="word-scrambles">Spelling Scramble</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="assignQuestionCount"
+                        className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                      >
+                        Question Count
+                      </Label>
+                      <Input
+                        id="assignQuestionCount"
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={assignQuestionCount}
+                        onChange={(e) => setAssignQuestionCount(Number(e.target.value))}
+                        required
+                        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="assignTopic"
+                        className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                      >
+                        Topic*
+                      </Label>
+                      <Input
+                        id="assignTopic"
+                        value={assignTopic}
+                        onChange={(e) => setAssignTopic(e.target.value)}
+                        required
+                        placeholder="e.g. Addition, Dinosaurs"
+                        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="assignDifficulty"
+                        className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                      >
+                        Difficulty
+                      </Label>
+                      <Select
+                        value={assignDifficulty}
+                        onValueChange={(val) => setAssignDifficulty(val || "")}
+                      >
+                        <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                          <SelectValue placeholder="Select difficulty" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Grade 1">Grade 1</SelectItem>
+                          <SelectItem value="Grade 2">Grade 2</SelectItem>
+                          <SelectItem value="Grade 3">Grade 3</SelectItem>
+                          <SelectItem value="Grade 4">Grade 4</SelectItem>
+                          <SelectItem value="Grade 5">Grade 5</SelectItem>
+                          <SelectItem value="Grade 6">Grade 6</SelectItem>
+                          <SelectItem value="Grade 7">Grade 7</SelectItem>
+                          <SelectItem value="Grade 8">Grade 8</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="assignDueDate"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Due Date
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger
+                        type="button"
+                        id="assignDueDate"
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 text-left justify-start flex items-center gap-2 hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                        {assignDueDate ? (
+                          format(parseLocalDate(assignDueDate), "PPP")
+                        ) : (
+                          <span className="text-muted-foreground/50">Select due date</span>
+                        )}
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                        <ShadcnCalendar
+                          mode="single"
+                          selected={assignDueDate ? parseLocalDate(assignDueDate) : undefined}
+                          onSelect={(d) => setAssignDueDate(d ? formatLocalDate(d) : "")}
+                          disabled={{ before: new Date() }}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </ScrollArea>
+
+              <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 mx-0 mb-0 flex gap-2 rounded-b-[32px] shrink-0">
                 <Button
                   type="button"
                   variant="outline"
@@ -598,8 +603,8 @@ export default function ClassroomAssignmentsTab({
 
       {/* Edit Assignment Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl">
-          <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4">
+        <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] flex flex-col">
+          <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight">
               Edit Assignment
             </DialogTitle>
@@ -608,214 +613,218 @@ export default function ClassroomAssignmentsTab({
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleUpdateAssignment} className="space-y-4 px-6 pb-5">
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="editTitle"
-                className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-              >
-                Assignment Title*
-              </Label>
-              <Input
-                id="editTitle"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                required
-                placeholder="e.g. Science Lab Project"
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="editDesc"
-                className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-              >
-                Instructions / Description
-              </Label>
-              <Input
-                id="editDesc"
-                value={editDesc}
-                onChange={(e) => setEditDesc(e.target.value)}
-                placeholder="Describe submission format, resources, details..."
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="editSubject"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Subject
-                </Label>
-                <Input
-                  id="editSubject"
-                  value={editSubject}
-                  onChange={(e) => setEditSubject(e.target.value)}
-                  placeholder="e.g. Physics"
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="editPoints"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Total Points
-                </Label>
-                <Input
-                  id="editPoints"
-                  type="number"
-                  value={editPoints}
-                  onChange={(e) => setEditPoints(Number(e.target.value))}
-                  required
-                  disabled={
-                    editingAssignment?.status === "PUBLISHED" ||
-                    editingAssignment?.status === "CLOSED"
-                  }
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="editActivityType"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Activity Type
-                </Label>
-                <Select
-                  value={editActivityType}
-                  onValueChange={(val) => setEditActivityType(val || "")}
-                  disabled={
-                    editingAssignment?.status === "PUBLISHED" ||
-                    editingAssignment?.status === "CLOSED"
-                  }
-                >
-                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
-                    <SelectValue placeholder="Select activity type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="quizzes">Quiz</SelectItem>
-                    <SelectItem value="flashcards">Flashcards</SelectItem>
-                    <SelectItem value="math-challenges">Math Challenge</SelectItem>
-                    <SelectItem value="word-scrambles">Spelling Scramble</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="editQuestionCount"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Question Count
-                </Label>
-                <Input
-                  id="editQuestionCount"
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={editQuestionCount}
-                  onChange={(e) => setEditQuestionCount(Number(e.target.value))}
-                  required
-                  disabled={
-                    editingAssignment?.status === "PUBLISHED" ||
-                    editingAssignment?.status === "CLOSED"
-                  }
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="editTopic"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Topic*
-                </Label>
-                <Input
-                  id="editTopic"
-                  value={editTopic}
-                  onChange={(e) => setEditTopic(e.target.value)}
-                  required
-                  disabled={
-                    editingAssignment?.status === "PUBLISHED" ||
-                    editingAssignment?.status === "CLOSED"
-                  }
-                  placeholder="e.g. Addition, Dinosaurs"
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="editDifficulty"
-                  className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-                >
-                  Difficulty
-                </Label>
-                <Select
-                  value={editDifficulty}
-                  onValueChange={(val) => setEditDifficulty(val || "")}
-                  disabled={
-                    editingAssignment?.status === "PUBLISHED" ||
-                    editingAssignment?.status === "CLOSED"
-                  }
-                >
-                  <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
-                    <SelectValue placeholder="Select difficulty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Grade 1">Grade 1</SelectItem>
-                    <SelectItem value="Grade 2">Grade 2</SelectItem>
-                    <SelectItem value="Grade 3">Grade 3</SelectItem>
-                    <SelectItem value="Grade 4">Grade 4</SelectItem>
-                    <SelectItem value="Grade 5">Grade 5</SelectItem>
-                    <SelectItem value="Grade 6">Grade 6</SelectItem>
-                    <SelectItem value="Grade 7">Grade 7</SelectItem>
-                    <SelectItem value="Grade 8">Grade 8</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="editDueDate"
-                className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
-              >
-                Due Date
-              </Label>
-              <Popover>
-                <PopoverTrigger
-                  type="button"
-                  id="editDueDate"
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 text-left justify-start flex items-center gap-2 hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-                  {editDueDate ? (
-                    format(parseLocalDate(editDueDate), "PPP")
-                  ) : (
-                    <span className="text-muted-foreground/50">Select due date</span>
-                  )}
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
-                  <ShadcnCalendar
-                    mode="single"
-                    selected={editDueDate ? parseLocalDate(editDueDate) : undefined}
-                    onSelect={(d) => setEditDueDate(d ? formatLocalDate(d) : "")}
-                    disabled={{ before: new Date() }}
+          <form onSubmit={handleUpdateAssignment} className="flex-1 min-h-0 flex flex-col">
+            <ScrollArea className="flex-1 h-full max-h-[50vh] sm:max-h-[60vh]">
+              <div className="space-y-4 px-5 pb-4">
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="editTitle"
+                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                  >
+                    Assignment Title*
+                  </Label>
+                  <Input
+                    id="editTitle"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    required
+                    placeholder="e.g. Science Lab Project"
+                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
-                </PopoverContent>
-              </Popover>
-            </div>
+                </div>
 
-            <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 -mx-6 -mb-6 flex gap-2 rounded-b-[32px]">
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="editDesc"
+                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                  >
+                    Instructions / Description
+                  </Label>
+                  <Input
+                    id="editDesc"
+                    value={editDesc}
+                    onChange={(e) => setEditDesc(e.target.value)}
+                    placeholder="Describe submission format, resources, details..."
+                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="editSubject"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Subject
+                    </Label>
+                    <Input
+                      id="editSubject"
+                      value={editSubject}
+                      onChange={(e) => setEditSubject(e.target.value)}
+                      placeholder="e.g. Physics"
+                      className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="editPoints"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Total Points
+                    </Label>
+                    <Input
+                      id="editPoints"
+                      type="number"
+                      value={editPoints}
+                      onChange={(e) => setEditPoints(Number(e.target.value))}
+                      required
+                      disabled={
+                        editingAssignment?.status === "PUBLISHED" ||
+                        editingAssignment?.status === "CLOSED"
+                      }
+                      className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="editActivityType"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Activity Type
+                    </Label>
+                    <Select
+                      value={editActivityType}
+                      onValueChange={(val) => setEditActivityType(val || "")}
+                      disabled={
+                        editingAssignment?.status === "PUBLISHED" ||
+                        editingAssignment?.status === "CLOSED"
+                      }
+                    >
+                      <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                        <SelectValue placeholder="Select activity type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="quizzes">Quiz</SelectItem>
+                        <SelectItem value="flashcards">Flashcards</SelectItem>
+                        <SelectItem value="math-challenges">Math Challenge</SelectItem>
+                        <SelectItem value="word-scrambles">Spelling Scramble</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="editQuestionCount"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Question Count
+                    </Label>
+                    <Input
+                      id="editQuestionCount"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={editQuestionCount}
+                      onChange={(e) => setEditQuestionCount(Number(e.target.value))}
+                      required
+                      disabled={
+                        editingAssignment?.status === "PUBLISHED" ||
+                        editingAssignment?.status === "CLOSED"
+                      }
+                      className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="editTopic"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Topic*
+                    </Label>
+                    <Input
+                      id="editTopic"
+                      value={editTopic}
+                      onChange={(e) => setEditTopic(e.target.value)}
+                      required
+                      disabled={
+                        editingAssignment?.status === "PUBLISHED" ||
+                        editingAssignment?.status === "CLOSED"
+                      }
+                      placeholder="e.g. Addition, Dinosaurs"
+                      className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 w-full disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="editDifficulty"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                    >
+                      Difficulty
+                    </Label>
+                    <Select
+                      value={editDifficulty}
+                      onValueChange={(val) => setEditDifficulty(val || "")}
+                      disabled={
+                        editingAssignment?.status === "PUBLISHED" ||
+                        editingAssignment?.status === "CLOSED"
+                      }
+                    >
+                      <SelectTrigger className="rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold !h-11 w-full px-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                        <SelectValue placeholder="Select difficulty" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Grade 1">Grade 1</SelectItem>
+                        <SelectItem value="Grade 2">Grade 2</SelectItem>
+                        <SelectItem value="Grade 3">Grade 3</SelectItem>
+                        <SelectItem value="Grade 4">Grade 4</SelectItem>
+                        <SelectItem value="Grade 5">Grade 5</SelectItem>
+                        <SelectItem value="Grade 6">Grade 6</SelectItem>
+                        <SelectItem value="Grade 7">Grade 7</SelectItem>
+                        <SelectItem value="Grade 8">Grade 8</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="editDueDate"
+                    className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
+                  >
+                    Due Date
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger
+                      type="button"
+                      id="editDueDate"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-background text-sm font-semibold h-11 px-3 text-left justify-start flex items-center gap-2 hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:border-slate-200 dark:disabled:border-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                      {editDueDate ? (
+                        format(parseLocalDate(editDueDate), "PPP")
+                      ) : (
+                        <span className="text-muted-foreground/50">Select due date</span>
+                      )}
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                      <ShadcnCalendar
+                        mode="single"
+                        selected={editDueDate ? parseLocalDate(editDueDate) : undefined}
+                        onSelect={(d) => setEditDueDate(d ? formatLocalDate(d) : "")}
+                        disabled={{ before: new Date() }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </ScrollArea>
+
+            <DialogFooter className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-6 py-4 mx-0 mb-0 flex gap-2 rounded-b-[32px] shrink-0">
               <Button
                 type="button"
                 variant="outline"
