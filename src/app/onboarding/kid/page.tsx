@@ -103,15 +103,12 @@ export default function KidOnboardingPage() {
   useEffect(() => {
     if (isLoading || !user) return;
 
-    const resolveInvite = async () => {
-      const inviteToken = user.user_metadata?.invite_token;
-      if (!inviteToken) {
-        setInviteError(
-          "Invitation token is missing. You must register using a parent's invitation link."
-        );
-        return;
-      }
+    const inviteToken = user.user_metadata?.invite_token;
+    if (!inviteToken) {
+      return; // Flow A: Normal onboarding (no token, no checks)
+    }
 
+    const resolveInvite = async () => {
       setIsResolvingEmail(true);
       setInviteError(null);
       try {
@@ -193,6 +190,13 @@ export default function KidOnboardingPage() {
   }
 
   if (userProfile?.is_onboarded) {
+    if (kidState.success) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
+        </div>
+      );
+    }
     return <AlreadyOnboardedView />;
   }
 
@@ -218,7 +222,7 @@ export default function KidOnboardingPage() {
       }
     >
       {/* Avatar Section */}
-      <AvatarUpload label="Pick a Profile Photo" />
+      <AvatarUpload label="Pick a Profile Photo" initialAvatarUrl={userProfile?.avatar_url} />
 
       {/* Info Section */}
       <form action={kidAction} className="space-y-6">
@@ -257,7 +261,7 @@ export default function KidOnboardingPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
+          <div className={`space-y-2 ${user?.user_metadata?.invite_token ? "" : "sm:col-span-2"}`}>
             <Label htmlFor="dateOfBirth" className="text-sm font-bold text-foreground ml-1">
               Birthdate<span className="text-red-500">*</span>
             </Label>
@@ -292,25 +296,27 @@ export default function KidOnboardingPage() {
               <p className="text-xs font-bold text-rose-500 ml-1 mt-1">{localAgeError}</p>
             )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="parentEmail" className="text-sm font-bold text-foreground ml-1">
-              Parent&apos;s Email
-            </Label>
-            <div className="relative">
-              <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
-              <Input
-                id="parentEmail"
-                name="parentEmail"
-                type="email"
-                value={prefillParentEmail ?? ""}
-                readOnly
-                className="h-12 rounded-2xl border-2 border-sky-500/30 pl-11 text-base font-medium bg-sky-50/30 dark:bg-sky-900/10 text-sky-600 dark:text-sky-400 cursor-not-allowed focus:ring-0"
-              />
+          {user?.user_metadata?.invite_token && (
+            <div className="space-y-2">
+              <Label htmlFor="parentEmail" className="text-sm font-bold text-foreground ml-1">
+                Parent&apos;s Email
+              </Label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
+                <Input
+                  id="parentEmail"
+                  name="parentEmail"
+                  type="email"
+                  value={prefillParentEmail ?? ""}
+                  readOnly
+                  className="h-12 rounded-2xl border-2 border-sky-500/30 pl-11 text-base font-medium bg-sky-50/30 dark:bg-sky-900/10 text-sky-600 dark:text-sky-400 cursor-not-allowed focus:ring-0"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground ml-1">
+                Your account is automatically linked to your parent.
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground ml-1">
-              Your account is automatically linked to your parent.
-            </p>
-          </div>
+          )}
         </div>
 
         {kidState.error && (

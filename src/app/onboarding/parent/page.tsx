@@ -72,6 +72,13 @@ export default function ParentOnboardingPage() {
   }
 
   if (userProfile?.is_onboarded) {
+    if (parentState.success) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
+        </div>
+      );
+    }
     return <AlreadyOnboardedView />;
   }
 
@@ -100,7 +107,7 @@ export default function ParentOnboardingPage() {
       }
     >
       {/* Avatar Section */}
-      <AvatarUpload />
+      <AvatarUpload initialAvatarUrl={userProfile?.avatar_url} />
 
       {/* Info Section */}
       <form action={parentAction} className="space-y-6">

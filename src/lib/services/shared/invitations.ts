@@ -5,6 +5,7 @@ import { sendInvitationEmail } from "./email";
 import { headers } from "next/headers";
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { revalidatePath } from "next/cache";
 
 export type InvitationValidationResult = {
   success: boolean;
@@ -75,6 +76,44 @@ export async function createChildInvitation(
 
   const supabase = await createClient();
 
+  // 1. Check if the parent is already linked to a child with this email
+  const { data: targetProfile } = await supabase
+    .from("profile")
+    .select("user_id")
+    .eq("email", targetEmail)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (targetProfile) {
+    const { data: existingLink } = await supabase
+      .from("parent_child_link")
+      .select("id")
+      .eq("parent_user_id", parentId)
+      .eq("child_user_id", targetProfile.user_id)
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (existingLink) {
+      return { success: false, error: "You are already linked with this child profile." };
+    }
+  }
+
+  // 2. Check if there is an active pending invitation sent by this parent to this email
+  const { data: existingInvite } = await supabase
+    .from("child_invitations")
+    .select("id")
+    .eq("parent_id", parentId)
+    .eq("invitee_email", targetEmail)
+    .is("accepted_at", null)
+    .is("deleted_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+
+  if (existingInvite) {
+    return { success: false, error: "An invitation is already pending for this email." };
+  }
+
   // Generate secure 32-character token
   const token = crypto.randomBytes(16).toString("hex");
 
@@ -97,11 +136,12 @@ export async function createChildInvitation(
     ? `${parentProfile.first_name || ""} ${parentProfile.last_name || ""}`.trim() || "Your Parent"
     : "Your Parent";
 
-  // Soft-delete any existing active invitations to the same email to avoid duplicates
+  // Soft-delete any existing active/expired/cancelled duplicate invitations from THIS parent to avoid duplicates
   await supabase
     .from("child_invitations")
     .update({ deleted_at: new Date().toISOString() })
     .eq("invitee_email", targetEmail)
+    .eq("parent_id", parentId)
     .is("accepted_at", null)
     .is("deleted_at", null);
 
@@ -226,4 +266,200 @@ export async function getParentDetailsByInviteToken(token: string): Promise<Pare
     parentId: invite.parent_id,
     parentEmail: parentProfile.email,
   };
+}
+
+export type PendingInvitation = {
+  id: string;
+  parent_id: string;
+  invitee_email: string;
+  expires_at: string;
+  created_at: string;
+  parent_name: string;
+  parent_email: string;
+  parent_avatar: string | null;
+  parent_username: string | null;
+};
+
+/**
+ * Retrieves active pending invitations for the authenticated child.
+ */
+export async function getPendingInvitations(): Promise<PendingInvitation[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !user.email) return [];
+
+  const { data: invites, error } = await supabase
+    .from("child_invitations")
+    .select("id, parent_id, invitee_email, expires_at, created_at")
+    .eq("invitee_email", user.email.trim().toLowerCase())
+    .is("accepted_at", null)
+    .is("deleted_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching pending invitations:", error.message);
+    return [];
+  }
+
+  if (!invites || invites.length === 0) return [];
+
+  const parentIds = Array.from(new Set(invites.map((i) => i.parent_id)));
+  const adminClient = createAdminClient();
+  const { data: profiles } = await adminClient
+    .from("profile")
+    .select("user_id, first_name, last_name, email, username, avatar_url")
+    .in("user_id", parentIds);
+
+  const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
+
+  return invites.map((invite) => {
+    const profile = profileMap.get(invite.parent_id);
+    return {
+      id: invite.id,
+      parent_id: invite.parent_id,
+      invitee_email: invite.invitee_email,
+      expires_at: invite.expires_at,
+      created_at: invite.created_at,
+      parent_name: profile
+        ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || profile.username || "Parent"
+        : "Parent",
+      parent_email: profile?.email || "",
+      parent_avatar: profile?.avatar_url || null,
+      parent_username: profile?.username || null,
+    };
+  });
+}
+
+export type SentInvitation = {
+  id: string;
+  invitee_email: string;
+  expires_at: string;
+  created_at: string;
+};
+
+/**
+ * Retrieves active pending invitations sent by the authenticated parent.
+ */
+export async function getSentPendingInvitations(): Promise<SentInvitation[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("child_invitations")
+    .select("id, invitee_email, expires_at, created_at")
+    .eq("parent_id", user.id)
+    .is("accepted_at", null)
+    .is("deleted_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching sent pending invitations:", error.message);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
+ * Accepts a child invitation transactionally and idempotently.
+ */
+export async function acceptChildInvitation(
+  inviteId: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!inviteId) return { success: false, error: "Invitation ID is required." };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated." };
+
+  // Call the transactional accept_child_invitation RPC
+  const { data, error } = await supabase.rpc("accept_child_invitation", {
+    p_invite_id: inviteId,
+    p_child_user_id: user.id,
+  });
+
+  if (error) {
+    console.error("Error accepting child invitation via RPC:", error.message);
+    return { success: false, error: error.message };
+  }
+
+  const result = data as { status: string; message: string } | null;
+  if (!result || result.status === "error") {
+    return { success: false, error: result?.message || "Failed to accept invitation." };
+  }
+
+  // Clear metadata token if the user signed up using it and it's still present
+  if (user.user_metadata?.invite_token) {
+    const adminClient = createAdminClient();
+    await adminClient.auth.admin.updateUserById(user.id, {
+      user_metadata: {
+        ...user.user_metadata,
+        invite_token: null,
+      },
+    });
+  }
+
+  revalidatePath("/dashboard/kid");
+  return { success: true };
+}
+
+/**
+ * Declines a child invitation (soft-deletes it so the kid no longer sees it).
+ */
+export async function declineChildInvitation(
+  inviteId: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!inviteId) return { success: false, error: "Invitation ID is required." };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated." };
+
+  const { error } = await supabase
+    .from("child_invitations")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", inviteId)
+    .eq("invitee_email", user.email?.trim().toLowerCase() || "")
+    .is("accepted_at", null)
+    .is("deleted_at", null);
+
+  if (error) {
+    console.error("Error declining child invitation:", error.message);
+    return { success: false, error: "Failed to decline invitation." };
+  }
+
+  revalidatePath("/dashboard/kid");
+  return { success: true };
+}
+
+/**
+ * Cancels a child invitation sent by the parent.
+ */
+export async function cancelChildInvitation(
+  inviteId: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!inviteId) return { success: false, error: "Invitation ID is required." };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated." };
+
+  const { error } = await supabase
+    .from("child_invitations")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", inviteId)
+    .eq("parent_id", user.id)
+    .is("accepted_at", null)
+    .is("deleted_at", null);
+
+  if (error) {
+    console.error("Error cancelling child invitation:", error.message);
+    return { success: false, error: "Failed to cancel invitation." };
+  }
+
+  revalidatePath("/dashboard/parent");
+  return { success: true };
 }

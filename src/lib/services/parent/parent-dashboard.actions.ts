@@ -12,7 +12,7 @@ import type {
   ParentActivityItem,
 } from "@/types/kid";
 import type { ChatMessageRow } from "@/types/common";
-import { getDailyScreenTime, recoverStaleSessions } from "../shared/screentime.actions";
+import { getDailyScreenTime } from "../shared/screentime.actions";
 import { preSignMessageUrls } from "../shared/chat.actions";
 import type { SearchHistoryItem, CacheData } from "@/types/parent";
 import {
@@ -22,6 +22,10 @@ import {
   linkByEmail as linkShared,
 } from "@/lib/services/kid/dashboard.actions";
 import { calculateActivityAnalytics } from "@/lib/utils/activity-analytics";
+import {
+  getSentPendingInvitations as getSentInvitesShared,
+  cancelChildInvitation as cancelInviteShared
+} from "@/lib/services/shared/invitations";
 
 export async function getCurrentDashboardProfile(): Promise<DashboardUserProfile> {
   return getProfileShared();
@@ -29,6 +33,14 @@ export async function getCurrentDashboardProfile(): Promise<DashboardUserProfile
 
 export async function linkByEmail(targetEmail: string): Promise<EmailLinkResult> {
   return linkShared(targetEmail);
+}
+
+export async function getSentPendingInvitations() {
+  return getSentInvitesShared();
+}
+
+export async function cancelChildInvitation(inviteId: string) {
+  return cancelInviteShared(inviteId);
 }
 
 interface RewardQueryResult {

@@ -31,7 +31,7 @@ function LoginPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { isUserLoggedIn, userProfile } = useAuth();
+  const { isUserLoggedIn, userProfile, user, isInitializing } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -47,10 +47,14 @@ function LoginPageContent() {
           router.replace(roleRedirectMap[role] || "/");
         }
       } else {
-        router.replace("/onboarding");
+        if (user?.user_metadata?.invite_token) {
+          router.replace("/onboarding/kid");
+        } else {
+          router.replace("/onboarding");
+        }
       }
     }
-  }, [isUserLoggedIn, userProfile, router]);
+  }, [isUserLoggedIn, userProfile, user, router]);
 
   type FormValue = {
     email: string;
@@ -84,6 +88,10 @@ function LoginPageContent() {
     };
     initRemembered();
   }, [setValue]);
+
+  if (isInitializing || (isUserLoggedIn && !userProfile)) {
+    return <AuthSkeleton />;
+  }
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     setIsSubmitting(true);

@@ -12,7 +12,6 @@ import {
   GraduationCap,
   School,
   CheckCircle2,
-  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
@@ -84,6 +83,13 @@ export default function TeacherOnboardingPage() {
   }
 
   if (userProfile?.is_onboarded) {
+    if (teacherState.success) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
+        </div>
+      );
+    }
     return <AlreadyOnboardedView />;
   }
 
@@ -112,7 +118,7 @@ export default function TeacherOnboardingPage() {
       }
     >
       {/* Avatar Section */}
-      <AvatarUpload />
+      <AvatarUpload initialAvatarUrl={userProfile?.avatar_url} />
 
       {/* Info Section */}
       <form action={teacherAction} className="space-y-6">
@@ -165,7 +171,7 @@ export default function TeacherOnboardingPage() {
           </div>
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="studentEmail" className="text-sm font-bold text-foreground ml-1">
             Student&apos;s Email <span className="text-muted-foreground">(Optional)</span>
           </Label>
@@ -179,7 +185,7 @@ export default function TeacherOnboardingPage() {
               className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
             />
           </div>
-        </div>
+        </div> */}
 
         {teacherState.error && (
           <div className="animate-in fade-in slide-in-from-top-2 rounded-2xl border-2 border-rose-500/20 bg-rose-500/10 p-3 text-sm font-bold text-rose-500 text-center">

@@ -114,110 +114,151 @@ export async function submitKidOnboarding(
 
   const inviteToken = user.user_metadata?.invite_token as string | undefined;
 
-  if (!inviteToken) {
-    return {
-      error: "Invitation token is missing. You must be invited by a parent to sign up as a kid.",
-    };
-  }
-
   const adminClient = createAdminClient();
 
-  // 1. Fetch the invitation details using admin client (bypassing RLS)
-  const { data: invite, error: inviteError } = await adminClient
-    .from("child_invitations")
-    .select("id, parent_id, invitee_email, expires_at, accepted_at, deleted_at")
-    .eq("token", inviteToken)
-    .maybeSingle();
+  if (inviteToken) {
+    // Flow B: Invitation-based onboarding
+    // 1. Fetch & validate invitation details using admin client (bypassing RLS)
+    const { data: invite, error: inviteError } = await adminClient
+      .from("child_invitations")
+      .select("id, parent_id, invitee_email, expires_at, accepted_at, deleted_at")
+      .eq("token", inviteToken)
+      .maybeSingle();
 
-  if (inviteError) {
-    console.error("[submitKidOnboarding] invite query error:", inviteError.message);
-    return { error: "Failed to verify invitation." };
-  }
+    if (inviteError) {
+      console.error("[submitKidOnboarding] invite query error:", inviteError.message);
+      return { error: "Failed to verify invitation." };
+    }
 
-  if (!invite) {
-    return { error: "Invitation not found." };
-  }
+    if (!invite) {
+      return { error: "Invitation not found." };
+    }
 
-  if (invite.accepted_at) {
-    return { error: "This invitation has already been accepted." };
-  }
+    if (invite.accepted_at) {
+      return { error: "This invitation has already been accepted." };
+    }
 
-  if (invite.deleted_at) {
-    return { error: "This invitation is no longer active." };
-  }
+    if (invite.deleted_at) {
+      return { error: "This invitation is no longer active." };
+    }
 
-  const expiresAt = new Date(invite.expires_at);
-  if (expiresAt.getTime() < Date.now()) {
-    return { error: "This invitation link has expired." };
-  }
+    const expiresAt = new Date(invite.expires_at);
+    if (expiresAt.getTime() < Date.now()) {
+      return { error: "This invitation link has expired." };
+    }
 
-  // 2. Security requirement: Validate invitation belongs to the authenticated user
-  if (invite.invitee_email.trim().toLowerCase() !== user.email?.trim().toLowerCase()) {
-    return { error: "This invitation belongs to a different email address." };
-  }
+    // 2. Security requirement: Validate invitation belongs to the authenticated user
+    if (invite.invitee_email.trim().toLowerCase() !== user.email?.trim().toLowerCase()) {
+      return { error: "This invitation belongs to a different email address." };
+    }
 
-  // 3. Mark the child's profile as onboarded (using admin client to ensure database write success)
-  const { error: profileUpdateError } = await adminClient
-    .from("profile")
-    .update({
-      first_name: firstName,
-      last_name: lastName,
-      date_of_birth: dateOfBirth,
-      role: "kid",
-      is_onboarded: true,
-    })
-    .eq("user_id", user.id);
+    // 3. Resolve the parent's email from their profile
+    const { data: parentProfile, error: parentProfileError } = await adminClient
+      .from("profile")
+      .select("email")
+      .eq("user_id", invite.parent_id)
+      .is("deleted_at", null)
+      .maybeSingle();
 
-  if (profileUpdateError) {
-    console.error("[submitKidOnboarding] profile update error:", profileUpdateError.message);
-    return { error: "Failed to update profile details." };
-  }
+    if (parentProfileError || !parentProfile?.email) {
+      console.error(
+        "[submitKidOnboarding] parent profile lookup failed:",
+        parentProfileError?.message
+      );
+      return { error: "Failed to resolve parent profile." };
+    }
 
-  // 4. Resolve the parent's email from their profile
-  const { data: parentProfile, error: parentProfileError } = await adminClient
-    .from("profile")
-    .select("email")
-    .eq("user_id", invite.parent_id)
-    .is("deleted_at", null)
-    .maybeSingle();
+    // 4. Update profile fields but keep is_onboarded = false for transactional safety
+    const { error: profileUpdateError } = await adminClient
+      .from("profile")
+      .update({
+        first_name: firstName,
+        last_name: lastName,
+        date_of_birth: dateOfBirth,
+        role: "kid",
+        is_onboarded: false,
+      })
+      .eq("user_id", user.id);
 
-  if (parentProfileError || !parentProfile?.email) {
-    console.error(
-      "[submitKidOnboarding] parent profile lookup failed:",
-      parentProfileError?.message
-    );
-    return { error: "Failed to resolve parent profile." };
-  }
+    if (profileUpdateError) {
+      console.error("[submitKidOnboarding] profile update error:", profileUpdateError.message);
+      return { error: "Failed to update profile details." };
+    }
 
-  // 5. Create the parent-child relationship using the invitation parent email via RPC
-  const { data: linkData, error: linkError } = await adminClient.rpc("link_users_by_email", {
-    p_current_user_id: user.id,
-    p_target_email: parentProfile.email,
-  });
+    // 5. Create the parent-child relationship using the invitation parent email via RPC
+    const { data: linkData, error: linkError } = await adminClient.rpc("link_users_by_email", {
+      p_current_user_id: user.id,
+      p_target_email: parentProfile.email,
+    });
 
-  if (linkError) {
-    console.error("[submitKidOnboarding] link users RPC error:", linkError.message);
-    return { error: "Failed to establish parent-child relationship." };
-  }
+    if (linkError) {
+      console.error("[submitKidOnboarding] link users RPC error:", linkError.message);
+      return { error: "Failed to establish parent-child relationship." };
+    }
 
-  if (linkData?.status !== "success") {
-    console.error("[submitKidOnboarding] link users RPC failed status:", linkData?.message);
-    return { error: linkData?.message || "Failed to link accounts." };
-  }
+    if (linkData?.status !== "success") {
+      console.error("[submitKidOnboarding] link users RPC failed status:", linkData?.message);
+      return { error: linkData?.message || "Failed to link accounts." };
+    }
 
-  // 6. Mark the invitation as accepted
-  const { error: acceptError } = await adminClient
-    .from("child_invitations")
-    .update({ accepted_at: new Date().toISOString() })
-    .eq("id", invite.id);
+    // 6. Mark the invitation as accepted
+    const { error: acceptError } = await adminClient
+      .from("child_invitations")
+      .update({ accepted_at: new Date().toISOString() })
+      .eq("id", invite.id);
 
-  if (acceptError) {
-    console.error("[submitKidOnboarding] accept invitation status error:", acceptError.message);
+    if (acceptError) {
+      console.error("[submitKidOnboarding] accept invitation status error:", acceptError.message);
+    }
+
+    // 7. Remove the invitation token from user metadata
+    const { error: metadataError } = await adminClient.auth.admin.updateUserById(user.id, {
+      user_metadata: {
+        ...user.user_metadata,
+        invite_token: null,
+      },
+    });
+
+    if (metadataError) {
+      console.error("[submitKidOnboarding] failed to clear invite token:", metadataError.message);
+    }
+
+    // 8. Finally, mark the child's profile as fully onboarded
+    const { error: profileFinalizeError } = await adminClient
+      .from("profile")
+      .update({
+        is_onboarded: true,
+      })
+      .eq("user_id", user.id);
+
+    if (profileFinalizeError) {
+      console.error("[submitKidOnboarding] profile finalize error:", profileFinalizeError.message);
+      return { error: "Failed to finalize profile setup." };
+    }
+  } else {
+    // Flow A: Normal Onboarding (No Invitation)
+    const { error: profileUpdateError } = await adminClient
+      .from("profile")
+      .update({
+        first_name: firstName,
+        last_name: lastName,
+        date_of_birth: dateOfBirth,
+        role: "kid",
+        is_onboarded: true,
+      })
+      .eq("user_id", user.id);
+
+    if (profileUpdateError) {
+      console.error("[submitKidOnboarding] profile update error:", profileUpdateError.message);
+      return { error: "Failed to update profile details." };
+    }
   }
 
   return {
     success: true,
-    message: "Profile setup complete and automatically linked with parent!",
+    message: inviteToken
+      ? "Profile setup complete and automatically linked with parent!"
+      : "Profile setup complete!",
     error: null,
   };
 }

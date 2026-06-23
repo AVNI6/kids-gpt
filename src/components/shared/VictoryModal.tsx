@@ -79,6 +79,7 @@ export default function VictoryModal({
         : `activity_${activitySlug}_${memoryMatchWorldId ?? ""}_${memoryMatchStepNumber ?? ""}_${jigsawGridSize ?? ""}_${jigsawThemeName ?? ""}_${score ?? ""}`;
 
       if (claimedActivitiesSet.has(claimKey)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setClaimCompleted(true);
         return;
       }

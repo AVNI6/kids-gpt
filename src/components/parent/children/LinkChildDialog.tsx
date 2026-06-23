@@ -20,12 +20,14 @@ interface LinkChildDialogProps {
   trigger?: React.ReactElement;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export default function LinkChildDialog({
   trigger,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
+  onSuccess,
 }: LinkChildDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [linkEmail, setLinkEmail] = useState("");
@@ -53,10 +55,12 @@ export default function LinkChildDialog({
         toast.success("Child account linked successfully.");
         setLinkEmail("");
         onOpenChange?.(false);
+        onSuccess?.();
       } else if (result.status === "pending") {
         toast.success(`An invitation email has been sent to ${email}!`);
         setLinkEmail("");
         onOpenChange?.(false);
+        onSuccess?.();
       } else {
         toast.error("Linking failed", {
           description: result.message || "Failed to link child.",

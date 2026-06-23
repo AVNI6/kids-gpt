@@ -28,6 +28,12 @@ export function AvatarUpload({
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const [prevInitialAvatarUrl, setPrevInitialAvatarUrl] = useState(initialAvatarUrl);
+  if (initialAvatarUrl !== prevInitialAvatarUrl) {
+    setPrevInitialAvatarUrl(initialAvatarUrl);
+    setAvatarUrl(initialAvatarUrl ?? null);
+  }
+
   useEffect(() => {
     return () => {
       if (localPreviewUrl) {
@@ -36,7 +42,7 @@ export function AvatarUpload({
     };
   }, [localPreviewUrl]);
 
-  const displayUrl = useMemo(() => avatarUrl ?? localPreviewUrl, [avatarUrl, localPreviewUrl]);
+  const displayUrl = useMemo(() => localPreviewUrl ?? avatarUrl, [avatarUrl, localPreviewUrl]);
 
   const onAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -58,6 +64,7 @@ export function AvatarUpload({
         const result = await uploadAvatar(formData);
         if (result.avatarUrl) {
           setAvatarUrl(result.avatarUrl);
+          setLocalPreviewUrl(null);
           setError(null);
           try {
             await refreshProfile();
