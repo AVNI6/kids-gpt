@@ -1,8 +1,12 @@
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
-import { getStudentClassroomWorkspace } from "@/lib/services/kid/classroom.actions";
+import {
+  getStudentClassroomMetadata,
+  getStudentClassroomAssignments,
+  getStudentClassroomAnnouncements,
+} from "@/lib/services/kid/classroom.actions";
 import { ClassroomWorkspaceSkeleton } from "@/components/shared/skeletonLoading";
 import KidClassroomWorkspaceClient from "@/components/kid/dashboard/KidClassroomWorkspaceClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,15 +14,16 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 async function StudentWorkspaceLoader({ classroomId }: { classroomId: string }) {
-  const result = await getStudentClassroomWorkspace(classroomId);
+  await checkDashboardAccess(["kid"]);
+  const metadataResult = await getStudentClassroomMetadata(classroomId);
 
-  if (!result.success || !result.data) {
+  if (!metadataResult.success || !metadataResult.data) {
     return (
       <Card className="rounded-[32px] border-rose-100 bg-rose-50/20 p-8 text-center">
         <CardContent className="space-y-4 p-0">
           <h2 className="text-xl font-black text-rose-700">Failed to load classroom</h2>
           <p className="text-sm text-slate-500 font-semibold max-w-md mx-auto">
-            {result.error ||
+            {metadataResult.error ||
               "You are not an approved member of this classroom or it has been deleted."}
           </p>
           <Link
@@ -36,26 +41,32 @@ async function StudentWorkspaceLoader({ classroomId }: { classroomId: string }) 
     );
   }
 
-  const { classroom, assignments, resources, announcements } = result.data;
+  const classroom = metadataResult.data;
+
+  // Overview is the default tab. It requires assignments (for stats) and announcements (for latest announcement card).
+  // Resources tab data is lazy-loaded on request.
+  const [assignmentsRes, announcementsRes] = await Promise.all([
+    getStudentClassroomAssignments(classroomId),
+    getStudentClassroomAnnouncements(classroomId),
+  ]);
+
+  const assignments = assignmentsRes.success && assignmentsRes.data ? assignmentsRes.data : [];
+  const announcements =
+    announcementsRes.success && announcementsRes.data ? announcementsRes.data : [];
 
   return (
     <KidClassroomWorkspaceClient
       classroomId={classroomId}
       classroom={classroom}
       initialAssignments={assignments}
-      initialResources={resources}
       initialAnnouncements={announcements}
+      initialResources={null}
     />
   );
 }
 
-export default async function KidClassroomDetailsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  await checkDashboardAccess(["kid"]);
-  const resolvedParams = await params;
+export default function KidClassroomDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const classroomId = resolvedParams.id;
 
   return (

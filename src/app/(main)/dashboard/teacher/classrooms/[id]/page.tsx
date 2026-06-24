@@ -1,17 +1,39 @@
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
-import { getTeacherClassroomWorkspace } from "@/lib/services/kid/classroom.actions";
-import type { TeacherWorkspaceData } from "@/types/classroom.types";
+import {
+  getTeacherClassroomMetadata,
+  getTeacherClassroomAssignments,
+  getTeacherClassroomResources,
+  getTeacherClassroomAnnouncements,
+  getTeacherClassroomStudents,
+} from "@/lib/services/kid/classroom.actions";
 import TeacherClassroomWorkspaceClient from "@/components/teacher/classrooms/TeacherClassroomWorkspaceClient";
 import { ClassroomWorkspaceSkeleton } from "@/components/shared/skeletonLoading";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-async function WorkspaceLoader({ classroomId }: { classroomId: string }) {
-  const result = await getTeacherClassroomWorkspace(classroomId);
+import type {
+  ClassroomAssignment,
+  ClassroomResource,
+  ClassroomAnnouncement,
+  WorkspaceStudent,
+} from "@/types/classroom.types";
+
+async function WorkspaceLoader({
+  classroomId,
+  searchParams,
+}: {
+  classroomId: string;
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  await checkDashboardAccess(["teacher"]);
+  const resolvedSearchParams = await searchParams;
+  const tab = resolvedSearchParams.tab || "assignments";
+
+  const result = await getTeacherClassroomMetadata(classroomId);
 
   if (!result.success || !result.data) {
     return (
@@ -37,34 +59,53 @@ async function WorkspaceLoader({ classroomId }: { classroomId: string }) {
     );
   }
 
-  const { classroom, assignments, resources, announcements, students } =
-    result.data as TeacherWorkspaceData;
+  const classroom = result.data;
+
+  let initialAssignments: ClassroomAssignment[] | null = null;
+  let initialResources: ClassroomResource[] | null = null;
+  let initialAnnouncements: ClassroomAnnouncement[] | null = null;
+  let initialStudents: WorkspaceStudent[] | null = null;
+
+  if (tab === "assignments") {
+    const res = await getTeacherClassroomAssignments(classroomId);
+    if (res.success && res.data) initialAssignments = res.data;
+  } else if (tab === "resources") {
+    const res = await getTeacherClassroomResources(classroomId);
+    if (res.success && res.data) initialResources = res.data;
+  } else if (tab === "announcements") {
+    const res = await getTeacherClassroomAnnouncements(classroomId);
+    if (res.success && res.data) initialAnnouncements = res.data;
+  } else if (tab === "students") {
+    const res = await getTeacherClassroomStudents(classroomId);
+    if (res.success && res.data) initialStudents = res.data;
+  }
 
   return (
     <TeacherClassroomWorkspaceClient
       classroomId={classroomId}
       initialClassroom={classroom}
-      initialAssignments={assignments}
-      initialResources={resources}
-      initialAnnouncements={announcements}
-      initialStudents={students}
+      initialAssignments={initialAssignments}
+      initialResources={initialResources}
+      initialAnnouncements={initialAnnouncements}
+      initialStudents={initialStudents}
     />
   );
 }
 
-export default async function TeacherClassroomDetailsPage({
+export default function TeacherClassroomDetailsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
-  await checkDashboardAccess(["teacher"]);
-  const resolvedParams = await params;
+  const resolvedParams = use(params);
   const classroomId = resolvedParams.id;
 
   return (
     <main className="min-h-full bg-background text-slate-900 dark:text-slate-50">
       <Suspense fallback={<ClassroomWorkspaceSkeleton />}>
-        <WorkspaceLoader classroomId={classroomId} />
+        <WorkspaceLoader classroomId={classroomId} searchParams={searchParams} />
       </Suspense>
     </main>
   );

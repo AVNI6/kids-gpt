@@ -57,7 +57,7 @@ export default function ChatInterface() {
         const supabase = createClient();
         const { data: sessionData, error: sessionError } = await supabase
           .from("chat_sessions")
-          .select("user_id, profile:profile(first_name, last_name, avatar_url, role)")
+          .select("user_id, profile:profile(user_id, first_name, last_name, avatar_url, role)")
           .eq("id", currentSessionId)
           .maybeSingle();
 
@@ -207,7 +207,7 @@ export default function ChatInterface() {
       )}
 
       <main className="flex-1 flex flex-col overflow-hidden min-h-0 bg-background">
-        {isSessionLoading && messages.length === 0 ? (
+        {isSessionLoading && messages.length === 0 && currentSessionId ? (
           <ChatSkeleton />
         ) : messages.length === 0 ? (
           <ChatSuggestions suggestions={suggestions} onSelectSuggestion={handleSelectSuggestion} />

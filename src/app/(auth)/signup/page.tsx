@@ -21,7 +21,7 @@ import { useState, useEffect, Suspense } from "react";
 import { AuthSkeleton } from "@/components/shared/skeletonLoading";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import Logo from "@/components/shared/logo/Logo";
 import { validatePassword } from "@/lib/utils";

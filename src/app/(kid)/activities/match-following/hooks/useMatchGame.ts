@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { MatchItem, ConnectionState, SelectedDot, DrawingState } from "../types";
 import { toast } from "sonner";
 

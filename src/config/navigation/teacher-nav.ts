@@ -1,4 +1,4 @@
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { BookOpen, Settings, Home } from "lucide-react";
 import type { NavItemConfig } from "./kid-nav";
 

@@ -10,7 +10,7 @@ import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 
 import { type MathChallengeItem } from "@/types/activities.type";
 import VictoryModal from "@/components/shared/VictoryModal";

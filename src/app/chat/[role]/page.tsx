@@ -9,8 +9,14 @@ type Role = "parent" | "kid" | "teacher";
 
 const allowedRoles: Role[] = ["parent", "kid", "teacher"];
 
-export default async function ChatRoute({ params }: { params: Promise<{ role: string }> }) {
+interface PageProps {
+  params: Promise<{ role: string }>;
+  searchParams: Promise<{ id?: string }>;
+}
+
+export default async function ChatRoute({ params, searchParams }: PageProps) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
 
   if (!allowedRoles.includes(resolvedParams.role as Role)) {
     notFound();
@@ -18,7 +24,7 @@ export default async function ChatRoute({ params }: { params: Promise<{ role: st
 
   return (
     <MainLayout>
-      <Suspense fallback={<ChatSkeleton />}>
+      <Suspense fallback={resolvedSearchParams.id ? <ChatSkeleton /> : null}>
         <ChatInterface />
       </Suspense>
     </MainLayout>

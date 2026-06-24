@@ -10,7 +10,7 @@ import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import VictoryModal from "@/components/shared/VictoryModal";
 import { type QuizQuestionItem } from "@/types/activities.type";

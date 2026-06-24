@@ -24,7 +24,7 @@ import {
 import { calculateActivityAnalytics } from "@/lib/utils/activity-analytics";
 import {
   getSentPendingInvitations as getSentInvitesShared,
-  cancelChildInvitation as cancelInviteShared
+  cancelChildInvitation as cancelInviteShared,
 } from "@/lib/services/shared/invitations";
 
 export async function getCurrentDashboardProfile(): Promise<DashboardUserProfile> {
@@ -481,9 +481,7 @@ export async function getParentActivitiesPaginated(
 
     if (settingIds.length > 0) {
       // Filter: source_type matches slug OR source_id is one of the found activity_settings ids
-      query = query.or(
-        `source_type.eq.${activitySlug},source_id.in.(${settingIds.join(",")})`
-      );
+      query = query.or(`source_type.eq.${activitySlug},source_id.in.(${settingIds.join(",")})`);
     } else {
       // No settings row found — filter by source_type only
       query = query.eq("source_type", activitySlug);
@@ -629,7 +627,7 @@ export async function getParentSessionMessages(
 
     let query = supabase
       .from("chat_messages")
-      .select("*")
+      .select("*, profile:profile(user_id, first_name, last_name, avatar_url, role)")
       .eq("session_id", sessionId)
       .is("deleted_at", null);
 

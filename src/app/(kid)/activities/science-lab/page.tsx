@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { type ScienceLabItem } from "@/types/activities.type";
 import VictoryModal from "@/components/shared/VictoryModal";
 import type { QuizReviewData, ScienceLabReviewItem } from "@/types/activity-review.types";

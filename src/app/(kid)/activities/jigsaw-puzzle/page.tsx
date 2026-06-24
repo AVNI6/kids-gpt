@@ -23,7 +23,7 @@ import HintOverlay from "./components/HintOverlay";
 import VictoryModal from "@/components/shared/VictoryModal";
 import ThemeSelector from "./components/ThemeSelector";
 import { Skeleton } from "@/components/ui/skeleton";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { JIGSAW_THEMES } from "@/lib/constants/JigsawThemes";
 
 const DEFAULT_IMAGE = JIGSAW_THEMES[0].url;

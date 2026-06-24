@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   addMessage,
   addSession,
@@ -46,6 +46,7 @@ export function useChatSender({
 }: UseChatSenderArgs) {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const userProfile = useAppSelector((state) => state.auth.userProfile);
   const [isLoading, setIsLoading] = useState(false);
   const pendingSendRef = useRef(false);
 
@@ -97,6 +98,8 @@ export function useChatSender({
 
         const userMessage: Message = {
           id: crypto.randomUUID(),
+          userId: user?.id || undefined,
+          senderProfile: userProfile || undefined,
           role: "user",
           content: currentInput,
           uploadedImage: currentImage || undefined,
@@ -152,6 +155,8 @@ export function useChatSender({
 
       const userMessage: Message = {
         id: crypto.randomUUID(),
+        userId: user?.id || undefined,
+        senderProfile: userProfile || undefined,
         role: "user",
         content: currentInput,
         uploadedImage: currentImage || undefined,
@@ -766,6 +771,7 @@ export function useChatSender({
       user,
       age,
       userRole,
+      userProfile,
       isUserLoggedIn,
       messages,
       dispatch,

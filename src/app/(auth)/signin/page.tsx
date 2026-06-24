@@ -15,7 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Image from "next/image";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { useState, useEffect } from "react";
 import Logo from "@/components/shared/logo/Logo";

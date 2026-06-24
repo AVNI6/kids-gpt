@@ -17,7 +17,7 @@ import { processActivityCompletion } from "@/lib/services/kid/rewards.actions";
 import { submitAssignmentActivityCompletion } from "@/lib/services/kid/classroom.actions";
 import { saveActivityReview } from "@/lib/services/kid/activity-review.actions";
 import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import type { ActivityReviewData } from "@/types/activity-review.types";
 
 interface VictoryModalProps {
