@@ -17,6 +17,7 @@ import {
   updateParentProfileSettings,
   changeParentPassword,
 } from "@/lib/services/parent/settings.actions";
+import { uploadAvatar } from "@/lib/services/shared/profile.actions";
 
 import { useAuth } from "@/hooks/useAuth";
 import ChangePasswordModal from "@/components/shared/forms/ChangePasswordModal";
@@ -34,12 +35,13 @@ export default function ParentSettingsContainer({ profile }: ParentSettingsConta
   const [firstName, setFirstName] = useState(profile.first_name || "");
   const [lastName, setLastName] = useState(profile.last_name || "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const hasChanges =
     firstName !== (profile.first_name || "") ||
     lastName !== (profile.last_name || "") ||
-    avatarUrl !== (profile.avatar_url || "");
+    selectedFile !== null;
 
   // Handle Profile Update
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -51,14 +53,28 @@ export default function ParentSettingsContainer({ profile }: ParentSettingsConta
 
     setIsSavingProfile(true);
     try {
+      let finalAvatarUrl = avatarUrl;
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("avatar", selectedFile);
+        const uploadRes = await uploadAvatar(formData);
+        if (uploadRes.avatarUrl) {
+          finalAvatarUrl = uploadRes.avatarUrl;
+          setAvatarUrl(uploadRes.avatarUrl);
+        } else {
+          throw new Error("Failed to upload profile picture.");
+        }
+      }
+
       const res = await updateParentProfileSettings({
         firstName,
         lastName,
-        avatarUrl,
+        avatarUrl: finalAvatarUrl,
       });
 
       if (res.success) {
         toast.success(res.message || "Profile settings saved!");
+        setSelectedFile(null);
         await refreshProfile();
       } else {
         toast.error(res.error || "Failed to update settings.");
@@ -126,10 +142,11 @@ export default function ParentSettingsContainer({ profile }: ParentSettingsConta
                     </Label>
                     <div className="flex flex-col sm:flex-row items-center gap-6 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
                       <AvatarUpload
-                        initialAvatarUrl={avatarUrl}
-                        onUploadSuccess={(url) => setAvatarUrl(url)}
+                        initialAvatarUrl={profile.avatar_url}
+                        onFileSelect={(file) => setSelectedFile(file)}
+                        isUploading={isSavingProfile}
                         label="Pick a Profile Photo"
-                        description="Click the photo circle to upload or replace your image automatically."
+                        description="Click the photo circle to upload or replace your image."
                       />
                     </div>
                   </div>

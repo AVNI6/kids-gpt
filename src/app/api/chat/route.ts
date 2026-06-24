@@ -9,50 +9,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getStudentLearningProfile } from "@/lib/services/shared/learning-profile.actions";
 
 import { GoogleGenAI } from "@google/genai";
-import {
-  isStopCommand,
-  deriveChatMode,
-  extractUserQuery,
-} from "@/lib/ai/orchestration/mode-detector";
+import { isStopCommand } from "@/lib/ai/orchestration/mode-detector";
 import { getGenerationConfig } from "@/lib/ai/orchestration/generation-config";
 import { extractAndParseJSON } from "@/lib/ai/orchestration/json-parser";
 import { PdfResponseSchema } from "@/lib/ai/schemas/pdf-response.schema";
 import { DocResponseSchema } from "@/lib/ai/schemas/doc-response.schema";
-
-function isImageGenerationRequest(message: string): boolean {
-  if (!message) return false;
-  const queryLower = extractUserQuery(message).trim().toLowerCase();
-
-  const hasAnalysisIntent =
-    /(explain|describe|what\s+is|tell\s+me|analyze|analyse|discuss|identify|who|why|how|where|when|detail|in\s+(the\s+)?(image|photo|picture|drawing|illustration)|about\s+(the\s+)?(image|photo|picture|drawing|illustration)|previous\s+(image|photo|picture|drawing|illustration)|above\s+(image|photo|picture|drawing|illustration))/i.test(
-      queryLower
-    );
-  if (hasAnalysisIntent) return false;
-
-  const hasDirectCreation =
-    /(draw|paint|sketch|illustrate|render|visualize)\s+(a|an|the|some)?\s*[a-z0-9]/i.test(
-      queryLower
-    );
-
-  const hasRequestVerb =
-    /(draw|create|generate|make|show|paint|sketch|produce|design|illustrate|visualize|render|want|wanted|need|display|give\s+me|fetch)/i.test(
-      queryLower
-    );
-  const hasVisualNoun =
-    /(image|picture|drawing|painting|photo|illustration|artwork|graphic|visual|portrait|scene|diagram)/i.test(
-      queryLower
-    );
-  const hasVerbAndNoun = hasRequestVerb && hasVisualNoun;
-
-  const hasOfPattern =
-    /(image|picture|photo|illustration|drawing|painting|sketch|graphic|portrait|diagram)\s+of/i.test(
-      queryLower
-    );
-
-  const isShortVisualNoun = hasVisualNoun && queryLower.length < 40;
-
-  return hasDirectCreation || hasVerbAndNoun || hasOfPattern || isShortVisualNoun;
-}
+import { routeIntent } from "@/lib/ai/orchestration/intent-router";
 
 export async function POST(req: NextRequest) {
   try {
@@ -110,7 +72,32 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (isImageGenerationRequest(message || "")) {
+    // Unified Intent Detection
+    const hasImage = !!image;
+    const hasDocument =
+      (message || "").includes("[Attachment:") || (message || "").includes("[File:");
+    const intent = await routeIntent({
+      message: message || "",
+      history: history || [],
+      hasImage,
+      hasDocument,
+      signal: req.signal,
+    });
+
+    // Enforce guest constraints (if guest user tries to perform a paid action)
+    if (!user) {
+      if (intent.mode === "pdf" || intent.mode === "doc" || intent.mode === "image_generation") {
+        return NextResponse.json({
+          type: "text",
+          message: `I'm sorry, you need to sign in to generate ${intent.mode === "image_generation" ? "images" : "documents"}!`,
+        });
+      }
+    }
+
+    const mode: ChatMode = intent.mode as ChatMode;
+    const resolvedCustomTask = intent.customTask || customTask;
+
+    if (mode === "image_generation") {
       // SAFE: Only strips leading trigger phrases
       let cleanedPrompt = (message || "").trim();
       // 1. Remove leading request phrasing: "generate an image of", "wanted image of", "draw a", "want to see a"
@@ -347,9 +334,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Centralized Mode Derivation using extracted mode detector
-    const mode: ChatMode = deriveChatMode(message || "", history || []);
-
     aiLogger.info(
       "ChatAPI",
       `Received request. Role: ${secureRole}, Mode: ${mode}, Style: ${responseStyle}`
@@ -359,7 +343,7 @@ export async function POST(req: NextRequest) {
     const activePrompt = buildSystemPrompt({
       role: secureRole,
       mode,
-      customTask,
+      customTask: resolvedCustomTask,
       responseStyle,
       age,
       learnerContext,

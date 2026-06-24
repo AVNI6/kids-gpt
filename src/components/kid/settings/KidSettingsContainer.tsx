@@ -14,6 +14,7 @@ import { AvatarUpload } from "@/components/ui/avatar-upload";
 
 import type { DashboardUserProfile } from "@/types/kid";
 import { updateKidProfileSettings, changeKidPassword } from "@/lib/services/kid/settings.actions";
+import { uploadAvatar } from "@/lib/services/shared/profile.actions";
 import { formatLocalDate, parseLocalDate } from "@/lib/utils/kid/childAge";
 import KidDobInput from "@/components/shared/forms/KidDobInput";
 
@@ -39,13 +40,14 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
   const [localAgeError, setLocalAgeError] = useState<string | null>(null);
 
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const hasChanges =
     firstName !== (profile.first_name || "") ||
     lastName !== (profile.last_name || "") ||
     username !== (profile.username || "") ||
-    avatarUrl !== (profile.avatar_url || "") ||
+    selectedFile !== null ||
     (date ? formatLocalDate(date) !== (profile.date_of_birth || "") : false);
 
   // Handle Profile Update
@@ -68,16 +70,30 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
 
     setIsSavingProfile(true);
     try {
+      let finalAvatarUrl = avatarUrl;
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("avatar", selectedFile);
+        const uploadRes = await uploadAvatar(formData);
+        if (uploadRes.avatarUrl) {
+          finalAvatarUrl = uploadRes.avatarUrl;
+          setAvatarUrl(uploadRes.avatarUrl);
+        } else {
+          throw new Error("Failed to upload profile picture.");
+        }
+      }
+
       const res = await updateKidProfileSettings({
         firstName,
         lastName,
         dateOfBirth: formatLocalDate(date),
         username,
-        avatarUrl,
+        avatarUrl: finalAvatarUrl,
       });
 
       if (res.success) {
         toast.success(res.message || "Profile settings saved!");
+        setSelectedFile(null);
         await refreshProfile();
       } else {
         toast.error(res.error || "Failed to update settings.");
@@ -143,10 +159,11 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
                   </Label>
                   <div className="flex flex-col sm:flex-row items-center gap-6 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
                     <AvatarUpload
-                      initialAvatarUrl={avatarUrl}
-                      onUploadSuccess={(url) => setAvatarUrl(url)}
+                      initialAvatarUrl={profile.avatar_url}
+                      onFileSelect={(file) => setSelectedFile(file)}
+                      isUploading={isSavingProfile}
                       label="Pick a Profile Photo"
-                      description="Click the photo circle to upload or replace your image automatically."
+                      description="Click the photo circle to upload or replace your image."
                     />
                   </div>
                 </div>

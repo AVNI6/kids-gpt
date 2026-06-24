@@ -13,6 +13,11 @@ export function getGenerationConfig(mode: ChatMode): JsonObject | undefined {
       return {
         temperature: 0.2,
       };
+    case "document_analysis":
+    case "image_analysis":
+      return {
+        temperature: 0.4,
+      };
     case "chat":
       return {
         temperature: 0.7,

@@ -129,7 +129,6 @@ export default function ChatInterface() {
   const { isLoading, sendMessage, stopGenerating } = useChatSender({
     messages,
     currentSessionId,
-    isUserLoggedIn,
     isLoadingAuth,
     user,
     age: childAge,
