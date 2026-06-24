@@ -49,6 +49,62 @@ export function useChatSender({
   const router = useRouter();
   const userProfile = useAppSelector((state) => state.auth.userProfile);
   const [isLoading, setIsLoading] = useState(false);
+  const [requestType, setRequestType] = useState<"pdf" | "docx" | "image" | "regular">("regular");
+  const [loadingText, setLoadingText] = useState("Thinking...");
+
+  useEffect(() => {
+    if (!isLoading) {
+      return;
+    }
+
+    const steps = {
+      pdf: [
+        "Analyzing your PDF request...",
+        "Gathering the best learning info...",
+        "Organizing PDF page layouts...",
+        "Creating beautiful PDF sections...",
+        "Your PDF has been generated!",
+      ],
+      docx: [
+        "Analyzing your document request...",
+        "Researching educational details...",
+        "Organizing headings & content structure...",
+        "Writing the Word Document content...",
+        "Your Word Document has been generated!",
+      ],
+      image: [
+        "Reading your creative request...",
+        "Setting up the drawing canvas...",
+        "Drawing the outlines & shapes...",
+        "Adding colorful details & textures...",
+        "Your Image has been generated!",
+      ],
+      regular: [
+        "Thinking...",
+        "Searching for answers...",
+        "Writing down the thoughts...",
+        "Almost ready...",
+        "Your Response is ready!",
+      ],
+    }[requestType];
+
+    let index = 0;
+
+    const interval = setInterval(() => {
+      if (index < steps.length - 1) {
+        index++;
+        setLoadingText(steps[index]);
+      } else {
+        clearInterval(interval);
+      }
+    }, 4000);
+
+    return () => {
+      clearInterval(interval);
+      setLoadingText("Thinking...");
+    };
+  }, [isLoading, requestType]);
+
   const pendingSendRef = useRef(false);
 
   const pendingInputRef = useRef<string>("");
@@ -101,6 +157,16 @@ export function useChatSender({
           currentInput || ""
         ) ||
           (currentInput || "").length < 50);
+
+      const type = isPdfRequest ? "pdf" : isDocRequest ? "docx" : "regular";
+      setRequestType(type);
+      setLoadingText(
+        type === "pdf"
+          ? "Analyzing your PDF request..."
+          : type === "docx"
+            ? "Analyzing your document request..."
+            : "Thinking..."
+      );
 
       // Intercept PDF/Doc requests for unauthenticated (guest) users
       if (!isUserLoggedIn && (isPdfRequest || isDocRequest)) {
@@ -277,6 +343,11 @@ export function useChatSender({
             (hasRequestVerb && hasVisualNoun) ||
             hasOfPattern ||
             isShortVisualNoun);
+
+        if (isImageRequest) {
+          setRequestType("image");
+          setLoadingText("Reading your creative request...");
+        }
 
         const apiUrl = isImageRequest ? "/api/generate-image" : "/api/chat";
         const bodyPayload = isImageRequest
@@ -876,5 +947,5 @@ export function useChatSender({
     setIsLoading(false);
   }, []);
 
-  return { isLoading, sendMessage, stopGenerating };
+  return { isLoading, loadingText, sendMessage, stopGenerating };
 }

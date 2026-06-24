@@ -126,7 +126,7 @@ export default function ChatInterface() {
     user,
   });
 
-  const { isLoading, sendMessage, stopGenerating } = useChatSender({
+  const { isLoading, loadingText, sendMessage, stopGenerating } = useChatSender({
     messages,
     currentSessionId,
     isUserLoggedIn,
@@ -240,6 +240,7 @@ export default function ChatInterface() {
           <ChatMessageList
             messages={messages}
             isLoading={isLoading}
+            loadingText={loadingText}
             pdfStates={pdfStates}
             handleDownloadPDF={handleDownloadPDF}
             docxStates={docxStates}

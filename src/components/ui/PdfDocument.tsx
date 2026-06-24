@@ -408,16 +408,8 @@ export const PdfDocument = ({ content, role = "kid" }: PdfDocumentProps) => {
           <MarkdownToPdf content={content} styles={styles} />
         </View>
 
-        {/* Footer Section */}
         <View style={styles.footer} fixed>
-          <Text>
-            {role === "kid"
-              ? "Created with love by Kidoza 🚀 | Page "
-              : role === "teacher"
-                ? "Kidoza Teacher Resource Hub | Page "
-                : "Kidoza Parent Portal Summary | Page "}
-            <Text render={({ pageNumber, totalPages }) => `${pageNumber} of ${totalPages}`} />
-          </Text>
+          <Text>Created with love by Kidoza</Text>
         </View>
       </Page>
     </Document>

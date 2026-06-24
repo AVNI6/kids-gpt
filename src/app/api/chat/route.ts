@@ -91,23 +91,6 @@ export async function POST(req: NextRequest) {
       }
 
       secureRole = profile.role as "kid" | "parent" | "teacher";
-
-      // 2. Perform usage boundary enforcement for kid role
-      if (secureRole === "kid") {
-        const { data: usage } = await supabase
-          .from("whole_usage_tracking")
-          .select("limit_reached")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        // Reject if token tracking indicates limits are reached
-        if (usage?.limit_reached) {
-          return NextResponse.json(
-            { error: "Token quota limit reached. Please upgrade your subscription plan." },
-            { status: 403 }
-          );
-        }
-      }
     }
 
     if (isImageGenerationRequest(message || "")) {
