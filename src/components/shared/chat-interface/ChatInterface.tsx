@@ -9,6 +9,7 @@ import ChatSkeleton from "./ChatSkeleton";
 import ChatHeader from "./ChatHeader";
 import { useChatMessages } from "./useChatMessages";
 import { useChatPdf } from "./useChatPdf";
+import { useChatDocx } from "./useChatDocx";
 import { useChatSender } from "./useChatSender";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setCurrentSessionId } from "@/store/slices/chatSlice";
@@ -33,6 +34,8 @@ export default function ChatInterface() {
   const isFirstScrollRef = useRef(true);
   const currentSessionIdRef = useRef(currentSessionId);
   const lastMessageIdRef = useRef<string | null>(null);
+  const lastMessageContentRef = useRef<string | null>(null);
+  const prevIsLoadingRef = useRef(false);
   const chatFooterRef = useRef<ChatFooterRef>(null);
 
   useEffect(() => {
@@ -57,7 +60,7 @@ export default function ChatInterface() {
         const supabase = createClient();
         const { data: sessionData, error: sessionError } = await supabase
           .from("chat_sessions")
-          .select("user_id, profile:profile(first_name, last_name, avatar_url, role)")
+          .select("user_id, profile:profile(user_id, first_name, last_name, avatar_url, role)")
           .eq("id", currentSessionId)
           .maybeSingle();
 
@@ -115,10 +118,17 @@ export default function ChatInterface() {
     userRole,
   });
 
-  const { isLoading, sendMessage, stopGenerating } = useChatSender({
+  const { docxStates, handleDownloadDocx } = useChatDocx({
     messages,
+    sessions,
     currentSessionId,
     isUserLoggedIn,
+    user,
+  });
+
+  const { isLoading, loadingText, sendMessage, stopGenerating } = useChatSender({
+    messages,
+    currentSessionId,
     isLoadingAuth,
     user,
     age: childAge,
@@ -162,29 +172,43 @@ export default function ChatInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior });
   }, []);
 
-  // Reset scroll speed on session change
   useEffect(() => {
     isFirstScrollRef.current = true;
   }, [currentSessionId]);
 
-  // Scroll to bottom whenever messages update; use instant on first load of a session,
-  // or smooth scroll when a new message is appended (last message ID changed)
   useEffect(() => {
+    const prevIsLoading = prevIsLoadingRef.current;
+    prevIsLoadingRef.current = isLoading;
+
     if (messages.length === 0) {
       lastMessageIdRef.current = null;
+      lastMessageContentRef.current = null;
       return;
     }
 
     const lastMsg = messages[messages.length - 1];
     const prevLastMsgId = lastMessageIdRef.current;
+    const prevLastMsgContent = lastMessageContentRef.current;
+
     lastMessageIdRef.current = lastMsg.id;
+    lastMessageContentRef.current = lastMsg.content || "";
 
     const isFirst = isFirstScrollRef.current;
     if (isFirst) {
       scrollToBottom("instant");
       isFirstScrollRef.current = false;
-    } else if (prevLastMsgId !== null && lastMsg.id !== prevLastMsgId) {
-      scrollToBottom("smooth");
+    } else {
+      const isNewMessage = prevLastMsgId !== null && lastMsg.id !== prevLastMsgId;
+      const isStreaming =
+        prevLastMsgId !== null &&
+        lastMsg.id === prevLastMsgId &&
+        lastMsg.role === "model" &&
+        (lastMsg.content || "") !== prevLastMsgContent;
+      const startedLoading = isLoading && !prevIsLoading;
+
+      if (isNewMessage || isStreaming || startedLoading) {
+        scrollToBottom("smooth");
+      }
     }
   }, [messages, isLoading, scrollToBottom]);
 
@@ -207,7 +231,7 @@ export default function ChatInterface() {
       )}
 
       <main className="flex-1 flex flex-col overflow-hidden min-h-0 bg-background">
-        {isSessionLoading && messages.length === 0 ? (
+        {isSessionLoading && messages.length === 0 && currentSessionId ? (
           <ChatSkeleton />
         ) : messages.length === 0 ? (
           <ChatSuggestions suggestions={suggestions} onSelectSuggestion={handleSelectSuggestion} />
@@ -215,8 +239,11 @@ export default function ChatInterface() {
           <ChatMessageList
             messages={messages}
             isLoading={isLoading}
+            loadingText={loadingText}
             pdfStates={pdfStates}
             handleDownloadPDF={handleDownloadPDF}
+            docxStates={docxStates}
+            handleDownloadDocx={handleDownloadDocx}
             messagesEndRef={messagesEndRef}
             hasMore={hasMore}
             isLoadingMore={isLoadingMore}

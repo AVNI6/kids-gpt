@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   addMessage,
   addSession,
@@ -20,13 +20,13 @@ import {
 } from "@/lib/services/shared/chat.actions";
 import { Message, UserRole } from "@/types/common";
 import { generatePdfBlob } from "@/hooks/shared/pdf-helper";
+import { generateDocxBlob } from "@/hooks/shared/docx-helper";
 import { getSessionManager } from "@/lib/ai/session-manager";
 import { getUniqueStoragePath } from "./chat-utils";
 
 interface UseChatSenderArgs {
   messages: Message[];
   currentSessionId: string | null;
-  isUserLoggedIn: boolean;
   isLoadingAuth: boolean;
   user: User | null;
   age?: number;
@@ -37,7 +37,6 @@ interface UseChatSenderArgs {
 export function useChatSender({
   messages,
   currentSessionId,
-  isUserLoggedIn,
   isLoadingAuth,
   user,
   age,
@@ -46,7 +45,64 @@ export function useChatSender({
 }: UseChatSenderArgs) {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const userProfile = useAppSelector((state) => state.auth.userProfile);
   const [isLoading, setIsLoading] = useState(false);
+  const requestType: "pdf" | "docx" | "image" | "regular" = "regular";
+  const [loadingText, setLoadingText] = useState("Thinking...");
+
+  useEffect(() => {
+    if (!isLoading) {
+      return;
+    }
+
+    const steps = {
+      pdf: [
+        "Analyzing your PDF request...",
+        "Gathering the best learning info...",
+        "Organizing PDF page layouts...",
+        "Creating beautiful PDF sections...",
+        "Your PDF has been generated!",
+      ],
+      docx: [
+        "Analyzing your document request...",
+        "Researching educational details...",
+        "Organizing headings & content structure...",
+        "Writing the Word Document content...",
+        "Your Word Document has been generated!",
+      ],
+      image: [
+        "Reading your creative request...",
+        "Setting up the drawing canvas...",
+        "Drawing the outlines & shapes...",
+        "Adding colorful details & textures...",
+        "Your Image has been generated!",
+      ],
+      regular: [
+        "Thinking...",
+        "Searching for answers...",
+        "Writing down the thoughts...",
+        "Almost ready...",
+        "Your Response is ready!",
+      ],
+    }[requestType];
+
+    let index = 0;
+
+    const interval = setInterval(() => {
+      if (index < steps.length - 1) {
+        index++;
+        setLoadingText(steps[index]);
+      } else {
+        clearInterval(interval);
+      }
+    }, 4000);
+
+    return () => {
+      clearInterval(interval);
+      setLoadingText("Thinking...");
+    };
+  }, [isLoading, requestType]);
+
   const pendingSendRef = useRef(false);
 
   const pendingInputRef = useRef<string>("");
@@ -75,44 +131,6 @@ export function useChatSender({
       const canPersist = !!user?.id;
 
       if (!currentInput.trim() && !currentImage && !currentFileContent && !currentFileName) {
-        return;
-      }
-
-      const isAttachmentPresent =
-        !!currentFileContent || /\[Attachment:.*\.pdf\]/i.test(currentInput || "");
-      const isSummaryOrQuery =
-        /summarize|summarise|summary|explain|read|analyze|analyse|outline|extract|review/i.test(
-          currentInput || ""
-        );
-
-      const isPdfRequest =
-        !isAttachmentPresent &&
-        !isSummaryOrQuery &&
-        /pdf/i.test(currentInput || "") &&
-        /generate|create|make|build|download|export|convert/i.test(currentInput || "");
-
-      // Intercept PDF requests for unauthenticated (guest) users
-      if (!isUserLoggedIn && isPdfRequest) {
-        setIsLoading(true);
-
-        const userMessage: Message = {
-          id: crypto.randomUUID(),
-          role: "user",
-          content: currentInput,
-          uploadedImage: currentImage || undefined,
-          fileName: currentFileName || undefined,
-        };
-        dispatch(addMessage(userMessage));
-
-        setTimeout(() => {
-          const aiMessage: Message = {
-            id: crypto.randomUUID(),
-            role: "model",
-            content: "cant generate pdf, please signin to generate pdf",
-          };
-          dispatch(addMessage(aiMessage));
-          setIsLoading(false);
-        }, 800);
         return;
       }
 
@@ -152,6 +170,8 @@ export function useChatSender({
 
       const userMessage: Message = {
         id: crypto.randomUUID(),
+        userId: user?.id || undefined,
+        senderProfile: userProfile || undefined,
         role: "user",
         content: currentInput,
         uploadedImage: currentImage || undefined,
@@ -226,64 +246,26 @@ export function useChatSender({
       const signal = sessionManager.registerRequest(requestId);
 
       try {
-        // Detect explicit image creation requests.
-        const queryLower = currentInput.trim().toLowerCase();
-
-        const hasAnalysisIntent =
-          /(explain|describe|what\s+is|tell\s+me|analyze|analyse|discuss|identify|who|why|how|where|when|detail|in\s+(the\s+)?(image|photo|picture|drawing|illustration)|about\s+(the\s+)?(image|photo|picture|drawing|illustration)|previous\s+(image|photo|picture|drawing|illustration)|above\s+(image|photo|picture|drawing|illustration))/i.test(
-            queryLower
-          );
-
-        const hasDirectCreation =
-          /(draw|paint|sketch|illustrate|render|visualize)\s+(a|an|the|some)?\s*[a-z0-9]/i.test(
-            queryLower
-          );
-
-        const hasRequestVerb =
-          /(draw|create|generate|make|show|paint|sketch|produce|design|illustrate|visualize|render|want|wanted|need|display|give\s+me|fetch)/i.test(
-            queryLower
-          );
-        const hasVisualNoun =
-          /(image|picture|drawing|painting|photo|illustration|artwork|graphic|visual|portrait|scene|diagram)/i.test(
-            queryLower
-          );
-
-        const hasOfPattern =
-          /(image|picture|photo|illustration|drawing|painting|sketch|graphic|portrait|diagram)\s+of/i.test(
-            queryLower
-          );
-
-        const isShortVisualNoun = hasVisualNoun && queryLower.length < 40;
-
-        const isImageRequest =
-          !currentImage &&
-          !hasAnalysisIntent &&
-          (hasDirectCreation ||
-            (hasRequestVerb && hasVisualNoun) ||
-            hasOfPattern ||
-            isShortVisualNoun);
-
-        const apiUrl = isImageRequest ? "/api/generate-image" : "/api/chat";
-        const bodyPayload = isImageRequest
-          ? { prompt: currentInput }
-          : {
-              message: finalInputForAI,
-              image: currentImage,
-              history: chatHistory,
-              role: userRole || "kid",
-              age: age,
-              sessionId: sessionId || undefined,
-            };
+        const bodyPayload = {
+          message: finalInputForAI,
+          image: currentImage,
+          history: chatHistory,
+          role: userRole || "kid",
+          age: age,
+          sessionId: sessionId || undefined,
+        };
 
         const apiStartTime = Date.now();
-        const res = await fetch(apiUrl, {
+        const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(bodyPayload),
           signal,
         });
 
-        if (!isImageRequest && !isPdfRequest && res.body) {
+        const isStream = res.headers.get("content-type")?.includes("text/event-stream");
+
+        if (isStream && res.body) {
           // 1. Generate unique message ID
           const aiMessageId = crypto.randomUUID();
 
@@ -581,8 +563,12 @@ export function useChatSender({
             isImage: isImageResponse,
             pdfContent: data?.isPdfRequest ? data.pdfContent : undefined,
             isPdfRequest: data?.isPdfRequest,
-            token_used: tokens,
             pdfTheme: data?.isPdfRequest ? data.pdfTheme : undefined,
+            isDocRequest: data?.isDocRequest,
+            docContent: data?.isDocRequest ? data.docContent : undefined,
+            docTheme: data?.isDocRequest ? data.docTheme : undefined,
+            suggestedTitle: data?.suggestedTitle,
+            token_used: tokens,
           };
 
           dispatch(addMessage(initialAiMessage));
@@ -726,8 +712,63 @@ export function useChatSender({
                   })();
                 }
 
-                // Track non-image/non-pdf usage
-                if (!isImageResponse && !data.isPdfRequest) {
+                // Asynchronously compile and upload Word documents (.docx) in the background
+                if (data.isDocRequest && data.docContent) {
+                  (async () => {
+                    try {
+                      const docxBlob = await generateDocxBlob(data.docContent);
+                      if (!user?.id) throw new Error("Missing user id for Word upload");
+                      const storageFileName = getUniqueStoragePath(
+                        user.id,
+                        sessionId,
+                        "docx",
+                        "doc"
+                      );
+                      const docxAttachmentUrl = await uploadFileToStorage(
+                        docxBlob,
+                        storageFileName,
+                        user.id
+                      );
+
+                      // Update Redux state and cache with the permanent Word URL
+                      dispatch(
+                        updateMessage({
+                          id: aiMessageId,
+                          content: finalContent,
+                          attachmentUrl: docxAttachmentUrl,
+                        })
+                      );
+
+                      // Update DB with the permanent Word URL
+                      await updateChatMessageAttachment(aiMessageId, docxAttachmentUrl);
+
+                      // Save to generated materials table
+                      await saveGeneratedMaterial(
+                        sessionId,
+                        "doc",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        docxAttachmentUrl,
+                        { prompt: currentInput },
+                        user?.id
+                      );
+
+                      // Track daily usage for Word Document (increment pdfs_generated metric too)
+                      await trackDailyUsage(
+                        tokens,
+                        { isPdf: true, durationMs: responseTime },
+                        user?.id
+                      );
+                    } catch (docxUploadErr) {
+                      console.error(
+                        "[ChatInterface] Background Word upload failed:",
+                        docxUploadErr
+                      );
+                    }
+                  })();
+                }
+
+                // Track non-image/non-pdf/non-doc usage
+                if (!isImageResponse && !data.isPdfRequest && !data.isDocRequest) {
                   await trackDailyUsage(tokens, { durationMs: responseTime }, user?.id);
                 }
               } catch (backgroundErr) {
@@ -766,7 +807,7 @@ export function useChatSender({
       user,
       age,
       userRole,
-      isUserLoggedIn,
+      userProfile,
       messages,
       dispatch,
       router,
@@ -801,5 +842,5 @@ export function useChatSender({
     setIsLoading(false);
   }, []);
 
-  return { isLoading, sendMessage, stopGenerating };
+  return { isLoading, loadingText, sendMessage, stopGenerating };
 }

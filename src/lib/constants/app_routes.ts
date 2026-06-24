@@ -22,4 +22,5 @@ export const APP_ROUTES = {
   TeacherClassrooms: "/dashboard/teacher/classrooms",
   TeacherNotifications: "/dashboard/teacher/notifications",
   TeacherSettings: "/dashboard/teacher/settings",
+  PdfDoodlesCount: 7,
 };

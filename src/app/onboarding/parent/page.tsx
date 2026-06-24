@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { OnboardingLayout } from "@/components/shared/onboarding/onboarding-layout";
 
@@ -72,6 +72,13 @@ export default function ParentOnboardingPage() {
   }
 
   if (userProfile?.is_onboarded) {
+    if (parentState.success) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
+        </div>
+      );
+    }
     return <AlreadyOnboardedView />;
   }
 
@@ -100,7 +107,7 @@ export default function ParentOnboardingPage() {
       }
     >
       {/* Avatar Section */}
-      <AvatarUpload />
+      <AvatarUpload initialAvatarUrl={userProfile?.avatar_url} />
 
       {/* Info Section */}
       <form action={parentAction} className="space-y-6">

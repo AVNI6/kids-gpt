@@ -23,8 +23,9 @@ import HintOverlay from "./components/HintOverlay";
 import VictoryModal from "@/components/shared/VictoryModal";
 import ThemeSelector from "./components/ThemeSelector";
 import { Skeleton } from "@/components/ui/skeleton";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { JIGSAW_THEMES } from "@/lib/constants/JigsawThemes";
+import type { JigsawReviewData } from "@/types/activity-review.types";
 
 const DEFAULT_IMAGE = JIGSAW_THEMES[0].url;
 
@@ -36,6 +37,10 @@ export default function JigsawPuzzlePage() {
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
   const boardRef = useRef<HTMLDivElement>(null);
   const [boardWidth, setBoardWidth] = useState(0);
+
+  // Game start timestamp for duration tracking
+  const gameStartedAtRef = useRef<number>(0);
+  const [finalGameStartedAt, setFinalGameStartedAt] = useState<number>(0);
 
   // Game Event States
   const [isSolved, setIsSolved] = useState(false);
@@ -128,6 +133,8 @@ export default function JigsawPuzzlePage() {
 
   const handleReset = () => {
     initPuzzle(difficulty);
+    gameStartedAtRef.current = Date.now();
+    setFinalGameStartedAt(0);
   };
 
   const handleImageUploaded = async (file: File) => {
@@ -171,6 +178,7 @@ export default function JigsawPuzzlePage() {
       const solved = updated.every((p) => p.isPlaced);
       if (solved) {
         setIsSolved(true);
+        setFinalGameStartedAt(gameStartedAtRef.current);
       }
 
       return updated;
@@ -180,6 +188,8 @@ export default function JigsawPuzzlePage() {
   const handleStartPuzzle = () => {
     initPuzzle(difficulty);
     setGameState("playing");
+    gameStartedAtRef.current = Date.now();
+    setFinalGameStartedAt(0);
   };
 
   const handleBackToSetup = () => {
@@ -481,6 +491,16 @@ export default function JigsawPuzzlePage() {
         rewardsDescription={`${difficulty}x${difficulty} Grid Completion`}
         jigsawGridSize={difficulty}
         jigsawThemeName={JIGSAW_THEMES.find((p) => p.url === imageUrl)?.id || "custom-upload"}
+        gameStartedAt={finalGameStartedAt}
+        reviewData={
+          {
+            type: "jigsaw-puzzle",
+            grid_size: difficulty,
+            theme_name: JIGSAW_THEMES.find((p) => p.url === imageUrl)?.name || "Custom Upload",
+            theme_url: imageUrl,
+            completion_status: "solved",
+          } satisfies JigsawReviewData
+        }
       />
     </main>
   );

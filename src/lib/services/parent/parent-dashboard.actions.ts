@@ -12,7 +12,7 @@ import type {
   ParentActivityItem,
 } from "@/types/kid";
 import type { ChatMessageRow } from "@/types/common";
-import { getDailyScreenTime, recoverStaleSessions } from "../shared/screentime.actions";
+import { getDailyScreenTime } from "../shared/screentime.actions";
 import { preSignMessageUrls } from "../shared/chat.actions";
 import type { SearchHistoryItem, CacheData } from "@/types/parent";
 import {
@@ -22,6 +22,10 @@ import {
   linkByEmail as linkShared,
 } from "@/lib/services/kid/dashboard.actions";
 import { calculateActivityAnalytics } from "@/lib/utils/activity-analytics";
+import {
+  getSentPendingInvitations as getSentInvitesShared,
+  cancelChildInvitation as cancelInviteShared,
+} from "@/lib/services/shared/invitations";
 
 export async function getCurrentDashboardProfile(): Promise<DashboardUserProfile> {
   return getProfileShared();
@@ -29,6 +33,14 @@ export async function getCurrentDashboardProfile(): Promise<DashboardUserProfile
 
 export async function linkByEmail(targetEmail: string): Promise<EmailLinkResult> {
   return linkShared(targetEmail);
+}
+
+export async function getSentPendingInvitations() {
+  return getSentInvitesShared();
+}
+
+export async function cancelChildInvitation(inviteId: string) {
+  return cancelInviteShared(inviteId);
 }
 
 interface RewardQueryResult {
@@ -469,9 +481,7 @@ export async function getParentActivitiesPaginated(
 
     if (settingIds.length > 0) {
       // Filter: source_type matches slug OR source_id is one of the found activity_settings ids
-      query = query.or(
-        `source_type.eq.${activitySlug},source_id.in.(${settingIds.join(",")})`
-      );
+      query = query.or(`source_type.eq.${activitySlug},source_id.in.(${settingIds.join(",")})`);
     } else {
       // No settings row found — filter by source_type only
       query = query.eq("source_type", activitySlug);
@@ -617,7 +627,7 @@ export async function getParentSessionMessages(
 
     let query = supabase
       .from("chat_messages")
-      .select("*")
+      .select("*, profile:profile(user_id, first_name, last_name, avatar_url, role)")
       .eq("session_id", sessionId)
       .is("deleted_at", null);
 

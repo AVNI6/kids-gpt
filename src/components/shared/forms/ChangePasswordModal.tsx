@@ -135,7 +135,10 @@ export default function ChangePasswordModal({
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-md rounded-3xl border border-border bg-card p-6 shadow-xl">
+      <DialogContent
+        showCloseButton={false}
+        className="sm:max-w-md rounded-3xl border border-border bg-card p-6 shadow-xl"
+      >
         <DialogHeader suppressHydrationWarning>
           <DialogTitle className="text-2xl font-black text-foreground">Change Password</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground font-medium mt-1">

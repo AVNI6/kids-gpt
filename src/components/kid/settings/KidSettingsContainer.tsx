@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { UserRound, KeyRound, Mail, Shield, Calendar as CalendarIcon } from "lucide-react";
+import { UserRound, KeyRound, Mail, Shield } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,12 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 
 import type { DashboardUserProfile } from "@/types/kid";
 import { updateKidProfileSettings, changeKidPassword } from "@/lib/services/kid/settings.actions";
-import { calculateAge, formatLocalDate, parseLocalDate } from "@/lib/utils/kid/childAge";
+import { uploadAvatar } from "@/lib/services/shared/profile.actions";
+import { formatLocalDate, parseLocalDate } from "@/lib/utils/kid/childAge";
+import KidDobInput from "@/components/shared/forms/KidDobInput";
 
 import { useAuth } from "@/hooks/useAuth";
 import ChangePasswordModal from "@/components/shared/forms/ChangePasswordModal";
@@ -41,42 +40,15 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
   const [localAgeError, setLocalAgeError] = useState<string | null>(null);
 
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const hasChanges =
     firstName !== (profile.first_name || "") ||
     lastName !== (profile.last_name || "") ||
     username !== (profile.username || "") ||
-    avatarUrl !== (profile.avatar_url || "") ||
+    selectedFile !== null ||
     (date ? formatLocalDate(date) !== (profile.date_of_birth || "") : false);
-
-  const handleDateChange = (selectedDate: Date | undefined) => {
-    setDate(selectedDate);
-    if (!selectedDate) {
-      setLocalAgeError("Birthdate is required.");
-      return;
-    }
-
-    const today = new Date();
-    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const selectedDateOnly = new Date(
-      selectedDate.getFullYear(),
-      selectedDate.getMonth(),
-      selectedDate.getDate()
-    );
-
-    if (selectedDateOnly > todayDateOnly) {
-      setLocalAgeError("Birthdate cannot be in the future.");
-      return;
-    }
-
-    const age = calculateAge(selectedDateOnly, todayDateOnly);
-    if (age === null || age < 5) {
-      setLocalAgeError("You must be at least 5 years old.");
-    } else {
-      setLocalAgeError(null);
-    }
-  };
 
   // Handle Profile Update
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -98,16 +70,30 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
 
     setIsSavingProfile(true);
     try {
+      let finalAvatarUrl = avatarUrl;
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("avatar", selectedFile);
+        const uploadRes = await uploadAvatar(formData);
+        if (uploadRes.avatarUrl) {
+          finalAvatarUrl = uploadRes.avatarUrl;
+          setAvatarUrl(uploadRes.avatarUrl);
+        } else {
+          throw new Error("Failed to upload profile picture.");
+        }
+      }
+
       const res = await updateKidProfileSettings({
         firstName,
         lastName,
         dateOfBirth: formatLocalDate(date),
         username,
-        avatarUrl,
+        avatarUrl: finalAvatarUrl,
       });
 
       if (res.success) {
         toast.success(res.message || "Profile settings saved!");
+        setSelectedFile(null);
         await refreshProfile();
       } else {
         toast.error(res.error || "Failed to update settings.");
@@ -173,10 +159,11 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
                   </Label>
                   <div className="flex flex-col sm:flex-row items-center gap-6 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
                     <AvatarUpload
-                      initialAvatarUrl={avatarUrl}
-                      onUploadSuccess={(url) => setAvatarUrl(url)}
+                      initialAvatarUrl={profile.avatar_url}
+                      onFileSelect={(file) => setSelectedFile(file)}
+                      isUploading={isSavingProfile}
                       label="Pick a Profile Photo"
-                      description="Click the photo circle to upload or replace your image automatically."
+                      description="Click the photo circle to upload or replace your image."
                     />
                   </div>
                 </div>
@@ -222,41 +209,15 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
                     />
                   </div>
 
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="dateOfBirth" className="text-sm font-bold text-foreground ml-1">
-                      Date of Birth
-                    </Label>
-                    <div className="relative">
-                      <Popover>
-                        <PopoverTrigger
-                          type="button"
-                          id="dateOfBirth"
-                          className="w-full rounded-2xl border border-input bg-background focus:bg-card h-13 text-base font-medium px-4 text-left justify-start flex items-center gap-2 hover:bg-background/90"
-                        >
-                          <CalendarIcon className="h-5 w-5 text-muted-foreground/80 shrink-0" />
-                          {date ? (
-                            format(date, "PPP")
-                          ) : (
-                            <span className="text-muted-foreground/50">Pick your birthday</span>
-                          )}
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={handleDateChange}
-                            captionLayout="dropdown"
-                            startMonth={new Date(new Date().getFullYear() - 100, 0)}
-                            endMonth={new Date()}
-                            disabled={{ after: new Date() }}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    {localAgeError && (
-                      <p className="text-xs font-bold text-rose-500 ml-1 mt-1">{localAgeError}</p>
-                    )}
-                  </div>
+                  <KidDobInput
+                    date={date}
+                    onDateChange={(selectedDate, error) => {
+                      setDate(selectedDate);
+                      setLocalAgeError(error);
+                    }}
+                    localAgeError={localAgeError}
+                    variant="settings"
+                  />
                 </div>
 
                 <div className="flex justify-end pt-6 border-t border-border">

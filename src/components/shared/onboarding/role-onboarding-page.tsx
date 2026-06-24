@@ -17,7 +17,7 @@ import Image from "next/image";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import Logo from "@/components/shared/logo/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { AlreadyOnboardedView } from "./already-onboarded-view";

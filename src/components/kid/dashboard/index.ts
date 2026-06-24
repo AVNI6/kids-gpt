@@ -16,3 +16,5 @@ export {
   default as NotificationsUpdates,
   NotificationsUpdatesSkeleton,
 } from "./NotificationsUpdates";
+export { default as PendingInvitations } from "./PendingInvitations";
+

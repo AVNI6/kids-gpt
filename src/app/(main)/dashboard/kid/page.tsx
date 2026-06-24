@@ -2,6 +2,7 @@ import { Suspense } from "react";
 
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getKidComprehensiveDetails } from "@/lib/services/kid/dashboard.actions";
+import { getPendingInvitations } from "@/lib/services/shared/invitations";
 import { KidStreakBannerSkeleton } from "@/components/shared/skeletonLoading";
 
 import KidStreakBanner from "@/components/kid/dashboard/KidStreakBanner";
@@ -10,11 +11,13 @@ import {
   GameHistorySkeleton,
   NotificationsUpdates,
   NotificationsUpdatesSkeleton,
+  PendingInvitations,
 } from "@/components/kid/dashboard";
 
 export default async function KidDashboardPage() {
   await checkDashboardAccess(["kid"]);
   const details = await getKidComprehensiveDetails();
+  const invitations = await getPendingInvitations();
 
   return (
     <main className="min-h-full bg-background px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8 dark:text-slate-50">
@@ -22,6 +25,10 @@ export default async function KidDashboardPage() {
         <Suspense fallback={<KidStreakBannerSkeleton />}>
           <KidStreakBanner />
         </Suspense>
+
+        {invitations.length > 0 && (
+          <PendingInvitations initialInvitations={invitations} />
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <div className="h-full">

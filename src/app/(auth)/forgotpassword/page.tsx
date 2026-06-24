@@ -5,7 +5,7 @@ import { Mail, ArrowRight, Lightbulb, ArrowLeft, HelpCircle, Shield } from "luci
 import { createClient } from "@/lib/supabase/client";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { useState } from "react";
 import Logo from "@/components/shared/logo/Logo";
 import { Input } from "@/components/ui/input";

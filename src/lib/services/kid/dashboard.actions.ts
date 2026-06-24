@@ -200,8 +200,25 @@ export async function linkByEmail(targetEmail: string): Promise<EmailLinkResult>
   }
 
   const { profile } = await verifyUserRole();
-  const supabase = await getSupabaseClient();
 
+  // For parents, bypass link_users_by_email RPC and directly create child invitation
+  if (profile.role === "parent") {
+    const inviteResult = await createChildInvitation(email, profile.user_id);
+    if (!inviteResult.success) {
+      return {
+        status: "error",
+        message: inviteResult.error || "Failed to create invitation.",
+      };
+    }
+    revalidatePath("/dashboard/parent");
+    return {
+      status: "pending",
+      message: inviteResult.message || "Invitation sent successfully.",
+    };
+  }
+
+  // For other roles (e.g. teachers linking kids), call the RPC
+  const supabase = await getSupabaseClient();
   const { data, error } = await supabase.rpc("link_users_by_email", {
     p_current_user_id: profile.user_id,
     p_target_email: email,
@@ -215,18 +232,6 @@ export async function linkByEmail(targetEmail: string): Promise<EmailLinkResult>
 
   if (!result || typeof result.status !== "string") {
     return { status: "error", message: "Unexpected response from email linking RPC." };
-  }
-
-  if (result.status === "pending" && profile.role === "parent") {
-    const inviteResult = await createChildInvitation(email, profile.user_id);
-    if (!inviteResult.success) {
-      return {
-        status: "error",
-        message: inviteResult.error || "Failed to create invitation link.",
-      };
-    }
-    revalidatePath("/dashboard/parent");
-    return { status: "pending", message: inviteResult.message || "Invitation sent successfully." };
   }
 
   if (result.status === "success" || result.status === "pending") {

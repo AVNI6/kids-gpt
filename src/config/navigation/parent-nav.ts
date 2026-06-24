@@ -1,4 +1,4 @@
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { Users, BarChart3, ClipboardList, Home, Settings } from "lucide-react";
 import type { NavItemConfig } from "./kid-nav";
 

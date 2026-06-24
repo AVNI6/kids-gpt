@@ -12,6 +12,8 @@ interface AvatarUploadProps {
   label?: string;
   description?: string;
   successMessage?: string;
+  onFileSelect?: (file: File | null) => void;
+  isUploading?: boolean;
 }
 
 export function AvatarUpload({
@@ -21,12 +23,26 @@ export function AvatarUpload({
   label = "Profile Photo",
   description = "Click the photo circle to upload or replace your image automatically.",
   successMessage = "Looking good!",
+  onFileSelect,
+  isUploading = false,
 }: AvatarUploadProps) {
   const { refreshProfile } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl ?? null);
   const [error, setError] = useState<string | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const isPendingVal = isPending || isUploading;
+
+  const [prevInitialAvatarUrl, setPrevInitialAvatarUrl] = useState(initialAvatarUrl);
+  if (initialAvatarUrl !== prevInitialAvatarUrl) {
+    setPrevInitialAvatarUrl(initialAvatarUrl);
+    setAvatarUrl(initialAvatarUrl ?? null);
+    if (localPreviewUrl) {
+      URL.revokeObjectURL(localPreviewUrl);
+      setLocalPreviewUrl(null);
+    }
+  }
 
   useEffect(() => {
     return () => {
@@ -36,7 +52,7 @@ export function AvatarUpload({
     };
   }, [localPreviewUrl]);
 
-  const displayUrl = useMemo(() => avatarUrl ?? localPreviewUrl, [avatarUrl, localPreviewUrl]);
+  const displayUrl = useMemo(() => localPreviewUrl ?? avatarUrl, [avatarUrl, localPreviewUrl]);
 
   const onAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -50,6 +66,11 @@ export function AvatarUpload({
     setLocalPreviewUrl(preview);
     setError(null);
 
+    if (onFileSelect) {
+      onFileSelect(file);
+      return;
+    }
+
     const formData = new FormData();
     formData.append("avatar", file);
 
@@ -58,6 +79,7 @@ export function AvatarUpload({
         const result = await uploadAvatar(formData);
         if (result.avatarUrl) {
           setAvatarUrl(result.avatarUrl);
+          setLocalPreviewUrl(null);
           setError(null);
           try {
             await refreshProfile();
@@ -80,7 +102,7 @@ export function AvatarUpload({
         <label
           htmlFor="avatar-input"
           className={`relative block h-28 w-28 overflow-hidden rounded-full border-4 border-border bg-muted shadow-xl ring-4 ring-sky-500/10 transition-all duration-300 ${
-            isPending
+            isPendingVal
               ? "cursor-not-allowed opacity-80"
               : "cursor-pointer hover:scale-105 hover:border-sky-500"
           }`}
@@ -95,7 +117,7 @@ export function AvatarUpload({
           )}
 
           {/* Glassmorphic Loading Overlay */}
-          {isPending && (
+          {isPendingVal && (
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center rounded-full animate-in fade-in duration-200">
               <Loader2 className="h-8 w-8 text-white animate-spin" />
             </div>
@@ -106,7 +128,7 @@ export function AvatarUpload({
         <label
           htmlFor="avatar-input"
           className={`absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg border-2 border-border transition-all duration-300 ${
-            isPending
+            isPendingVal
               ? "cursor-not-allowed opacity-50"
               : "cursor-pointer hover:scale-110 hover:bg-emerald-600"
           }`}
@@ -121,7 +143,7 @@ export function AvatarUpload({
           type="file"
           accept="image/*"
           onChange={onAvatarChange}
-          disabled={isPending}
+          disabled={isPendingVal}
           className="hidden"
         />
       </div>

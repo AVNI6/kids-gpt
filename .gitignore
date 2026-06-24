@@ -46,6 +46,6 @@ next-env.d.ts
 .agents/*
 skills-lock.json
 
-.husky/*
+.husky/_
 .vscode/*
 supabase/.temp/*

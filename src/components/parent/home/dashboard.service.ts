@@ -51,6 +51,14 @@ export class DashboardService {
     return actions.linkByEmail(email);
   }
 
+  static async getSentPendingInvitations() {
+    return actions.getSentPendingInvitations();
+  }
+
+  static async cancelChildInvitation(inviteId: string) {
+    return actions.cancelChildInvitation(inviteId);
+  }
+
   static async updateProfile(formData: FormData) {
     return actions.updateParentProfile(formData);
   }

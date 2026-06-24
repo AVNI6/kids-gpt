@@ -8,8 +8,11 @@ import { Button } from "@/components/ui/button";
 export function triggerConfettiSideCannons() {
   const end = Date.now() + 2 * 1000; //
   const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+  let cancelled = false;
+  let animationFrameId: number;
+
   const frame = () => {
-    if (Date.now() > end) return;
+    if (cancelled || Date.now() > end) return;
     confetti({
       particleCount: 4,
       angle: 60,
@@ -26,9 +29,17 @@ export function triggerConfettiSideCannons() {
       origin: { x: 1, y: 0.5 },
       colors: colors,
     });
-    requestAnimationFrame(frame);
+    animationFrameId = requestAnimationFrame(frame);
   };
   frame();
+
+  return () => {
+    cancelled = true;
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+    }
+    confetti.reset();
+  };
 }
 
 export function ConfettiSideCannons() {

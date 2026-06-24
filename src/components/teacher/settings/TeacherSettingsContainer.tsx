@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { UserRound, KeyRound, Loader2, Camera, Mail, Shield } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
   const [organization, setOrganization] = useState(profile.standard || "");
   const [mobileNo, setMobileNo] = useState(profile.mobile_no || "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const hasChanges =
@@ -46,16 +47,23 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
     username !== (profile.username || "") ||
     organization !== (profile.standard || "") ||
     mobileNo !== (profile.mobile_no || "") ||
-    avatarUrl !== (profile.avatar_url || "");
+    selectedFile !== null;
 
   // Avatar upload
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, startUploadTransition] = useTransition();
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (localPreviewUrl) {
+        URL.revokeObjectURL(localPreviewUrl);
+      }
+    };
+  }, [localPreviewUrl]);
 
   // Initials helper
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.trim().toUpperCase() || "T";
-  const displayUrl = avatarUrl || localPreviewUrl || "";
+  const displayUrl = localPreviewUrl || avatarUrl || "";
 
   // Handle Avatar Change
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,24 +75,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
     }
     const preview = URL.createObjectURL(file);
     setLocalPreviewUrl(preview);
-
-    const formData = new FormData();
-    formData.append("avatar", file);
-
-    startUploadTransition(async () => {
-      try {
-        const result = await uploadAvatar(formData);
-        if (result && result.avatarUrl) {
-          setAvatarUrl(result.avatarUrl);
-          toast.success("Profile avatar uploaded successfully!");
-          await refreshProfile();
-        } else {
-          toast.error("Avatar upload failed");
-        }
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to upload avatar.");
-      }
-    });
+    setSelectedFile(file);
   };
 
   // Handle Profile Update
@@ -105,17 +96,35 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
 
     setIsSavingProfile(true);
     try {
+      let finalAvatarUrl = avatarUrl;
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("avatar", selectedFile);
+        const uploadResult = await uploadAvatar(formData);
+        if (uploadResult && uploadResult.avatarUrl) {
+          finalAvatarUrl = uploadResult.avatarUrl;
+          setAvatarUrl(uploadResult.avatarUrl);
+        } else {
+          throw new Error("Avatar upload failed");
+        }
+      }
+
       const res = await updateTeacherProfileSettings({
         firstName,
         lastName,
         organization,
         mobileNo,
         username,
-        avatarUrl,
+        avatarUrl: finalAvatarUrl,
       });
 
       if (res.success) {
         toast.success(res.message || "Profile settings saved!");
+        setSelectedFile(null);
+        if (localPreviewUrl) {
+          URL.revokeObjectURL(localPreviewUrl);
+          setLocalPreviewUrl(null);
+        }
         await refreshProfile();
       } else {
         toast.error(res.error || "Failed to update settings.");
@@ -184,9 +193,9 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={isUploading}
+                        disabled={isSavingProfile}
                         className={`relative group rounded-full p-1 border-2 border-border transition-all shrink-0 ${
-                          isUploading
+                          isSavingProfile
                             ? "cursor-not-allowed opacity-80"
                             : "cursor-pointer hover:scale-105 hover:border-indigo-500 active:scale-95"
                         }`}
@@ -207,7 +216,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                         </div>
 
                         {/* Loading Spinner */}
-                        {isUploading && (
+                        {isSavingProfile && (
                           <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center rounded-full animate-in fade-in duration-200">
                             <Loader2 className="w-8 h-8 text-white animate-spin" />
                           </div>
@@ -218,7 +227,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={isUploading}
+                        disabled={isSavingProfile}
                         className="absolute bottom-1 right-1 p-2 bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600 text-white rounded-full shadow-lg border-2 border-card cursor-pointer transition-all hover:scale-110 active:scale-95 flex items-center justify-center shrink-0"
                         title="Upload Avatar"
                       >
@@ -230,7 +239,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                         type="file"
                         accept="image/*"
                         onChange={handleAvatarChange}
-                        disabled={isUploading}
+                        disabled={isSavingProfile}
                         className="hidden"
                       />
                     </div>

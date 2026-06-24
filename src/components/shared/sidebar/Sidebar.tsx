@@ -264,13 +264,12 @@ export default function Sidebar() {
               isOpen ? "justify-between" : "justify-center"
             )}
           >
-            {/* Main Action Button */}
             <button
               suppressHydrationWarning
               title={isOpen ? "Go Home" : "Open Sidebar"}
               onClick={() => {
                 if (isOpen) {
-                  handleNewChat();
+                  router.push("/");
                 } else {
                   toggleSidebar();
                 }
@@ -366,7 +365,10 @@ export default function Sidebar() {
           if (!open && !isDeleting) setSessionToDelete(null);
         }}
       >
-        <DialogContent className="sm:max-w-106.25 rounded-2xl border-border bg-background">
+        <DialogContent
+          showCloseButton={false}
+          className="sm:max-w-106.25 rounded-2xl border-border bg-background"
+        >
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-foreground">Delete Chat?</DialogTitle>
             <DialogDescription className="text-muted-foreground pt-2">
@@ -406,7 +408,10 @@ export default function Sidebar() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-md rounded-2xl border-border bg-background">
+        <DialogContent
+          showCloseButton={false}
+          className="sm:max-w-md rounded-2xl border-border bg-background"
+        >
           <DialogHeader>
             <DialogTitle className="text-foreground">Share link</DialogTitle>
             <DialogDescription className="text-muted-foreground">

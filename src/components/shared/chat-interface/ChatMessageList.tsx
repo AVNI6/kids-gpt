@@ -18,11 +18,17 @@ interface ChatMessageListProps {
     "idle" | "generating" | "uploading" | "downloading" | "success" | "error"
   >;
   handleDownloadPDF: (messageId: string) => Promise<void>;
+  docxStates: Record<
+    string,
+    "idle" | "generating" | "uploading" | "downloading" | "success" | "error"
+  >;
+  handleDownloadDocx: (messageId: string) => Promise<void>;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   hasMore: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => Promise<void>;
   sessionOwnerProfile?: UserProfile | null;
+  loadingText?: string;
 }
 
 const ChatMessageList = memo(function ChatMessageList({
@@ -30,11 +36,14 @@ const ChatMessageList = memo(function ChatMessageList({
   isLoading,
   pdfStates,
   handleDownloadPDF,
+  docxStates,
+  handleDownloadDocx,
   messagesEndRef,
   hasMore,
   isLoadingMore,
   onLoadMore,
   sessionOwnerProfile,
+  loadingText,
 }: ChatMessageListProps) {
   const { userProfile, isUserLoggedIn } = useAuth();
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
@@ -87,7 +96,7 @@ const ChatMessageList = memo(function ChatMessageList({
   return (
     <div className="flex-1 min-h-0 overflow-hidden relative">
       <ScrollArea viewportRef={viewportRef} onScroll={handleScroll} className="h-full w-full">
-        <div className="w-full max-w-3xl mx-auto space-y-6 pb-6 px-2 py-4 sm:p-0 sm:py-6 md:py-8">
+        <div className="w-full max-w-3xl mx-auto pb-6 px-2 py-4 sm:p-0 sm:py-6">
           {isLoadingMore && (
             <div className="flex justify-center py-2 text-xs font-semibold text-muted-foreground gap-2 items-center">
               <Spinner className="w-4 h-4 animate-spin text-sky-500" />
@@ -106,6 +115,8 @@ const ChatMessageList = memo(function ChatMessageList({
                 showModelHeader={showModelHeader}
                 pdfState={pdfStates[message.id] || "idle"}
                 handleDownloadPDF={handleDownloadPDF}
+                docxState={docxStates[message.id] || "idle"}
+                handleDownloadDocx={handleDownloadDocx}
                 isCopied={copiedMessageId === message.id}
                 handleCopy={handleCopy}
                 isUserLoggedIn={isUserLoggedIn}
@@ -126,7 +137,9 @@ const ChatMessageList = memo(function ChatMessageList({
 
                 <div className="rounded-3xl rounded-bl-sm px-5 py-3.5 bg-card border border-border flex items-center gap-3 shadow-sm">
                   <Spinner />
-                  <span className="text-muted-foreground text-sm font-medium">Thinking...</span>
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {loadingText || "Thinking..."}
+                  </span>
                 </div>
               </div>
             </div>

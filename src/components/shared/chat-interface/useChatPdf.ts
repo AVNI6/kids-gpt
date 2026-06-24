@@ -6,7 +6,7 @@ import { User } from "@supabase/supabase-js";
 import { downloadPdfBlob, downloadPdfFromUrl, generatePdfBlob } from "@/hooks/shared/pdf-helper";
 import { uploadFileToStorage, saveGeneratedMaterial } from "@/lib/services/shared/chat.actions";
 import { Message, UserRole, ChatSession } from "@/types/common";
-import { getUniqueStoragePath } from "./chat-utils";
+import { getUniqueStoragePath, cleanFileName } from "./chat-utils";
 
 interface UseChatPdfArgs {
   messages: Message[];
@@ -43,13 +43,6 @@ export function useChatPdf({
         return;
       }
 
-      const cleanFileName = (title: string) => {
-        return title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "")
-          .slice(0, 30);
-      };
       const session = sessions.find((s) => s.id === currentSessionId);
       const baseName = message.suggestedTitle
         ? cleanFileName(message.suggestedTitle)

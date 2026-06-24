@@ -17,7 +17,7 @@ import { processActivityCompletion } from "@/lib/services/kid/rewards.actions";
 import { submitAssignmentActivityCompletion } from "@/lib/services/kid/classroom.actions";
 import { saveActivityReview } from "@/lib/services/kid/activity-review.actions";
 import { triggerConfettiSideCannons } from "@/components/ui/confetti-side-cannons";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import type { ActivityReviewData } from "@/types/activity-review.types";
 
 interface VictoryModalProps {
@@ -68,8 +68,27 @@ export default function VictoryModal({
   const hasClaimed = useRef(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimCompleted, setClaimCompleted] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const cleanupConfettiRef = useRef<(() => void) | null>(null);
+
+  // Trigger confetti immediately when modal opens, and clean it up when closed/unmounted
+  useEffect(() => {
+    if (isOpen) {
+      const stopConfetti = triggerConfettiSideCannons();
+      cleanupConfettiRef.current = stopConfetti;
+    } else {
+      if (cleanupConfettiRef.current) {
+        cleanupConfettiRef.current();
+        cleanupConfettiRef.current = null;
+      }
+    }
+
+    return () => {
+      if (cleanupConfettiRef.current) {
+        cleanupConfettiRef.current();
+        cleanupConfettiRef.current = null;
+      }
+    };
+  }, [isOpen]);
 
   // Background Auto-Claim XP Trigger
   useEffect(() => {
@@ -79,6 +98,7 @@ export default function VictoryModal({
         : `activity_${activitySlug}_${memoryMatchWorldId ?? ""}_${memoryMatchStepNumber ?? ""}_${jigsawGridSize ?? ""}_${jigsawThemeName ?? ""}_${score ?? ""}`;
 
       if (claimedActivitiesSet.has(claimKey)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setClaimCompleted(true);
         return;
       }
@@ -154,7 +174,6 @@ export default function VictoryModal({
                 }
               }
               setClaimCompleted(true);
-              triggerConfettiSideCannons();
               if (onClaimSuccess) onClaimSuccess();
             } else {
               console.error("Activity completion auto-claim failed:", result.error);
@@ -205,7 +224,10 @@ export default function VictoryModal({
         }
       }}
     >
-      <DialogContent className="max-w-md p-0 overflow-hidden rounded-3xl border-2 border-amber-200 bg-white dark:bg-slate-900 shadow-2xl z-50">
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-md p-0 overflow-hidden rounded-3xl border-2 border-amber-200 bg-white dark:bg-slate-900 shadow-2xl z-50"
+      >
         <DialogHeader className="sr-only">
           <DialogTitle>{activityTitle} Complete!</DialogTitle>
           <DialogDescription>

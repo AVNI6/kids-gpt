@@ -6,7 +6,7 @@ import { useNotifications } from "@/hooks/parent/useNotifications";
 import { useClassroomNotifications } from "@/hooks/shared/useClassroomNotifications";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
 import { getKidPendingAssignmentsCount } from "@/lib/services/kid/classroom.actions";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 
 // Configs
 import { kidNavItems } from "@/config/navigation/kid-nav";

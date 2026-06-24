@@ -21,7 +21,7 @@ import { useState, useEffect, Suspense } from "react";
 import { AuthSkeleton } from "@/components/shared/skeletonLoading";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import Logo from "@/components/shared/logo/Logo";
 import { validatePassword } from "@/lib/utils";
@@ -34,7 +34,7 @@ const supabase = createClient();
 
 function SignupForm() {
   const router = useRouter();
-  const { isUserLoggedIn, userProfile } = useAuth();
+  const { isUserLoggedIn, userProfile, user, isInitializing } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -50,10 +50,14 @@ function SignupForm() {
           router.replace(roleRedirectMap[role] || "/");
         }
       } else {
-        router.replace("/onboarding");
+        if (user?.user_metadata?.invite_token) {
+          router.replace("/onboarding/kid");
+        } else {
+          router.replace("/onboarding");
+        }
       }
     }
-  }, [isUserLoggedIn, userProfile, router]);
+  }, [isUserLoggedIn, userProfile, user, router]);
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("invite_token");
 
@@ -109,7 +113,19 @@ function SignupForm() {
     }
   }, [inviteToken, setValue]);
 
+  if (isInitializing || (isUserLoggedIn && !userProfile)) {
+    return <AuthSkeleton />;
+  }
+
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
+    if (inviteToken && inviteStatus !== "valid") {
+      toast.error("Invalid Invitation Link", {
+        description:
+          inviteError || "You cannot register using an invalid or expired invitation link.",
+      });
+      return;
+    }
+
     if (!agreed) {
       toast.error("Terms & Safety Rules Agreement Required", {
         description: "Please check the box to agree to the Safety Rules and Privacy Terms.",
@@ -159,7 +175,7 @@ function SignupForm() {
         });
 
         // Email confirmation disabled (dev mode) — session returned immediately
-        if (data.session) {
+        if (data.session || isUserLoggedIn) {
           router.push(inviteToken ? `/onboarding/kid` : `/onboarding`);
           return;
         }
@@ -330,6 +346,7 @@ function SignupForm() {
                 type="submit"
                 loading={signupState === "loading"}
                 loadingText="Creating account..."
+                disabled={inviteToken ? inviteStatus !== "valid" : false}
                 className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2 text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
               >
                 Create Account
@@ -358,7 +375,10 @@ function SignupForm() {
       </div>
 
       <Dialog open={activeModal !== null} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="rounded-3xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 p-6 max-w-lg">
+        <DialogContent
+          showCloseButton={false}
+          className="rounded-3xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 p-6 max-w-lg"
+        >
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
               {activeModal === "safety" ? "🛡️ Safety Rules" : "🔒 Privacy Terms"}

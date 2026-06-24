@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { toast } from "sonner";
+import { DashboardService } from "@/components/parent/home/dashboard.service";
+import type { SentInvitation } from "@/lib/services/shared/invitations";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Plus, Settings2, GraduationCap, School, Target, BarChart3, Users } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { LinkedChildProfile } from "@/types/parent";
 import { useParentDashboard } from "@/hooks/parent/useParentDashboard";
 import { displayAge } from "@/lib/utils/kid/childAge";
@@ -23,6 +33,49 @@ export default function MyChildrenManagement({
   const { activeChildId, setActiveChildId } = useParentDashboard();
   const router = useRouter();
   const [activeSettingsChild, setActiveSettingsChild] = useState<LinkedChildProfile | null>(null);
+  const [sentInvitations, setSentInvitations] = useState<SentInvitation[]>([]);
+  const [isPending, startTransition] = useTransition();
+  const [cancelInviteTarget, setCancelInviteTarget] = useState<{
+    id: string;
+    email: string;
+  } | null>(null);
+
+  const fetchSentInvitations = () => {
+    DashboardService.getSentPendingInvitations().then((data) => {
+      setSentInvitations(data);
+    });
+  };
+
+  useEffect(() => {
+    let active = true;
+    DashboardService.getSentPendingInvitations().then((data) => {
+      if (active) setSentInvitations(data);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleCancelInvitation = (inviteId: string, email: string) => {
+    const previous = [...sentInvitations];
+    setSentInvitations((prev) => prev.filter((i) => i.id !== inviteId));
+
+    startTransition(async () => {
+      try {
+        const res = await DashboardService.cancelChildInvitation(inviteId);
+        if (res.success) {
+          toast.success(`Invitation to ${email} cancelled.`);
+          router.refresh();
+        } else {
+          toast.error(res.error || "Failed to cancel invitation.");
+          setSentInvitations(previous);
+        }
+      } catch {
+        toast.error("An unexpected error occurred.");
+        setSentInvitations(previous);
+      }
+    });
+  };
 
   // Selector handlers pushing URL parameters shallowly via Context
   const handleSelectChild = (childId: string | null) => {
@@ -50,6 +103,7 @@ export default function MyChildrenManagement({
           </p>
         </div>
         <LinkChildDialog
+          onSuccess={fetchSentInvitations}
           trigger={
             <Button className="rounded-full bg-sky-600 hover:bg-sky-700 text-white shadow-sm h-11 px-6 font-bold cursor-pointer dark:bg-sky-500 dark:hover:bg-sky-600">
               <Plus className="w-5 h-5 mr-2" /> Add Child
@@ -187,6 +241,108 @@ export default function MyChildrenManagement({
           })
         )}
       </div>
+
+      {/* Sent Pending Invitations Section */}
+      {sentInvitations.length > 0 && (
+        <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800/40">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-sky-500" />
+            <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+              Pending Invitations
+            </h2>
+            <span className="bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 font-bold px-2 py-0.5 rounded-full text-xs">
+              {sentInvitations.length}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sentInvitations.map((invite) => (
+              <Card
+                key={invite.id}
+                className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm relative overflow-hidden group hover:shadow-md transition-all"
+              >
+                <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center shrink-0">
+                      <Plus className="w-5 h-5 text-sky-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-slate-900 dark:text-white truncate">
+                        {invite.invitee_email}
+                      </p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                        Invited{" "}
+                        {invite.created_at
+                          ? new Date(invite.created_at).toLocaleDateString()
+                          : "Recently"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    disabled={isPending}
+                    onClick={() =>
+                      setCancelInviteTarget({ id: invite.id, email: invite.invitee_email })
+                    }
+                    className="w-full rounded-xl border-slate-200 dark:border-slate-800 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20 dark:hover:text-red-400 font-bold h-10 text-xs cursor-pointer transition-colors"
+                  >
+                    Cancel Invitation
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Invitation Confirmation Modal */}
+      <Dialog
+        open={cancelInviteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setCancelInviteTarget(null);
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-md rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100"
+        >
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black tracking-tight text-slate-950 dark:text-white flex items-center gap-2">
+              Cancel Invitation
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
+              Are you sure you want to cancel the invitation sent to{" "}
+              <strong className="text-slate-800 dark:text-slate-200">
+                {cancelInviteTarget?.email}
+              </strong>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              variant="outline"
+              disabled={isPending}
+              onClick={() => setCancelInviteTarget(null)}
+              className="rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-black/50 font-bold h-11 text-sm cursor-pointer"
+            >
+              No, Keep It
+            </Button>
+            <Button
+              disabled={isPending}
+              onClick={() => {
+                if (cancelInviteTarget) {
+                  handleCancelInvitation(cancelInviteTarget.id, cancelInviteTarget.email);
+                  setCancelInviteTarget(null);
+                }
+              }}
+              className="rounded-xl bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 font-bold h-11 text-sm cursor-pointer shadow-md"
+            >
+              Yes, Cancel Invite
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Settings Modal */}
       {activeSettingsChild && (

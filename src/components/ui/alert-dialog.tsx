@@ -6,8 +6,14 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
-function AlertDialog({ ...props }: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root data-slot="alert-dialog" {...props} />;
+function AlertDialog({ disablePointerDismissal = true, ...props }: DialogPrimitive.Root.Props) {
+  return (
+    <DialogPrimitive.Root
+      data-slot="alert-dialog"
+      disablePointerDismissal={disablePointerDismissal}
+      {...props}
+    />
+  );
 }
 
 function AlertDialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {

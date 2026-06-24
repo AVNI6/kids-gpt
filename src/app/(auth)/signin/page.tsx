@@ -15,7 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Image from "next/image";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { useState, useEffect } from "react";
 import Logo from "@/components/shared/logo/Logo";
@@ -31,7 +31,7 @@ function LoginPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { isUserLoggedIn, userProfile } = useAuth();
+  const { isUserLoggedIn, userProfile, user, isInitializing } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -47,10 +47,14 @@ function LoginPageContent() {
           router.replace(roleRedirectMap[role] || "/");
         }
       } else {
-        router.replace("/onboarding");
+        if (user?.user_metadata?.invite_token) {
+          router.replace("/onboarding/kid");
+        } else {
+          router.replace("/onboarding");
+        }
       }
     }
-  }, [isUserLoggedIn, userProfile, router]);
+  }, [isUserLoggedIn, userProfile, user, router]);
 
   type FormValue = {
     email: string;
@@ -84,6 +88,10 @@ function LoginPageContent() {
     };
     initRemembered();
   }, [setValue]);
+
+  if (isInitializing || (isUserLoggedIn && !userProfile)) {
+    return <AuthSkeleton />;
+  }
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     setIsSubmitting(true);
