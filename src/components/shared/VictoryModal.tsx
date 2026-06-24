@@ -68,8 +68,27 @@ export default function VictoryModal({
   const hasClaimed = useRef(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimCompleted, setClaimCompleted] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const cleanupConfettiRef = useRef<(() => void) | null>(null);
+
+  // Trigger confetti immediately when modal opens, and clean it up when closed/unmounted
+  useEffect(() => {
+    if (isOpen) {
+      const stopConfetti = triggerConfettiSideCannons();
+      cleanupConfettiRef.current = stopConfetti;
+    } else {
+      if (cleanupConfettiRef.current) {
+        cleanupConfettiRef.current();
+        cleanupConfettiRef.current = null;
+      }
+    }
+
+    return () => {
+      if (cleanupConfettiRef.current) {
+        cleanupConfettiRef.current();
+        cleanupConfettiRef.current = null;
+      }
+    };
+  }, [isOpen]);
 
   // Background Auto-Claim XP Trigger
   useEffect(() => {
@@ -155,7 +174,6 @@ export default function VictoryModal({
                 }
               }
               setClaimCompleted(true);
-              triggerConfettiSideCannons();
               if (onClaimSuccess) onClaimSuccess();
             } else {
               console.error("Activity completion auto-claim failed:", result.error);

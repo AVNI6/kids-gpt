@@ -47,7 +47,7 @@ export function useChatSender({
   const router = useRouter();
   const userProfile = useAppSelector((state) => state.auth.userProfile);
   const [isLoading, setIsLoading] = useState(false);
-  const [requestType, setRequestType] = useState<"pdf" | "docx" | "image" | "regular">("regular");
+  const requestType: "pdf" | "docx" | "image" | "regular" = "regular";
   const [loadingText, setLoadingText] = useState("Thinking...");
 
   useEffect(() => {

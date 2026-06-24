@@ -97,7 +97,7 @@ export default function ParentActivityReviewModal({
             <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center shrink-0">
               <BookOpen className="w-5 h-5 text-sky-500" />
             </div>
-            <DialogTitle className="text-xl font-black text-slate-900 dark:text-white leading-tight">
+            <DialogTitle className="sm:text-xl font-black text-slate-900 dark:text-white leading-tight">
               {activityTitle} Review
             </DialogTitle>
           </div>

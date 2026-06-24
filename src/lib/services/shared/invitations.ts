@@ -74,27 +74,50 @@ export async function createChildInvitation(
     return { success: false, error: "Email is required." };
   }
 
+  console.log(`[createChildInvitation] START — email: ${targetEmail}, parentId: ${parentId}`);
+
   const supabase = await createClient();
+  const adminClient = createAdminClient();
 
-  // 1. Check if the parent is already linked to a child with this email
-  const { data: targetProfile } = await supabase
-    .from("profile")
-    .select("user_id")
-    .eq("email", targetEmail)
-    .is("deleted_at", null)
-    .maybeSingle();
+  // 1. Check if the target email belongs to an existing registered user.
+  //    We use auth.admin.listUsers() instead of querying profile by email because:
+  //    a) The profile.email column may not be populated for older accounts.
+  //    b) RLS on the profile table would block a regular client from seeing other users' rows.
+  //    auth.admin.listUsers() bypasses both problems — it queries auth.users directly.
+  let existingUserId: string | null = null;
+  try {
+    const { data: listData, error: listError } = await adminClient.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
+    if (listError) {
+      console.error("[createChildInvitation] Error listing auth users:", listError.message);
+    } else {
+      const match = listData?.users?.find((u) => u.email?.toLowerCase() === targetEmail);
+      if (match) {
+        existingUserId = match.id;
+        console.log(`[createChildInvitation] Existing user FOUND — userId: ${existingUserId}`);
+      } else {
+        console.log(`[createChildInvitation] No existing user found for email: ${targetEmail}`);
+      }
+    }
+  } catch (err) {
+    console.error("[createChildInvitation] Unexpected error during user lookup:", err);
+  }
 
-  if (targetProfile) {
+  if (existingUserId) {
+    // Check if parent is already linked to this child
     const { data: existingLink } = await supabase
       .from("parent_child_link")
       .select("id")
       .eq("parent_user_id", parentId)
-      .eq("child_user_id", targetProfile.user_id)
+      .eq("child_user_id", existingUserId)
       .eq("is_active", true)
       .is("deleted_at", null)
       .maybeSingle();
 
     if (existingLink) {
+      console.log(`[createChildInvitation] Already linked — returning error.`);
       return { success: false, error: "You are already linked with this child profile." };
     }
   }
@@ -182,7 +205,22 @@ export async function createChildInvitation(
 
   const inviteLink = `${baseUrl}/signup?invite_token=${token}`;
 
-  // Send mock email
+  if (existingUserId) {
+    // Existing user: Do not send invitation email, only notify in-app via child_invitations
+    console.log(
+      `[createChildInvitation] Existing user path — SKIPPING email, returning link-request message.`
+    );
+    return {
+      success: true,
+      message: `A linking request has been sent to the child. They can accept it from their account.`,
+      inviteLink,
+    };
+  }
+
+  // New user: Send invitation email
+  console.log(
+    `[createChildInvitation] New user path — SENDING invitation email to ${targetEmail}.`
+  );
   await sendInvitationEmail(targetEmail, parentName, inviteLink);
 
   return {
@@ -285,7 +323,9 @@ export type PendingInvitation = {
  */
 export async function getPendingInvitations(): Promise<PendingInvitation[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user || !user.email) return [];
 
   const { data: invites, error } = await supabase
@@ -322,7 +362,9 @@ export async function getPendingInvitations(): Promise<PendingInvitation[]> {
       expires_at: invite.expires_at,
       created_at: invite.created_at,
       parent_name: profile
-        ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || profile.username || "Parent"
+        ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
+          profile.username ||
+          "Parent"
         : "Parent",
       parent_email: profile?.email || "",
       parent_avatar: profile?.avatar_url || null,
@@ -343,7 +385,9 @@ export type SentInvitation = {
  */
 export async function getSentPendingInvitations(): Promise<SentInvitation[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   const { data, error } = await supabase
@@ -372,7 +416,9 @@ export async function acceptChildInvitation(
   if (!inviteId) return { success: false, error: "Invitation ID is required." };
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Not authenticated." };
 
   // Call the transactional accept_child_invitation RPC
@@ -415,7 +461,9 @@ export async function declineChildInvitation(
   if (!inviteId) return { success: false, error: "Invitation ID is required." };
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Not authenticated." };
 
   const { error } = await supabase
@@ -444,7 +492,9 @@ export async function cancelChildInvitation(
   if (!inviteId) return { success: false, error: "Invitation ID is required." };
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Not authenticated." };
 
   const { error } = await supabase

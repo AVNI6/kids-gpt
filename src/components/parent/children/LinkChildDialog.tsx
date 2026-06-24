@@ -57,7 +57,10 @@ export default function LinkChildDialog({
         onOpenChange?.(false);
         onSuccess?.();
       } else if (result.status === "pending") {
-        toast.success(`An invitation email has been sent to ${email}!`);
+        // Use the message returned by the server — it distinguishes between:
+        // - existing user  → "A linking request has been sent to the child."
+        // - new user       → "An invitation email has been sent to <email>!"
+        toast.success(result.message || `An invitation email has been sent to ${email}!`);
         setLinkEmail("");
         onOpenChange?.(false);
         onSuccess?.();
