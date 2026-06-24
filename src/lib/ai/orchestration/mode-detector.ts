@@ -60,6 +60,24 @@ export function isPdfRequest(message: string): boolean {
   return hasPdf && hasCreation;
 }
 
+export function isDocRequest(message: string): boolean {
+  const query = extractUserQuery(message);
+
+  const hasAction =
+    /\b(generate|create|make|build|download|export|convert|write|give|show|send|provide|get|want|need)\b/i.test(
+      query
+    );
+  const hasDoc = /\b(doc|docx|word|document)\b/i.test(query);
+  const hasAnalysisVerb =
+    /\b(analyze|analyse|summarize|explain|review|detail|details|discuss)\b/i.test(query);
+
+  if (hasDoc && hasAnalysisVerb && !hasAction) {
+    return false;
+  }
+
+  return hasDoc && (hasAction || query.length < 50);
+}
+
 export function isDocumentAnalysis(
   message: string,
   history: ChatRequestBody["history"] = []
@@ -92,6 +110,9 @@ export function deriveChatMode(
 ): ChatMode {
   if (isPdfRequest(message)) {
     return "pdf";
+  }
+  if (isDocRequest(message)) {
+    return "doc";
   }
   if (isDocumentAnalysis(message, history)) {
     return "document_analysis";

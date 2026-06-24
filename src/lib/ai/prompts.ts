@@ -1,6 +1,6 @@
 import { UserRole } from "./types";
 
-export type ChatMode = "chat" | "quiz" | "pdf" | "document_analysis";
+export type ChatMode = "chat" | "quiz" | "pdf" | "doc" | "document_analysis";
 
 export type ResponseStyle = "concise" | "detailed" | "interactive" | "step_by_step";
 
@@ -293,6 +293,30 @@ Return only a single valid JSON object.
 - clean: professional, structured, practical, and action-oriented.
 - teacher: classroom-ready, instructional, well-structured, assessment-aware, and curriculum-oriented.`;
 
+export const DOC_MODE_PROMPT = `### Mode: Word Document Generator
+
+### JSON Output Contract
+Return only a single valid JSON object.
+
+### JSON Rules
+- The output must begin with { and end with }.
+- Do not wrap the response in markdown code fences.
+- Do not include explanations, greetings, or extra prose.
+- Ensure the JSON is valid and parsable.
+- Do not include trailing commas.
+
+### Required JSON Schema
+{
+  "overview": "string",
+  "docContent": "string",
+  "suggestedTitle": "string"
+}
+
+### Field Requirements
+- overview: A concise 2-3 sentence summary describing the document contents and purpose.
+- docContent: A complete educational document written in clean Markdown using headings, sections, bullet points, and readable structure.
+- suggestedTitle: A short, compelling, human-friendly document title.`;
+
 export const DOCUMENT_ANALYSIS_MODE_PROMPT = `### Mode: Document Analysis
 - Analyze uploaded documents naturally.
 - Return normal conversational text.
@@ -370,6 +394,9 @@ export function buildSystemPrompt(config: PromptConfig): string {
       break;
     case "pdf":
       parts.push(PDF_MODE_PROMPT);
+      break;
+    case "doc":
+      parts.push(DOC_MODE_PROMPT);
       break;
     case "document_analysis":
       parts.push(DOCUMENT_ANALYSIS_MODE_PROMPT);

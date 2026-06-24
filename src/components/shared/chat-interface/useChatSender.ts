@@ -20,6 +20,7 @@ import {
 } from "@/lib/services/shared/chat.actions";
 import { Message, UserRole } from "@/types/common";
 import { generatePdfBlob } from "@/hooks/shared/pdf-helper";
+import { generateDocxBlob } from "@/hooks/shared/docx-helper";
 import { getSessionManager } from "@/lib/ai/session-manager";
 import { getUniqueStoragePath } from "./chat-utils";
 
@@ -89,11 +90,20 @@ export function useChatSender({
       const isPdfRequest =
         !isAttachmentPresent &&
         !isSummaryOrQuery &&
-        /pdf/i.test(currentInput || "") &&
+        /\bpdf\b/i.test(currentInput || "") &&
         /generate|create|make|build|download|export|convert/i.test(currentInput || "");
 
-      // Intercept PDF requests for unauthenticated (guest) users
-      if (!isUserLoggedIn && isPdfRequest) {
+      const isDocRequest =
+        !isAttachmentPresent &&
+        !isSummaryOrQuery &&
+        /\b(doc|docx|word|document)\b/i.test(currentInput || "") &&
+        (/\b(generate|create|make|build|download|export|convert|write|give|show|send|provide|get|want|need)\b/i.test(
+          currentInput || ""
+        ) ||
+          (currentInput || "").length < 50);
+
+      // Intercept PDF/Doc requests for unauthenticated (guest) users
+      if (!isUserLoggedIn && (isPdfRequest || isDocRequest)) {
         setIsLoading(true);
 
         const userMessage: Message = {
@@ -111,7 +121,7 @@ export function useChatSender({
           const aiMessage: Message = {
             id: crypto.randomUUID(),
             role: "model",
-            content: "cant generate pdf, please signin to generate pdf",
+            content: `cant generate ${isPdfRequest ? "pdf" : "document"}, please signin to generate documents`,
           };
           dispatch(addMessage(aiMessage));
           setIsLoading(false);
@@ -288,7 +298,7 @@ export function useChatSender({
           signal,
         });
 
-        if (!isImageRequest && !isPdfRequest && res.body) {
+        if (!isImageRequest && !isPdfRequest && !isDocRequest && res.body) {
           // 1. Generate unique message ID
           const aiMessageId = crypto.randomUUID();
 
@@ -586,8 +596,12 @@ export function useChatSender({
             isImage: isImageResponse,
             pdfContent: data?.isPdfRequest ? data.pdfContent : undefined,
             isPdfRequest: data?.isPdfRequest,
-            token_used: tokens,
             pdfTheme: data?.isPdfRequest ? data.pdfTheme : undefined,
+            isDocRequest: data?.isDocRequest,
+            docContent: data?.isDocRequest ? data.docContent : undefined,
+            docTheme: data?.isDocRequest ? data.docTheme : undefined,
+            suggestedTitle: data?.suggestedTitle,
+            token_used: tokens,
           };
 
           dispatch(addMessage(initialAiMessage));
@@ -731,8 +745,63 @@ export function useChatSender({
                   })();
                 }
 
-                // Track non-image/non-pdf usage
-                if (!isImageResponse && !data.isPdfRequest) {
+                // Asynchronously compile and upload Word documents (.docx) in the background
+                if (data.isDocRequest && data.docContent) {
+                  (async () => {
+                    try {
+                      const docxBlob = await generateDocxBlob(data.docContent);
+                      if (!user?.id) throw new Error("Missing user id for Word upload");
+                      const storageFileName = getUniqueStoragePath(
+                        user.id,
+                        sessionId,
+                        "docx",
+                        "doc"
+                      );
+                      const docxAttachmentUrl = await uploadFileToStorage(
+                        docxBlob,
+                        storageFileName,
+                        user.id
+                      );
+
+                      // Update Redux state and cache with the permanent Word URL
+                      dispatch(
+                        updateMessage({
+                          id: aiMessageId,
+                          content: finalContent,
+                          attachmentUrl: docxAttachmentUrl,
+                        })
+                      );
+
+                      // Update DB with the permanent Word URL
+                      await updateChatMessageAttachment(aiMessageId, docxAttachmentUrl);
+
+                      // Save to generated materials table
+                      await saveGeneratedMaterial(
+                        sessionId,
+                        "doc",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        docxAttachmentUrl,
+                        { prompt: currentInput },
+                        user?.id
+                      );
+
+                      // Track daily usage for Word Document (increment pdfs_generated metric too)
+                      await trackDailyUsage(
+                        tokens,
+                        { isPdf: true, durationMs: responseTime },
+                        user?.id
+                      );
+                    } catch (docxUploadErr) {
+                      console.error(
+                        "[ChatInterface] Background Word upload failed:",
+                        docxUploadErr
+                      );
+                    }
+                  })();
+                }
+
+                // Track non-image/non-pdf/non-doc usage
+                if (!isImageResponse && !data.isPdfRequest && !data.isDocRequest) {
                   await trackDailyUsage(tokens, { durationMs: responseTime }, user?.id);
                 }
               } catch (backgroundErr) {
