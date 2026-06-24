@@ -36,6 +36,9 @@ export interface Message {
   pdfContent?: string;
   isPdfRequest?: boolean;
   pdfTheme?: PdfTheme;
+  isDocRequest?: boolean;
+  docContent?: string;
+  docTheme?: PdfTheme;
   suggestedTitle?: string;
   token_used?: number;
   attachmentUrl?: string | null;

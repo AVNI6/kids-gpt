@@ -8,3 +8,11 @@ export const getUniqueStoragePath = (
 ) => {
   return `${userId}/${sessionId}_${kind}_${Date.now()}.${ext}`;
 };
+
+export const cleanFileName = (title: string): string => {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 30);
+};

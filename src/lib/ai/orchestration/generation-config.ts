@@ -4,6 +4,7 @@ import type { JsonObject } from "@/types/json";
 export function getGenerationConfig(mode: ChatMode): JsonObject | undefined {
   switch (mode) {
     case "pdf":
+    case "doc":
       return {
         temperature: 0.1,
         responseMimeType: "application/json",

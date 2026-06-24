@@ -264,13 +264,12 @@ export default function Sidebar() {
               isOpen ? "justify-between" : "justify-center"
             )}
           >
-            {/* Main Action Button */}
             <button
               suppressHydrationWarning
               title={isOpen ? "Go Home" : "Open Sidebar"}
               onClick={() => {
                 if (isOpen) {
-                  handleNewChat();
+                  router.push("/");
                 } else {
                   toggleSidebar();
                 }

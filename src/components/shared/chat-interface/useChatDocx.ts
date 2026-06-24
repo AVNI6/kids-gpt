@@ -3,42 +3,44 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
-import { downloadPdfBlob, downloadPdfFromUrl, generatePdfBlob } from "@/hooks/shared/pdf-helper";
+import {
+  downloadDocxBlob,
+  downloadDocxFromUrl,
+  generateDocxBlob,
+} from "@/hooks/shared/docx-helper";
 import { uploadFileToStorage, saveGeneratedMaterial } from "@/lib/services/shared/chat.actions";
-import { Message, UserRole, ChatSession } from "@/types/common";
+import { Message, ChatSession } from "@/types/common";
 import { getUniqueStoragePath, cleanFileName } from "./chat-utils";
 
-interface UseChatPdfArgs {
+interface UseChatDocxArgs {
   messages: Message[];
   sessions: ChatSession[];
   currentSessionId: string | null;
   isUserLoggedIn: boolean;
   user: User | null;
-  userRole: UserRole | null;
 }
 
-export function useChatPdf({
+export function useChatDocx({
   messages,
   sessions,
   currentSessionId,
   isUserLoggedIn,
   user,
-  userRole,
-}: UseChatPdfArgs) {
-  const [pdfStates, setPdfStates] = useState<
+}: UseChatDocxArgs) {
+  const [docxStates, setDocxStates] = useState<
     Record<string, "idle" | "generating" | "uploading" | "downloading" | "success" | "error">
   >({});
 
-  const handleDownloadPDF = useCallback(
+  const handleDownloadDocx = useCallback(
     async (messageId: string) => {
       const message = messages.find((m) => m.id === messageId);
       if (!message) return;
 
       // Prevent concurrent download requests for the same message
       if (
-        pdfStates[messageId] &&
-        pdfStates[messageId] !== "idle" &&
-        pdfStates[messageId] !== "error"
+        docxStates[messageId] &&
+        docxStates[messageId] !== "idle" &&
+        docxStates[messageId] !== "error"
       ) {
         return;
       }
@@ -49,12 +51,12 @@ export function useChatPdf({
         : session
           ? cleanFileName(session.title)
           : `learning-${messageId.slice(0, 5)}`;
-      const downloadFileName = `${baseName}.pdf`;
+      const downloadFileName = `${baseName}.docx`;
 
       // 1. Direct Download from stored attachment URL
       if (message.attachmentUrl) {
-        setPdfStates((prev) => ({ ...prev, [messageId]: "downloading" }));
-        const toastId = toast.loading("Downloading PDF...");
+        setDocxStates((prev) => ({ ...prev, [messageId]: "downloading" }));
+        const toastId = toast.loading("Downloading Word Document...");
         try {
           let targetUrl = message.attachmentUrl;
           if (targetUrl.includes("/object/public/materials/")) {
@@ -67,11 +69,11 @@ export function useChatPdf({
               throw new Error(result.error || "Failed to generate signed URL");
             }
           }
-          await downloadPdfFromUrl(targetUrl, downloadFileName);
-          setPdfStates((prev) => ({ ...prev, [messageId]: "success" }));
-          toast.success("PDF downloaded successfully! 🚀", { id: toastId });
+          await downloadDocxFromUrl(targetUrl, downloadFileName);
+          setDocxStates((prev) => ({ ...prev, [messageId]: "success" }));
+          toast.success("Document downloaded successfully! 🚀", { id: toastId });
           setTimeout(() => {
-            setPdfStates((prev) => ({ ...prev, [messageId]: "idle" }));
+            setDocxStates((prev) => ({ ...prev, [messageId]: "idle" }));
           }, 3000);
         } catch (err) {
           console.error("Direct download failed, opening in new tab:", err);
@@ -90,47 +92,42 @@ export function useChatPdf({
             }
           }
           window.open(targetUrl, "_blank");
-          setPdfStates((prev) => ({ ...prev, [messageId]: "success" }));
-          toast.success("Opening PDF in a new tab...", { id: toastId });
+          setDocxStates((prev) => ({ ...prev, [messageId]: "success" }));
+          toast.success("Opening Document in a new tab...", { id: toastId });
           setTimeout(() => {
-            setPdfStates((prev) => ({ ...prev, [messageId]: "idle" }));
+            setDocxStates((prev) => ({ ...prev, [messageId]: "idle" }));
           }, 3000);
         }
         return;
       }
 
-      // 2. Dynamic generation under @react-pdf/renderer
+      // 2. Dynamic generation using the `docx` library helper
       const toastId = toast.loading("Preparing learning material...");
       try {
-        setPdfStates((prev) => ({ ...prev, [messageId]: "generating" }));
-        toast.loading("Generating beautiful layout...", { id: toastId });
+        setDocxStates((prev) => ({ ...prev, [messageId]: "generating" }));
+        toast.loading("Generating Word document structure...", { id: toastId });
 
-        const resolvedRole = (
-          message.pdfTheme === "clean" ? "parent" : message.pdfTheme || userRole || "kid"
-        ) as UserRole;
+        const blob = await generateDocxBlob(message.docContent || message.content);
 
-        // Lazily loads @react-pdf/renderer & PdfDocument, performs rendering of blocks, paragraphs, and list AST nodes
-        const blob = await generatePdfBlob(message.pdfContent || message.content, resolvedRole);
-
-        setPdfStates((prev) => ({ ...prev, [messageId]: "downloading" }));
+        setDocxStates((prev) => ({ ...prev, [messageId]: "downloading" }));
         toast.loading("Pushing document to browser...", { id: toastId });
 
-        downloadPdfBlob(blob, downloadFileName);
+        downloadDocxBlob(blob, downloadFileName);
 
-        setPdfStates((prev) => ({ ...prev, [messageId]: "success" }));
-        toast.success("PDF downloaded successfully! 🚀", { id: toastId });
+        setDocxStates((prev) => ({ ...prev, [messageId]: "success" }));
+        toast.success("Word Document downloaded successfully! 🚀", { id: toastId });
 
         // Upload to storage if not already there (runs asynchronously in the background)
-        if (currentSessionId && isUserLoggedIn && !message.pdfContent?.startsWith("http")) {
+        if (currentSessionId && isUserLoggedIn && !message.docContent?.startsWith("http")) {
           if (user?.id) {
-            const storageFileName = getUniqueStoragePath(user.id, currentSessionId, "pdf", "pdf");
+            const storageFileName = getUniqueStoragePath(user.id, currentSessionId, "docx", "doc");
             const uploadWithRetry = async (retries = 3, delay = 1000) => {
               try {
                 const storageUrl = await uploadFileToStorage(blob, storageFileName, user.id);
                 await saveGeneratedMaterial(
                   currentSessionId,
-                  "pdf",
-                  "application/pdf",
+                  "doc",
+                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                   storageUrl,
                   {
                     originalMessageId: messageId,
@@ -141,14 +138,17 @@ export function useChatPdf({
               } catch (uploadErr) {
                 if (retries > 0) {
                   console.warn(
-                    `Background PDF upload failed, retrying in ${delay}ms... (${retries} retries left):`,
+                    `Background Word upload failed, retrying in ${delay}ms... (${retries} retries left):`,
                     uploadErr
                   );
                   setTimeout(() => {
                     void uploadWithRetry(retries - 1, delay * 2);
                   }, delay);
                 } else {
-                  console.error("Background PDF upload failed after multiple attempts:", uploadErr);
+                  console.error(
+                    "Background Word upload failed after multiple attempts:",
+                    uploadErr
+                  );
                 }
               }
             };
@@ -157,19 +157,19 @@ export function useChatPdf({
         }
 
         setTimeout(() => {
-          setPdfStates((prev) => ({ ...prev, [messageId]: "idle" }));
+          setDocxStates((prev) => ({ ...prev, [messageId]: "idle" }));
         }, 3000);
       } catch (error) {
-        console.error("PDF generation failed:", error);
-        setPdfStates((prev) => ({ ...prev, [messageId]: "error" }));
-        toast.error("Failed to generate PDF. Please try again.", { id: toastId });
+        console.error("Word Document generation failed:", error);
+        setDocxStates((prev) => ({ ...prev, [messageId]: "error" }));
+        toast.error("Failed to generate Word Document. Please try again.", { id: toastId });
         setTimeout(() => {
-          setPdfStates((prev) => ({ ...prev, [messageId]: "idle" }));
+          setDocxStates((prev) => ({ ...prev, [messageId]: "idle" }));
         }, 3000);
       }
     },
-    [messages, pdfStates, sessions, currentSessionId, isUserLoggedIn, user, userRole]
+    [messages, docxStates, sessions, currentSessionId, isUserLoggedIn, user]
   );
 
-  return { pdfStates, handleDownloadPDF };
+  return { docxStates, handleDownloadDocx };
 }

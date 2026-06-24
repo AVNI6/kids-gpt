@@ -17,6 +17,7 @@ import {
 import { getGenerationConfig } from "@/lib/ai/orchestration/generation-config";
 import { extractAndParseJSON } from "@/lib/ai/orchestration/json-parser";
 import { PdfResponseSchema } from "@/lib/ai/schemas/pdf-response.schema";
+import { DocResponseSchema } from "@/lib/ai/schemas/doc-response.schema";
 
 function isImageGenerationRequest(message: string): boolean {
   if (!message) return false;
@@ -538,6 +539,85 @@ export async function POST(req: NextRequest) {
           pdfTheme: secureRole === "kid" ? "kid" : secureRole === "teacher" ? "teacher" : "clean",
           suggestedTitle: "Learning Material",
           isPdfRequest: true,
+          usage: {
+            promptTokenCount: response.usage.promptTokens,
+            candidatesTokenCount: response.usage.completionTokens,
+            totalTokenCount: response.usage.totalTokens,
+          },
+          provider: response.provider,
+          model: response.model,
+          fallbackUsed: response.fallbackUsed,
+        });
+      }
+    }
+
+    if (mode === "doc") {
+      // Delegate to the model fallback orchestrator for structured JSON
+      const response = await generateAIResponse({
+        contents,
+        systemPrompt: finalSystemPrompt,
+        generationConfig,
+        signal: req.signal,
+      });
+
+      if (!response.success) {
+        return NextResponse.json(
+          { error: response.error || "Failed to generate AI response" },
+          { status: 500 }
+        );
+      }
+
+      try {
+        const parsedRaw = extractAndParseJSON(response.content) as JsonObject;
+        const validationResult = DocResponseSchema.safeParse(parsedRaw);
+
+        let validatedData;
+        if (validationResult.success) {
+          validatedData = validationResult.data;
+        } else {
+          aiLogger.warn("ChatAPI", "Doc JSON failed strict zod schema validation", {
+            errors: validationResult.error.format() as unknown as JsonObject,
+            raw: parsedRaw,
+          });
+          // Fall back gracefully to raw fields, filling missing parameters with defaults
+          validatedData = {
+            overview: (parsedRaw?.overview as string) || "Here is your completed Word document.",
+            docContent:
+              (parsedRaw?.docContent as string) ||
+              (parsedRaw?.pdfContent as string) ||
+              response.content,
+            suggestedTitle: (parsedRaw?.suggestedTitle as string) || "Learning Material",
+          };
+        }
+
+        return NextResponse.json({
+          type: "text",
+          message: validatedData.overview || "Here is your completed Word document.",
+          docContent: validatedData.docContent || response.content,
+          suggestedTitle: validatedData.suggestedTitle || "Learning Material",
+          isDocRequest: true,
+          usage: {
+            promptTokenCount: response.usage.promptTokens,
+            candidatesTokenCount: response.usage.completionTokens,
+            totalTokenCount: response.usage.totalTokens,
+          },
+          provider: response.provider,
+          model: response.model,
+          fallbackUsed: response.fallbackUsed,
+        });
+      } catch (err) {
+        aiLogger.error("ChatAPI", "Failed to parse Doc JSON response", {
+          error: err instanceof Error ? err.message : String(err),
+          rawContent: response.content,
+        });
+
+        // Fallback if AI fails to return valid JSON
+        return NextResponse.json({
+          type: "text",
+          message: "Here is your Word document overview.",
+          docContent: response.content,
+          suggestedTitle: "Learning Material",
+          isDocRequest: true,
           usage: {
             promptTokenCount: response.usage.promptTokens,
             candidatesTokenCount: response.usage.completionTokens,

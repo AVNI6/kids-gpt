@@ -32,6 +32,11 @@ export function mapDbMessageToClient(m: ChatMessageRow): Message {
     (m.content.includes("pdf/") && m.content.includes(".pdf")) ||
     m.content.includes("<!-- OVERVIEW -->");
 
+  let isDoc =
+    m.attachment_url?.includes(".docx") ||
+    (m.content.includes("docx/") && m.content.includes(".docx")) ||
+    m.content.includes("<!-- DOC_OVERVIEW -->");
+
   // Extract embedded file name if present (format: [File: filename.ext] content)
   let content = m.content;
   let fileName: string | null = null;
@@ -42,8 +47,10 @@ export function mapDbMessageToClient(m: ChatMessageRow): Message {
   }
 
   let pdfContent = content;
+  let docContent = content;
   let suggestedTitle: string | undefined = undefined;
   let pdfTheme: Message["pdfTheme"] = undefined;
+  let docTheme: Message["docTheme"] = undefined;
 
   if (content.includes("<!-- OVERVIEW -->")) {
     const parts = content.split("<!-- OVERVIEW -->");
@@ -68,6 +75,29 @@ export function mapDbMessageToClient(m: ChatMessageRow): Message {
     isPdf = true;
   }
 
+  if (content.includes("<!-- DOC_OVERVIEW -->")) {
+    const parts = content.split("<!-- DOC_OVERVIEW -->");
+    docContent = parts[0].trim();
+    let rest = parts[1];
+
+    // Parse title
+    const titleMatch = rest.match(/<!-- TITLE:(.*?) -->/);
+    if (titleMatch) {
+      suggestedTitle = titleMatch[1].trim() || undefined;
+      rest = rest.replace(/<!-- TITLE:(.*?) -->/, "");
+    }
+
+    // Parse theme
+    const themeMatch = rest.match(/<!-- THEME:(.*?) -->/);
+    if (themeMatch) {
+      docTheme = (themeMatch[1].trim() as Message["docTheme"]) || undefined;
+      rest = rest.replace(/<!-- THEME:(.*?) -->/, "");
+    }
+
+    content = rest.trim();
+    isDoc = true;
+  }
+
   return {
     id: m.id,
     userId: m.user_id,
@@ -85,8 +115,11 @@ export function mapDbMessageToClient(m: ChatMessageRow): Message {
     isImage,
     isPdfRequest: isPdf,
     pdfContent: pdfContent,
-    suggestedTitle: suggestedTitle,
     pdfTheme: pdfTheme,
+    isDocRequest: isDoc,
+    docContent: docContent,
+    docTheme: docTheme,
+    suggestedTitle: suggestedTitle,
     attachmentUrl: m.attachment_url,
     fileName: fileName,
     uploadedImage: m.sender_role === "user" && isImage ? m.attachment_url || content : undefined,

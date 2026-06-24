@@ -18,6 +18,11 @@ interface ChatMessageListProps {
     "idle" | "generating" | "uploading" | "downloading" | "success" | "error"
   >;
   handleDownloadPDF: (messageId: string) => Promise<void>;
+  docxStates: Record<
+    string,
+    "idle" | "generating" | "uploading" | "downloading" | "success" | "error"
+  >;
+  handleDownloadDocx: (messageId: string) => Promise<void>;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   hasMore: boolean;
   isLoadingMore: boolean;
@@ -30,6 +35,8 @@ const ChatMessageList = memo(function ChatMessageList({
   isLoading,
   pdfStates,
   handleDownloadPDF,
+  docxStates,
+  handleDownloadDocx,
   messagesEndRef,
   hasMore,
   isLoadingMore,
@@ -87,7 +94,7 @@ const ChatMessageList = memo(function ChatMessageList({
   return (
     <div className="flex-1 min-h-0 overflow-hidden relative">
       <ScrollArea viewportRef={viewportRef} onScroll={handleScroll} className="h-full w-full">
-        <div className="w-full max-w-3xl mx-auto space-y-6 pb-6 px-2 py-4 sm:p-0 sm:py-6 md:py-8">
+        <div className="w-full max-w-3xl mx-auto pb-6 px-2 py-4 sm:p-0 sm:py-6">
           {isLoadingMore && (
             <div className="flex justify-center py-2 text-xs font-semibold text-muted-foreground gap-2 items-center">
               <Spinner className="w-4 h-4 animate-spin text-sky-500" />
@@ -106,6 +113,8 @@ const ChatMessageList = memo(function ChatMessageList({
                 showModelHeader={showModelHeader}
                 pdfState={pdfStates[message.id] || "idle"}
                 handleDownloadPDF={handleDownloadPDF}
+                docxState={docxStates[message.id] || "idle"}
+                handleDownloadDocx={handleDownloadDocx}
                 isCopied={copiedMessageId === message.id}
                 handleCopy={handleCopy}
                 isUserLoggedIn={isUserLoggedIn}

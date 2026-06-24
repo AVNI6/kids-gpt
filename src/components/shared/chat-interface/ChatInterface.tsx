@@ -9,6 +9,7 @@ import ChatSkeleton from "./ChatSkeleton";
 import ChatHeader from "./ChatHeader";
 import { useChatMessages } from "./useChatMessages";
 import { useChatPdf } from "./useChatPdf";
+import { useChatDocx } from "./useChatDocx";
 import { useChatSender } from "./useChatSender";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setCurrentSessionId } from "@/store/slices/chatSlice";
@@ -33,6 +34,8 @@ export default function ChatInterface() {
   const isFirstScrollRef = useRef(true);
   const currentSessionIdRef = useRef(currentSessionId);
   const lastMessageIdRef = useRef<string | null>(null);
+  const lastMessageContentRef = useRef<string | null>(null);
+  const prevIsLoadingRef = useRef(false);
   const chatFooterRef = useRef<ChatFooterRef>(null);
 
   useEffect(() => {
@@ -115,6 +118,14 @@ export default function ChatInterface() {
     userRole,
   });
 
+  const { docxStates, handleDownloadDocx } = useChatDocx({
+    messages,
+    sessions,
+    currentSessionId,
+    isUserLoggedIn,
+    user,
+  });
+
   const { isLoading, sendMessage, stopGenerating } = useChatSender({
     messages,
     currentSessionId,
@@ -162,29 +173,43 @@ export default function ChatInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior });
   }, []);
 
-  // Reset scroll speed on session change
   useEffect(() => {
     isFirstScrollRef.current = true;
   }, [currentSessionId]);
 
-  // Scroll to bottom whenever messages update; use instant on first load of a session,
-  // or smooth scroll when a new message is appended (last message ID changed)
   useEffect(() => {
+    const prevIsLoading = prevIsLoadingRef.current;
+    prevIsLoadingRef.current = isLoading;
+
     if (messages.length === 0) {
       lastMessageIdRef.current = null;
+      lastMessageContentRef.current = null;
       return;
     }
 
     const lastMsg = messages[messages.length - 1];
     const prevLastMsgId = lastMessageIdRef.current;
+    const prevLastMsgContent = lastMessageContentRef.current;
+
     lastMessageIdRef.current = lastMsg.id;
+    lastMessageContentRef.current = lastMsg.content || "";
 
     const isFirst = isFirstScrollRef.current;
     if (isFirst) {
       scrollToBottom("instant");
       isFirstScrollRef.current = false;
-    } else if (prevLastMsgId !== null && lastMsg.id !== prevLastMsgId) {
-      scrollToBottom("smooth");
+    } else {
+      const isNewMessage = prevLastMsgId !== null && lastMsg.id !== prevLastMsgId;
+      const isStreaming =
+        prevLastMsgId !== null &&
+        lastMsg.id === prevLastMsgId &&
+        lastMsg.role === "model" &&
+        (lastMsg.content || "") !== prevLastMsgContent;
+      const startedLoading = isLoading && !prevIsLoading;
+
+      if (isNewMessage || isStreaming || startedLoading) {
+        scrollToBottom("smooth");
+      }
     }
   }, [messages, isLoading, scrollToBottom]);
 
@@ -217,6 +242,8 @@ export default function ChatInterface() {
             isLoading={isLoading}
             pdfStates={pdfStates}
             handleDownloadPDF={handleDownloadPDF}
+            docxStates={docxStates}
+            handleDownloadDocx={handleDownloadDocx}
             messagesEndRef={messagesEndRef}
             hasMore={hasMore}
             isLoadingMore={isLoadingMore}

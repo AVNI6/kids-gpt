@@ -4,7 +4,6 @@ import React from "react";
 import { Bot, Check, Copy, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Spinner } from "@/components/ui/spinner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
@@ -12,6 +11,7 @@ import { Message } from "@/types/common";
 import type { UserProfile } from "@/types/user";
 import { getSignedResourceUrl } from "@/lib/services/shared/storage.actions";
 import { IoPersonCircleOutline } from "react-icons/io5";
+import { DownloadCard } from "./DownloadCard";
 
 interface ChatMessageItemProps {
   message: Message;
@@ -19,6 +19,8 @@ interface ChatMessageItemProps {
   showModelHeader: boolean;
   pdfState: "idle" | "generating" | "uploading" | "downloading" | "success" | "error";
   handleDownloadPDF: (messageId: string) => Promise<void>;
+  docxState: "idle" | "generating" | "uploading" | "downloading" | "success" | "error";
+  handleDownloadDocx: (messageId: string) => Promise<void>;
   isCopied: boolean;
   handleCopy: (messageId: string, content: string) => void;
   isUserLoggedIn: boolean;
@@ -33,6 +35,8 @@ const ChatMessageItem = React.memo(
     showModelHeader,
     pdfState,
     handleDownloadPDF,
+    docxState,
+    handleDownloadDocx,
     isCopied,
     handleCopy,
     isUserLoggedIn,
@@ -308,69 +312,19 @@ const ChatMessageItem = React.memo(
                     )}
 
                     {message.isPdfRequest && (
-                      <div className="mt-4 p-4 bg-sky-500/10 border border-sky-500/20 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="sm:w-10 sm:h-10 bg-sky-500/20 rounded-full flex items-center justify-center text-sky-600 shrink-0">
-                            {pdfState === "success" ? (
-                              <span className="text-lg">🎉</span>
-                            ) : pdfState === "error" ? (
-                              <span className="text-lg text-destructive">❌</span>
-                            ) : pdfState && pdfState !== "idle" ? (
-                              <Spinner className="w-4 h-4 text-sky-600 animate-spin" />
-                            ) : (
-                              <Download className="w-4 h-4 sm:w-5 sm:h-5" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-foreground m-0">
-                              {pdfState === "generating"
-                                ? "Creating Educational PDF"
-                                : pdfState === "uploading"
-                                  ? "Saving to Cloud Library"
-                                  : pdfState === "downloading"
-                                    ? "Downloading material"
-                                    : pdfState === "success"
-                                      ? "Successfully Downloaded!"
-                                      : pdfState === "error"
-                                        ? "Generation Failed"
-                                        : "Your PDF is ready"}
-                            </p>
-                            <p className="text-sm text-muted-foreground m-0">
-                              {pdfState === "generating"
-                                ? "Designing pages, wrapping text, formatting lists..."
-                                : pdfState === "uploading"
-                                  ? "Uploading the PDF to your student folder..."
-                                  : pdfState === "downloading"
-                                    ? "Pushing the document to your local machine..."
-                                    : pdfState === "success"
-                                      ? "Check your downloads folder! 🚀"
-                                      : pdfState === "error"
-                                        ? "Something went wrong. Let's try again."
-                                        : "Click to download the formatted PDF"}
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          onClick={() => handleDownloadPDF(message.id)}
-                          disabled={pdfState && pdfState !== "idle" && pdfState !== "error"}
-                          className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all shrink-0 ${
-                            pdfState === "success"
-                              ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                              : pdfState === "error"
-                                ? "bg-destructive hover:bg-destructive/90 text-white"
-                                : pdfState && pdfState !== "idle"
-                                  ? "bg-sky-400 text-white cursor-not-allowed opacity-80"
-                                  : "bg-sky-500 hover:bg-sky-600 text-white hover:scale-[1.02] active:scale-95"
-                          }`}
-                        >
-                          {pdfState === "generating" && "Generating..."}
-                          {pdfState === "uploading" && "Saving..."}
-                          {pdfState === "downloading" && "Downloading..."}
-                          {pdfState === "success" && "Downloaded! ✓"}
-                          {pdfState === "error" && "Retry"}
-                          {(!pdfState || pdfState === "idle") && "Download PDF"}
-                        </Button>
-                      </div>
+                      <DownloadCard
+                        type="pdf"
+                        state={pdfState}
+                        onDownload={() => handleDownloadPDF(message.id)}
+                      />
+                    )}
+
+                    {message.isDocRequest && (
+                      <DownloadCard
+                        type="docx"
+                        state={docxState}
+                        onDownload={() => handleDownloadDocx(message.id)}
+                      />
                     )}
                   </div>
                 ) : (
