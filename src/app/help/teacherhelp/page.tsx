@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, School, WandSparkles, LineChart, FileDown } from "lucide-react";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,

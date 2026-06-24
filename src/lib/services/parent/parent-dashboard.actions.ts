@@ -12,7 +12,7 @@ import type {
   ParentActivityItem,
 } from "@/types/kid";
 import type { ChatMessageRow } from "@/types/common";
-import { getDailyScreenTime, recoverStaleSessions } from "../shared/screentime.actions";
+import { getDailyScreenTime } from "../shared/screentime.actions";
 import { preSignMessageUrls } from "../shared/chat.actions";
 import type { SearchHistoryItem, CacheData } from "@/types/parent";
 import {
@@ -469,9 +469,7 @@ export async function getParentActivitiesPaginated(
 
     if (settingIds.length > 0) {
       // Filter: source_type matches slug OR source_id is one of the found activity_settings ids
-      query = query.or(
-        `source_type.eq.${activitySlug},source_id.in.(${settingIds.join(",")})`
-      );
+      query = query.or(`source_type.eq.${activitySlug},source_id.in.(${settingIds.join(",")})`);
     } else {
       // No settings row found — filter by source_type only
       query = query.eq("source_type", activitySlug);
@@ -617,7 +615,7 @@ export async function getParentSessionMessages(
 
     let query = supabase
       .from("chat_messages")
-      .select("*")
+      .select("*, profile:profile(user_id, first_name, last_name, avatar_url, role)")
       .eq("session_id", sessionId)
       .is("deleted_at", null);
 

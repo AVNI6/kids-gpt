@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, RotateCcw, HelpCircle } from "lucide-react";
 import Link from "next/link";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { toast } from "sonner";
 import type { MatchFollowingReviewData } from "@/types/activity-review.types";
 

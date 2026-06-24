@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { kidActivities, activityColorStyles, activityButtonStyles } from "@/lib/kid-activities";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import ActivityTopicModal from "@/components/kid/activities/ActivityTopicModal";
 
 interface PageProps {

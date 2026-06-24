@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import VictoryModal from "@/components/shared/VictoryModal";
 import { type WordScrambleItem } from "@/types/activities.type";
 import type { WordScrambleReviewData, WordScrambleReviewItem } from "@/types/activity-review.types";

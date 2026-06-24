@@ -3,6 +3,7 @@ import { Document, Page, Text, StyleSheet, View, Image, Font, Link } from "@reac
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { UserRole } from "@/types/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 
 type ReactPdfStyle = NonNullable<Parameters<typeof StyleSheet.create>[0]>[string];
 
@@ -111,205 +112,6 @@ const kidStyles = StyleSheet.create({
   },
 });
 
-// ===== PARENT STYLE SHEET (Clean & Minimalist) =====
-const parentStyles = StyleSheet.create({
-  page: {
-    padding: 50,
-    fontSize: 11,
-    lineHeight: 1.6,
-    fontFamily: "Helvetica",
-    backgroundColor: "#fafafa",
-  },
-  backgroundContainer: {
-    display: "none",
-  },
-  backgroundImage: {
-    display: "none",
-  },
-  header: {
-    fontSize: 22,
-    marginBottom: 20,
-    color: "#1e293b",
-    fontWeight: "bold",
-    textAlign: "left",
-    borderBottomWidth: 1.5,
-    borderBottomColor: "#cbd5e1",
-    paddingBottom: 8,
-  },
-  section: {
-    marginBottom: 15,
-    backgroundColor: "#ffffff",
-    padding: 25,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  h1: {
-    fontSize: 18,
-    marginBottom: 12,
-    marginTop: 20,
-    fontWeight: "bold",
-    color: "#0f172a",
-  },
-  h2: {
-    fontSize: 15,
-    marginBottom: 10,
-    marginTop: 16,
-    fontWeight: "bold",
-    color: "#1e293b",
-  },
-  h3: {
-    fontSize: 13,
-    marginBottom: 8,
-    marginTop: 12,
-    fontWeight: "bold",
-    color: "#334155",
-  },
-  paragraph: {
-    marginBottom: 12,
-  },
-  text: {
-    fontSize: 11,
-    color: "#334155",
-    lineHeight: 1.6,
-  },
-  bold: {
-    fontWeight: "bold",
-    color: "#0f172a",
-  },
-  italic: {
-    fontStyle: "italic",
-  },
-  bulletRow: {
-    flexDirection: "row",
-    marginBottom: 8,
-    paddingLeft: 5,
-  },
-  bullet: {
-    width: 20,
-    fontSize: 12,
-    color: "#64748b",
-  },
-  bulletText: {
-    fontSize: 11,
-    color: "#334155",
-    lineHeight: 1.6,
-  },
-  footer: {
-    position: "absolute",
-    bottom: 25,
-    left: 50,
-    right: 50,
-    textAlign: "center",
-    fontSize: 9,
-    color: "#64748b",
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
-    paddingTop: 10,
-  },
-});
-
-// ===== TEACHER STYLE SHEET (Structured Worksheet) =====
-const teacherStyles = StyleSheet.create({
-  page: {
-    padding: 50,
-    fontSize: 11.5,
-    lineHeight: 1.5,
-    fontFamily: "Helvetica",
-    backgroundColor: "#ffffff",
-  },
-  backgroundContainer: {
-    display: "none",
-  },
-  backgroundImage: {
-    display: "none",
-  },
-  header: {
-    fontSize: 24,
-    marginBottom: 25,
-    color: "#1e3a8a",
-    fontWeight: "bold",
-    textAlign: "center",
-    borderWidth: 2,
-    borderColor: "#1e3a8a",
-    padding: 10,
-    backgroundColor: "#eff6ff",
-  },
-  section: {
-    marginBottom: 15,
-    backgroundColor: "#ffffff",
-    padding: 25,
-    borderWidth: 1.5,
-    borderColor: "#1e3a8a",
-  },
-  h1: {
-    fontSize: 20,
-    marginBottom: 12,
-    marginTop: 20,
-    fontWeight: "bold",
-    color: "#1e3a8a",
-    borderBottomWidth: 1,
-    borderBottomColor: "#1e3a8a",
-    paddingBottom: 4,
-  },
-  h2: {
-    fontSize: 16,
-    marginBottom: 10,
-    marginTop: 16,
-    fontWeight: "bold",
-    color: "#2563eb",
-  },
-  h3: {
-    fontSize: 14,
-    marginBottom: 8,
-    marginTop: 12,
-    fontWeight: "bold",
-    color: "#1d4ed8",
-  },
-  paragraph: {
-    marginBottom: 12,
-  },
-  text: {
-    fontSize: 11.5,
-    color: "#0f172a",
-    lineHeight: 1.6,
-  },
-  bold: {
-    fontWeight: "bold",
-    color: "#000000",
-  },
-  italic: {
-    fontStyle: "italic",
-  },
-  bulletRow: {
-    flexDirection: "row",
-    marginBottom: 8,
-    paddingLeft: 5,
-  },
-  bullet: {
-    width: 22,
-    fontSize: 13,
-    color: "#1e3a8a",
-    fontWeight: "bold",
-  },
-  bulletText: {
-    fontSize: 11.5,
-    color: "#0f172a",
-    lineHeight: 1.6,
-  },
-  footer: {
-    position: "absolute",
-    bottom: 25,
-    left: 50,
-    right: 50,
-    textAlign: "center",
-    fontSize: 9.5,
-    color: "#475569",
-    borderTopWidth: 1.5,
-    borderTopColor: "#1e3a8a",
-    paddingTop: 10,
-  },
-});
-
 // Clean and prepare markdown content
 const cleanMarkdown = (content: string) => {
   if (!content) return "";
@@ -325,14 +127,6 @@ interface MarkdownToPdfProps {
   content: string;
   styles: PdfStyles;
 }
-
-/**
- * Safely processes children array for react-pdf.
- * It guarantees that:
- * 1. Raw text strings and inline components are wrapped in a single <Text> node.
- * 2. Block-level components (represented as <View> in react-pdf) are rendered outside of <Text> nodes.
- * This completely prevents the crash-prone "View inside Text" nested hierarchy in @react-pdf/renderer.
- */
 const renderSafeContent = (
   children: React.ReactNode,
   textStyle: ReactPdfStyle | ReactPdfStyle[] | undefined
@@ -565,20 +359,7 @@ type PdfDocumentProps = {
 };
 
 export const PdfDocument = ({ content, role = "kid" }: PdfDocumentProps) => {
-  // Select active stylesheet based on user's role
-  const getStyles = () => {
-    switch (role) {
-      case "parent":
-        return parentStyles;
-      case "teacher":
-        return teacherStyles;
-      case "kid":
-      default:
-        return kidStyles;
-    }
-  };
-
-  const styles = getStyles();
+  const styles = kidStyles;
 
   // Select header title based on user's role
   const getHeaderTitle = () => {
@@ -593,7 +374,7 @@ export const PdfDocument = ({ content, role = "kid" }: PdfDocumentProps) => {
     }
   };
 
-  // Randomly select a doodle background (1-3) - Only for kid role
+  // Randomly select a doodle background dynamically from APP_ROUTES config
   const getDoodleIndex = () => {
     if (!content) return 1;
     let hash = 0;
@@ -601,7 +382,8 @@ export const PdfDocument = ({ content, role = "kid" }: PdfDocumentProps) => {
       hash = (hash << 2) - hash + content.charCodeAt(i);
       hash |= 0;
     }
-    return (Math.abs(hash) % 3) + 1;
+    const count = APP_ROUTES.PdfDoodlesCount || 7;
+    return (Math.abs(hash) % count) + 1;
   };
 
   const doodleIndex = getDoodleIndex();
@@ -610,22 +392,20 @@ export const PdfDocument = ({ content, role = "kid" }: PdfDocumentProps) => {
   return (
     <Document title="Learning Material" author="Kidoza">
       <Page size="A4" style={styles.page}>
-        {/* Background Doodles - Only for Kid Theme */}
-        {role === "kid" && (
-          <View style={styles.backgroundContainer} fixed>
-            {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <Image src={backgroundSrc} style={styles.backgroundImage} />
-          </View>
-        )}
+        {/* Background Doodles - Rendered for all roles */}
+        <View style={styles.backgroundContainer} fixed>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
+          <Image src={backgroundSrc} style={styles.backgroundImage} />
+        </View>
 
         {/* Header Section */}
-        <View fixed>
+        <View>
           <Text style={styles.header}>{getHeaderTitle()}</Text>
         </View>
 
         {/* Content Section */}
         <View style={styles.section}>
-          <MarkdownToPdf content={content} styles={styles as typeof kidStyles} />
+          <MarkdownToPdf content={content} styles={styles} />
         </View>
 
         {/* Footer Section */}

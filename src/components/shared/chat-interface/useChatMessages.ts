@@ -70,6 +70,16 @@ export function mapDbMessageToClient(m: ChatMessageRow): Message {
 
   return {
     id: m.id,
+    userId: m.user_id,
+    senderProfile: m.profile
+      ? {
+          user_id: m.profile.user_id,
+          first_name: m.profile.first_name || undefined,
+          last_name: m.profile.last_name || undefined,
+          avatar_url: m.profile.avatar_url || undefined,
+          role: (m.profile.role as string | null) || undefined,
+        }
+      : null,
     role: (m.sender_role as string) === "assistant" ? "model" : m.sender_role,
     content: content,
     isImage,

@@ -123,7 +123,11 @@ const ChatMessageItem = React.memo(
       }
     }, []);
 
-    const resolvedProfile = sessionOwnerProfile || userProfile;
+    const resolvedProfile = message.senderProfile
+      ? message.senderProfile
+      : message.userId && sessionOwnerProfile && message.userId === sessionOwnerProfile.user_id
+        ? sessionOwnerProfile
+        : userProfile;
 
     return (
       <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -467,6 +471,9 @@ const ChatMessageItem = React.memo(
   (prevProps, nextProps) => {
     return (
       prevProps.message.id === nextProps.message.id &&
+      prevProps.message.userId === nextProps.message.userId &&
+      prevProps.message.senderProfile?.avatar_url === nextProps.message.senderProfile?.avatar_url &&
+      prevProps.message.senderProfile?.first_name === nextProps.message.senderProfile?.first_name &&
       prevProps.message.content === nextProps.message.content &&
       prevProps.message.uploadedImage === nextProps.message.uploadedImage &&
       prevProps.message.attachmentUrl === nextProps.message.attachmentUrl &&

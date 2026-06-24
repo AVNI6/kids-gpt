@@ -21,6 +21,14 @@ export type PdfTheme = "kid" | "clean" | "teacher";
 
 export interface Message {
   id: string;
+  userId?: string;
+  senderProfile?: {
+    user_id: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    avatar_url?: string | null;
+    role?: string | null;
+  } | null;
   role: "user" | "model";
   content: string;
   isImage?: boolean;
@@ -76,6 +84,13 @@ export interface ChatMessageRow {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  profile?: {
+    user_id: string;
+    first_name: string | null;
+    last_name: string | null;
+    avatar_url: string | null;
+    role: string | null;
+  } | null;
 }
 
 export interface GeneratedMaterialRow {

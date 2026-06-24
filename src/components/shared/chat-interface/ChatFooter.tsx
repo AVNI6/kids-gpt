@@ -85,6 +85,48 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
     },
   }));
 
+  // Auto-focus input on mount, when session changes, or when loading state finishes
+  useEffect(() => {
+    if (!isAuthLoading && !isLoading && !isParsing) {
+      const timer = setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [currentSessionId, isAuthLoading, isLoading, isParsing]);
+
+  // Global keydown listener to auto-focus textarea when user starts typing
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Ignore modifier keys
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+      // Ignore if user is already focusing an input, textarea, or contenteditable element
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          activeEl.getAttribute("contenteditable") === "true")
+      ) {
+        return;
+      }
+
+      // Ignore if input is disabled due to loading
+      if (isAuthLoading || isLoading || isParsing) return;
+
+      // Focus only for single printable characters (length 1)
+      if (e.key.length === 1) {
+        textareaRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleGlobalKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [isAuthLoading, isLoading, isParsing]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
@@ -250,7 +292,7 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
     >
       <footer className="bg-background px-2 sm:px-4 pb-4 sm:pb-6">
         <div className="w-full max-w-3xl mx-auto">
-          <div className="relative bg-muted/30 border border-border rounded-[28px] overflow-hidden focus-within:ring-2 focus-within:ring-sky-400 transition-all">
+          <div className="relative bg-muted/30 border border-border rounded-[28px] overflow-hidden">
             <input
               type="file"
               accept="image/*"
@@ -383,7 +425,6 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything"
-                disabled={isAuthLoading || isLoading || isParsing}
                 className="flex-1 min-w-0 resize-none bg-transparent py-3 px-3 text-base border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 min-h-[40px] max-h-[180px] overflow-y-auto scrollbar-none text-foreground placeholder:text-muted-foreground/60 align-bottom leading-relaxed text-left whitespace-pre-wrap break-words"
                 suppressHydrationWarning={true}
               />
@@ -393,7 +434,6 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                   ref={voiceInputRef}
                   onTranscript={(text) => setInput((prev) => prev + (prev ? " " : "") + text)}
                   currentSessionId={currentSessionId}
-                  disabled={isAuthLoading || isLoading || isParsing}
                 />
 
                 {isLoading ? (

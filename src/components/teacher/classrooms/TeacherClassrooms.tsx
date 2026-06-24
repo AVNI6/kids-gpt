@@ -406,7 +406,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         <span className="text-xl font-black text-slate-900 dark:text-white block">
                           {studentCount}
                         </span>
-                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block truncate w-full">
                           Students
                         </span>
                       </div>
@@ -414,7 +414,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         <span className="text-xl font-black text-slate-900 dark:text-white block">
                           {assignmentCount}
                         </span>
-                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block truncate w-full">
                           Assignments
                         </span>
                       </div>
@@ -422,7 +422,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         <span className="text-xl font-black text-slate-900 dark:text-white block">
                           {resourceCount}
                         </span>
-                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block truncate w-full">
                           Resources
                         </span>
                       </div>
@@ -430,7 +430,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         <span className="text-xl font-black text-slate-900 dark:text-white block">
                           {announcementCount}
                         </span>
-                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block truncate w-full">
                           Announcements
                         </span>
                       </div>
@@ -476,7 +476,6 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
 
                     <Button
                       loading={loadingClassroomId === cls.id}
-                      loadingText="Opening..."
                       onClick={() => {
                         setLoadingClassroomId(cls.id);
                         // Track access in client storage

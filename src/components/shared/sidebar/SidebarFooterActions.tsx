@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SidebarFooter } from "@/components/ui/sidebar";
-import { APP_ROUTES } from "@/lib/constants/common";
+import { APP_ROUTES } from "@/lib/constants/app_routes";
 import Profile from "./Profile";
 import { useAuth } from "@/hooks/useAuth";
 

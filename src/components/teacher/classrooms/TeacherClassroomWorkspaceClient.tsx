@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, FolderOpen, Megaphone, Users } from "lucide-react";
@@ -23,7 +23,12 @@ import {
   deleteResource,
   deleteAnnouncement,
   getTeacherAssignmentOverview,
+  getTeacherClassroomAssignments,
+  getTeacherClassroomResources,
+  getTeacherClassroomAnnouncements,
+  getTeacherClassroomStudents,
 } from "@/lib/services/kid/classroom.actions";
+import { TabContentSkeleton } from "@/components/shared/skeletonLoading";
 
 import type {
   Classroom,
@@ -43,10 +48,10 @@ import ClassroomGradingDialog from "./tabs/ClassroomGradingDialog";
 type Props = {
   classroomId: string;
   initialClassroom: Classroom;
-  initialAssignments: ClassroomAssignment[];
-  initialResources: ClassroomResource[];
-  initialAnnouncements: ClassroomAnnouncement[];
-  initialStudents: WorkspaceStudent[];
+  initialAssignments: ClassroomAssignment[] | null;
+  initialResources: ClassroomResource[] | null;
+  initialAnnouncements: ClassroomAnnouncement[] | null;
+  initialStudents: WorkspaceStudent[] | null;
 };
 
 export default function TeacherClassroomWorkspaceClient({
@@ -57,22 +62,174 @@ export default function TeacherClassroomWorkspaceClient({
   initialAnnouncements,
   initialStudents,
 }: Props) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Tab is driven directly by URL query parameter (href) or defaults to assignments
-  const activeTab = (searchParams?.get("tab") || "assignments") as
-    | "assignments"
-    | "resources"
-    | "announcements"
-    | "students";
+  // Local state for instant tab switching
+  const [activeTabState, setActiveTabState] = useState<
+    "assignments" | "resources" | "announcements" | "students"
+  >(() => {
+    const tab = searchParams?.get("tab");
+    if (tab === "resources" || tab === "announcements" || tab === "students") {
+      return tab;
+    }
+    return "assignments";
+  });
 
   // Lists state
   const [classroom] = useState(initialClassroom);
-  const [assignments, setAssignments] = useState(initialAssignments);
-  const [resources, setResources] = useState(initialResources);
-  const [announcements, setAnnouncements] = useState(initialAnnouncements);
-  const [students] = useState(initialStudents);
+  const [assignments, setAssignments] = useState<ClassroomAssignment[] | null>(initialAssignments);
+  const [resources, setResources] = useState<ClassroomResource[] | null>(initialResources);
+  const [announcements, setAnnouncements] = useState<ClassroomAnnouncement[] | null>(
+    initialAnnouncements
+  );
+  const [students, setStudents] = useState<WorkspaceStudent[] | null>(initialStudents);
+  const fetchingRefs = useRef({
+    assignments: false,
+    resources: false,
+    announcements: false,
+    students: false,
+  });
+
+  const loadAssignments = useCallback(
+    async (force = false) => {
+      if (assignments && !force) return;
+      if (fetchingRefs.current.assignments) return;
+      fetchingRefs.current.assignments = true;
+      try {
+        const result = await getTeacherClassroomAssignments(classroomId);
+        if (result.success && result.data) {
+          setAssignments(result.data);
+        } else {
+          toast.error(result.error || "Failed to load assignments.");
+        }
+      } catch {
+        toast.error("Failed to load assignments.");
+      } finally {
+        fetchingRefs.current.assignments = false;
+      }
+    },
+    [assignments, classroomId]
+  );
+
+  const loadResources = useCallback(
+    async (force = false) => {
+      if (resources && !force) return;
+      if (fetchingRefs.current.resources) return;
+      fetchingRefs.current.resources = true;
+      try {
+        const result = await getTeacherClassroomResources(classroomId);
+        if (result.success && result.data) {
+          setResources(result.data);
+        } else {
+          toast.error(result.error || "Failed to load resources.");
+        }
+      } catch {
+        toast.error("Failed to load resources.");
+      } finally {
+        fetchingRefs.current.resources = false;
+      }
+    },
+    [resources, classroomId]
+  );
+
+  const loadAnnouncements = useCallback(
+    async (force = false) => {
+      if (announcements && !force) return;
+      if (fetchingRefs.current.announcements) return;
+      fetchingRefs.current.announcements = true;
+      try {
+        const result = await getTeacherClassroomAnnouncements(classroomId);
+        if (result.success && result.data) {
+          setAnnouncements(result.data);
+        } else {
+          toast.error(result.error || "Failed to load announcements.");
+        }
+      } catch {
+        toast.error("Failed to load announcements.");
+      } finally {
+        fetchingRefs.current.announcements = false;
+      }
+    },
+    [announcements, classroomId]
+  );
+
+  const loadStudents = useCallback(
+    async (force = false) => {
+      if (students && !force) return;
+      if (fetchingRefs.current.students) return;
+      fetchingRefs.current.students = true;
+      try {
+        const result = await getTeacherClassroomStudents(classroomId);
+        if (result.success && result.data) {
+          setStudents(result.data);
+        } else {
+          toast.error(result.error || "Failed to load students.");
+        }
+      } catch {
+        toast.error("Failed to load students.");
+      } finally {
+        fetchingRefs.current.students = false;
+      }
+    },
+    [students, classroomId]
+  );
+
+  const loadFunctionsRef = useRef({
+    loadAssignments,
+    loadResources,
+    loadAnnouncements,
+    loadStudents,
+  });
+
+  useEffect(() => {
+    loadFunctionsRef.current = {
+      loadAssignments,
+      loadResources,
+      loadAnnouncements,
+      loadStudents,
+    };
+  }, [loadAssignments, loadResources, loadAnnouncements, loadStudents]);
+
+  const triggerAsyncLoad = useCallback(
+    (tab: "assignments" | "resources" | "announcements" | "students") => {
+      Promise.resolve().then(() => {
+        const {
+          loadAssignments: fnAssignments,
+          loadResources: fnResources,
+          loadAnnouncements: fnAnnouncements,
+          loadStudents: fnStudents,
+        } = loadFunctionsRef.current;
+
+        if (tab === "assignments") {
+          fnAssignments();
+        } else if (tab === "resources") {
+          fnResources();
+        } else if (tab === "announcements") {
+          fnAnnouncements();
+        } else if (tab === "students") {
+          fnStudents();
+        }
+      });
+    },
+    []
+  );
+
+  // Sync tab state on browser navigation (forward/back)
+  useEffect(() => {
+    const tab = searchParams?.get("tab");
+    if (
+      tab &&
+      (tab === "assignments" ||
+        tab === "resources" ||
+        tab === "announcements" ||
+        tab === "students")
+    ) {
+      Promise.resolve().then(() => {
+        setActiveTabState(tab);
+        triggerAsyncLoad(tab);
+      });
+    }
+  }, [searchParams, triggerAsyncLoad]);
 
   // Selected Assignment for grading dialog
   const [selectedAssignment, setSelectedAssignment] = useState<ClassroomAssignment | null>(null);
@@ -118,10 +275,14 @@ export default function TeacherClassroomWorkspaceClient({
       const result = await publishAssignment(id);
       if (result.success) {
         toast.success("Assignment published!");
-        setAssignments(
-          assignments.map((a) =>
-            a.id === id ? { ...a, status: "PUBLISHED", published_at: new Date().toISOString() } : a
-          )
+        setAssignments((prev) =>
+          prev
+            ? prev.map((a) =>
+                a.id === id
+                  ? { ...a, status: "PUBLISHED" as const, published_at: new Date().toISOString() }
+                  : a
+              )
+            : null
         );
       } else {
         toast.error(result.error || "Failed to publish assignment.");
@@ -142,7 +303,7 @@ export default function TeacherClassroomWorkspaceClient({
           const result = await deleteAssignment(id);
           if (result.success) {
             toast.success("Assignment deleted.");
-            setAssignments(assignments.filter((a) => a.id !== id));
+            setAssignments((prev) => (prev ? prev.filter((a) => a.id !== id) : null));
           } else {
             toast.error(result.error || "Failed to delete assignment.");
           }
@@ -178,7 +339,7 @@ export default function TeacherClassroomWorkspaceClient({
           const result = await deleteResource(id);
           if (result.success) {
             toast.success("Resource deleted.");
-            setResources((prev) => prev.filter((r) => r.id !== id));
+            setResources((prev) => (prev ? prev.filter((r) => r.id !== id) : null));
           } else {
             toast.error(result.error || "Failed to delete resource.");
           }
@@ -198,7 +359,7 @@ export default function TeacherClassroomWorkspaceClient({
           const result = await deleteAnnouncement(id);
           if (result.success) {
             toast.success("Announcement deleted.");
-            setAnnouncements(announcements.filter((a) => a.id !== id));
+            setAnnouncements((prev) => (prev ? prev.filter((a) => a.id !== id) : null));
           } else {
             toast.error(result.error || "Failed to delete announcement.");
           }
@@ -215,10 +376,18 @@ export default function TeacherClassroomWorkspaceClient({
 
   return (
     <Tabs
-      value={activeTab}
-      onValueChange={(val) =>
-        router.push(`/dashboard/teacher/classrooms/${classroomId}?tab=${val}`, { scroll: false })
-      }
+      value={activeTabState}
+      onValueChange={(val) => {
+        const nextTab = val as "assignments" | "resources" | "announcements" | "students";
+        setActiveTabState(nextTab);
+        const newUrl = `/dashboard/teacher/classrooms/${classroomId}?tab=${val}`;
+        window.history.replaceState(
+          { ...window.history.state, as: newUrl, url: newUrl },
+          "",
+          newUrl
+        );
+        triggerAsyncLoad(nextTab);
+      }}
       className="mx-auto w-full flex flex-col gap-6"
     >
       {/* 1. Header */}
@@ -271,37 +440,57 @@ export default function TeacherClassroomWorkspaceClient({
 
       {/* 2. Workspace Tabs Viewports */}
       <TabsContent value="assignments" className="mt-0 outline-none">
-        <ClassroomAssignmentsTab
-          classroomId={classroomId}
-          assignments={assignments}
-          setAssignments={setAssignments}
-          handlePublishAssignment={handlePublishAssignment}
-          handleDeleteAssignment={handleDeleteAssignment}
-          handleOpenGrading={handleOpenGrading}
-          publishingAssignmentId={publishingAssignmentId}
-        />
+        {assignments === null ? (
+          <TabContentSkeleton />
+        ) : (
+          <ClassroomAssignmentsTab
+            classroomId={classroomId}
+            assignments={assignments}
+            setAssignments={
+              setAssignments as React.Dispatch<React.SetStateAction<ClassroomAssignment[]>>
+            }
+            handlePublishAssignment={handlePublishAssignment}
+            handleDeleteAssignment={handleDeleteAssignment}
+            handleOpenGrading={handleOpenGrading}
+            publishingAssignmentId={publishingAssignmentId}
+          />
+        )}
       </TabsContent>
 
       <TabsContent value="resources" className="mt-0 outline-none">
-        <ClassroomResourcesTab
-          classroomId={classroomId}
-          resources={resources}
-          setResources={setResources}
-          handleDeleteResource={handleDeleteResource}
-        />
+        {resources === null ? (
+          <TabContentSkeleton />
+        ) : (
+          <ClassroomResourcesTab
+            classroomId={classroomId}
+            resources={resources}
+            setResources={setResources as React.Dispatch<React.SetStateAction<ClassroomResource[]>>}
+            handleDeleteResource={handleDeleteResource}
+          />
+        )}
       </TabsContent>
 
       <TabsContent value="announcements" className="mt-0 outline-none">
-        <ClassroomAnnouncementsTab
-          classroomId={classroomId}
-          announcements={announcements}
-          setAnnouncements={setAnnouncements}
-          handleDeleteAnnouncement={handleDeleteAnnouncement}
-        />
+        {announcements === null ? (
+          <TabContentSkeleton />
+        ) : (
+          <ClassroomAnnouncementsTab
+            classroomId={classroomId}
+            announcements={announcements}
+            setAnnouncements={
+              setAnnouncements as React.Dispatch<React.SetStateAction<ClassroomAnnouncement[]>>
+            }
+            handleDeleteAnnouncement={handleDeleteAnnouncement}
+          />
+        )}
       </TabsContent>
 
       <TabsContent value="students" className="mt-0 outline-none">
-        <ClassroomStudentsTab students={students} getInitials={getInitials} />
+        {students === null ? (
+          <TabContentSkeleton />
+        ) : (
+          <ClassroomStudentsTab students={students} getInitials={getInitials} />
+        )}
       </TabsContent>
 
       {/* 3. Grading dialog */}

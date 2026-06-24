@@ -492,33 +492,36 @@ export default function ClassroomAssignmentsTab({
 
                     {/* Config Fields */}
                     {assign.activity_type && (
-                      <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 mt-2">
-                        <div>
-                          <span className="text-slate-400 dark:text-slate-500 block uppercase tracking-wider text-[8px]">
-                            Type
-                          </span>
-                          <span className="capitalize">
-                            {assign.activity_type.replace("-", " ")}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 dark:text-slate-500 block uppercase tracking-wider text-[8px]">
-                            Topic
-                          </span>
-                          <span className="truncate block">{assign.topic || "N/A"}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 dark:text-slate-500 block uppercase tracking-wider text-[8px]">
-                            Difficulty
-                          </span>
-                          <span>{assign.difficulty || "Grade 5"}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 dark:text-slate-500 block uppercase tracking-wider text-[8px]">
-                            Count
-                          </span>
-                          <span>{assign.question_count ?? 3} questions</span>
-                        </div>
+                      <div className="grid grid-cols-2 gap-2.5 text-[11px] sm:text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/80 mt-2">
+                        {[
+                          {
+                            label: "Type",
+                            value: assign.activity_type.replace("-", " "),
+                            className: "capitalize",
+                          },
+                          {
+                            label: "Topic",
+                            value: assign.topic || "N/A",
+                            className: "truncate block",
+                          },
+                          {
+                            label: "Difficulty",
+                            value: assign.difficulty || "Grade 5",
+                          },
+                          {
+                            label: "Questions",
+                            value: assign.question_count ?? 3,
+                          },
+                        ].map((item) => (
+                          <div key={item.label} className="min-w-0">
+                            <span className="text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[9px] sm:text-[10px] md:text-xs block truncate w-full">
+                              {item.label}
+                            </span>
+                            <span className={`block truncate w-full ${item.className || ""}`}>
+                              {item.value}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     )}
 
