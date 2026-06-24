@@ -56,11 +56,28 @@ export default function WordScramblesPage({
   const gameStartedAtRef = useRef<number>(0);
   const [finalGameStartedAt, setFinalGameStartedAt] = useState<number>(0);
   const [finalReviewItems, setFinalReviewItems] = useState<WordScrambleReviewItem[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const nextButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     gameStartedAtRef.current = Date.now();
     getActivityXp("word-scrambles").then(setXpReward);
   }, []);
+
+  useEffect(() => {
+    if (showResult && nextButtonRef.current) {
+      nextButtonRef.current.focus();
+    }
+  }, [showResult]);
+
+  useEffect(() => {
+    if (!showResult && inputRef.current) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [showResult]);
 
   const safeWords = words || defaultWords;
   const word = safeWords[currentWord] || safeWords[0];
@@ -163,19 +180,28 @@ export default function WordScramblesPage({
               </h2>
 
               <div className="flex flex-wrap justify-center gap-2 py-2">
-                {word.scrambled.split(/\s+/).map((letter, i) => (
-                  <div
-                    key={i}
-                    className="bg-background border-4 border-pink-500/30 dark:border-pink-500/20 w-12 h-16 md:w-14 md:h-18 rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-black text-pink-600 dark:text-pink-400 shadow-sm rotate-[-2deg] hover:rotate-[2deg] transition-transform select-none"
-                  >
-                    {letter}
-                  </div>
-                ))}
+                {word.scrambled.split(/\s+/).map((letter, i) => {
+                  const letters = word.scrambled.split(/\s+/);
+                  const isLongWord = letters.length > 5;
+                  return (
+                    <div
+                      key={i}
+                      className={`bg-background border-4 border-pink-500/30 dark:border-pink-500/20 rounded-2xl flex items-center justify-center font-black text-pink-600 dark:text-pink-400 shadow-sm rotate-[-2deg] hover:rotate-[2deg] transition-transform select-none ${
+                        isLongWord
+                          ? "w-9 h-12 text-lg sm:w-12 sm:h-16 sm:text-2xl md:w-14 md:h-18 md:text-3xl"
+                          : "w-12 h-16 md:w-14 md:h-18 text-2xl md:text-3xl"
+                      }`}
+                    >
+                      {letter}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             <div className="flex flex-col items-center shrink-0">
               <Input
+                ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value.toUpperCase())}
@@ -183,6 +209,12 @@ export default function WordScramblesPage({
                 placeholder="Type answer..."
                 className="w-full max-w-xs text-center text-2xl font-black uppercase tracking-widest h-14 rounded-2xl border-4 border-border dark:border-slate-800 bg-background focus-visible:border-pink-500 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-inner text-foreground transition-colors"
                 maxLength={word.answer.length}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && input.trim()) {
+                    e.preventDefault();
+                    handleCheck();
+                  }
+                }}
               />
             </div>
 
@@ -211,6 +243,7 @@ export default function WordScramblesPage({
                 <div className="text-base font-bold text-red-500">Oops! It was {word.answer}.</div>
               )}
               <Button
+                ref={nextButtonRef}
                 onClick={handleNext}
                 className="h-11 px-10 rounded-full bg-pink-500 hover:bg-pink-600 text-base font-bold shadow-[0_4px_0px_0px_#be185d] active:translate-y-1 active:shadow-none transition-all"
               >

@@ -144,7 +144,7 @@ export async function getDailyScreenTime(
       query.eq("parent_user_id", parentId);
     }
 
-    const { data: link, error: linkError } = await query.maybeSingle();
+    const { data: links, error: linkError } = await query;
 
     if (linkError) {
       console.error("[getDailyScreenTime] Link query error:", linkError);
@@ -158,8 +158,19 @@ export async function getDailyScreenTime(
       };
     }
 
-    const dailyLimit = link?.daily_limit_minutes ?? 60;
-    const isLimitEnabled = link?.is_screen_time_limit_enabled ?? false;
+    let dailyLimit = 60;
+    let isLimitEnabled = false;
+
+    if (links && links.length > 0) {
+      const enabledLinks = links.filter((l) => l.is_screen_time_limit_enabled);
+      if (enabledLinks.length > 0) {
+        isLimitEnabled = true;
+        dailyLimit = Math.min(...enabledLinks.map((l) => l.daily_limit_minutes ?? 60));
+      } else {
+        isLimitEnabled = false;
+        dailyLimit = Math.min(...links.map((l) => l.daily_limit_minutes ?? 60));
+      }
+    }
 
     // 2. Fetch screen time usage today from daily_screen_time_usage table
     const todayStr = getLocalDateString(new Date(), timezone);
@@ -520,7 +531,9 @@ export async function recoverStaleSessions(): Promise<{
     const supabase = await createClient();
 
     // Invoke the single-query database RPC to bulk-complete stale sessions (eliminates N+1 loops)
-    const { data: count, error: rpcError } = await supabase.rpc("recover_stale_screen_time_sessions");
+    const { data: count, error: rpcError } = await supabase.rpc(
+      "recover_stale_screen_time_sessions"
+    );
 
     if (rpcError) {
       console.error("[recoverStaleSessions] RPC Error:", rpcError);
