@@ -28,6 +28,7 @@ interface ChatMessageListProps {
   isLoadingMore: boolean;
   onLoadMore: () => Promise<void>;
   sessionOwnerProfile?: UserProfile | null;
+  loadingText?: string;
 }
 
 const ChatMessageList = memo(function ChatMessageList({
@@ -42,6 +43,7 @@ const ChatMessageList = memo(function ChatMessageList({
   isLoadingMore,
   onLoadMore,
   sessionOwnerProfile,
+  loadingText,
 }: ChatMessageListProps) {
   const { userProfile, isUserLoggedIn } = useAuth();
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
@@ -135,7 +137,9 @@ const ChatMessageList = memo(function ChatMessageList({
 
                 <div className="rounded-3xl rounded-bl-sm px-5 py-3.5 bg-card border border-border flex items-center gap-3 shadow-sm">
                   <Spinner />
-                  <span className="text-muted-foreground text-sm font-medium">Thinking...</span>
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {loadingText || "Thinking..."}
+                  </span>
                 </div>
               </div>
             </div>

@@ -266,21 +266,6 @@ export async function trackDailyUsage(
       console.error("[trackDailyUsage] Error fetching subscription:", subError);
     }
 
-    let monthlyTokenLimit: number | null = null;
-    if (subData?.plan_id) {
-      const { data: planData, error: planError } = await supabase
-        .from("subscriptions_plans")
-        .select("monthly_token_limit")
-        .eq("id", subData.plan_id)
-        .maybeSingle();
-
-      if (planError) {
-        console.error("[trackDailyUsage] Error fetching plan limits:", planError);
-      } else if (planData) {
-        monthlyTokenLimit = planData.monthly_token_limit;
-      }
-    }
-
     // 2. Track Daily Usage (daily_usage_tracking)
     // Use upsert so concurrent sends and constraint violations are handled gracefully.
     const { data: usageData, error: fetchDailyError } = await supabase
@@ -353,23 +338,18 @@ export async function trackDailyUsage(
       );
     }
 
-    const defaultLimit = 50000; // Fallback monthly limit (50,000 tokens)
-    const limit = monthlyTokenLimit !== null ? monthlyTokenLimit : defaultLimit;
-
     if (wholeData?.id) {
       const newTotalTokenUsed = (wholeData.total_token_used || 0) + roundedTokens;
-      const tokensRemaining = Math.max(0, limit - newTotalTokenUsed);
-      const limitReached = newTotalTokenUsed >= limit;
 
       const { error: updateWholeError } = await supabase
         .from("whole_usage_tracking")
         .update({
           total_token_used: newTotalTokenUsed,
-          tokens_remaining: tokensRemaining,
+          tokens_remaining: 999999, // Unlimited placeholder
           messages_sent: (wholeData.messages_sent || 0) + 1,
           pdfs_generated: (wholeData.pdfs_generated || 0) + (metrics.isPdf ? 1 : 0),
           total_session_duration_ms: (wholeData.total_session_duration_ms || 0) + roundedDuration,
-          limit_reached: limitReached,
+          limit_reached: false,
           updated_at: new Date().toISOString(),
         })
         .eq("id", wholeData.id);
@@ -381,19 +361,16 @@ export async function trackDailyUsage(
         );
       }
     } else {
-      const tokensRemaining = Math.max(0, limit - roundedTokens);
-      const limitReached = roundedTokens >= limit;
-
       const { error: insertWholeError } = await supabase.from("whole_usage_tracking").insert({
         user_id: finalUserId,
         subscription_id: subData?.id || null,
         usage_date: today,
         total_token_used: roundedTokens,
-        tokens_remaining: tokensRemaining,
+        tokens_remaining: 999999, // Unlimited placeholder
         messages_sent: 1,
         pdfs_generated: metrics.isPdf ? 1 : 0,
         total_session_duration_ms: roundedDuration,
-        limit_reached: limitReached,
+        limit_reached: false,
       });
 
       if (insertWholeError) {
