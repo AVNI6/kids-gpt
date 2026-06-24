@@ -206,7 +206,10 @@ export default function VictoryModal({
         }
       }}
     >
-      <DialogContent className="max-w-md p-0 overflow-hidden rounded-3xl border-2 border-amber-200 bg-white dark:bg-slate-900 shadow-2xl z-50">
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-md p-0 overflow-hidden rounded-3xl border-2 border-amber-200 bg-white dark:bg-slate-900 shadow-2xl z-50"
+      >
         <DialogHeader className="sr-only">
           <DialogTitle>{activityTitle} Complete!</DialogTitle>
           <DialogDescription>

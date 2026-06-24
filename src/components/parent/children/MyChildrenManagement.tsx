@@ -35,7 +35,10 @@ export default function MyChildrenManagement({
   const [activeSettingsChild, setActiveSettingsChild] = useState<LinkedChildProfile | null>(null);
   const [sentInvitations, setSentInvitations] = useState<SentInvitation[]>([]);
   const [isPending, startTransition] = useTransition();
-  const [cancelInviteTarget, setCancelInviteTarget] = useState<{ id: string; email: string } | null>(null);
+  const [cancelInviteTarget, setCancelInviteTarget] = useState<{
+    id: string;
+    email: string;
+  } | null>(null);
 
   const fetchSentInvitations = () => {
     DashboardService.getSentPendingInvitations().then((data) => {
@@ -268,7 +271,10 @@ export default function MyChildrenManagement({
                         {invite.invitee_email}
                       </p>
                       <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
-                        Invited {invite.created_at ? new Date(invite.created_at).toLocaleDateString() : "Recently"}
+                        Invited{" "}
+                        {invite.created_at
+                          ? new Date(invite.created_at).toLocaleDateString()
+                          : "Recently"}
                       </p>
                     </div>
                   </div>
@@ -276,7 +282,9 @@ export default function MyChildrenManagement({
                   <Button
                     variant="outline"
                     disabled={isPending}
-                    onClick={() => setCancelInviteTarget({ id: invite.id, email: invite.invitee_email })}
+                    onClick={() =>
+                      setCancelInviteTarget({ id: invite.id, email: invite.invitee_email })
+                    }
                     className="w-full rounded-xl border-slate-200 dark:border-slate-800 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20 dark:hover:text-red-400 font-bold h-10 text-xs cursor-pointer transition-colors"
                   >
                     Cancel Invitation
@@ -295,13 +303,20 @@ export default function MyChildrenManagement({
           if (!open) setCancelInviteTarget(null);
         }}
       >
-        <DialogContent className="max-w-md rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-md rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100"
+        >
           <DialogHeader>
             <DialogTitle className="text-lg font-black tracking-tight text-slate-950 dark:text-white flex items-center gap-2">
               Cancel Invitation
             </DialogTitle>
             <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
-              Are you sure you want to cancel the invitation sent to <strong className="text-slate-800 dark:text-slate-200">{cancelInviteTarget?.email}</strong>? This action cannot be undone.
+              Are you sure you want to cancel the invitation sent to{" "}
+              <strong className="text-slate-800 dark:text-slate-200">
+                {cancelInviteTarget?.email}
+              </strong>
+              ? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">

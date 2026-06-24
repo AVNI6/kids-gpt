@@ -100,6 +100,9 @@ export async function submitKidOnboarding(
   if (age === null || age < 5) {
     return { error: "You must be at least 5 years old to sign up." };
   }
+  if (age > 25) {
+    return { error: "You must be at most 25 years old." };
+  }
 
   const supabase = await createClient();
 

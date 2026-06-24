@@ -11,7 +11,12 @@ export interface NavItemConfig {
 }
 
 export const kidNavItems: NavItemConfig[] = [
-  { label: "Home", href: "/dashboard/kid", exact: true, icon: Home },
+  {
+    label: "Home",
+    href: "/dashboard/kid",
+    exact: true,
+    icon: Home,
+  },
   {
     label: "Classrooms",
     href: "/dashboard/kid/classrooms",
@@ -19,5 +24,10 @@ export const kidNavItems: NavItemConfig[] = [
     hasBadge: true,
     icon: School,
   },
-  { label: "Settings", href: "/dashboard/kid/settings", exact: false, icon: Settings },
+  {
+    label: "Settings",
+    href: "/dashboard/kid/settings",
+    exact: false,
+    icon: Settings,
+  },
 ];

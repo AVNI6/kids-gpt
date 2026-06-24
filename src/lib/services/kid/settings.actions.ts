@@ -26,6 +26,9 @@ export async function updateKidProfileSettings(fields: {
       if (age === null || age < 5) {
         return { success: false, error: "You must be at least 5 years old." };
       }
+      if (age > 25) {
+        return { success: false, error: "You must be at most 25 years old." };
+      }
     } else {
       return { success: false, error: "Birthdate is required." };
     }

@@ -194,7 +194,10 @@ export default function ClassroomAssignmentsTab({
               </Button>
             }
           />
-          <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] flex flex-col">
+          <DialogContent
+            showCloseButton={false}
+            className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] flex flex-col"
+          >
             <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4 shrink-0">
               <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight">
                 Create Assignment
@@ -603,7 +606,10 @@ export default function ClassroomAssignmentsTab({
 
       {/* Edit Assignment Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] flex flex-col">
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-md rounded-[32px] p-0 overflow-hidden dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] flex flex-col"
+        >
           <DialogHeader className="border-b border-slate-200 dark:border-slate-800 px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-xl font-black text-slate-950 dark:text-white tracking-tight">
               Edit Assignment

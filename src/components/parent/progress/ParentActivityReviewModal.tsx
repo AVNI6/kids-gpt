@@ -88,7 +88,10 @@ export default function ParentActivityReviewModal({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="max-w-md rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 flex flex-col gap-4 max-h-[90vh]">
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-md rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 flex flex-col gap-4 max-h-[90vh]"
+      >
         <DialogHeader>
           <div className="flex items-center gap-2 mb-1">
             <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center shrink-0">

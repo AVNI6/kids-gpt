@@ -120,7 +120,8 @@ function SignupForm() {
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     if (inviteToken && inviteStatus !== "valid") {
       toast.error("Invalid Invitation Link", {
-        description: inviteError || "You cannot register using an invalid or expired invitation link.",
+        description:
+          inviteError || "You cannot register using an invalid or expired invitation link.",
       });
       return;
     }
@@ -374,7 +375,10 @@ function SignupForm() {
       </div>
 
       <Dialog open={activeModal !== null} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="rounded-3xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 p-6 max-w-lg">
+        <DialogContent
+          showCloseButton={false}
+          className="rounded-3xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 p-6 max-w-lg"
+        >
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
               {activeModal === "safety" ? "🛡️ Safety Rules" : "🔒 Privacy Terms"}
