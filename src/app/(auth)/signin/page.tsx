@@ -37,15 +37,7 @@ function LoginPageContent() {
   useEffect(() => {
     if (isUserLoggedIn && userProfile) {
       if (userProfile.is_onboarded) {
-        const role = userProfile.role;
-        if (role) {
-          const roleRedirectMap: Record<string, string> = {
-            kid: "/dashboard/kid",
-            parent: "/dashboard/parent",
-            teacher: "/dashboard/teacher",
-          };
-          router.replace(roleRedirectMap[role] || "/");
-        }
+        router.replace("/");
       } else {
         if (user?.user_metadata?.invite_token) {
           router.replace("/onboarding/kid");
@@ -125,35 +117,10 @@ function LoginPageContent() {
         localStorage.removeItem("rememberedPassword");
       }
 
-      // Attempt to read profile and route first-time users to onboarding.
-      try {
-        const userId = data.user?.id;
-        if (userId) {
-          const { data: profileData } = await supabase
-            .from("profile")
-            .select("is_onboarded")
-            .eq("user_id", userId)
-            .maybeSingle();
-
-          const isOnboarded = Boolean(profileData?.is_onboarded);
-
-          if (!isOnboarded) {
-            // Always redirect to the root onboarding role selection page if not onboarded yet
-            window.location.assign("/onboarding");
-            return;
-          }
-        }
-      } catch (err) {
-        console.error("Error checking profile after sign-in:", err);
-      }
-
-      window.location.assign("/");
       toast.success("Welcome!", {
         description: "Login successful!",
       });
     }
-
-    setIsSubmitting(false);
   };
 
   return (
