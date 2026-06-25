@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import NotificationBell, { type NotificationItem } from "./NotificationBell";
-import MobileNavDrawer from "./MobileNavDrawer";
 import type { NavItemConfig } from "@/config/navigation/kid-nav";
 
 interface DashboardNavbarBaseProps {
@@ -41,7 +39,6 @@ export default function DashboardNavbarBase({
   isLinkActive,
 }: DashboardNavbarBaseProps) {
   const { toggleSidebar } = useSidebar();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Logo branding and mobile triggers
   const brandText = pathname.startsWith("/dashboard/kid")
@@ -56,9 +53,6 @@ export default function DashboardNavbarBase({
     role === "teacher"
       ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300"
       : "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300";
-
-  const toggleSidebarRing =
-    role === "teacher" ? "focus:ring-indigo-500/20" : "focus:ring-sky-500/20";
 
   const sidebarBtnBg = "bg-sky-500 hover:bg-sky-600 shadow-sky-500/20";
 
@@ -131,34 +125,10 @@ export default function DashboardNavbarBase({
                   isLoading={isLoadingNotifications}
                 />
               )}
-
-              {/* Mobile Navigation Drawer Toggle */}
-              {pathname.startsWith("/dashboard") && navItems && navItems.length > 0 && (
-                <button
-                  className={cn(
-                    "lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 cursor-pointer",
-                    toggleSidebarRing
-                  )}
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  aria-label="Toggle navigation menu"
-                >
-                  <Menu className="size-5" />
-                </button>
-              )}
             </div>
           </div>
         </div>
       </div>
-      {/* Mobile Drawer (general page navigation sliding from the right) */}
-      <MobileNavDrawer
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        role={role}
-        navItems={navItems}
-        getNavItemHref={getNavItemHref}
-        isLinkActive={isLinkActive}
-        dueCount={dueCount}
-      />
     </nav>
   );
 }

@@ -69,7 +69,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
       <Popover open={isPopoverOpen} onOpenChange={(open) => setOpenPath(open ? pathname : null)}>
         <PopoverTrigger
           className={cn(
-            "w-full flex items-center gap-3 p-2 rounded-2xl hover:bg-sidebar-accent transition-all duration-300 group",
+            "w-full flex items-center gap-3 sm:p-2 rounded-2xl hover:bg-sidebar-accent transition-all duration-300 group",
             isCollapsed && "justify-center p-0! h-10! w-10! mx-auto"
           )}
         >
@@ -113,6 +113,16 @@ export default function Profile({ isCollapsed }: ProfileProps) {
             >
               <UserRound className="h-4 w-4" />
               <span>View Profile</span>
+            </Link>
+
+            <Link
+              href={`/dashboard/${dashboardRole}/settings`}
+              onClick={() => setOpenPath(null)}
+              prefetch={false}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
+            >
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
             </Link>
 
             <Link

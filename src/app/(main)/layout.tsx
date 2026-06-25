@@ -2,6 +2,7 @@
 
 import { ReactNode, useState } from "react";
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Sidebar from "@/components/shared/sidebar/Sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +11,7 @@ import DashboardNavbar from "@/components/shared/dashboard/DashboardNavbar";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const { userProfile, isUserLoggedIn } = useAuth();
+  const pathname = usePathname() || "";
 
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -27,6 +29,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
   const isKid = mounted && isUserLoggedIn && userProfile?.role === "kid";
   const showKidNav = isKid;
+  const isActivityPage = pathname.startsWith("/activities/") && pathname !== "/activities";
 
   const layoutContent = (
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -34,12 +37,18 @@ export default function MainLayout({ children }: { children: ReactNode }) {
         <Sidebar />
         <SidebarInset className="flex-1 min-w-0 h-full overflow-hidden flex flex-col relative">
           {showKidNav && <DashboardNavbar role="kid" />}
-          <div className="flex-1 min-w-0 h-full overflow-y-auto bg-background">{children}</div>
+          <div
+            className={`flex-1 min-w-0 h-full bg-background ${
+              isActivityPage ? "overflow-hidden flex flex-col" : "overflow-y-auto"
+            }`}
+          >
+            {children}
+          </div>
         </SidebarInset>
       </div>
     </SidebarProvider>
   );
-  
+
   if (isKid) {
     return <ScreenTimeTracker>{layoutContent}</ScreenTimeTracker>;
   }

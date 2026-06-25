@@ -1,11 +1,17 @@
 "use client";
 
+import { useContext, useState, useEffect } from "react";
 import Link from "next/link";
-import { PlusCircle, Search, ClipboardList } from "lucide-react";
+import { PlusCircle, Search, ClipboardList, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import AuthPromptPopoverContent from "./AuthPromptPopoverContent";
+import { DashboardContext } from "@/context/parent-dashboard/DashboardContext";
+import { kidNavItems, type NavItemConfig } from "@/config/navigation/kid-nav";
+import { parentNavItems } from "@/config/navigation/parent-nav";
+import { teacherNavItems } from "@/config/navigation/teacher-nav";
+import { getKidPendingAssignmentsCount } from "@/lib/services/kid/classroom.actions";
 
 interface SidebarNavigationProps {
   isOpen: boolean;
@@ -28,7 +34,46 @@ export default function SidebarNavigation({
   onNewChat,
   onSearchOpen,
 }: SidebarNavigationProps) {
-  const navItems = [
+  const parentContext = useContext(DashboardContext);
+  const activeChildId = parentContext?.activeChildId || "";
+
+  const [dueCount, setDueCount] = useState(0);
+
+  useEffect(() => {
+    if (userRole === "kid" && isMobile) {
+      getKidPendingAssignmentsCount()
+        .then(setDueCount)
+        .catch((err) => console.error("Error fetching assignments count:", err));
+    }
+  }, [pathname, userRole, isMobile]);
+
+  const mergedNavItems =
+    userRole === "kid"
+      ? kidNavItems
+      : userRole === "parent"
+        ? parentNavItems
+        : userRole === "teacher"
+          ? teacherNavItems
+          : [];
+
+  const isLinkActive = (item: NavItemConfig) => {
+    if (item.exact) return pathname === item.href;
+    return pathname.startsWith(item.href);
+  };
+
+  const getNavItemHref = (item: NavItemConfig) => {
+    if (item.isParameterized && activeChildId) {
+      return `${item.href}?childId=${activeChildId}`;
+    }
+    return item.href;
+  };
+
+  const navItems: {
+    label: string;
+    icon: LucideIcon;
+    onClick?: (e?: React.MouseEvent) => void;
+    href?: string;
+  }[] = [
     { label: "New Chat", icon: PlusCircle, onClick: onNewChat },
     { label: "Search Chats", icon: Search },
     ...(userRole === "kid"
@@ -127,7 +172,14 @@ export default function SidebarNavigation({
             <Link
               key={item.label}
               href={item.href}
-              onClick={item.onClick}
+              onClick={(e) => {
+                if (isMobile && isOpen) {
+                  toggleSidebar();
+                }
+                if (item.onClick) {
+                  item.onClick(e);
+                }
+              }}
               prefetch={false}
               className={buttonClass}
             >
@@ -147,6 +199,50 @@ export default function SidebarNavigation({
           </button>
         );
       })}
+
+      {/* Merged Navigation Items (Mobile Only) */}
+      {isMobile && mergedNavItems.length > 0 && (
+        <>
+          <div className="h-px bg-slate-200 dark:bg-slate-800/80 my-3 mx-1 shrink-0" />
+          <div className="space-y-2">
+            {mergedNavItems.map((item) => {
+              const Icon = item.icon;
+              const href = getNavItemHref(item);
+              const isActive = isLinkActive(item);
+              const isClassrooms = item.label === "Classrooms";
+
+              const buttonClass = cn(
+                "w-full flex items-center justify-between rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group/nav cursor-pointer",
+                isActive ? "bg-sidebar-accent text-sky-500 font-bold" : "text-sidebar-foreground"
+              );
+
+              return (
+                <Link
+                  key={item.href}
+                  href={href}
+                  onClick={() => {
+                    if (isMobile && isOpen) {
+                      toggleSidebar();
+                    }
+                  }}
+                  prefetch={false}
+                  className={buttonClass}
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <Icon className="w-5 h-5 shrink-0 text-slate-500 group-hover/nav:text-slate-700 dark:text-slate-400 dark:group-hover/nav:text-slate-200 transition-colors" />
+                    <span className="whitespace-nowrap truncate">{item.label}</span>
+                  </div>
+                  {isClassrooms && dueCount > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-slate-950 shrink-0">
+                      {dueCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   ) : (
     // --- CLOSED SIDEBAR STATE ---

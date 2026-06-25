@@ -174,14 +174,14 @@ export default function HomeSection() {
 
       {/* Bottom Section: Unified Chronological Activity Feed and Family recommendations */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.9fr] gap-8">
-        <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm overflow-hidden">
-          <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm overflow-hidden flex flex-col h-[580px]">
+          <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
             <h3 className="text-xl font-black flex items-center gap-2">
               <Activity className="w-5 h-5 text-sky-600 animate-pulse" /> Recent Family Activity
             </h3>
           </div>
-          <CardContent>
-            <ScrollArea className="max-h-[480px] pr-4 -mr-4">
+          <CardContent className="flex-1 min-h-0 p-6 pt-0">
+            <ScrollArea className="h-full pr-4 -mr-4">
               <div className="divide-y divide-slate-100 dark:divide-slate-800/40 pr-2">
                 {isLoadingChildData && familyTimeline.length === 0 ? (
                   <div className="space-y-6 py-2">
@@ -257,69 +257,78 @@ export default function HomeSection() {
         </Card>
 
         {/* Family AI Onboarding & Recommendations */}
-        <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm flex flex-col p-8 justify-between relative overflow-hidden">
+        <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm flex flex-col p-6 md:p-8 relative overflow-hidden h-[580px]">
           <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-          <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-sky-50 dark:bg-sky-950/40 rounded-xl flex items-center justify-center">
-                <MdFamilyRestroom className="w-5 h-5 text-sky-500" />
+          <div className="flex flex-col h-full justify-between gap-6 min-h-0">
+            <div className="flex flex-col flex-1 min-h-0 gap-4">
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="w-10 h-10 bg-sky-50 dark:bg-sky-950/40 rounded-xl flex items-center justify-center">
+                  <MdFamilyRestroom className="w-5 h-5 text-sky-500" />
+                </div>
+                <h3 className="text-lg font-black">Family AI Insights</h3>
               </div>
-              <h3 className="text-lg font-black">Family AI Insights</h3>
+
+              {linkedChildren.length === 0 ? (
+                <div className="space-y-4 text-center py-6">
+                  <p className="text-sm font-semibold text-slate-500">No linked kids</p>
+                  <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                    Add your child&apos;s account in &quot;My Children&quot; to start generating AI
+                    insights and recommendations.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col flex-1 min-h-0 gap-3">
+                  <p className="text-sm font-semibold text-slate-500 shrink-0">
+                    This Week&apos;s Highlight
+                  </p>
+                  <ScrollArea className="flex-1 min-h-0 pr-4 -mr-4">
+                    <div className="space-y-3 pr-2 pb-2">
+                      {linkedChildren.map((child) => {
+                        const childData = cache[child.user_id];
+                        const accuracy = childData?.details?.quiz_accuracy ?? 0;
+                        return (
+                          <div
+                            key={child.user_id}
+                            className="p-3 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between animate-in fade-in duration-300"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <Avatar className="w-8 h-8 border border-white dark:border-slate-800 rounded-full shrink-0">
+                                <AvatarImage
+                                  src={child.avatar_url ?? undefined}
+                                  className="object-cover"
+                                />
+                                <AvatarFallback className="text-xs font-black bg-sky-500 text-white">
+                                  {child.first_name?.[0] || "C"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0">
+                                <span className="text-xs font-extrabold block truncate">
+                                  {child.first_name}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-400">
+                                  {accuracy > 0 ? `${accuracy}% Accuracy` : "Started Journey"}
+                                </span>
+                              </div>
+                            </div>
+                            <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 font-bold px-2 py-0.5 rounded-lg text-[10px] shrink-0 border border-sky-100 dark:border-sky-900/30">
+                              Level {getLevel(child.total_experience_points)}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
             </div>
 
-            {linkedChildren.length === 0 ? (
-              <div className="space-y-4 text-center py-6">
-                <p className="text-sm font-semibold text-slate-500">No linked kids</p>
-                <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                  Add your child&apos;s account in &quot;My Children&quot; to start generating AI
-                  insights and recommendations.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold text-slate-500">This Week&apos;s Highlight</p>
-                  {linkedChildren.map((child) => {
-                    const childData = cache[child.user_id];
-                    const accuracy = childData?.details?.quiz_accuracy ?? 0;
-                    return (
-                      <div
-                        key={child.user_id}
-                        className="p-3 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <Avatar className="w-8 h-8 border border-white dark:border-slate-800 rounded-full shrink-0">
-                            <AvatarImage
-                              src={child.avatar_url ?? undefined}
-                              className="object-cover"
-                            />
-                            <AvatarFallback className="text-xs font-black bg-sky-500 text-white">
-                              {child.first_name?.[0] || "C"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <span className="text-xs font-extrabold block truncate">
-                              {child.first_name}
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400">
-                              {accuracy > 0 ? `${accuracy}% Accuracy` : "Started Journey"}
-                            </span>
-                          </div>
-                        </div>
-                        <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 font-bold px-2 py-0.5 rounded-lg text-[10px] shrink-0 border border-sky-100 dark:border-sky-900/30">
-                          Level {getLevel(child.total_experience_points)}
-                        </Badge>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-350 bg-sky-50/50 dark:bg-sky-950/20 p-4 rounded-2xl border border-sky-100/60 dark:border-sky-900/20 leading-relaxed">
-                  Your family dashboard aggregates learning habits across all linked children. Use
-                  the &quot;My Children&quot; tab to monitor specific histories, or head to
-                  &quot;Learning Progress&quot; for subject mastery details.
-                </p>
-              </div>
+            {linkedChildren.length > 0 && (
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-350 bg-sky-50/50 dark:bg-sky-950/20 p-4 rounded-2xl border border-sky-100/60 dark:border-sky-900/20 leading-relaxed shrink-0">
+                Your family dashboard aggregates learning habits across all linked children. Use the
+                &quot;My Children&quot; tab to monitor specific histories, or head to &quot;Learning
+                Progress&quot; for subject mastery details.
+              </p>
             )}
           </div>
         </Card>

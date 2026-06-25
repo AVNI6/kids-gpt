@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Type, Sparkles, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Sparkles, CheckCircle2, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
+import { ActivityCard, ActivityCardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { APP_ROUTES } from "@/lib/constants/app_routes";
 import VictoryModal from "@/components/shared/VictoryModal";
@@ -142,110 +142,114 @@ export default function WordScramblesPage({
   };
 
   return (
-    <div className="min-h-screen bg-pink-50 dark:bg-pink-950/20 flex flex-col font-sans">
-      <header className="px-4 py-4 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-pink-100 dark:border-slate-800">
+    <div className="h-full max-h-full overflow-hidden bg-pink-50 dark:bg-pink-950/20 flex flex-col font-sans">
+      <header className="px-3 py-2 sm:px-4 sm:py-3 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-pink-100 dark:border-slate-800 shrink-0">
         <Link
           href={APP_ROUTES.Activities}
-          className="flex items-center gap-2 font-bold text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300"
+          className="flex items-center gap-1.5 font-bold text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300 text-xs sm:text-sm"
         >
-          <ArrowLeft className="w-5 h-5" /> Back
+          <ArrowLeft className="w-4 h-4" /> Back
         </Link>
-        <h1 className="font-black text-lg text-pink-900 dark:text-pink-300">{scrambleTitle}</h1>
-        <div className="w-20" />
+        <h1 className="font-black text-sm sm:text-lg text-pink-900 dark:text-pink-300">
+          {scrambleTitle}
+        </h1>
+        <div className="w-12 sm:w-20" />
       </header>
 
-      <main className="flex-1 p-4 max-w-2xl mx-auto w-full flex flex-col">
-        <div className="flex-1 flex flex-col min-h-0">
+      <main className="flex-1 p-2.5 sm:p-4 max-w-2xl mx-auto w-full flex flex-col min-h-0 overflow-hidden">
+        <div className="shrink-0 space-y-1.5 mb-1">
           <div className="flex items-center justify-between text-xs text-pink-600 dark:text-pink-400 font-bold">
-            <span>Word Magic Progress</span>
-            <span className="flex items-center gap-1.5 rounded-full bg-card px-2.5 py-0.5 shadow-sm border border-border">
+            <span>
+              Word Magic <span className="hidden sm:inline">Progress</span>
+            </span>
+            <span className="flex items-center gap-1 rounded-full bg-card px-2 py-0.5 shadow-sm border border-border text-[10px] sm:text-xs">
               Word {currentWord + 1} of {safeWords.length}
             </span>
           </div>
           <Progress
             value={progress}
-            className="h-2 rounded-full bg-pink-500/10 [&>div]:bg-pink-500"
+            className="h-1.5 rounded-full bg-pink-500/10 [&>div]:bg-pink-500"
           />
         </div>
 
-        <Card className="border-4 border-pink-500/20 dark:border-pink-500/10 shadow-md rounded-[1.5rem] bg-card flex-1 flex flex-col min-h-[160px] md:min-h-[220px] overflow-hidden mt-1">
-          <CardContent className="p-4 md:p-6 text-center flex-1 flex flex-col justify-center gap-5 min-h-0 overflow-y-auto">
-            <div className="mx-auto bg-pink-500/10 w-16 h-16 rounded-full flex items-center justify-center shrink-0">
-              <Type className="h-8 w-8 text-pink-600 dark:text-pink-400" />
-            </div>
+        <ActivityCard className="border-4 border-pink-500/20 dark:border-pink-500/10 shadow-md mt-1">
+          <ActivityCardContent>
+            <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center text-center gap-3 sm:gap-4 my-auto">
+              <div className="space-y-1">
+                <h2 className="text-base md:text-lg font-black tracking-tight text-muted-foreground">
+                  Unscramble the letters!
+                </h2>
 
-            <div className="shrink-0 space-y-1">
-              <h2 className="text-base md:text-lg font-black tracking-tight text-muted-foreground">
-                Unscramble the letters!
-              </h2>
-
-              <div className="flex flex-wrap justify-center gap-2 py-2">
-                {word.scrambled.split(/\s+/).map((letter, i) => {
-                  const letters = word.scrambled.split(/\s+/);
-                  const isLongWord = letters.length > 5;
-                  return (
-                    <div
-                      key={i}
-                      className={`bg-background border-4 border-pink-500/30 dark:border-pink-500/20 rounded-2xl flex items-center justify-center font-black text-pink-600 dark:text-pink-400 shadow-sm rotate-[-2deg] hover:rotate-[2deg] transition-transform select-none ${
-                        isLongWord
-                          ? "w-9 h-12 text-lg sm:w-12 sm:h-16 sm:text-2xl md:w-14 md:h-18 md:text-3xl"
-                          : "w-12 h-16 md:w-14 md:h-18 text-2xl md:text-3xl"
-                      }`}
-                    >
-                      {letter}
-                    </div>
-                  );
-                })}
+                <div className="flex flex-wrap justify-center gap-2 py-2">
+                  {word.scrambled.split(/\s+/).map((letter, i) => {
+                    const letters = word.scrambled.split(/\s+/);
+                    const isLongWord = letters.length > 5;
+                    return (
+                      <div
+                        key={i}
+                        className={`bg-background border-2 border-pink-500/30 dark:border-pink-500/20 rounded-2xl flex items-center justify-center font-black text-pink-600 dark:text-pink-400 shadow-sm rotate-[-2deg] hover:rotate-[2deg] transition-transform select-none ${
+                          isLongWord
+                            ? "w-9 h-12 text-lg sm:w-11 sm:h-14 sm:text-2xl md:w-12 md:h-15 md:text-3xl"
+                            : "w-11 h-15 md:w-13 md:h-16 text-2xl md:text-3xl"
+                        }`}
+                      >
+                        {letter}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
+
+              <div className="flex flex-col items-center">
+                <Input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value.toUpperCase())}
+                  disabled={showResult}
+                  placeholder="Type answer..."
+                  className="w-full max-w-xs text-center text-2xl font-black uppercase tracking-widest h-12 rounded-2xl border-2 border-border dark:border-slate-800 bg-background focus-visible:border-pink-500 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-inner text-foreground transition-colors"
+                  maxLength={word.answer.length}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && input.trim()) {
+                      e.preventDefault();
+                      handleCheck();
+                    }
+                  }}
+                />
+              </div>
+
+              <p className="text-pink-500 dark:text-pink-400 font-bold text-sm shrink-0 bg-pink-500/5 px-4 py-2 rounded-full border border-pink-500/10 dark:border-pink-500/20 w-fit mx-auto">
+                💡 Hint: {word.hint}
+              </p>
             </div>
+          </ActivityCardContent>
+        </ActivityCard>
 
-            <div className="flex flex-col items-center shrink-0">
-              <Input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value.toUpperCase())}
-                disabled={showResult}
-                placeholder="Type answer..."
-                className="w-full max-w-xs text-center text-2xl font-black uppercase tracking-widest h-14 rounded-2xl border-4 border-border dark:border-slate-800 bg-background focus-visible:border-pink-500 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-inner text-foreground transition-colors"
-                maxLength={word.answer.length}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && input.trim()) {
-                    e.preventDefault();
-                    handleCheck();
-                  }
-                }}
-              />
-            </div>
-
-            <p className="text-pink-500 dark:text-pink-400 font-bold text-sm shrink-0 bg-pink-500/5 px-4 py-2 rounded-full border border-pink-500/10 dark:border-pink-500/20 w-fit mx-auto">
-              💡 Hint: {word.hint}
-            </p>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-center h-16 shrink-0 items-center mt-1">
+        <div className="flex justify-center min-h-0 shrink-0 items-center mt-2">
           {!showResult ? (
             <Button
               onClick={handleCheck}
               disabled={!input.trim()}
-              className="h-11 px-10 rounded-full bg-pink-500 hover:bg-pink-600 text-base font-bold shadow-[0_4px_0px_0px_#be185d] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 disabled:shadow-none disabled:translate-y-0"
+              className="h-8 px-6 sm:h-10 sm:px-8 rounded-full bg-pink-500 hover:bg-pink-600 text-xs sm:text-sm font-bold shadow-[0_3px_0px_0px_#be185d] active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 disabled:shadow-none disabled:translate-y-0"
             >
-              Check Word <Sparkles className="ml-2 h-4 w-4" />
+              Check Word <Sparkles className="ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
           ) : (
-            <div className="flex items-center gap-4 animate-in zoom-in">
+            <div className="flex items-center gap-3 sm:gap-4 animate-in zoom-in">
               {isCorrect ? (
-                <div className="flex items-center gap-1.5 text-lg font-black text-green-500">
-                  <CheckCircle2 className="h-5 w-5" /> You got it!
+                <div className="flex items-center gap-1.5 text-xs sm:text-base font-black text-green-500">
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" /> You got it!
                 </div>
               ) : (
-                <div className="text-base font-bold text-red-500">Oops! It was {word.answer}.</div>
+                <div className="text-xs sm:text-sm font-bold text-red-500">
+                  Oops! It was {word.answer}.
+                </div>
               )}
               <Button
                 ref={nextButtonRef}
                 onClick={handleNext}
-                className="h-11 px-10 rounded-full bg-pink-500 hover:bg-pink-600 text-base font-bold shadow-[0_4px_0px_0px_#be185d] active:translate-y-1 active:shadow-none transition-all"
+                className="h-8 px-5 sm:h-10 sm:px-8 rounded-full bg-pink-500 hover:bg-pink-600 text-xs sm:text-sm font-bold shadow-[0_3px_0px_0px_#be185d] active:translate-y-0.5 active:shadow-none transition-all"
               >
                 {currentWord === safeWords.length - 1 ? "Finish Scramble" : "Next Word"}
               </Button>

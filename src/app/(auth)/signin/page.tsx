@@ -157,7 +157,7 @@ function LoginPageContent() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col px-6 font-sans bg-background relative overflow-hidden">
+    <main className="min-h-screen flex flex-col p-3 sm:p-6 font-sans bg-background relative overflow-hidden">
       {/* Dynamic Background Accents */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-50 dark:opacity-20">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-sky-400/20 blur-[120px]" />
@@ -217,13 +217,13 @@ function LoginPageContent() {
               Account created! Please check your email to verify your account before signing in.
             </div>
           )}
-          <div className="mb-8">
+          <div className="mb-4 sm:mb-8">
             <h2 className="mb-2 text-4xl font-bold text-foreground">Sign In</h2>
             <p className="text-muted-foreground">Access your learning dashboard</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-2">
+            <div className="sm:space-y-2">
               <Label className="block mb-2 text-sm font-semibold text-foreground">Email</Label>
               <div className="relative">
                 <Mail
@@ -294,7 +294,7 @@ function LoginPageContent() {
             </Button>
           </form>
 
-          <div className="relative my-8">
+          <div className="relative my-4 sm:my-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-border"></div>
             </div>
