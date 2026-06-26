@@ -34,6 +34,16 @@ function cleanTerminationContent(content: string): string {
     .trim();
 }
 
+function useTextClamp(text: string, limit: number = 2500) {
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const isLongMessage = !!text && text.length > limit;
+  const shouldCollapse = isLongMessage && !isExpanded;
+  const toggleClamp = React.useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
+  return { isExpanded, isLongMessage, shouldCollapse, toggleClamp };
+}
+
 interface ChatMessageItemProps {
   message: Message;
   isUser: boolean;
@@ -94,7 +104,7 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components
     }
 
     return (
-      <pre className="bg-slate-950 text-slate-100 p-4 rounded-2xl font-mono text-sm whitespace-pre-wrap break-words my-4 border border-slate-800/80 shadow-md">
+      <pre className="w-full max-w-full sm:w-auto sm:max-w-none overflow-x-auto bg-slate-950 text-slate-100 p-4 rounded-2xl font-mono text-sm whitespace-pre-wrap break-words my-4 border border-slate-800/80 shadow-md">
         <code className={className}>{codeString}</code>
       </pre>
     );
@@ -152,26 +162,8 @@ const ChatMessageItem = React.memo(
     const docxState = docxStates[message.id] || "idle";
     const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
     const [previewImageUrl, setPreviewImageUrl] = React.useState("");
-    const [resolvedImageUrl, setResolvedImageUrl] = React.useState<string | null>(null);
-    const [resolvedGeneratedImageUrl, setResolvedGeneratedImageUrl] = React.useState<string | null>(
-      null
-    );
-
-    React.useEffect(() => {
-      if (message.uploadedImage) {
-        setResolvedImageUrl(message.uploadedImage);
-      } else {
-        setResolvedImageUrl(null);
-      }
-    }, [message.uploadedImage]);
-
-    React.useEffect(() => {
-      if (message.isImage && message.content) {
-        setResolvedGeneratedImageUrl(message.content);
-      } else {
-        setResolvedGeneratedImageUrl(null);
-      }
-    }, [message.isImage, message.content]);
+    const resolvedImageUrl = message.uploadedImage || null;
+    const resolvedGeneratedImageUrl = message.isImage && message.content ? message.content : null;
 
     const handleDownloadImage = React.useCallback(async (url: string) => {
       try {
@@ -198,7 +190,6 @@ const ChatMessageItem = React.memo(
 
     // Task 3.2: Update termination detection logic
     const isStoppedByUser =
-      message.status === "failed" &&
       !!message.content &&
       (message.content.includes("stopped by user") || message.content.includes("terminated"));
 
@@ -207,14 +198,23 @@ const ChatMessageItem = React.memo(
       ? cleanTerminationContent(message.content)
       : message.content;
 
-    const speakText =
-      message.status === "failed"
-        ? isStoppedByUser
-          ? cleanContent
-            ? `${cleanContent}. Session has been terminated.`
-            : "Session has been terminated."
-          : "Sorry, something went wrong and I couldn't finish generating that response. Please try again."
+    const speakText = isStoppedByUser
+      ? cleanContent
+        ? `${cleanContent}. Session has been terminated.`
+        : "Session has been terminated."
+      : message.status === "failed"
+        ? "Sorry, something went wrong and I couldn't finish generating that response. Please try again."
         : message.content || "";
+
+    const activeText = isUser
+      ? message.content || ""
+      : isStoppedByUser
+        ? cleanContent
+        : message.content || "";
+    const { isExpanded, isLongMessage, shouldCollapse, toggleClamp } = useTextClamp(
+      activeText,
+      2500
+    );
 
     if (hasNoDisplayContent) {
       return null;
@@ -272,7 +272,7 @@ const ChatMessageItem = React.memo(
 
             {(message.content || message.isImage || message.role === "model") && (
               <div
-                className={`rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2.5 sm:py-3.5 leading-relaxed text-[14px] sm:text-[15px] shadow-sm ${
+                className={`max-w-full sm:max-w-none rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2.5 sm:py-3.5 leading-relaxed text-[14px] sm:text-[15px] shadow-sm ${
                   isUser
                     ? "bg-sky-500 text-white rounded-br-sm"
                     : "bg-card border border-border rounded-bl-sm text-foreground"
@@ -285,10 +285,14 @@ const ChatMessageItem = React.memo(
                 )}
 
                 {!isUser ? (
-                  <div className="w-full text-foreground space-y-1 overflow-hidden font-medium">
-                    {message.status === "failed" ? (
-                      <div className="flex flex-col gap-3 py-1">
-                        {isStoppedByUser ? (
+                  <div className="w-full text-foreground space-y-1 font-medium">
+                    <div
+                      className={`relative transition-all duration-300 min-w-0 sm:min-w-[initial] w-full sm:w-auto overflow-hidden ${
+                        shouldCollapse ? "max-h-[320px]" : ""
+                      }`}
+                    >
+                      {isStoppedByUser ? (
+                        <div className="flex flex-col gap-3 py-1">
                           <div className="space-y-3">
                             {cleanContent && (
                               <ReactMarkdown
@@ -299,96 +303,130 @@ const ChatMessageItem = React.memo(
                               </ReactMarkdown>
                             )}
                             {/* Task 3.4: Single, unified termination message */}
-                            <div className="text-slate-600 dark:text-slate-400 text-sm">
+                            <div className="text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap">
                               <span>Session has been terminated.</span>
                             </div>
                           </div>
-                        ) : (
-                          <>
-                            <p className="text-red-500 font-semibold text-[14px]">
-                              Sorry, something went wrong and I couldn&apos;t finish generating that
-                              response. Please try again.
-                            </p>
-                            {onRetry && (
-                              <Button
-                                onClick={onRetry}
-                                variant="outline"
-                                size="sm"
-                                className="w-fit border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl font-semibold cursor-pointer"
-                              >
-                                Retry
-                              </Button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ) : message.isImage && resolvedGeneratedImageUrl ? (
-                      <div className="flex flex-col gap-2">
-                        <div className="relative group cursor-pointer overflow-hidden rounded-xl">
-                          <Image
-                            src={resolvedGeneratedImageUrl}
-                            alt="Generated Illustration"
-                            width={400}
-                            height={400}
-                            className="rounded-xl max-w-full md:max-w-xs shadow-sm transition-transform duration-300 group-hover:scale-[1.02]"
-                            unoptimized
-                            onClick={() => {
-                              setPreviewImageUrl(resolvedGeneratedImageUrl);
-                              setIsPreviewOpen(true);
-                            }}
-                          />
                         </div>
-                        <Button
-                          type="button"
-                          onClick={() => handleDownloadImage(resolvedGeneratedImageUrl)}
-                          variant="secondary"
-                          size="sm"
-                          className="flex items-center gap-1.5 w-fit rounded-lg text-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 mt-1"
-                        >
-                          <Download className="w-3.5 h-3.5" /> Download Image
-                        </Button>
-                      </div>
-                    ) : (
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                        {message.content}
-                      </ReactMarkdown>
-                    )}
+                      ) : message.status === "failed" ? (
+                        <div className="flex flex-col gap-3 py-1">
+                          <p className="text-red-500 font-semibold text-[14px]">
+                            Sorry, something went wrong and I couldn&apos;t finish generating that
+                            response. Please try again.
+                          </p>
+                          {onRetry && (
+                            <Button
+                              onClick={onRetry}
+                              variant="outline"
+                              size="sm"
+                              className="w-fit border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl font-semibold cursor-pointer"
+                            >
+                              Retry
+                            </Button>
+                          )}
+                        </div>
+                      ) : message.isImage && resolvedGeneratedImageUrl ? (
+                        <div className="flex flex-col gap-2">
+                          <div className="relative group cursor-pointer overflow-hidden rounded-xl">
+                            <Image
+                              src={resolvedGeneratedImageUrl}
+                              alt="Generated Illustration"
+                              width={400}
+                              height={400}
+                              className="rounded-xl max-w-full md:max-w-xs shadow-sm transition-transform duration-300 group-hover:scale-[1.02]"
+                              unoptimized
+                              onClick={() => {
+                                setPreviewImageUrl(resolvedGeneratedImageUrl);
+                                setIsPreviewOpen(true);
+                              }}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={() => handleDownloadImage(resolvedGeneratedImageUrl)}
+                            variant="secondary"
+                            size="sm"
+                            className="flex items-center gap-1.5 w-fit rounded-lg text-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 mt-1"
+                          >
+                            <Download className="w-3.5 h-3.5" /> Download Image
+                          </Button>
+                        </div>
+                      ) : (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                          {message.content}
+                        </ReactMarkdown>
+                      )}
 
-                    {message.isPdfRequest && (
-                      <DownloadCard
-                        type="pdf"
-                        state={pdfState}
-                        onDownload={() => handleDownloadPDF(message.id)}
-                      />
-                    )}
+                      {message.isPdfRequest && (
+                        <DownloadCard
+                          type="pdf"
+                          state={pdfState}
+                          onDownload={() => handleDownloadPDF(message.id)}
+                        />
+                      )}
 
-                    {message.isDocRequest && (
-                      <DownloadCard
-                        type="docx"
-                        state={docxState}
-                        onDownload={() => handleDownloadDocx(message.id)}
-                      />
+                      {message.isDocRequest && (
+                        <DownloadCard
+                          type="docx"
+                          state={docxState}
+                          onDownload={() => handleDownloadDocx(message.id)}
+                        />
+                      )}
+
+                      {shouldCollapse && (
+                        <div className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none bg-gradient-to-t from-card to-transparent" />
+                      )}
+                    </div>
+
+                    {isLongMessage && (
+                      <button
+                        type="button"
+                        onClick={toggleClamp}
+                        className="mt-2 text-xs font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors focus:outline-none cursor-pointer"
+                      >
+                        {isExpanded ? "Show Less" : "Read More"}
+                      </button>
                     )}
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {message.content && <p className="m-0 leading-relaxed">{message.content}</p>}
-                    {message.fileName &&
-                      (message.attachmentUrl ? (
-                        <a
-                          href={message.attachmentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 p-2 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold w-fit mt-1 transition-colors cursor-pointer text-current"
-                          title="Open attachment"
-                        >
-                          <FileText className="w-3 h-3" /> {message.fileName}
-                        </a>
-                      ) : (
-                        <div className="flex items-center gap-2 p-2 bg-white/20 rounded-xl text-xs font-bold w-fit mt-1">
-                          <FileText className="w-3 h-3" /> {message.fileName}
-                        </div>
-                      ))}
+                    <div
+                      className={`relative transition-all duration-300 min-w-0 sm:min-w-[initial] w-full sm:w-auto overflow-hidden ${
+                        shouldCollapse ? "max-h-[320px]" : ""
+                      }`}
+                    >
+                      {message.content && <p className="m-0 leading-relaxed">{message.content}</p>}
+                      {message.fileName &&
+                        (message.attachmentUrl ? (
+                          <a
+                            href={message.attachmentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 p-2 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold w-fit mt-1 transition-colors cursor-pointer text-current"
+                            title="Open attachment"
+                          >
+                            <FileText className="w-3 h-3" /> {message.fileName}
+                          </a>
+                        ) : (
+                          <div className="flex items-center gap-2 p-2 bg-white/20 rounded-xl text-xs font-bold w-fit mt-1">
+                            <FileText className="w-3 h-3" /> {message.fileName}
+                          </div>
+                        ))}
+
+                      {shouldCollapse && (
+                        <div className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none bg-gradient-to-t from-sky-500 to-transparent" />
+                      )}
+                    </div>
+
+                    {isLongMessage && (
+                      <button
+                        type="button"
+                        onClick={toggleClamp}
+                        className="mt-2 text-xs font-bold text-white hover:text-white/80 transition-colors focus:outline-none cursor-pointer"
+                      >
+                        {isExpanded ? "Show Less" : "Read More"}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
