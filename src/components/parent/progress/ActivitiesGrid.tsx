@@ -220,7 +220,7 @@ export default function ActivitiesGrid() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="section-gap flex flex-col animate-in fade-in duration-300">
       <div className="flex overflow-x-auto no-scrollbar lg:flex-wrap gap-2">
         {dynamicFilters.map((filter) => (
           <Button
@@ -238,7 +238,7 @@ export default function ActivitiesGrid() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 card-gap">
         {isLoading && !data ? null : paginatedActivities.length === 0 ? (
           <Card className="col-span-full rounded-[28px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center">
             <CardContent className="space-y-3">
@@ -261,7 +261,7 @@ export default function ActivitiesGrid() {
               }}
               className="rounded-[28px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm hover:shadow-md transition-all group cursor-pointer hover:border-sky-200 dark:hover:border-sky-900 active:scale-98"
             >
-              <CardContent className="p-6 flex flex-col h-full justify-between relative">
+              <CardContent className="card-padding flex flex-col h-full justify-between relative">
                 {loadingReviewId === activity.id && (
                   <div className="absolute inset-0 bg-white/60 dark:bg-black/60 rounded-[28px] flex items-center justify-center z-10">
                     <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
@@ -276,24 +276,24 @@ export default function ActivitiesGrid() {
                     </div>
                     <Badge
                       variant="secondary"
-                      className="font-bold uppercase tracking-wider text-[10px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/45 dark:text-emerald-300 border border-emerald-100/50"
+                      className="font-bold uppercase tracking-wider text-body-xs bg-emerald-50 text-emerald-700 dark:bg-emerald-950/45 dark:text-emerald-300 border border-emerald-100/50"
                     >
                       {activity.status}
                     </Badge>
                   </div>
 
                   <div className="mb-4">
-                    <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 line-clamp-1">
+                    <h3 className="text-card-title text-slate-900 dark:text-white mb-1 line-clamp-1">
                       {activity.title}
                     </h3>
                     {activity.description && activity.description !== activity.title && (
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mb-2 line-clamp-2">
+                      <p className="text-body-xs text-slate-400 dark:text-slate-500 mb-2 line-clamp-2">
                         {activity.description}
                       </p>
                     )}
-                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                    <div className="flex items-center gap-2 text-body-sm text-slate-500 dark:text-slate-400 font-medium">
                       <span className="flex items-center">
-                        <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" /> {activity.dueDate}
+                        <Calendar className="icon-xs mr-1 text-slate-400" /> {activity.dueDate}
                       </span>
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
                       <span>{activity.difficulty}</span>
@@ -303,10 +303,10 @@ export default function ActivitiesGrid() {
 
                 {activity.status === "Completed" && activity.score && (
                   <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-slate-800">
-                    <span className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                    <span className="text-body-sm font-bold text-slate-500 dark:text-slate-400">
                       Score Achieved
                     </span>
-                    <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                    <span className="font-black text-emerald-600 dark:text-emerald-400 text-body-sm">
                       {activity.score}
                     </span>
                   </div>
@@ -320,7 +320,7 @@ export default function ActivitiesGrid() {
       {/* Pagination — always directly below the grid */}
       {activitiesCount > 0 && activitiesPagination.totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800/60 pt-5 animate-in fade-in duration-300">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <span className="text-body-xs font-semibold text-slate-500 dark:text-slate-400">
             {(() => {
               const start = activitiesPagination.startIndex + 1;
               const end = activitiesPagination.startIndex + paginatedActivities.length;

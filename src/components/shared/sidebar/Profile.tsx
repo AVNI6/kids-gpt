@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { ProfileSkeleton } from "@/components/shared/skeletonLoading";
+import { useSidebar } from "@/components/ui/sidebar";
 
 interface ProfileProps {
   isCollapsed?: boolean;
@@ -39,6 +40,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
   const { user, userProfile, isUserLoggedIn, logout, isLoading, isInitializing } = useAuth();
   const { setTheme, theme } = useTheme();
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [openPath, setOpenPath] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -64,6 +66,13 @@ export default function Profile({ isCollapsed }: ProfileProps) {
   const avatarUrl = userProfile.avatar_url;
   const dashboardRole = userProfile.role ?? "kid";
 
+  const handleLinkClick = () => {
+    setOpenPath(null);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <div className="w-full">
       <Popover open={isPopoverOpen} onOpenChange={(open) => setOpenPath(open ? pathname : null)}>
@@ -81,10 +90,10 @@ export default function Profile({ isCollapsed }: ProfileProps) {
           </Avatar>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0 text-left flex-1">
-              <span className="text-sm font-bold text-sidebar-foreground truncate uppercase tracking-tight">
+              <span className="text-body-sm font-bold text-sidebar-foreground truncate uppercase tracking-tight">
                 {displayName}
               </span>
-              <span className="text-xs font-medium text-sidebar-foreground/50">Free</span>
+              <span className="text-body-xs font-medium text-sidebar-foreground/50">Free</span>
             </div>
           )}
         </PopoverTrigger>
@@ -95,7 +104,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
           align={isCollapsed ? "end" : "center"}
           sideOffset={12}
         >
-          <div className="space-y-1">
+          <div>
             {/* <Link
               href={APP_ROUTES.Subscription}
               onClick={() => setOpenPath(null)}
@@ -107,38 +116,38 @@ export default function Profile({ isCollapsed }: ProfileProps) {
 
             <Link
               href={`/dashboard/${dashboardRole}`}
-              onClick={() => setOpenPath(null)}
+              onClick={handleLinkClick}
               prefetch={false}
-              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-xs sm:text-sm font-semibold"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-body-sm font-semibold"
             >
-              <UserRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <UserRound className="icon-sm" />
               <span>View Profile</span>
             </Link>
 
             <Link
               href={`/dashboard/${dashboardRole}/settings`}
-              onClick={() => setOpenPath(null)}
+              onClick={handleLinkClick}
               prefetch={false}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
+              className="w-full flex items-center gap-3 p-2 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-body-sm font-semibold"
             >
-              <Settings className="h-4 w-4" />
+              <Settings className="icon-sm" />
               <span>Settings</span>
             </Link>
 
             <Link
               href={APP_ROUTES.Help}
-              onClick={() => setOpenPath(null)}
+              onClick={handleLinkClick}
               prefetch={false}
-              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-xs sm:text-sm font-semibold"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-body-sm font-semibold"
             >
-              <HelpCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <HelpCircle className="icon-sm" />
               <span>Help</span>
             </Link>
 
             <div className="py-2 sm:py-4 px-2 sm:px-3">
               <div className="flex items-center gap-2 mb-2">
-                <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 opacity-50" />
-                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider opacity-50">
+                <Settings className="icon-sm opacity-50" />
+                <span className="text-body-xs font-bold uppercase tracking-wider opacity-50">
                   Theme
                 </span>
               </div>
@@ -150,7 +159,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                   }}
                   className={`flex-1 flex justify-center py-1 sm:py-1.5 rounded-md transition-all ${mounted && theme === "light" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Sun className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Sun className="icon-sm" />
                 </button>
                 <button
                   onClick={() => {
@@ -159,7 +168,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                   }}
                   className={`flex-1 flex justify-center py-1 sm:py-1.5 rounded-md transition-all ${mounted && theme === "dark" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Moon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Moon className="icon-sm" />
                 </button>
                 <button
                   onClick={() => {
@@ -168,7 +177,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                   }}
                   className={`flex-1 flex justify-center py-1 sm:py-1.5 rounded-md transition-all ${mounted && theme === "system" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Monitor className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Monitor className="icon-sm" />
                 </button>
               </div>
             </div>
@@ -181,9 +190,9 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                 setOpenPath(null);
                 setShowLogoutConfirm(true);
               }}
-              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-xs sm:text-sm font-semibold cursor-pointer"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-body-sm font-semibold cursor-pointer"
             >
-              <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <LogOut className="icon-sm" />
               <span>Log Out</span>
             </button>
           </div>

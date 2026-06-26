@@ -42,32 +42,32 @@ interface ChatMessageItemProps {
 
 const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
   h1: ({ children }) => (
-    <h1 className="text-xl sm:text-2xl font-black text-sky-600 dark:text-sky-400 mt-4 mb-2 first:mt-0 flex items-center gap-1.5">
+    <h1 className="text-section-title text-sky-600 dark:text-sky-400 mt-4 mb-2 first:mt-0 flex items-center gap-1.5">
       {children}
     </h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-lg sm:text-xl font-bold text-sky-700 dark:text-sky-300 mt-3.5 mb-2 first:mt-0 flex items-center gap-1.5">
+    <h2 className="text-card-title text-sky-700 dark:text-sky-300 mt-3.5 mb-2 first:mt-0 flex items-center gap-1.5">
       {children}
     </h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-base sm:text-lg font-bold text-sky-800 dark:text-sky-200 mt-3 mb-1 first:mt-0">
+    <h3 className="text-body-lg font-bold text-sky-800 dark:text-sky-200 mt-3 mb-1 first:mt-0">
       {children}
     </h3>
   ),
   p: ({ children }) => (
-    <p className="mb-3 last:mb-0 leading-relaxed text-[15px] text-slate-700 dark:text-slate-300 font-medium">
+    <p className="mb-3 last:mb-0 leading-relaxed text-body-md text-slate-700 dark:text-slate-350 font-medium">
       {children}
     </p>
   ),
   ul: ({ children }) => (
-    <ul className="list-disc pl-6 my-3 space-y-2 text-slate-700 dark:text-slate-300 font-medium">
+    <ul className="list-disc pl-6 my-3 space-y-2 text-body-md text-slate-700 dark:text-slate-300 font-medium">
       {children}
     </ul>
   ),
   ol: ({ children }) => (
-    <ol className="list-decimal pl-6 my-3 space-y-2 text-slate-700 dark:text-slate-300 font-medium">
+    <ol className="list-decimal pl-6 my-3 space-y-2 text-body-md text-slate-700 dark:text-slate-300 font-medium">
       {children}
     </ol>
   ),
@@ -245,7 +245,7 @@ const ChatMessageItem = React.memo(
               </>
             ) : (
               <AvatarFallback className="bg-sky-500 text-white">
-                <Bot className="w-4 h-4" />
+                <Bot className="icon-sm" />
               </AvatarFallback>
             )}
           </Avatar>
@@ -272,15 +272,15 @@ const ChatMessageItem = React.memo(
 
             {(message.content || message.isImage || message.role === "model") && (
               <div
-                className={`rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2.5 sm:py-3.5 leading-relaxed text-[14px] sm:text-[15px] shadow-sm ${
+                className={`rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2.5 sm:py-3.5 leading-relaxed text-body-md shadow-sm ${
                   isUser
                     ? "bg-sky-500 text-white rounded-br-sm"
                     : "bg-card border border-border rounded-bl-sm text-foreground"
                 }`}
               >
                 {showModelHeader && (
-                  <div className="flex items-center gap-1.5 text-sky-600 font-bold text-sm mb-2">
-                    <Bot className="w-4 h-4" /> AI Buddy
+                  <div className="flex items-center gap-1.5 text-sky-600 font-bold text-body-sm mb-2">
+                    <Bot className="icon-sm" /> AI Buddy
                   </div>
                 )}
 
@@ -299,13 +299,13 @@ const ChatMessageItem = React.memo(
                               </ReactMarkdown>
                             )}
                             {/* Task 3.4: Single, unified termination message */}
-                            <div className="text-slate-600 dark:text-slate-400 text-sm">
+                            <div className="text-slate-600 dark:text-slate-400 text-body-sm">
                               <span>Session has been terminated.</span>
                             </div>
                           </div>
                         ) : (
                           <>
-                            <p className="text-red-500 font-semibold text-[14px]">
+                            <p className="text-red-500 font-semibold text-body-sm">
                               Sorry, something went wrong and I couldn&apos;t finish generating that
                               response. Please try again.
                             </p>
@@ -343,9 +343,9 @@ const ChatMessageItem = React.memo(
                           onClick={() => handleDownloadImage(resolvedGeneratedImageUrl)}
                           variant="secondary"
                           size="sm"
-                          className="flex items-center gap-1.5 w-fit rounded-lg text-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 mt-1"
+                          className="flex items-center gap-1.5 w-fit rounded-lg text-body-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 mt-1"
                         >
-                          <Download className="w-3.5 h-3.5" /> Download Image
+                          <Download className="icon-xs" /> Download Image
                         </Button>
                       </div>
                     ) : (
@@ -379,14 +379,14 @@ const ChatMessageItem = React.memo(
                           href={message.attachmentUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 p-2 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold w-fit mt-1 transition-colors cursor-pointer text-current"
+                          className="flex items-center gap-2 p-2 bg-white/20 hover:bg-white/30 rounded-xl text-body-xs font-bold w-fit mt-1 transition-colors cursor-pointer text-current"
                           title="Open attachment"
                         >
-                          <FileText className="w-3 h-3" /> {message.fileName}
+                          <FileText className="icon-xs" /> {message.fileName}
                         </a>
                       ) : (
-                        <div className="flex items-center gap-2 p-2 bg-white/20 rounded-xl text-xs font-bold w-fit mt-1">
-                          <FileText className="w-3 h-3" /> {message.fileName}
+                        <div className="flex items-center gap-2 p-2 bg-white/20 rounded-xl text-body-xs font-bold w-fit mt-1">
+                          <FileText className="icon-xs" /> {message.fileName}
                         </div>
                       ))}
                   </div>
@@ -407,7 +407,7 @@ const ChatMessageItem = React.memo(
                       <>
                         {isSpeechLoading ? (
                           <div className="flex items-center justify-center p-1 rounded-lg text-sky-500">
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <Loader2 className="icon-xs animate-spin" />
                           </div>
                         ) : isPlaying ? (
                           <button
@@ -416,7 +416,7 @@ const ChatMessageItem = React.memo(
                             className="flex items-center justify-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-150"
                             title="Pause"
                           >
-                            <Pause className="w-3.5 h-3.5" />
+                            <Pause className="icon-xs" />
                           </button>
                         ) : isSpeechPaused ? (
                           <button
@@ -425,7 +425,7 @@ const ChatMessageItem = React.memo(
                             className="flex items-center justify-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-150 text-sky-500"
                             title="Resume"
                           >
-                            <Volume2 className="w-3.5 h-3.5" />
+                            <Volume2 className="icon-xs" />
                           </button>
                         ) : null}
 
@@ -435,7 +435,7 @@ const ChatMessageItem = React.memo(
                           className="flex items-center justify-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-red-500 hover:text-red-600 transition-colors duration-150"
                           title="Stop"
                         >
-                          <Square className="w-3.5 h-3.5 fill-current" />
+                          <Square className="icon-xs fill-current" />
                         </button>
                       </>
                     ) : (
@@ -445,7 +445,7 @@ const ChatMessageItem = React.memo(
                         className="flex items-center justify-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-150"
                         title="Read aloud"
                       >
-                        <Volume2 className="w-3.5 h-3.5" />
+                        <Volume2 className="icon-xs" />
                       </button>
                     )}
                   </div>
@@ -457,9 +457,9 @@ const ChatMessageItem = React.memo(
                   title={isCopied ? "Copied!" : "Copy message"}
                 >
                   {isCopied ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    <Check className="icon-xs text-emerald-500" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="icon-xs" />
                   )}
                 </button>
               </div>

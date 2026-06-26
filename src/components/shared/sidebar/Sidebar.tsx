@@ -67,12 +67,19 @@ export default function Sidebar() {
   const [shareCopied, setShareCopied] = useState(false);
 
   const { setTheme, theme } = useTheme();
-  const { state, toggleSidebar, isMobile } = useSidebar();
+  const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
   const isOpen = state === "expanded" || isMobile;
 
   const [hasMoreSessions, setHasMoreSessions] = useState(true);
   const [isLoadingMoreSessions, setIsLoadingMoreSessions] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  // Automatically close the mobile sidebar drawer on navigation or chat session switch
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [pathname, currentSessionId, isMobile, setOpenMobile]);
 
   useEffect(() => {
     let active = true;

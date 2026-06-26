@@ -77,7 +77,7 @@ export default function DashboardNavbarBase({
             )}
 
             <div className="flex items-center shrink-0">
-              <span className="font-extrabold text-xl tracking-tight bg-linear-to-r from-sky-500 to-sky-700 bg-clip-text text-transparent">
+              <span className="font-extrabold text-card-title bg-linear-to-r from-sky-500 to-sky-700 bg-clip-text text-transparent">
                 {brandText}
               </span>
             </div>
@@ -96,7 +96,7 @@ export default function DashboardNavbarBase({
                     href={getNavItemHref(item)}
                     prefetch={false}
                     className={cn(
-                      "px-4 py-2 rounded-full text-sm font-bold transition-all cursor-pointer flex items-center gap-2",
+                      "px-4 py-2 rounded-full text-body-sm font-bold transition-all cursor-pointer flex items-center gap-2",
                       active
                         ? activeLinkClass
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
@@ -104,7 +104,7 @@ export default function DashboardNavbarBase({
                   >
                     <span>{item.label}</span>
                     {isClassrooms && dueCount > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-slate-950">
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-body-xs font-bold text-white shadow-sm ring-1 ring-white dark:ring-slate-950">
                         {dueCount}
                       </span>
                     )}

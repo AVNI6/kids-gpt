@@ -5,7 +5,7 @@ import { Settings, HelpCircle, Sun, Moon, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { SidebarFooter } from "@/components/ui/sidebar";
+import { SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { APP_ROUTES } from "@/lib/constants/app_routes";
 import Profile from "./Profile";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +25,7 @@ export default function SidebarFooterActions({
   setTheme,
 }: SidebarFooterActionsProps) {
   const { isInitializing } = useAuth();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   return (
     <SidebarFooter className="p-4 flex flex-col shrink-0 gap-2 border-t border-sidebar-border bg-sidebar">
@@ -88,6 +89,11 @@ export default function SidebarFooterActions({
           <Link
             href={APP_ROUTES.Help}
             prefetch={false}
+            onClick={() => {
+              if (isMobile) {
+                setOpenMobile(false);
+              }
+            }}
             className={cn(
               buttonVariants({ variant: "ghost" }),
               "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-xl cursor-pointer flex items-center h-10",

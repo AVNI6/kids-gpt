@@ -94,13 +94,13 @@ export default function SidebarNavigation({
         const isActivities = item.label === "Activities";
 
         const buttonClass = cn(
-          "w-full flex items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group/nav cursor-pointer",
+          "w-full flex items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold text-body-sm transition-colors group/nav cursor-pointer",
           showActiveStyle ? "bg-sidebar-accent text-sky-500 font-bold" : "text-sidebar-foreground"
         );
 
         const itemContent = (
           <>
-            <Icon className="w-5 h-5 shrink-0 text-slate-500 group-hover/nav:text-slate-700 dark:text-slate-400 dark:group-hover/nav:text-slate-200 transition-colors" />
+            <Icon className="icon-sm shrink-0 text-slate-500 group-hover/nav:text-slate-700 dark:text-slate-400 dark:group-hover/nav:text-slate-200 transition-colors" />
             <span className="whitespace-nowrap truncate">{item.label}</span>
           </>
         );
@@ -212,7 +212,7 @@ export default function SidebarNavigation({
               const isClassrooms = item.label === "Classrooms";
 
               const buttonClass = cn(
-                "w-full flex items-center justify-between rounded-xl px-2 py-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group/nav cursor-pointer",
+                "w-full flex items-center justify-between rounded-xl px-2 py-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold text-body-sm transition-colors group/nav cursor-pointer",
                 isActive ? "bg-sidebar-accent text-sky-500 font-bold" : "text-sidebar-foreground"
               );
 
@@ -229,11 +229,11 @@ export default function SidebarNavigation({
                   className={buttonClass}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Icon className="w-5 h-5 shrink-0 text-slate-500 group-hover/nav:text-slate-700 dark:text-slate-400 dark:group-hover/nav:text-slate-200 transition-colors" />
+                    <Icon className="icon-sm shrink-0 text-slate-500 group-hover/nav:text-slate-700 dark:text-slate-400 dark:group-hover/nav:text-slate-200 transition-colors" />
                     <span className="whitespace-nowrap truncate">{item.label}</span>
                   </div>
                   {isClassrooms && dueCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-slate-950 shrink-0">
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-body-xs font-bold text-white shadow-sm ring-1 ring-white dark:ring-slate-950 shrink-0">
                       {dueCount}
                     </span>
                   )}
@@ -272,7 +272,7 @@ export default function SidebarNavigation({
                   : "text-sidebar-foreground"
               )}
             >
-              <Icon className="w-6 h-6 !w-6 !h-6 size-6! shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
+              <Icon className="icon-md shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
             </SidebarMenuButton>
           );
 
@@ -333,7 +333,7 @@ export default function SidebarNavigation({
                       : "text-sidebar-foreground"
                   )}
                 >
-                  <Icon className="w-6 h-6 !w-6 !h-6 size-6! shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
+                  <Icon className="icon-md shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
@@ -353,7 +353,7 @@ export default function SidebarNavigation({
                       : "text-sidebar-foreground"
                   )}
                 >
-                  <Icon className="w-6 h-6 !w-6 !h-6 size-6! shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
+                  <Icon className="icon-md shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
@@ -371,7 +371,7 @@ export default function SidebarNavigation({
                     : "text-sidebar-foreground"
                 )}
               >
-                <Icon className="w-6 h-6 !w-6 !h-6 size-6! shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
+                <Icon className="icon-md shrink-0 text-slate-500 group-hover/menu-button:text-slate-700 dark:text-slate-400 dark:group-hover/menu-button:text-slate-200 transition-colors" />
               </SidebarMenuButton>
             </SidebarMenuItem>
           );

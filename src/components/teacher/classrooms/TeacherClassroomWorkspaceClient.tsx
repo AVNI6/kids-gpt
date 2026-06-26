@@ -391,7 +391,7 @@ export default function TeacherClassroomWorkspaceClient({
       className="mx-auto w-full flex flex-col gap-6"
     >
       {/* 1. Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center element-gap">
         <Link
           href="/dashboard/teacher/classrooms"
           className={cn(
@@ -399,13 +399,13 @@ export default function TeacherClassroomWorkspaceClient({
             "rounded-full h-10 w-10 p-0 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 flex items-center justify-center shrink-0"
           )}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="icon-sm" />
         </Link>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-page-title font-black text-slate-950 dark:text-white tracking-tight flex items-center gap-2">
             {classroom.name}
           </h1>
-          <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
+          <p className="text-body-xs sm:text-body-sm font-semibold text-slate-500 mt-0.5">
             {classroom.subject || "General"} • {classroom.grade || "No Grade Set"} • Class Code:{" "}
             <span className="font-bold font-mono tracking-wider">{classroom.class_code}</span>
           </p>
@@ -434,9 +434,9 @@ export default function TeacherClassroomWorkspaceClient({
                       inline: "center",
                     });
                   }}
-                  className="flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2 sm:py-3 data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:bg-input/50 whitespace-nowrap shrink-0 border-none bg-transparent text-muted-foreground hover:text-foreground transition-all shadow-none data-[state=active]:shadow-sm"
+                  className="flex-1 rounded-full font-bold text-body-sm sm:text-body-md flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2 sm:py-3 data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:bg-input/50 whitespace-nowrap shrink-0 border-none bg-transparent text-muted-foreground hover:text-foreground transition-all shadow-none data-[state=active]:shadow-sm"
                 >
-                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <Icon className="icon-sm shrink-0" />
                   <span>{tab.label}</span>
                 </TabsTrigger>
               );

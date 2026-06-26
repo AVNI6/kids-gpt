@@ -137,11 +137,11 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
   };
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col section-gap">
       {/* Settings Header */}
       <div>
-        <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">Settings</h1>
-        <p className="text-sm sm:text-base text-muted-foreground font-medium mt-2">
+        <h1 className="text-page-title text-foreground">Settings</h1>
+        <p className="text-body-md text-muted-foreground font-medium mt-2">
           Manage your educator profile and account security.
         </p>
       </div>
@@ -151,18 +151,18 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
           <TabsList className="flex !h-auto p-1 bg-muted dark:bg-slate-900 rounded-full w-full">
             <TabsTrigger
               value="profile"
-              className="flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0"
+              className="flex-1 rounded-full font-bold text-body-sm sm:text-body-md flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0"
             >
-              <UserRound className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+              <UserRound className="icon-sm shrink-0" />
               <span>
                 Profile<span className="hidden sm:inline"> Details</span>
               </span>
             </TabsTrigger>
             <TabsTrigger
               value="security"
-              className="flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0"
+              className="flex-1 rounded-full font-bold text-body-sm sm:text-body-md flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0"
             >
-              <KeyRound className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+              <KeyRound className="icon-sm shrink-0" />
               <span>
                 <span className="hidden sm:inline">Account & </span>Security
               </span>
@@ -173,19 +173,19 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
         {/* Tab 1: Profile Details */}
         <TabsContent value="profile" className="mt-8">
           <Card className="rounded-[32px] border border-border bg-card shadow-sm overflow-hidden">
-            <CardHeader className="p-5 sm:p-8 lg:p-10 border-b border-border">
-              <CardTitle className="text-2xl font-black text-card-foreground">
+            <CardHeader className="card-padding py-5 sm:py-6 border-b border-border">
+              <CardTitle className="text-section-title text-card-foreground">
                 Profile Details
               </CardTitle>
-              <CardDescription className="text-sm text-muted-foreground font-medium">
+              <CardDescription className="text-body-sm text-muted-foreground font-medium">
                 Customize your public display profile and contact information.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-5 sm:p-8 lg:p-10 flex flex-col gap-8">
-              <form onSubmit={handleProfileSubmit} className="flex flex-col gap-8">
+            <CardContent className="card-padding flex flex-col card-gap">
+              <form onSubmit={handleProfileSubmit} className="flex flex-col card-gap">
                 {/* Profile Picture Upload Container */}
                 <div className="flex flex-col gap-4">
-                  <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                  <Label className="text-body-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
                     Profile Photo
                   </Label>
                   <div className="flex flex-col sm:flex-row items-center gap-6 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
@@ -209,8 +209,8 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
 
                         {/* Camera Overlay */}
                         <div className="absolute inset-0 bg-black/45 rounded-full opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity">
-                          <Camera className="w-5 h-5 text-white mb-0.5" />
-                          <span className="text-[10px] font-bold text-white uppercase tracking-wider">
+                          <Camera className="icon-md text-white mb-0.5" />
+                          <span className="text-body-xs font-bold text-white uppercase tracking-wider">
                             Change
                           </span>
                         </div>
@@ -218,7 +218,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                         {/* Loading Spinner */}
                         {isSavingProfile && (
                           <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center rounded-full animate-in fade-in duration-200">
-                            <Loader2 className="w-8 h-8 text-white animate-spin" />
+                            <Loader2 className="icon-lg text-white animate-spin" />
                           </div>
                         )}
                       </button>
@@ -231,7 +231,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                         className="absolute bottom-1 right-1 p-2 bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600 text-white rounded-full shadow-lg border-2 border-card cursor-pointer transition-all hover:scale-110 active:scale-95 flex items-center justify-center shrink-0"
                         title="Upload Avatar"
                       >
-                        <Camera className="w-4 h-4" />
+                        <Camera className="icon-sm" />
                       </button>
 
                       <input
@@ -244,8 +244,10 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                       />
                     </div>
                     <div className="text-center sm:text-left flex flex-col gap-1">
-                      <h4 className="text-base font-extrabold text-foreground">Educator Avatar</h4>
-                      <p className="text-xs text-muted-foreground font-medium leading-relaxed max-w-[320px]">
+                      <h4 className="text-body-md font-extrabold text-foreground">
+                        Educator Avatar
+                      </h4>
+                      <p className="text-body-xs text-muted-foreground font-medium leading-relaxed max-w-[320px]">
                         Click on your photo to upload a custom profile picture. JPG, PNG, or WebP.
                         Max 5MB.
                       </p>
@@ -254,9 +256,12 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                 </div>
 
                 {/* Profile Grid Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 card-gap">
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="firstName" className="text-sm font-bold text-foreground ml-1">
+                    <Label
+                      htmlFor="firstName"
+                      className="text-body-sm font-bold text-foreground ml-1"
+                    >
                       First Name *
                     </Label>
                     <Input
@@ -264,12 +269,15 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                       placeholder="First Name"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
+                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-body-md font-medium px-4"
                     />
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="lastName" className="text-sm font-bold text-foreground ml-1">
+                    <Label
+                      htmlFor="lastName"
+                      className="text-body-sm font-bold text-foreground ml-1"
+                    >
                       Last Name
                     </Label>
                     <Input
@@ -277,12 +285,15 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                       placeholder="Last Name"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
+                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-body-md font-medium px-4"
                     />
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="username" className="text-sm font-bold text-foreground ml-1">
+                    <Label
+                      htmlFor="username"
+                      className="text-body-sm font-bold text-foreground ml-1"
+                    >
                       Username
                     </Label>
                     <Input
@@ -290,12 +301,15 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                       placeholder="e.g. educator_jane"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
+                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-body-md font-medium px-4"
                     />
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="mobileNo" className="text-sm font-bold text-foreground ml-1">
+                    <Label
+                      htmlFor="mobileNo"
+                      className="text-body-sm font-bold text-foreground ml-1"
+                    >
                       Mobile Number
                     </Label>
                     <Input
@@ -304,13 +318,13 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                       placeholder="+1 (555) 000-0000"
                       value={mobileNo}
                       onChange={(e) => setMobileNo(e.target.value)}
-                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
+                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-body-md font-medium px-4"
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="school" className="text-sm font-bold text-foreground ml-1">
+                  <Label htmlFor="school" className="text-body-sm font-bold text-foreground ml-1">
                     School / Organization
                   </Label>
                   <Input
@@ -318,7 +332,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                     placeholder="e.g. Bright Future Academy"
                     value={organization}
                     onChange={(e) => setOrganization(e.target.value)}
-                    className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
+                    className="rounded-2xl border-input bg-background focus:bg-card h-13 text-body-md font-medium px-4"
                   />
                 </div>
 
@@ -328,7 +342,7 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
                     loading={isSavingProfile}
                     disabled={!hasChanges}
                     loadingText="Saving..."
-                    className="rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-all w-full sm:w-auto"
+                    className="rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-13 px-8 text-body-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-all w-full sm:w-auto"
                   >
                     Save Changes
                   </Button>
@@ -340,44 +354,44 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
 
         {/* Tab 2: Account & Security */}
         <TabsContent value="security" className="mt-8">
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col card-gap">
             {/* Account Info details (Read-only metadata) */}
             <Card className="rounded-[32px] border border-border bg-card shadow-sm overflow-hidden">
-              <CardHeader className="p-5 sm:p-8 lg:p-10 border-b border-border">
-                <CardTitle className="text-2xl font-black text-card-foreground">
+              <CardHeader className="card-padding py-5 sm:py-6 border-b border-border">
+                <CardTitle className="text-section-title text-card-foreground">
                   Account Information
                 </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground font-medium">
+                <CardDescription className="text-body-sm text-muted-foreground font-medium">
                   General details and permissions tied to your account authentication credentials.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-5 sm:p-8 lg:p-10 flex flex-col gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <CardContent className="card-padding flex flex-col card-gap">
+                <div className="grid grid-cols-1 sm:grid-cols-2 card-gap">
                   <div className="flex items-start gap-4 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
-                    <Mail className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 shrink-0" />
+                    <Mail className="icon-lg text-indigo-600 dark:text-indigo-400 mt-1 shrink-0" />
                     <div>
-                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                      <h4 className="text-body-xs font-bold text-muted-foreground uppercase tracking-wider">
                         Email Address
                       </h4>
-                      <p className="text-base font-extrabold text-foreground mt-1.5 break-all">
+                      <p className="text-body-md font-extrabold text-foreground mt-1.5 break-all">
                         {profile.email}
                       </p>
-                      <Badge className="bg-muted text-muted-foreground border border-border font-bold text-[10px] uppercase px-2 py-1 rounded-md mt-3">
+                      <Badge className="bg-muted text-muted-foreground border border-border font-bold text-body-xs uppercase px-2 py-1 rounded-md mt-3">
                         Primary Auth
                       </Badge>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
-                    <Shield className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 shrink-0" />
+                    <Shield className="icon-lg text-indigo-600 dark:text-indigo-400 mt-1 shrink-0" />
                     <div>
-                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                      <h4 className="text-body-xs font-bold text-muted-foreground uppercase tracking-wider">
                         Role & Credentials
                       </h4>
-                      <p className="text-base font-extrabold text-foreground mt-1.5 capitalize">
+                      <p className="text-body-md font-extrabold text-foreground mt-1.5 capitalize">
                         {profile.role}
                       </p>
-                      <Badge className="bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border-none font-bold text-[10px] uppercase px-2 py-1 rounded-md mt-3">
+                      <Badge className="bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border-none font-bold text-body-xs uppercase px-2 py-1 rounded-md mt-3">
                         Full Educator Permissions
                       </Badge>
                     </div>
@@ -388,13 +402,13 @@ export default function TeacherSettingsContainer({ profile }: TeacherSettingsCon
 
             {/* Change Password Form */}
             <Card className="rounded-[32px] border border-border bg-card shadow-sm overflow-hidden">
-              <CardHeader className="p-5 border-b border-border">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+              <CardHeader className="card-padding py-5 sm:py-6 border-b border-border">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between card-gap w-full">
                   <div>
-                    <CardTitle className="text-2xl font-black text-card-foreground">
+                    <CardTitle className="text-section-title text-card-foreground">
                       Update Password
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground font-medium mt-2">
+                    <p className="text-body-sm text-muted-foreground font-medium mt-2">
                       Ensure your account is secure by using a strong password.
                     </p>
                   </div>
