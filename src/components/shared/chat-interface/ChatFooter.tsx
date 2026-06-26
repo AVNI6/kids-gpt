@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import VoiceInput, { VoiceInputRef } from "./mic/VoiceInput";
+import { toast } from "sonner";
 
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
@@ -36,6 +37,10 @@ type Props = {
 export interface ChatFooterRef {
   setInputText: (text: string) => void;
 }
+
+const getWordCount = (text: string): number => {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+};
 
 export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
   { onSend, onStop, isLoading, isAuthLoading = false, currentSessionId },
@@ -136,6 +141,10 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
+      if (getWordCount(input) > 2000) {
+        toast.error("cant exceed 2000 words ..");
+        return;
+      }
       handleSend();
     }
   };
@@ -226,6 +235,10 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
   };
 
   const handleSend = () => {
+    if (getWordCount(input) > 2000) {
+      toast.error("cant exceed 2000 words ..");
+      return;
+    }
     if ((!input.trim() && !image && !fileName) || isLoading || isParsing || isAuthLoading) {
       return;
     }
@@ -473,10 +486,15 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                   <Button
                     onClick={handleSend}
                     size="icon"
-                    disabled={(!input.trim() && !image && !fileName) || isParsing || isAuthLoading}
+                    disabled={
+                      (!input.trim() && !image && !fileName) ||
+                      isParsing ||
+                      isAuthLoading ||
+                      getWordCount(input) > 2000
+                    }
                     className={cn(
                       "h-8 w-8 sm:h-10 sm:w-10 rounded-full transition-all shrink-0 active:scale-95",
-                      input.trim() || image || fileName
+                      (input.trim() || image || fileName) && getWordCount(input) <= 2000
                         ? "bg-sky-500 hover:bg-sky-600 text-white shadow-md hover:shadow-lg cursor-pointer"
                         : "bg-muted text-muted-foreground cursor-not-allowed"
                     )}

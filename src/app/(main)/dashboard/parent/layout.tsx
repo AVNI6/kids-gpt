@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import React from "react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import type { CacheData, LinkedChildProfile } from "@/types/parent";
 import {
