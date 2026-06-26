@@ -1,4 +1,4 @@
-import { Suspense, use } from "react";
+import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
@@ -10,7 +10,6 @@ import {
   getTeacherClassroomStudents,
 } from "@/lib/services/kid/classroom.actions";
 import TeacherClassroomWorkspaceClient from "@/components/teacher/classrooms/TeacherClassroomWorkspaceClient";
-import { ClassroomWorkspaceSkeleton } from "@/components/shared/skeletonLoading";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -104,9 +103,7 @@ export default function TeacherClassroomDetailsPage({
 
   return (
     <main className="min-h-full bg-background text-slate-900 dark:text-slate-50">
-      <Suspense fallback={<ClassroomWorkspaceSkeleton />}>
-        <WorkspaceLoader classroomId={classroomId} searchParams={searchParams} />
-      </Suspense>
+      <WorkspaceLoader classroomId={classroomId} searchParams={searchParams} />
     </main>
   );
 }

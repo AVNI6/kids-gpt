@@ -90,7 +90,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-64 p-2 rounded-2xl shadow-xl border-sidebar-border bg-popover"
+          className="w-56 sm:w-64 p-1 sm:p-2 rounded-2xl shadow-xl border-sidebar-border bg-popover"
           side={isCollapsed ? "right" : "top"}
           align={isCollapsed ? "end" : "center"}
           sideOffset={12}
@@ -99,7 +99,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
             {/* <Link
               href={APP_ROUTES.Subscription}
               onClick={() => setOpenPath(null)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sky-500 hover:bg-sky-50 transition-colors text-sm font-bold"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-sky-500 hover:bg-sky-50 transition-colors text-xs sm:text-sm font-bold"
             >
               <Sparkles className="h-4 w-4" />
               <span>Try Premium</span>
@@ -109,9 +109,9 @@ export default function Profile({ isCollapsed }: ProfileProps) {
               href={`/dashboard/${dashboardRole}`}
               onClick={() => setOpenPath(null)}
               prefetch={false}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-xs sm:text-sm font-semibold"
             >
-              <UserRound className="h-4 w-4" />
+              <UserRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>View Profile</span>
             </Link>
 
@@ -119,44 +119,46 @@ export default function Profile({ isCollapsed }: ProfileProps) {
               href={APP_ROUTES.Help}
               onClick={() => setOpenPath(null)}
               prefetch={false}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-semibold"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-xs sm:text-sm font-semibold"
             >
-              <HelpCircle className="h-4 w-4" />
+              <HelpCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>Help</span>
             </Link>
 
-            <div className="py-4 px-3">
+            <div className="py-2 sm:py-4 px-2 sm:px-3">
               <div className="flex items-center gap-2 mb-2">
-                <Settings className="h-4 w-4 opacity-50" />
-                <span className="text-xs font-bold uppercase tracking-wider opacity-50">Theme</span>
+                <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 opacity-50" />
+                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider opacity-50">
+                  Theme
+                </span>
               </div>
-              <div className="flex bg-accent/50 p-1 rounded-lg gap-1">
+              <div className="flex bg-accent/50 p-0.5 sm:p-1 rounded-lg gap-1">
                 <button
                   onClick={() => {
                     setTheme("light");
                     setOpenPath(null);
                   }}
-                  className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${mounted && theme === "light" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex-1 flex justify-center py-1 sm:py-1.5 rounded-md transition-all ${mounted && theme === "light" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Sun className="h-4 w-4" />
+                  <Sun className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
                 <button
                   onClick={() => {
                     setTheme("dark");
                     setOpenPath(null);
                   }}
-                  className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${mounted && theme === "dark" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex-1 flex justify-center py-1 sm:py-1.5 rounded-md transition-all ${mounted && theme === "dark" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Moon className="h-4 w-4" />
+                  <Moon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
                 <button
                   onClick={() => {
                     setTheme("system");
                     setOpenPath(null);
                   }}
-                  className={`flex-1 flex justify-center py-1.5 rounded-md transition-all ${mounted && theme === "system" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex-1 flex justify-center py-1 sm:py-1.5 rounded-md transition-all ${mounted && theme === "system" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Monitor className="h-4 w-4" />
+                  <Monitor className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               </div>
             </div>
@@ -169,9 +171,9 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                 setOpenPath(null);
                 setShowLogoutConfirm(true);
               }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-semibold cursor-pointer"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-xs sm:text-sm font-semibold cursor-pointer"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>Log Out</span>
             </button>
           </div>

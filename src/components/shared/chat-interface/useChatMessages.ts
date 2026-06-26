@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAppDispatch } from "@/store/hooks";
 import { setMessages, prependMessages } from "@/store/slices/chatSlice";
 import { fetchSessionMessages } from "@/lib/services/shared/chat.actions";
@@ -123,6 +123,7 @@ export function mapDbMessageToClient(m: ChatMessageRow): Message {
     attachmentUrl: m.attachment_url,
     fileName: fileName,
     uploadedImage: m.sender_role === "user" && isImage ? m.attachment_url || content : undefined,
+    status: (m.status as Message["status"]) || undefined,
     created_at: m.created_at || undefined,
   };
 }
@@ -135,18 +136,21 @@ export function useChatMessages({
   justCreatedSessionRef,
   userRole,
   userId,
+  isGenerating,
 }: UseChatMessagesArgs) {
   const dispatch = useAppDispatch();
   const [isSessionLoading, setIsSessionLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
 
-  // Clear message cache on logout
+  // Clear message cache and current messages on logout
   useEffect(() => {
     if (!isUserLoggedIn) {
+      dispatch(setMessages([]));
       messagesCache.clear();
     }
-  }, [isUserLoggedIn]);
+  }, [isUserLoggedIn, dispatch]);
 
   // Keep cache synced with Redux messages state
   useEffect(() => {
@@ -174,9 +178,8 @@ export function useChatMessages({
         return;
       }
 
-      // 2. Return early if the user is logged out
+      // 2. Return early if the user is logged out / guest
       if (!isUserLoggedIn) {
-        dispatch(setMessages([]));
         setIsSessionLoading(false);
         return;
       }
@@ -352,7 +355,106 @@ export function useChatMessages({
     }
   }, [currentSessionId, isLoadingMore, hasMore, messages, userRole, dispatch]);
 
-  return { isSessionLoading, hasMore, isLoadingMore, loadMore };
+  const lastMsg = messages[messages.length - 1];
+  const messagesRef = useRef(messages);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  const cancelPolling = useCallback(() => {
+    setIsPolling(false);
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  }, []);
+
+  // Poll database every 2 seconds if the latest message from model is still streaming
+  // or if the latest message is a user message (waiting for the server to insert the model placeholder)
+  useEffect(() => {
+    if (!currentSessionId || !isUserLoggedIn || isLoadingAuth || isGenerating) {
+      Promise.resolve().then(() => setIsPolling(false));
+      return;
+    }
+
+    const isUserLast = lastMsg?.role === "user";
+    const isModelStreaming = lastMsg?.role === "model" && lastMsg?.status === "streaming";
+
+    if (!isUserLast && !isModelStreaming) {
+      Promise.resolve().then(() => setIsPolling(false));
+      return;
+    }
+
+    Promise.resolve().then(() => setIsPolling(true));
+    let active = true;
+    let pollCount = 0;
+
+    const interval = setInterval(async () => {
+      try {
+        pollCount++;
+        const { fetchSessionMessages } = await import("@/lib/services/shared/chat.actions");
+        const dbMessages = await fetchSessionMessages(currentSessionId, undefined, undefined, 30);
+
+        if (!active) return;
+
+        const mappedMessages = dbMessages.map(mapDbMessageToClient).map((dbMsg) => {
+          const localMsg = messagesRef.current.find((m) => m.id === dbMsg.id);
+          if (localMsg && localMsg.status === "failed" && dbMsg.status === "streaming") {
+            return {
+              ...dbMsg,
+              status: "failed" as const,
+              content: localMsg.content,
+            };
+          }
+          return dbMsg;
+        });
+        const newLastMsg = mappedMessages[mappedMessages.length - 1];
+
+        // If polling for a user message, expect a model placeholder to appear.
+        // Stop polling after 6 attempts (12 seconds) if no model message shows up.
+        if (isUserLast && (!newLastMsg || newLastMsg.role === "user") && pollCount > 6) {
+          setIsPolling(false);
+          clearInterval(interval);
+          pollIntervalRef.current = null;
+          return;
+        }
+
+        const hasChanged = JSON.stringify(messagesRef.current) !== JSON.stringify(mappedMessages);
+        if (hasChanged) {
+          dispatch(setMessages(mappedMessages));
+        }
+
+        if (newLastMsg?.role === "model" && newLastMsg?.status !== "streaming") {
+          setIsPolling(false);
+          clearInterval(interval);
+          pollIntervalRef.current = null;
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 2000);
+
+    pollIntervalRef.current = interval;
+
+    return () => {
+      active = false;
+      setIsPolling(false);
+      clearInterval(interval);
+      pollIntervalRef.current = null;
+    };
+  }, [
+    currentSessionId,
+    lastMsg?.role,
+    lastMsg?.status,
+    isUserLoggedIn,
+    isLoadingAuth,
+    isGenerating,
+    dispatch,
+  ]);
+
+  return { isSessionLoading, hasMore, isLoadingMore, loadMore, isPolling, cancelPolling };
 }
 
 interface UseChatMessagesArgs {
@@ -363,4 +465,5 @@ interface UseChatMessagesArgs {
   justCreatedSessionRef: React.MutableRefObject<boolean>;
   userRole?: string | null;
   userId?: string | null;
+  isGenerating?: boolean;
 }

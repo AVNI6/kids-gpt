@@ -1,66 +1,43 @@
 "use client";
 
-import { Provider, useDispatch, useSelector } from "react-redux";
-import { store, AppDispatch, RootState } from "@/store";
+import { Provider, useDispatch } from "react-redux";
+import { store, AppDispatch } from "@/store";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Session } from "@supabase/supabase-js";
-import {
-  setSessionUser,
-  clearAuthState,
-  fetchProfile,
-  setLoadingState,
-  setInitializingState,
-} from "@/store/slices/authSlice";
+import { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { setSessionUser, clearAuthState, fetchProfile } from "@/store/slices/authSlice";
 
-function AuthInitializer({ children }: { children: React.ReactNode }) {
+function AuthSync() {
   const dispatch = useDispatch<AppDispatch>();
-  const isLoggingOutRef = useRef(false);
-  const lastLoadedUserIdRef = useRef<string | null>(null);
-  const supabase = createClient();
 
-  const user = useSelector((state: RootState) => state.auth.user);
-  const userProfile = useSelector((state: RootState) => state.auth.userProfile);
-
-  // 1. Bootstraps initial session on mount (lean, synchronous action dispatching)
   useEffect(() => {
+    const supabase = createClient();
     let isMounted = true;
+    let lastLoadedUserId: string | null = null;
 
+    // Load initial session on mount to prevent auth flicker on page refreshes
     const initializeAuth = async () => {
       try {
         const {
           data: { session },
         } = await supabase.auth.getSession();
 
-        if (!isMounted || isLoggingOutRef.current) return;
+        if (!isMounted) return;
 
         if (session?.user) {
           dispatch(setSessionUser(session.user));
-          // Note: profile fetch will be triggered by the secondary useEffect watching user state
+          if (lastLoadedUserId !== session.user.id) {
+            lastLoadedUserId = session.user.id;
+            dispatch(fetchProfile(session.user.id));
+          }
         } else {
-          lastLoadedUserIdRef.current = null;
+          lastLoadedUserId = null;
           dispatch(clearAuthState());
         }
       } catch (error) {
-        console.error("AuthInitializer: Error during getSession init:", error);
-        if (isMounted) {
-          dispatch(setLoadingState(false));
-          dispatch(setInitializingState(false));
-        }
-      } finally {
-        if (isMounted) {
-          // If there is no active session on mount, immediately resolve loading states.
-          // Otherwise, loading state will resolve once the profile fetch thunk completes.
-          const {
-            data: { session: currentSession },
-          } = await supabase.auth.getSession();
-          if (!currentSession?.user) {
-            dispatch(setLoadingState(false));
-            dispatch(setInitializingState(false));
-          }
-        }
+        console.error("AuthSync: Error during getSession initialization:", error);
       }
     };
 
@@ -69,22 +46,23 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
     // Subscribe to auth state changes reactively
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event: string, session: Session | null) => {
-      // Ignore INITIAL_SESSION as it is already handled by initializeAuth
-      if (event === "INITIAL_SESSION") {
-        return;
-      }
+    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      if (!isMounted) return;
 
-      if (!isMounted || isLoggingOutRef.current) {
-        dispatch(setLoadingState(false));
-        dispatch(setInitializingState(false));
+      if (event === "SIGNED_OUT") {
+        lastLoadedUserId = null;
+        dispatch(clearAuthState());
         return;
       }
 
       if (session?.user) {
         dispatch(setSessionUser(session.user));
+        if (lastLoadedUserId !== session.user.id) {
+          lastLoadedUserId = session.user.id;
+          dispatch(fetchProfile(session.user.id));
+        }
       } else {
-        lastLoadedUserIdRef.current = null;
+        lastLoadedUserId = null;
         dispatch(clearAuthState());
       }
     });
@@ -93,20 +71,9 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dispatch]);
 
-  // 2. Fetch profile reactively outside the Supabase event listener/auth context to avoid Web Lock deadlocks
-  useEffect(() => {
-    if (user && !userProfile) {
-      if (lastLoadedUserIdRef.current !== user.id) {
-        lastLoadedUserIdRef.current = user.id;
-        dispatch(fetchProfile(user.id));
-      }
-    }
-  }, [user, userProfile, dispatch]);
-
-  return <>{children}</>;
+  return null;
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -115,16 +82,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: Infinity, // Avoid automatic refetching unless invalidated
+            staleTime: 5 * 60 * 1000, // 5 minutes staleTime
           },
         },
       })
   );
+
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthInitializer>{children}</AuthInitializer>
+          <AuthSync />
+          {children}
         </ThemeProvider>
       </QueryClientProvider>
     </Provider>

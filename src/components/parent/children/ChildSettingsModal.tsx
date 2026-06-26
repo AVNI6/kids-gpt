@@ -65,7 +65,14 @@ export default function ChildSettingsModal({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={(e) => {
+                    e.currentTarget.scrollIntoView({
+                      behavior: "smooth",
+                      block: "nearest",
+                      inline: "center",
+                    });
+                    setActiveTab(tab.id);
+                  }}
                   className={`flex items-center gap-3 px-4 py-2.5 sm:w-full rounded-2xl text-xs font-bold transition-all text-left cursor-pointer shrink-0 sm:shrink ${
                     isActive
                       ? "bg-slate-200/80 dark:bg-slate-800/80 text-sky-600 dark:text-white shadow-sm"

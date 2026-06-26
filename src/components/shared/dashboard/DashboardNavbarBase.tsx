@@ -100,6 +100,7 @@ export default function DashboardNavbarBase({
                   <Link
                     key={item.href}
                     href={getNavItemHref(item)}
+                    prefetch={false}
                     className={cn(
                       "px-4 py-2 rounded-full text-sm font-bold transition-all cursor-pointer flex items-center gap-2",
                       active

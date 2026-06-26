@@ -100,7 +100,7 @@ export default function ActivitiesPage() {
               >
                 {/* Premium Dynamic XP Badge on the corner of the card (overlapping the corner, locked to the card layout during scroll) */}
                 <div className="absolute -top-3 -right-3 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white font-black text-xs px-3.5 py-1.5 rounded-2xl shadow-md hover:scale-105 transition-transform duration-200 cursor-default select-none animate-pulse z-10 transform-gpu">
-                  +{activitySettings[activity.slug]?.xp_reward || 150} XP
+                  +{activitySettings[activity.slug]?.xp_reward} XP
                 </div>
 
                 <CardContent className="p-6 flex flex-col h-full justify-between">

@@ -106,10 +106,10 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
   };
 
   return (
-    <div className="flex flex-col gap-8 px-4 sm:px-6 lg:px-8 py-6">
+    <div className="flex flex-col gap-8">
       {/* Settings Header */}
       <div>
-        <h1 className="text-4xl font-black tracking-tight text-foreground">Settings</h1>
+        <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">Settings</h1>
         <p className="text-sm sm:text-base text-muted-foreground font-medium mt-2">
           Manage your student profile and learning account security.
         </p>

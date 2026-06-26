@@ -76,6 +76,7 @@ export default function MobileNavDrawer({
                 key={item.href}
                 href={getNavItemHref(item)}
                 onClick={onClose}
+                prefetch={false}
                 className={cn(
                   "w-full flex items-center justify-between px-4.5 py-3 rounded-2xl font-black transition-all cursor-pointer text-sm border border-transparent",
                   active

@@ -181,7 +181,7 @@ export default forwardRef<VoiceInputRef, VoiceInputProps>(function VoiceInput(
           size="icon"
           disabled={disabled}
           className={cn(
-            "h-10 w-10 rounded-full transition-all shrink-0 active:scale-95",
+            "h-8 w-8 sm:h-10 sm:w-10 rounded-full transition-all shrink-0 active:scale-95",
             isListening
               ? "bg-red-500 text-white hover:bg-red-600 animate-pulse shadow-md"
               : "hover:bg-muted text-muted-foreground"
@@ -190,9 +190,9 @@ export default forwardRef<VoiceInputRef, VoiceInputProps>(function VoiceInput(
           title={isListening ? "Stop listening" : "Start voice typing"}
         >
           {isListening ? (
-            <Square className="w-4.5 h-4.5 fill-current" />
+            <Square className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 fill-current" />
           ) : (
-            <Mic className="w-4.5 h-4.5" />
+            <Mic className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
           )}
         </Button>
       )}

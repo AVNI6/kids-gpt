@@ -38,7 +38,7 @@ export default function SidebarNavigation({
 
   return isOpen ? (
     // --- OPEN SIDEBAR STATE ---
-    <div className="space-y-2 shrink-0 px-4">
+    <div className="space-y-2 shrink-0 px-2">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive =

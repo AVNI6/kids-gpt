@@ -72,8 +72,8 @@ export default function Sidebar() {
 
   const [hasMoreSessions, setHasMoreSessions] = useState(true);
   const [isLoadingMoreSessions, setIsLoadingMoreSessions] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  // Load chat sessions for authenticated user
   useEffect(() => {
     let active = true;
     let controller = new AbortController();
@@ -89,6 +89,7 @@ export default function Sidebar() {
 
           setHasMoreSessions(true);
           setIsLoadingMoreSessions(false);
+          setIsInitialLoading(true);
 
           const userSessions = await fetchUserSessions(userId, undefined, undefined, 20);
           if (active) {
@@ -106,6 +107,10 @@ export default function Sidebar() {
       } catch (err) {
         if (active) {
           console.error("Failed to load sessions:", err);
+        }
+      } finally {
+        if (active) {
+          setIsInitialLoading(false);
         }
       }
     };
@@ -184,6 +189,8 @@ export default function Sidebar() {
 
       const wasCurrentSession = currentSessionId === sessionId;
       if (wasCurrentSession) {
+        // Clear current session instantly to avoid stale UI while router transitions
+        dispatch(setCurrentSessionId(null));
         handleNewChat();
       }
 
@@ -204,12 +211,14 @@ export default function Sidebar() {
     if (!sessionToDelete) return;
     const targetSessionId = sessionToDelete;
 
-    setIsDeleting(true);
+    // Instantly close the dialog for a highly responsive experience
+    setSessionToDelete(null);
+    setIsDeleting(false);
+
     try {
       await handleDeleteSession(targetSessionId);
-    } finally {
-      setIsDeleting(false);
-      setSessionToDelete(null);
+    } catch (error) {
+      console.error("Failed to execute delete session:", error);
     }
   }, [sessionToDelete, handleDeleteSession]);
 
@@ -334,6 +343,7 @@ export default function Sidebar() {
               onLoadMoreSessions={handleLoadMoreSessions}
               hasMoreSessions={hasMoreSessions}
               isLoadingMoreSessions={isLoadingMoreSessions}
+              isInitialLoading={isInitialLoading}
             />
           )}
         </SidebarContent>

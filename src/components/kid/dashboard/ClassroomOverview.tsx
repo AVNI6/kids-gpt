@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  GraduationCap,
-  ArrowRight,
-  Clock,
-  LogOut,
-  School,
-  Sparkles,
-} from "lucide-react";
+import { GraduationCap, ArrowRight, Clock, LogOut, School, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -473,7 +466,7 @@ export default function ClassroomOverview({ memberships }: Props) {
 
 export function ClassroomOverviewSkeleton() {
   return (
-    <div className="space-y-8 w-full animate-pulse">
+    <div className="space-y-8 w-full animate-pulse px-4 py-4 sm:px-6 sm:py-6 lg:px-8 max-w-[1600px] mx-auto">
       <Card className="rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 p-8 shadow-sm">
         <CardContent className="p-0 flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-3 flex-1">

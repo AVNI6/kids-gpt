@@ -16,7 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getParentActivitiesPaginated } from "@/lib/services/parent/parent-dashboard.actions";
 
 export default function ActivitiesGrid() {
-  const { activeChild, details } = useParentDashboard();
+  const { activeChild, details, activities: cachedActivities } = useParentDashboard();
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedReview, setSelectedReview] = useState<ActivityReviewRow | null>(null);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -80,9 +80,31 @@ export default function ActivitiesGrid() {
   const pageSize = 9;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["child-activities-filtered", activeChild?.user_id, pageState, pageSize, activeFilter],
-    queryFn: () => getParentActivitiesPaginated(activeChild!.user_id, pageState, pageSize, activeFilter),
+    queryKey: [
+      "child-activities-filtered",
+      activeChild?.user_id,
+      pageState,
+      pageSize,
+      activeFilter,
+    ],
+    queryFn: () =>
+      getParentActivitiesPaginated(activeChild!.user_id, pageState, pageSize, activeFilter),
     enabled: !!activeChild?.user_id,
+    placeholderData: (previousData) => {
+      if (previousData) return previousData;
+      if (
+        pageState === 1 &&
+        activeFilter === "All" &&
+        cachedActivities &&
+        cachedActivities.length > 0
+      ) {
+        return {
+          activities: cachedActivities,
+          totalCount: details?.total_completed ?? cachedActivities.length,
+        };
+      }
+      return undefined;
+    },
   });
 
   const activitiesCount = data?.totalCount || 0;
@@ -217,11 +239,7 @@ export default function ActivitiesGrid() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isLoading ? (
-          <div className="col-span-full flex items-center justify-center p-12">
-            <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
-          </div>
-        ) : paginatedActivities.length === 0 ? (
+        {isLoading && !data ? null : paginatedActivities.length === 0 ? (
           <Card className="col-span-full rounded-[28px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center">
             <CardContent className="space-y-3">
               <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />

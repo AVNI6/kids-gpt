@@ -21,7 +21,7 @@ async function SettingsContent() {
 
 export default function KidSettingsPage() {
   return (
-    <main>
+    <main className="min-h-full bg-background px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8 dark:text-slate-50">
       <div className="max-w-400 mx-auto">
         <Suspense fallback={<ProfileSettingsSkeleton />}>
           <SettingsContent />
