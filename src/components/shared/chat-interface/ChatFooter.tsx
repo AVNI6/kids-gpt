@@ -23,9 +23,7 @@ type Props = {
     text: string,
     img: string | null,
     fileText: string | null,
-    fileMeta: string | null,
-    isVoiceInput?: boolean,
-    attachedFile?: File | null
+    fileMeta: string | null
   ) => void;
   onStop?: () => void;
   isLoading: boolean;
@@ -45,7 +43,6 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
   const [image, setImage] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [rawFile, setRawFile] = useState<File | null>(null);
 
   const [isDragging, setIsDragging] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -55,7 +52,6 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
   const mediaInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const voiceInputRef = useRef<VoiceInputRef>(null);
-  const isVoiceUsedRef = useRef(false);
 
   // Auto-grow height of textarea based on content
   useIsomorphicLayoutEffect(() => {
@@ -68,12 +64,10 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
     textarea.style.height = "auto";
 
     const scrollHeight = textarea.scrollHeight;
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-    const maxHeight = isMobile ? 120 : 180;
-    textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+    textarea.style.height = `${Math.min(scrollHeight, 180)}px`;
 
     // Restore overflow if content height exceeds the max height limit
-    if (scrollHeight > maxHeight) {
+    if (scrollHeight > 180) {
       textarea.style.overflowY = "auto";
     } else {
       textarea.style.overflowY = originalOverflowY;
@@ -146,9 +140,7 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
     setImage(null);
     setFileContent(null);
     setFileName(null);
-    setRawFile(null);
     voiceInputRef.current?.stop();
-    isVoiceUsedRef.current = false;
   }, [currentSessionId]);
 
   // Sync native file inputs when image/fileName state is cleared
@@ -166,7 +158,6 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
       reader.readAsDataURL(file);
       setFileContent(null);
       setFileName(null);
-      setRawFile(null);
     } else if (file.type === "application/pdf") {
       const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
       if (file.size > MAX_PDF_SIZE) {
@@ -191,7 +182,6 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
         setImage(null);
         setFileName(file.name);
         setFileContent(text);
-        setRawFile(file);
       } catch (e) {
         console.error("PDF parsing failed:", e);
         const errorMsg = e instanceof Error ? e.message : "Failed to read PDF text.";
@@ -212,7 +202,6 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
         setImage(null);
         setFileName(file.name);
         setFileContent(e.target?.result as string);
-        setRawFile(file);
       };
       reader.readAsText(file);
     }
@@ -222,7 +211,6 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
     setImage(null);
     setFileContent(null);
     setFileName(null);
-    setRawFile(null);
   };
 
   const handleSend = () => {
@@ -230,13 +218,11 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
       return;
     }
     voiceInputRef.current?.stop();
-    onSend(input, image, fileContent, fileName, isVoiceUsedRef.current, rawFile);
-    isVoiceUsedRef.current = false;
+    onSend(input, image, fileContent, fileName);
     setInput("");
     setImage(null);
     setFileContent(null);
     setFileName(null);
-    setRawFile(null);
   };
 
   const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -304,9 +290,9 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <footer className="bg-background px-2 sm:px-4 pb-2 sm:pb-6">
+      <footer className="bg-background px-2 sm:px-4 pb-4 sm:pb-6">
         <div className="w-full max-w-3xl mx-auto">
-          <div className="relative bg-muted/30 border border-border rounded-2xl sm:rounded-[28px] overflow-hidden">
+          <div className="relative bg-muted/30 border border-border rounded-[28px] overflow-hidden">
             <input
               type="file"
               accept="image/*"
@@ -339,8 +325,8 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
               <div className="px-3 pt-3">
                 <div className="relative inline-block group">
                   {isParsing ? (
-                    <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl sm:rounded-2xl bg-muted border border-border flex flex-col items-center justify-center p-2">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mb-2" />
+                    <div className="w-28 h-28 rounded-2xl bg-muted border border-border flex flex-col items-center justify-center p-2">
+                      <div className="w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mb-2" />
                       <span className="text-[10px] text-muted-foreground">Reading...</span>
                     </div>
                   ) : image ? (
@@ -349,11 +335,11 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                       alt="preview"
                       width={112}
                       height={112}
-                      className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl sm:rounded-2xl object-cover border border-border shadow-sm transition-opacity group-hover:opacity-90"
+                      className="w-28 h-28 rounded-2xl object-cover border border-border shadow-sm transition-opacity group-hover:opacity-90"
                     />
                   ) : (
-                    <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl sm:rounded-2xl bg-blue-50 border border-blue-200 flex flex-col items-center justify-center p-2 text-center overflow-hidden">
-                      <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 mb-1" />
+                    <div className="w-28 h-28 rounded-2xl bg-blue-50 border border-blue-200 flex flex-col items-center justify-center p-2 text-center overflow-hidden">
+                      <FileText className="w-8 h-8 text-blue-500 mb-1" />
                       <span className="text-[10px] font-medium text-blue-700 truncate w-full px-1">
                         {fileName}
                       </span>
@@ -361,83 +347,76 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                   )}
                   <button
                     onClick={removeAttachment}
-                    className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-background border border-border shadow-md flex items-center justify-center hover:bg-destructive hover:text-white transition-all"
+                    className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-background border border-border shadow-md flex items-center justify-center hover:bg-destructive hover:text-white transition-all"
                   >
-                    <X className="w-3.5 h-3.5 sm:w-4 h-4" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center px-1.5 py-1.5 sm:px-2 sm:py-2 min-h-[48px] sm:min-h-[56px]">
-              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                <PopoverTrigger
-                  type="button"
-                  suppressHydrationWarning={true}
-                  className={cn(
-                    "h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-muted shrink-0",
-                    isPopoverOpen && "bg-muted"
-                  )}
-                >
-                  <Plus
+            <div className="flex items-end px-2 py-2 min-h-[56px]">
+              <div className="mb-1 shrink-0">
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger
+                    type="button"
+                    suppressHydrationWarning={true}
                     className={cn(
-                      "w-4 h-4 sm:w-5 sm:h-5 transition-transform",
-                      isPopoverOpen && "rotate-45"
+                      "h-10 w-10 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-muted",
+                      isPopoverOpen && "bg-muted"
                     )}
-                  />
-                </PopoverTrigger>
-                <PopoverContent
-                  side="top"
-                  align="start"
-                  sideOffset={16}
-                  className="w-40 sm:w-48 p-1 rounded-2xl shadow-xl border-border bg-popover z-50 animate-in fade-in-50 zoom-in-95 duration-100"
-                >
-                  <button
-                    onClick={() => {
-                      mediaInputRef.current?.click();
-                    }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl hover:bg-accent transition-colors text-left group"
                   >
-                    <div className="p-1.5 sm:p-2 rounded-lg shrink-0 transition-colors text-pink-500 group-hover:bg-white">
-                      <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <span className="text-xs sm:text-sm font-semibold text-foreground/80">
-                      Add Media
-                    </span>
-                  </button>
+                    <Plus
+                      className={cn("w-5 h-5 transition-transform", isPopoverOpen && "rotate-45")}
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="top"
+                    align="start"
+                    sideOffset={16}
+                    className="w-48 p-1 rounded-2xl shadow-xl border-border bg-popover z-50 animate-in fade-in-50 zoom-in-95 duration-100"
+                  >
+                    <button
+                      onClick={() => {
+                        mediaInputRef.current?.click();
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
+                    >
+                      <div className="p-2 rounded-lg shrink-0 transition-colors text-pink-500 group-hover:bg-white">
+                        <Camera className="w-5 h-5" />
+                      </div>
+                      <span className="text-sm font-semibold text-foreground/80">Add Media</span>
+                    </button>
 
-                  <button
-                    onClick={() => {
-                      fileInputRef.current?.click();
-                    }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl hover:bg-accent transition-colors text-left group"
-                  >
-                    <div className="p-1.5 sm:p-2 rounded-lg shrink-0 transition-colors text-blue-500 group-hover:bg-white">
-                      <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <span className="text-xs sm:text-sm font-semibold text-foreground/80">
-                      Upload Files
-                    </span>
-                  </button>
+                    <button
+                      onClick={() => {
+                        fileInputRef.current?.click();
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
+                    >
+                      <div className="p-2 rounded-lg shrink-0 transition-colors text-blue-500 group-hover:bg-white">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <span className="text-sm font-semibold text-foreground/80">Upload Files</span>
+                    </button>
 
-                  <button
-                    onClick={() => {
-                      setInput(
-                        "Start Quiz: ask me one question at a time, wait for my answer, tell me if I'm right, then automatically ask the next question. Stop if I say stop, exit, quit, or end quiz."
-                      );
-                      setIsPopoverOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl hover:bg-accent transition-colors text-left group"
-                  >
-                    <div className="p-1.5 sm:p-2 rounded-lg shrink-0 transition-colors text-amber-500 group-hover:bg-white">
-                      <BrainCircuit className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <span className="text-xs sm:text-sm font-semibold text-foreground/80">
-                      Start Quiz
-                    </span>
-                  </button>
-                </PopoverContent>
-              </Popover>
+                    <button
+                      onClick={() => {
+                        setInput(
+                          "Start Quiz: ask me one question at a time, wait for my answer, tell me if I'm right, then automatically ask the next question. Stop if I say stop, exit, quit, or end quiz."
+                        );
+                        setIsPopoverOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors text-left group"
+                    >
+                      <div className="p-2 rounded-lg shrink-0 transition-colors text-amber-500 group-hover:bg-white">
+                        <BrainCircuit className="w-5 h-5" />
+                      </div>
+                      <span className="text-sm font-semibold text-foreground/80">Start Quiz</span>
+                    </button>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
               <textarea
                 ref={textareaRef}
@@ -446,17 +425,14 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything"
-                className="flex-1 min-w-0 resize-none bg-transparent py-1.5 sm:py-2 px-2 sm:px-3 text-sm sm:text-base border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 min-h-[36px] sm:min-h-[40px] max-h-[120px] sm:max-h-[180px] overflow-y-auto scrollbar-none text-foreground placeholder:text-muted-foreground/60 leading-relaxed text-left whitespace-pre-wrap break-words"
+                className="flex-1 min-w-0 resize-none bg-transparent py-3 px-3 text-base border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 min-h-[40px] max-h-[180px] overflow-y-auto scrollbar-none text-foreground placeholder:text-muted-foreground/60 align-bottom leading-relaxed text-left whitespace-pre-wrap break-words"
                 suppressHydrationWarning={true}
               />
 
-              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              <div className="flex items-center gap-1.5 mb-1 shrink-0">
                 <VoiceInput
                   ref={voiceInputRef}
-                  onTranscript={(text) => {
-                    isVoiceUsedRef.current = true;
-                    setInput((prev) => prev + (prev ? " " : "") + text);
-                  }}
+                  onTranscript={(text) => setInput((prev) => prev + (prev ? " " : "") + text)}
                   currentSessionId={currentSessionId}
                 />
 
@@ -464,10 +440,10 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                   <Button
                     onClick={onStop}
                     size="icon"
-                    className="h-8 w-8 sm:h-10 sm:w-10 rounded-full transition-all shrink-0 active:scale-95 bg-slate-900 hover:bg-slate-800 text-white shadow-md hover:shadow-lg dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-950 cursor-pointer"
+                    className="h-10 w-10 rounded-full transition-all shrink-0 active:scale-95 bg-slate-900 hover:bg-slate-800 text-white shadow-md hover:shadow-lg dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-950 cursor-pointer"
                     suppressHydrationWarning={true}
                   >
-                    <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-current rounded-[2px]" />
+                    <span className="w-3 h-3 bg-current rounded-[2px]" />
                   </Button>
                 ) : (
                   <Button
@@ -475,20 +451,20 @@ export default forwardRef<ChatFooterRef, Props>(function ChatFooter(
                     size="icon"
                     disabled={(!input.trim() && !image && !fileName) || isParsing || isAuthLoading}
                     className={cn(
-                      "h-8 w-8 sm:h-10 sm:w-10 rounded-full transition-all shrink-0 active:scale-95",
+                      "h-10 w-10 rounded-full transition-all shrink-0 active:scale-95",
                       input.trim() || image || fileName
                         ? "bg-sky-500 hover:bg-sky-600 text-white shadow-md hover:shadow-lg cursor-pointer"
                         : "bg-muted text-muted-foreground cursor-not-allowed"
                     )}
                     suppressHydrationWarning={true}
                   >
-                    <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <Send className="w-4 h-4" />
                   </Button>
                 )}
               </div>
             </div>
           </div>
-          <div className="text-center mt-2 sm:mt-3 text-[9px] sm:text-xs text-muted-foreground opacity-60">
+          <div className="text-center mt-3 text-[10px] sm:text-xs text-muted-foreground opacity-60">
             Kidoza can make mistakes. Verify important information.
           </div>
         </div>

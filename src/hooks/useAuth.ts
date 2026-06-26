@@ -41,7 +41,7 @@ export function useAuth() {
     userRole,
     isLoading,
     isInitializing,
-    isUserLoggedIn: !!user && !isLoading,
+    isUserLoggedIn: !!user,
     logout,
     refreshProfile,
   };

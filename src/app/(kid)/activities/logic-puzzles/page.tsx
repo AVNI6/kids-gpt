@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
-import { Star, Brain, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Puzzle, Star, Brain, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ActivityCard, ActivityCardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/app_routes";
 import VictoryModal from "@/components/shared/VictoryModal";
 import type { QuizReviewData, LogicPuzzleReviewItem } from "@/types/activity-review.types";
@@ -128,59 +128,55 @@ export default function LogicPuzzlesPage({
   };
 
   return (
-    <div className="bg-background flex flex-col relative h-full max-h-full overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Background aesthetics */}
       <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-purple-500/5 blur-3xl pointer-events-none" />
       <div className="absolute bottom-20 right-10 h-80 w-80 rounded-full bg-sky-500/5 blur-3xl pointer-events-none" />
 
-      <main className="relative z-10 flex-1 px-4 py-4 md:px-6 flex flex-col min-h-0 overflow-hidden">
-        <div className="mx-auto max-w-4xl w-full flex-1 flex flex-col justify-start gap-4 sm:gap-5 min-h-0 overflow-hidden">
+      <main className="px-8 py-8 relative z-10">
+        <div className="mx-auto max-w-5xl space-y-8">
           <Link
             href={APP_ROUTES.Activities}
-            className="inline-flex items-center gap-1.5 text-purple-600 font-bold hover:text-purple-800 hover:-translate-x-1 transition-transform bg-card px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full shadow-sm border border-border w-fit text-xs sm:text-sm shrink-0"
+            className="inline-flex items-center gap-2 text-purple-600 font-bold hover:text-purple-800 hover:-translate-x-1 transition-transform bg-card px-4 py-2 rounded-full shadow-sm border border-border w-fit"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back{" "}
-            <span className="hidden sm:inline">to Activities</span>
+            <ArrowLeft className="h-5 w-5" /> Back to Activities
           </Link>
 
-          <div className="space-y-1 shrink-0">
-            <div className="flex items-center justify-between text-xs text-purple-600 font-bold">
-              <span className="truncate max-w-[120px] sm:max-w-none text-[11px] sm:text-xs">
-                {puzzleTitle} 🧩
-              </span>
-              <span className="flex items-center gap-1 rounded-full bg-card px-2 py-0.5 shadow-sm border border-border text-[10px] sm:text-xs">
-                <Brain className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-500" /> Level{" "}
-                {currentPuzzle + 1} of {safePuzzles.length}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-sm text-purple-600 font-bold">
+              <span>{puzzleTitle} 🧩</span>
+              <span className="flex items-center gap-2 rounded-full bg-card px-3 py-1 shadow-sm border border-border">
+                <Brain className="h-4 w-4 text-purple-500" /> Level {currentPuzzle + 1} of{" "}
+                {safePuzzles.length}
               </span>
             </div>
             <Progress
               value={progress}
-              className="h-1.5 rounded-full bg-purple-500/10 [&>div]:bg-purple-500"
+              className="h-3 rounded-full bg-purple-500/10 [&>div]:bg-purple-500"
             />
           </div>
 
-          <ActivityCard className="border-4 border-purple-500/20 shadow-xl rounded-[2rem] my-2">
-            <ActivityCardContent>
-              <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center text-center gap-4 my-auto">
-                <div>
-                  <h2 className="text-sm sm:text-lg md:text-2xl font-black text-foreground mb-0.5">
-                    What comes next?
-                  </h2>
-                  <p className="text-purple-500 font-semibold text-xs sm:text-sm">{puzzle.hint}</p>
-                </div>
-
-                <div className="flex justify-center gap-1 sm:gap-3 text-lg sm:text-3xl md:text-5xl bg-background/50 p-2 sm:p-4 rounded-xl border-2 border-border w-full">
-                  {puzzle.sequence.map((item, i) => (
-                    <span key={i} className={item === "?" ? "text-purple-400 animate-pulse" : ""}>
-                      {item}
-                    </span>
-                  ))}
-                </div>
+          <Card className="border-4 border-purple-500/20 shadow-xl rounded-[2rem] bg-card">
+            <CardContent className="p-8 text-center space-y-8">
+              <div className="mx-auto bg-purple-500/10 w-20 h-20 rounded-full flex items-center justify-center">
+                <Puzzle className="h-10 w-10 text-purple-600" />
               </div>
-            </ActivityCardContent>
-          </ActivityCard>
+              <div>
+                <h2 className="text-3xl font-black text-foreground mb-2">What comes next?</h2>
+                <p className="text-purple-500 font-medium">{puzzle.hint}</p>
+              </div>
 
-          <div className="grid grid-cols-3 gap-2 shrink-0">
+              <div className="flex justify-center gap-4 text-5xl bg-background/50 p-8 rounded-[2rem] shadow-inner border-2 border-border">
+                {puzzle.sequence.map((item, i) => (
+                  <span key={i} className={item === "?" ? "text-purple-400 animate-pulse" : ""}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 md:grid-cols-3">
             {puzzle.options.map((option) => {
               const isSelected = selected === option.id;
               const isCorrect = option.correct;
@@ -207,44 +203,42 @@ export default function LogicPuzzlesPage({
                     }
                   }}
                   disabled={selected !== null}
-                  className={`relative flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 p-2 sm:p-4 text-lg sm:text-3xl transition-all duration-300 ${
+                  className={`relative flex flex-col items-center justify-center gap-4 rounded-[2rem] border-4 p-8 text-4xl transition-all duration-300 ${
                     showSuccess
-                      ? "border-green-500 bg-green-500/10 scale-102 animate-in zoom-in-95 duration-200"
+                      ? "border-green-500 bg-green-500/10 scale-105 animate-in zoom-in-95 duration-200"
                       : showError
                         ? "border-red-500 bg-red-500/10 opacity-50"
-                        : "border-purple-500/20 bg-card hover:-translate-y-0.5 hover:shadow-sm hover:border-purple-500/50"
+                        : "border-purple-500/20 bg-card hover:-translate-y-2 hover:shadow-xl hover:border-purple-500/50"
                   } ${selected !== null ? "cursor-default" : "cursor-pointer"}`}
                 >
                   {option.label}
                   {showSuccess && (
-                    <CheckCircle2 className="absolute top-1 right-1 h-3.5 w-3.5 sm:h-5 sm:w-5 text-green-500 animate-in zoom-in-50 duration-200" />
+                    <CheckCircle2 className="absolute top-4 right-4 h-8 w-8 text-green-500 animate-in zoom-in-50 duration-200" />
                   )}
                 </button>
               );
             })}
           </div>
 
-          <div className="min-h-0 flex justify-center shrink-0 mt-2">
-            {selected && (
-              <div className="flex justify-center animate-in fade-in slide-in-from-bottom-4">
-                {currentPuzzle === safePuzzles.length - 1 ? (
-                  <Button
-                    onClick={handleFinish}
-                    className="h-8 px-6 rounded-full bg-green-600 hover:bg-green-700 text-xs font-bold shadow-[0_3px_0px_0px_#15803d] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-                  >
-                    Continue 🎉
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleNext}
-                    className="h-8 px-6 rounded-full bg-purple-600 hover:bg-purple-700 text-xs font-bold shadow-[0_3px_0px_0px_#581c87] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-                  >
-                    Next Puzzle <Star className="ml-1 h-3.5 w-3.5" />
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
+          {selected && (
+            <div className="flex justify-center animate-in fade-in slide-in-from-bottom-4">
+              {currentPuzzle === safePuzzles.length - 1 ? (
+                <Button
+                  onClick={handleFinish}
+                  className="h-16 px-12 rounded-full bg-green-600 hover:bg-green-700 text-xl font-bold shadow-[0_8px_0px_0px_#15803d] active:translate-y-2 active:shadow-none transition-all cursor-pointer"
+                >
+                  Continue 🎉
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleNext}
+                  className="h-16 px-12 rounded-full bg-purple-600 hover:bg-purple-700 text-xl font-bold shadow-[0_8px_0px_0px_#581c87] active:translate-y-2 active:shadow-none transition-all cursor-pointer"
+                >
+                  Next Puzzle <Star className="ml-2 h-6 w-6" />
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </main>
 

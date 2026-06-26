@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getCurrentDashboardProfile } from "@/lib/services/kid/dashboard.actions";
 import { getTeacherDashboardData } from "@/lib/services/kid/classroom.actions";
 import { createClient } from "@/lib/supabase/server";
 import TeacherDashboardContainer from "@/components/teacher/home/TeacherDashboardContainer";
+import { TeacherDashboardSkeleton } from "@/components/shared/skeletonLoading";
 
 interface TeacherDashboardAnalyticsResponse {
   published_assignments_count: number;
@@ -125,5 +127,9 @@ async function TeacherDashboardContent() {
 }
 
 export default async function TeacherDashboardPage() {
-  return <TeacherDashboardContent />;
+  return (
+    <Suspense fallback={<TeacherDashboardSkeleton />}>
+      <TeacherDashboardContent />
+    </Suspense>
+  );
 }

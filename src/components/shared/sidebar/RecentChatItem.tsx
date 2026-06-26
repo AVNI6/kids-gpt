@@ -62,7 +62,7 @@ const RecentChatItem = React.memo(
               isActive ? "bg-sidebar-accent text-sky-500" : "text-sidebar-foreground"
             )}
           >
-            <span className="min-w-0 flex-1 whitespace-nowrap overflow-hidden text-ellipsis text-sm pointer-events-none mr-2">
+            <span className="whitespace-nowrap overflow-hidden text-sm pointer-events-none truncate mr-2">
               {session.title}
             </span>
 

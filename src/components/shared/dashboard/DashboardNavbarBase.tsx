@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import NotificationBell, { type NotificationItem } from "./NotificationBell";
+import MobileNavDrawer from "./MobileNavDrawer";
 import type { NavItemConfig } from "@/config/navigation/kid-nav";
 
 interface DashboardNavbarBaseProps {
@@ -39,6 +41,7 @@ export default function DashboardNavbarBase({
   isLinkActive,
 }: DashboardNavbarBaseProps) {
   const { toggleSidebar } = useSidebar();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Logo branding and mobile triggers
   const brandText = pathname.startsWith("/dashboard/kid")
@@ -53,6 +56,9 @@ export default function DashboardNavbarBase({
     role === "teacher"
       ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300"
       : "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300";
+
+  const toggleSidebarRing =
+    role === "teacher" ? "focus:ring-indigo-500/20" : "focus:ring-sky-500/20";
 
   const sidebarBtnBg = "bg-sky-500 hover:bg-sky-600 shadow-sky-500/20";
 
@@ -77,7 +83,7 @@ export default function DashboardNavbarBase({
             )}
 
             <div className="flex items-center shrink-0">
-              <span className="font-extrabold text-card-title bg-linear-to-r from-sky-500 to-sky-700 bg-clip-text text-transparent">
+              <span className="font-extrabold text-xl tracking-tight bg-linear-to-r from-sky-500 to-sky-700 bg-clip-text text-transparent">
                 {brandText}
               </span>
             </div>
@@ -94,9 +100,8 @@ export default function DashboardNavbarBase({
                   <Link
                     key={item.href}
                     href={getNavItemHref(item)}
-                    prefetch={false}
                     className={cn(
-                      "px-4 py-2 rounded-full text-body-sm font-bold transition-all cursor-pointer flex items-center gap-2",
+                      "px-4 py-2 rounded-full text-sm font-bold transition-all cursor-pointer flex items-center gap-2",
                       active
                         ? activeLinkClass
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
@@ -104,7 +109,7 @@ export default function DashboardNavbarBase({
                   >
                     <span>{item.label}</span>
                     {isClassrooms && dueCount > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-body-xs font-bold text-white shadow-sm ring-1 ring-white dark:ring-slate-950">
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-slate-950">
                         {dueCount}
                       </span>
                     )}
@@ -126,10 +131,34 @@ export default function DashboardNavbarBase({
                   isLoading={isLoadingNotifications}
                 />
               )}
+
+              {/* Mobile Navigation Drawer Toggle */}
+              {pathname.startsWith("/dashboard") && navItems && navItems.length > 0 && (
+                <button
+                  className={cn(
+                    "lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 cursor-pointer",
+                    toggleSidebarRing
+                  )}
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label="Toggle navigation menu"
+                >
+                  <Menu className="size-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
+      {/* Mobile Drawer (general page navigation sliding from the right) */}
+      <MobileNavDrawer
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        role={role}
+        navItems={navItems}
+        getNavItemHref={getNavItemHref}
+        isLinkActive={isLinkActive}
+        dueCount={dueCount}
+      />
     </nav>
   );
 }

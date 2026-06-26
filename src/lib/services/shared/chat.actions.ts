@@ -49,8 +49,7 @@ export async function fetchUserSessions(
 
 export async function createChatSession(
   title: string = "New chat",
-  userId?: string,
-  customId?: string
+  userId?: string
 ): Promise<ChatSessionRow> {
   let finalUserId = userId;
   if (!finalUserId) {
@@ -64,7 +63,6 @@ export async function createChatSession(
   const { data, error } = await supabase
     .from("chat_sessions")
     .insert({
-      id: customId || undefined,
       user_id: finalUserId,
       title,
       is_active: true,
@@ -87,7 +85,6 @@ export async function saveChatMessage(
     model?: string;
     responseTime?: number;
     attachmentUrl?: string;
-    status?: "pending" | "streaming" | "completed" | "failed";
   },
   userId?: string
 ) {
@@ -110,16 +107,10 @@ export async function saveChatMessage(
     generated_by_model: metadata?.model,
     response_time_ms: metadata?.responseTime ? Math.round(metadata.responseTime) : undefined,
     attachment_url: metadata?.attachmentUrl,
-    status: metadata?.status || "completed",
   });
 
   if (error) {
-    console.error("Error saving chat message:", {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
+    console.error("Error saving chat message:", error);
     throw error;
   }
 
@@ -394,12 +385,62 @@ export async function trackDailyUsage(
   }
 }
 
-// Helper to pre-sign URLs in bulk on the server (now no-op for public bucket)
+// Helper to pre-sign URLs in bulk on the server
 export async function preSignMessageUrls(
   messages: ChatMessageRow[],
-  _supabaseClient: unknown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabaseClient: any
 ): Promise<ChatMessageRow[]> {
-  void _supabaseClient;
+  const pathsToSign: string[] = [];
+  const msgMap = new Map<string, Array<{ type: "content" | "attachment"; index: number }>>();
+
+  messages.forEach((msg, idx) => {
+    // 1. Check attachment URL
+    if (msg.attachment_url && msg.attachment_url.includes("/object/public/materials/")) {
+      const path = msg.attachment_url.split("/object/public/materials/")[1];
+      if (path) {
+        pathsToSign.push(path);
+        const list = msgMap.get(path) || [];
+        list.push({ type: "attachment", index: idx });
+        msgMap.set(path, list);
+      }
+    }
+    // 2. Check content (if message content contains a materials URL)
+    if (msg.content && msg.content.includes("/object/public/materials/")) {
+      const path = msg.content.split("/object/public/materials/")[1];
+      if (path) {
+        pathsToSign.push(path);
+        const list = msgMap.get(path) || [];
+        list.push({ type: "content", index: idx });
+        msgMap.set(path, list);
+      }
+    }
+  });
+
+  if (pathsToSign.length > 0) {
+    try {
+      const { data: signedUrls, error } = await supabaseClient.storage
+        .from("materials")
+        .createSignedUrls(pathsToSign, 900);
+      if (!error && signedUrls) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        signedUrls.forEach((item: any) => {
+          const list = msgMap.get(item.path);
+          if (list && item.signedUrl) {
+            list.forEach((mapping) => {
+              if (mapping.type === "attachment") {
+                messages[mapping.index].attachment_url = item.signedUrl;
+              } else {
+                messages[mapping.index].content = item.signedUrl;
+              }
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Bulk pre-signing failed:", err);
+    }
+  }
   return messages;
 }
 

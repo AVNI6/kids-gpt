@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { calculateAge } from "@/lib/utils/kid/childAge";
 import ChatFooter, { ChatFooterRef } from "./ChatFooter";
 import ChatMessageList from "./ChatMessageList";
@@ -11,15 +11,14 @@ import { useChatMessages } from "./useChatMessages";
 import { useChatPdf } from "./useChatPdf";
 import { useChatDocx } from "./useChatDocx";
 import { useChatSender } from "./useChatSender";
-import { useTextToSpeech } from "@/hooks/shared/useTextToSpeech";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setCurrentSessionId } from "@/store/slices/chatSlice";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/components/ui/sidebar";
+import { getSessionManager } from "@/lib/ai/session-manager";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { UserProfile } from "@/types/user";
-import { useChatStore } from "./chatStore";
 
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
 
@@ -46,25 +45,13 @@ export default function ChatInterface() {
   const { toggleSidebar, openMobile } = useSidebar();
   const { user, userProfile, isUserLoggedIn, userRole, isLoading: isLoadingAuth } = useAuth();
 
-  const sessionOwnerProfile = useChatStore((s) => s.sessionOwnerProfile);
-
-  // Sync Redux chat data to Zustand chatStore
-  useEffect(() => {
-    useChatStore.getState().setMessages(messages);
-  }, [messages]);
-
-  useEffect(() => {
-    useChatStore.getState().setSessions(sessions);
-  }, [sessions]);
-
-  useEffect(() => {
-    useChatStore.getState().setCurrentSessionId(currentSessionId);
-  }, [currentSessionId]);
+  const [sessionOwnerProfile, setSessionOwnerProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     let active = true;
     if (!currentSessionId) {
-      useChatStore.getState().setSessionOwnerProfile(null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSessionOwnerProfile(null);
       return;
     }
 
@@ -78,24 +65,25 @@ export default function ChatInterface() {
           .maybeSingle();
 
         if (sessionError || !sessionData) {
-          if (active) useChatStore.getState().setSessionOwnerProfile(null);
+          if (active) setSessionOwnerProfile(null);
           return;
         }
 
-        const profileRaw = (sessionData as { profile?: unknown }).profile;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const profileRaw = (sessionData as any).profile;
         const profileData = Array.isArray(profileRaw) ? profileRaw[0] : profileRaw;
 
         if (!profileData) {
-          if (active) useChatStore.getState().setSessionOwnerProfile(null);
+          if (active) setSessionOwnerProfile(null);
           return;
         }
 
         if (active) {
-          useChatStore.getState().setSessionOwnerProfile(profileData as UserProfile);
+          setSessionOwnerProfile(profileData as UserProfile);
         }
       } catch (err) {
         console.error("Failed to fetch session owner profile:", err);
-        if (active) useChatStore.getState().setSessionOwnerProfile(null);
+        if (active) setSessionOwnerProfile(null);
       }
     };
 
@@ -111,27 +99,15 @@ export default function ChatInterface() {
       ? (calculateAge(userProfile.date_of_birth) ?? undefined)
       : undefined;
 
-  const { isLoading, isGenerating, loadingText, sendMessage, stopGenerating } = useChatSender({
-    messages,
+  const { isSessionLoading, hasMore, isLoadingMore, loadMore } = useChatMessages({
     currentSessionId,
+    messages,
     isLoadingAuth,
-    user,
-    age: childAge,
-    userRole,
+    isUserLoggedIn,
     justCreatedSessionRef,
+    userRole,
+    userId: user?.id ?? null,
   });
-
-  const { isSessionLoading, hasMore, isLoadingMore, loadMore, isPolling, cancelPolling } =
-    useChatMessages({
-      currentSessionId,
-      messages,
-      isLoadingAuth,
-      isUserLoggedIn,
-      justCreatedSessionRef,
-      userRole,
-      userId: user?.id ?? null,
-      isGenerating,
-    });
 
   const { pdfStates, handleDownloadPDF } = useChatPdf({
     messages,
@@ -150,94 +126,22 @@ export default function ChatInterface() {
     user,
   });
 
-  const { speak, stop, pause, resume } = useTextToSpeech();
+  const { isLoading, loadingText, sendMessage, stopGenerating } = useChatSender({
+    messages,
+    currentSessionId,
+    isLoadingAuth,
+    user,
+    age: childAge,
+    userRole,
+    justCreatedSessionRef,
+  });
 
   const handleSend = useCallback(
-    (
-      text: string,
-      img: string | null,
-      fileText: string | null,
-      fileMeta: string | null,
-      isVoiceInput?: boolean,
-      attachedFile?: File | null
-    ) => {
-      void sendMessage(text, img, fileText, fileMeta, isVoiceInput, attachedFile);
+    (text: string, img: string | null, fileText: string | null, fileMeta: string | null) => {
+      void sendMessage(text, img, fileText, fileMeta);
     },
     [sendMessage]
   );
-
-  const handleRetry = useCallback(() => {
-    void sendMessage("", null, null, null, undefined, null, true);
-  }, [sendMessage]);
-
-  const handleStop = useCallback(() => {
-    stopGenerating();
-    cancelPolling();
-  }, [stopGenerating, cancelPolling]);
-
-  const lastMsg = messages[messages.length - 1];
-  const isLatestStreaming = lastMsg?.role === "model" && lastMsg?.status === "streaming";
-
-  const effectiveIsGenerating = isGenerating || isPolling || isLatestStreaming;
-  const effectiveIsLoading =
-    isLoading || (isPolling && !isLatestStreaming) || (isLatestStreaming && !lastMsg?.content);
-
-  // Sync speech actions to Zustand (actions don't change frequently)
-  useEffect(() => {
-    useChatStore.getState().setSpeechActions({ speak, stop, pause, resume });
-  }, [speak, stop, pause, resume]);
-
-  // Sync Download state to Zustand
-  useEffect(() => {
-    useChatStore.getState().setDownloadState({
-      pdfStates,
-      docxStates,
-      handleDownloadPDF,
-      handleDownloadDocx,
-    });
-  }, [pdfStates, docxStates, handleDownloadPDF, handleDownloadDocx]);
-
-  // Sync retry action to Zustand
-  useEffect(() => {
-    useChatStore.getState().setOnRetry(handleRetry);
-    return () => {
-      useChatStore.getState().setOnRetry(null);
-    };
-  }, [handleRetry]);
-
-  const wasGeneratingRef = useRef(false);
-
-  // Auto-play TTS for voice input when assistant response is fully received
-  useEffect(() => {
-    if (isGenerating) {
-      wasGeneratingRef.current = true;
-    } else if (wasGeneratingRef.current) {
-      wasGeneratingRef.current = false;
-      if (messages.length >= 2) {
-        const lastMsg = messages[messages.length - 1];
-        const secondLastMsg = messages[messages.length - 2];
-        if (
-          lastMsg &&
-          lastMsg.role === "model" &&
-          secondLastMsg &&
-          secondLastMsg.role === "user" &&
-          secondLastMsg.isVoiceInput &&
-          lastMsg.content &&
-          !lastMsg.isImage
-        ) {
-          speak(lastMsg.id, lastMsg.content);
-        }
-      }
-    }
-  }, [isGenerating, messages, speak]);
-
-  // Stop speaking when currentSessionId changes or component unmounts
-  useEffect(() => {
-    stop();
-    return () => {
-      stop();
-    };
-  }, [currentSessionId, stop]);
 
   useEffect(() => {
     // 1. If auth is loading, wait before syncing
@@ -256,6 +160,13 @@ export default function ChatInterface() {
       dispatch(setCurrentSessionId(urlSessionId));
     }
   }, [urlSessionId, isUserLoggedIn, isLoadingAuth, dispatch]); // ← currentSessionId intentionally omitted
+
+  // Abort in-flight requests when component unmounts
+  useEffect(() => {
+    return () => {
+      getSessionManager().abortActiveRequest();
+    };
+  }, []);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -327,20 +238,25 @@ export default function ChatInterface() {
         ) : (
           <ChatMessageList
             messages={messages}
-            isLoading={effectiveIsLoading}
+            isLoading={isLoading}
             loadingText={loadingText}
+            pdfStates={pdfStates}
+            handleDownloadPDF={handleDownloadPDF}
+            docxStates={docxStates}
+            handleDownloadDocx={handleDownloadDocx}
             messagesEndRef={messagesEndRef}
             hasMore={hasMore}
             isLoadingMore={isLoadingMore}
             onLoadMore={loadMore}
+            sessionOwnerProfile={sessionOwnerProfile}
           />
         )}
 
         <ChatFooter
           ref={chatFooterRef}
           onSend={handleSend}
-          onStop={handleStop}
-          isLoading={effectiveIsGenerating}
+          onStop={stopGenerating}
+          isLoading={isLoading}
           isAuthLoading={isLoadingAuth}
           currentSessionId={currentSessionId}
         />
