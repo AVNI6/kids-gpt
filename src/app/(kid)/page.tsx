@@ -1,6 +1,4 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import ChatInterface from "@/components/shared/chat-interface/ChatInterface";
 import ChatSkeleton from "@/components/shared/chat-interface/ChatSkeleton";
 

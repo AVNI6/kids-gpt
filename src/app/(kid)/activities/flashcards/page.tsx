@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { RefreshCcw, CheckCircle2, RotateCcw, ArrowLeft, Sparkles } from "lucide-react";
+import { RefreshCcw, CheckCircle2, RotateCcw, Sparkles, Rocket, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ActivityCard, ActivityCardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import VictoryModal from "@/components/shared/VictoryModal";
@@ -130,123 +130,124 @@ export default function FlashcardsPage({
   };
 
   return (
-    <div className="bg-background flex flex-col relative h-full max-h-full overflow-hidden">
+    <div className="h-full bg-background flex flex-col relative min-h-screen overflow-y-auto md:overflow-hidden">
       <div className="absolute top-20 left-10 h-32 w-32 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-20 right-10 h-48 w-48 rounded-full bg-green-500/10 blur-3xl pointer-events-none" />
 
-      <main className="relative z-10 flex-1 px-4 py-4 md:px-6 flex flex-col min-h-0 overflow-hidden">
-        <div className="mx-auto max-w-4xl w-full flex-1 flex flex-col justify-start gap-4 sm:gap-5 min-h-0 overflow-hidden">
+      <main className="relative z-10 flex-1 px-4 py-4 md:px-8 md:py-5 flex flex-col min-h-0 overflow-y-auto md:overflow-hidden">
+        <div className="mx-auto max-w-4xl w-full h-full flex flex-col justify-between gap-3 min-h-0">
           <div className="flex items-center justify-between shrink-0">
             <Link
               href={APP_ROUTES.Activities}
-              className="inline-flex items-center gap-1.5 text-sky-600 font-bold hover:text-sky-800 hover:-translate-x-1 transition-transform bg-card px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full shadow-sm border border-border w-fit text-xs sm:text-sm"
+              className="inline-flex items-center gap-2 text-sky-600 font-bold hover:text-sky-800 hover:-translate-x-1 transition-transform bg-card px-4 py-1.5 rounded-full shadow-sm border border-border w-fit text-sm"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> Back{" "}
-              <span className="hidden sm:inline">to Activities</span>
+              <ArrowLeft className="h-4 w-4" /> Back to Activities
             </Link>
 
-            <div className="rounded-full bg-card px-2.5 py-1 sm:px-4 sm:py-1 shadow-sm border border-border text-[10px] sm:text-xs">
+            <div className="rounded-full bg-card px-4 py-1 shadow-sm border border-border text-xs">
               <span className="font-bold text-sky-600">
                 {deckCompleted ? "Finished!" : `Card ${currentCard + 1} of ${flashcards.length}`}
               </span>
             </div>
           </div>
-          <div className="space-y-1 shrink-0">
+          <div className="space-y-1.5 shrink-0">
             <div className="flex justify-between items-end">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground hidden sm:block">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Current Deck
                 </p>
-                <h2 className="text-sm sm:text-lg md:text-2xl font-black text-foreground">
-                  {deckTitle}
-                </h2>
+                <h2 className="text-xl md:text-2xl font-black text-foreground">{deckTitle}</h2>
               </div>
             </div>
-            <Progress value={progress} className="h-1.5 rounded-full bg-muted" />
+            <Progress value={progress} className="h-2 rounded-full bg-muted" />
           </div>
 
-          {card?.fact && (
-            <div className="rounded-2xl border-2 border-sky-500/20 bg-sky-50/50 dark:bg-sky-950/20 px-4 py-2.5 shadow-xs max-w-3xl mx-auto w-full shrink-0 animate-in fade-in slide-in-from-top-2">
-              <p className="text-xs font-bold text-sky-600 dark:text-sky-400">
-                <span className="font-extrabold uppercase mr-1.5">Did you know?</span>
-                {card.fact}
-              </p>
+          <div className="relative flex-1 flex flex-col min-h-0 mt-2">
+            <div className="absolute -top-12 right-2 md:right-4 z-20">
+              <div className="rounded-2xl border-2 border-sky-500/20 bg-card px-3 py-1.5 shadow-md max-w-50">
+                <p className="text-xs font-bold text-sky-600 truncate-3-lines">{card?.fact}</p>
+              </div>
             </div>
-          )}
 
-          <div className="flex-1 flex flex-col min-h-0 mt-2">
-            <ActivityCard
-              className="border-4 border-sky-500 cursor-pointer select-none transition-colors hover:border-sky-600/80 active:scale-[0.998]"
-              onClick={() => setFlipped(!flipped)}
-            >
-              <ActivityCardContent>
+            <Card className="border-4 border-sky-500 shadow-md rounded-[20px] bg-card flex-1 flex flex-col min-h-40 md:min-h-55 overflow-hidden mt-6">
+              <CardContent className="flex flex-col items-center justify-center p-6 text-center flex-1 min-h-0 overflow-y-auto">
                 {!flipped ? (
-                  <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center text-center gap-4 my-auto">
-                    <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-foreground leading-tight">
+                  <>
+                    <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-[20px] bg-sky-500/10 shrink-0">
+                      <Rocket className="h-10 w-10 text-sky-600" />
+                    </div>
+
+                    <h2 className="text-2xl md:text-3xl font-black text-foreground leading-tight max-w-lg">
                       {card?.question}
                     </h2>
 
-                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider shrink-0 animate-pulse">
-                      Click anywhere on the card to flip 🌟
+                    <p className="mt-4 text-[10px] font-bold uppercase text-muted-foreground tracking-wider shrink-0 animate-pulse">
+                      Click to flip
                     </p>
-                  </div>
+                  </>
                 ) : (
-                  <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center text-center gap-4 my-auto">
-                    <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-green-600 leading-tight">
+                  <>
+                    <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-[20px] bg-green-500/10 shrink-0">
+                      <Sparkles className="h-10 w-10 text-green-600" />
+                    </div>
+
+                    <h2 className="text-3xl md:text-4xl font-black text-green-600 leading-tight max-w-lg">
                       {card?.answer}
                     </h2>
-                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider shrink-0">
-                      Click anywhere to flip back
-                    </p>
-                  </div>
+                  </>
                 )}
-              </ActivityCardContent>
-            </ActivityCard>
-          </div>
+              </CardContent>
+            </Card>
 
-          <div className="mt-4 shrink-0">
-            {!flipped ? (
-              <button
-                type="button"
-                onClick={() => setFlipped(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-sky-500/30 hover:border-sky-500 bg-card hover:bg-sky-500/5 text-sky-600 font-extrabold text-sm sm:text-base cursor-pointer shadow-xs transition-all active:translate-y-0.5 active:shadow-none"
+            <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 z-20 shrink-0">
+              <Button
+                onClick={() => setFlipped(!flipped)}
+                className="h-10 rounded-xl px-6 text-sm font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-md active:translate-y-0.5 active:shadow-sm"
               >
-                <RefreshCcw className="h-4.5 w-4.5 shrink-0" />
-                <span>Flip Card</span>
-              </button>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={handleReview}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-red-500/30 hover:border-red-500 bg-card hover:bg-red-500/5 text-red-600 font-extrabold text-sm sm:text-base cursor-pointer shadow-xs transition-all active:translate-y-0.5"
-                >
-                  <RotateCcw className="h-4.5 w-4.5 shrink-0" />
-                  <span>Study Again</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleMastered}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-green-500/30 hover:border-green-500 bg-card hover:bg-green-500/5 text-green-600 font-extrabold text-sm sm:text-base cursor-pointer shadow-xs transition-all active:translate-y-0.5"
-                >
-                  <CheckCircle2 className="h-4.5 w-4.5 shrink-0" />
-                  <span>I Know This</span>
-                </button>
-              </div>
-            )}
+                <RefreshCcw className="mr-1.5 h-4 w-4" />
+                Flip Card
+              </Button>
+            </div>
           </div>
 
-          <div className="my-1 flex justify-center gap-3 shrink-0 text-xs font-bold">
-            <div className="rounded-full bg-card px-2 sm:px-4 py-1.5 shadow-sm border border-border">
+          <div className="mt-8 grid grid-cols-2 gap-4 shrink-0">
+            <Card
+              onClick={handleReview}
+              className="border-2 border-red-500/50 rounded-[16px] shadow-sm cursor-pointer hover:bg-red-500/5 transition-all bg-card"
+            >
+              <CardContent className="flex flex-col items-center gap-1.5 py-3 text-center">
+                <div className="rounded-full bg-red-500/10 p-2">
+                  <RotateCcw className="h-5 w-5 text-red-600" />
+                </div>
+                <h3 className="text-base font-black text-red-600">Study Again</h3>
+                <p className="text-[10px] text-muted-foreground font-medium">Need more practice</p>
+              </CardContent>
+            </Card>
+
+            <Card
+              onClick={handleMastered}
+              className="border-2 border-green-500/50 rounded-[16px] shadow-sm cursor-pointer hover:bg-green-500/5 transition-all bg-card"
+            >
+              <CardContent className="flex flex-col items-center gap-1.5 py-3 text-center">
+                <div className="rounded-full bg-green-500/10 p-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                </div>
+                <h3 className="text-base font-black text-green-600">I Know This</h3>
+                <p className="text-[10px] text-muted-foreground font-medium">Mastered it!</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="mt-1.5 flex justify-center gap-3 shrink-0 text-xs font-bold">
+            <div className="rounded-full bg-card px-4 py-1.5 shadow-sm border border-border">
               <span className="text-green-600">{masteredIds.length} Mastered</span>
             </div>
 
-            <div className="rounded-full bg-card px-2 sm:px-4 py-1.5 shadow-sm border border-border">
+            <div className="rounded-full bg-card px-4 py-1.5 shadow-sm border border-border">
               <span className="text-red-500">{reviewIds.length} Review</span>
             </div>
 
-            <div className="rounded-full bg-card px-2 sm:px-4 py-1.5 shadow-sm border border-border">
+            <div className="rounded-full bg-card px-4 py-1.5 shadow-sm border border-border">
               <span className="text-sky-600">{flashcards.length - currentCard} Remaining</span>
             </div>
           </div>

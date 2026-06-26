@@ -41,7 +41,7 @@ interface DashboardContextType {
   deleteAllNotifications: () => Promise<void>;
 }
 
-export const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
+const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
 const fetchNotifications = async (parentUserId: string, limit?: number) => {
   if (!parentUserId) return { items: [], unreadCount: 0 };
@@ -282,33 +282,36 @@ export function DashboardProvider({
     updateNotificationsRef.current = updateNotifications;
   }, [updateNotifications]);
 
-  const markAsRead = useCallback(async (id: string) => {
-    const previous = notificationsRef.current;
-    // Check if this item was unread in the preview so we can decrement the real total count
-    const wasUnread = previous.find((n) => n.id === id)?.is_read === false;
+  const markAsRead = useCallback(
+    async (id: string) => {
+      const previous = notificationsRef.current;
+      // Check if this item was unread in the preview so we can decrement the real total count
+      const wasUnread = previous.find((n) => n.id === id)?.is_read === false;
 
-    // Optimistic update: mark item read in preview list
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
-    // Decrement the real unread count by 1 (the true DB total, not just preview)
-    if (wasUnread) {
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    }
+      // Optimistic update: mark item read in preview list
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+      // Decrement the real unread count by 1 (the true DB total, not just preview)
+      if (wasUnread) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
 
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("parent_notifications")
-        .update({ is_read: true })
-        .eq("id", id);
+      try {
+        const supabase = createClient();
+        const { error } = await supabase
+          .from("parent_notifications")
+          .update({ is_read: true })
+          .eq("id", id);
 
-      if (error) throw error;
-    } catch (err) {
-      console.error("Failed to mark notification read:", err);
-      // Rollback
-      setNotifications(previous);
-      if (wasUnread) setUnreadCount((prev) => prev + 1);
-    }
-  }, []);
+        if (error) throw error;
+      } catch (err) {
+        console.error("Failed to mark notification read:", err);
+        // Rollback
+        setNotifications(previous);
+        if (wasUnread) setUnreadCount((prev) => prev + 1);
+      }
+    },
+    []
+  );
 
   const markAllAsRead = useCallback(async () => {
     if (!initialProfile.user_id) return;
@@ -335,26 +338,29 @@ export function DashboardProvider({
     }
   }, [initialProfile.user_id]);
 
-  const deleteNotification = useCallback(async (id: string) => {
-    const previous = notificationsRef.current;
-    const wasUnread = previous.find((n) => n.id === id)?.is_read === false;
+  const deleteNotification = useCallback(
+    async (id: string) => {
+      const previous = notificationsRef.current;
+      const wasUnread = previous.find((n) => n.id === id)?.is_read === false;
 
-    // Optimistic update
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-    if (wasUnread) setUnreadCount((prev) => Math.max(0, prev - 1));
+      // Optimistic update
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      if (wasUnread) setUnreadCount((prev) => Math.max(0, prev - 1));
 
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.from("parent_notifications").delete().eq("id", id);
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("parent_notifications").delete().eq("id", id);
 
-      if (error) throw error;
-    } catch (err) {
-      console.error("Failed to delete notification:", err);
-      // Rollback
-      setNotifications(previous);
-      if (wasUnread) setUnreadCount((prev) => prev + 1);
-    }
-  }, []);
+        if (error) throw error;
+      } catch (err) {
+        console.error("Failed to delete notification:", err);
+        // Rollback
+        setNotifications(previous);
+        if (wasUnread) setUnreadCount((prev) => prev + 1);
+      }
+    },
+    []
+  );
 
   const deleteAllNotifications = useCallback(async () => {
     if (!initialProfile.user_id) return;

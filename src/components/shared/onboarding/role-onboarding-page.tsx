@@ -135,7 +135,7 @@ export function RoleOnboardingPage({ role }: Props) {
         {/* Right Side: Onboarding Card */}
         <Card className="rounded-[40px] border-2 border-border/50 bg-card/90 text-card-foreground p-8 shadow-[0_40px_80px_-24px_rgba(0,101,141,0.15)] backdrop-blur-xl sm:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar dark:border-slate-800">
           <div className="mb-6 text-center lg:text-left">
-            <h2 className="text-2xl sm:text-4xl font-black text-foreground tracking-tight">
+            <h2 className="text-4xl font-black text-foreground tracking-tight">
               {role === "parent" ? "Family Setup" : "Classroom Setup"}
             </h2>
             <p className="mt-1 text-base font-medium text-muted-foreground">

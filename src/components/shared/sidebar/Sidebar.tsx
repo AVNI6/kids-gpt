@@ -68,7 +68,7 @@ export default function Sidebar() {
   const [shareCopied, setShareCopied] = useState(false);
 
   const { setTheme, theme } = useTheme();
-  const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
+  const { state, toggleSidebar, isMobile } = useSidebar();
   const isOpen = state === "expanded" || isMobile;
 
   const [isLoadingMoreSessions, setIsLoadingMoreSessions] = useState(false);
@@ -141,8 +141,6 @@ export default function Sidebar() {
 
       const wasCurrentSession = currentSessionId === sessionId;
       if (wasCurrentSession) {
-        // Clear current session instantly to avoid stale UI while router transitions
-        dispatch(setCurrentSessionId(null));
         handleNewChat();
       }
 
@@ -163,14 +161,12 @@ export default function Sidebar() {
     if (!sessionToDelete) return;
     const targetSessionId = sessionToDelete;
 
-    // Instantly close the dialog for a highly responsive experience
-    setSessionToDelete(null);
-    setIsDeleting(false);
-
+    setIsDeleting(true);
     try {
       await handleDeleteSession(targetSessionId);
-    } catch (error) {
-      console.error("Failed to execute delete session:", error);
+    } finally {
+      setIsDeleting(false);
+      setSessionToDelete(null);
     }
   }, [sessionToDelete, handleDeleteSession]);
 
@@ -235,7 +231,7 @@ export default function Sidebar() {
                   toggleSidebar();
                 }
               }}
-              className="group/btn h-8 w-8 rounded-md bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95 cursor-pointer"
+              className="group/btn h-7 w-7 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95 cursor-pointer"
             >
               {isOpen ? (
                 <Sparkles className="w-4 h-4" />
@@ -265,7 +261,7 @@ export default function Sidebar() {
         </SidebarHeader>
 
         {/* Sidebar Navigation and Recent Chats Content */}
-        <SidebarContent className="flex flex-col flex-1 min-h-0 sm:pt-2 gap-4 px-0">
+        <SidebarContent className="flex flex-col flex-1 min-h-0 pt-2 gap-4 px-0">
           <SidebarNavigation
             isOpen={isOpen}
             isUserLoggedIn={isUserLoggedIn}
@@ -295,7 +291,6 @@ export default function Sidebar() {
               onLoadMoreSessions={handleLoadMoreSessions}
               hasMoreSessions={hasMoreSessions}
               isLoadingMoreSessions={isLoadingMoreSessions}
-              isInitialLoading={isInitialLoading}
             />
           )}
         </SidebarContent>

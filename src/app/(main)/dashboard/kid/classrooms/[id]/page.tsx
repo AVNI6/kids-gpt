@@ -1,4 +1,4 @@
-import { use } from "react";
+import { Suspense, use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
@@ -7,6 +7,7 @@ import {
   getStudentClassroomAssignments,
   getStudentClassroomAnnouncements,
 } from "@/lib/services/kid/classroom.actions";
+import { ClassroomWorkspaceSkeleton } from "@/components/shared/skeletonLoading";
 import KidClassroomWorkspaceClient from "@/components/kid/dashboard/KidClassroomWorkspaceClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
@@ -70,7 +71,9 @@ export default function KidClassroomDetailsPage({ params }: { params: Promise<{ 
 
   return (
     <main className="min-h-full bg-background px-4 py-4 text-slate-900 sm:px-6 sm:py-6 lg:px-8 dark:text-slate-50">
-      <StudentWorkspaceLoader classroomId={classroomId} />
+      <Suspense fallback={<ClassroomWorkspaceSkeleton />}>
+        <StudentWorkspaceLoader classroomId={classroomId} />
+      </Suspense>
     </main>
   );
 }

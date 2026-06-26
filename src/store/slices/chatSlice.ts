@@ -78,25 +78,19 @@ const chatSlice = createSlice({
       state,
       action: PayloadAction<{
         id: string;
-        content?: string;
+        content: string;
         attachmentUrl?: string;
         isImage?: boolean;
-        status?: "pending" | "streaming" | "completed" | "failed";
       }>
     ) => {
       const msg = state.messages.find((m) => m.id === action.payload.id);
       if (msg) {
-        if (action.payload.content !== undefined) {
-          msg.content = action.payload.content;
-        }
+        msg.content = action.payload.content;
         if (action.payload.attachmentUrl !== undefined) {
           msg.attachmentUrl = action.payload.attachmentUrl;
         }
         if (action.payload.isImage !== undefined) {
           msg.isImage = action.payload.isImage;
-        }
-        if (action.payload.status !== undefined) {
-          msg.status = action.payload.status;
         }
       }
     },

@@ -69,7 +69,8 @@ export default function DeleteAccountTab({ child, onSuccess }: DeleteAccountTabP
           </h4>
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
             This will immediately unlink {child.first_name}&apos;s profile from your dashboard. You
-            will lose access to their history log, streaks, AI metrics, and reports.
+            will lose access to their history log, streaks, AI metrics, and reports. The child will
+            not be deleted from the system, but the connection will be deactivated.
           </p>
         </div>
       </div>
@@ -77,8 +78,8 @@ export default function DeleteAccountTab({ child, onSuccess }: DeleteAccountTabP
       <div className="space-y-4 pt-2">
         <div className="space-y-2">
           <Label className="text-xs font-bold text-slate-600 dark:text-slate-400">
-            To confirm, type your child&apos;s first name
-            <span className="font-extrabold">{child.first_name}</span>:
+            To confirm, type your child&apos;s first name (
+            <span className="font-extrabold">{child.first_name}</span>):
           </Label>
           <Input
             type="text"

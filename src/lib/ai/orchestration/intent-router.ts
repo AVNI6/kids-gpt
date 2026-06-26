@@ -335,13 +335,9 @@ Output must be a single valid JSON object matching this schema:
       };
     }
   } catch (error) {
-    if (signal?.aborted) {
-      aiLogger.info("IntentRouter", "AI Intent Classification aborted by client");
-    } else {
-      aiLogger.error("IntentRouter", "AI Intent Classification failed", {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
+    aiLogger.error("IntentRouter", "AI Intent Classification failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 
   // Graceful fallback to chat if AI classification fails
