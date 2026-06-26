@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
       learnerContext,
       activityContext,
       sessionId,
-    }: ChatRequestBody = await req.json();
+      aiMessageId,
+    }: ChatRequestBody & { aiMessageId?: string } = await req.json();
 
     const supabase = await createClient();
 
@@ -64,7 +65,6 @@ export async function POST(req: NextRequest) {
       history: history || [],
       hasImage,
       hasDocument,
-      signal: req.signal,
     });
 
     // Enforce guest constraints (if guest user tries to perform a paid action)
@@ -431,7 +431,6 @@ export async function POST(req: NextRequest) {
         contents,
         systemPrompt: finalSystemPrompt,
         generationConfig,
-        signal: req.signal,
       });
 
       if (!response.success) {
@@ -524,7 +523,6 @@ export async function POST(req: NextRequest) {
         contents,
         systemPrompt: finalSystemPrompt,
         generationConfig,
-        signal: req.signal,
       });
 
       if (!response.success) {
@@ -597,16 +595,215 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const finalMessageId = aiMessageId || crypto.randomUUID();
+
+    // Create server-owned AbortController and store it in activeGenerations map
+    const serverAbortController = new AbortController();
+    const { activeGenerations } = await import("@/lib/ai/active-generations");
+    activeGenerations.set(finalMessageId, serverAbortController);
+
+    // Create assistant placeholder message in database immediately before generation starts
+    if (sessionId && user) {
+      try {
+        const { saveChatMessage } = await import("@/lib/services/shared/chat.actions.server");
+        await saveChatMessage(
+          sessionId,
+          "model",
+          "",
+          {
+            id: finalMessageId,
+            status: "streaming",
+            model: "gemini-2.5-flash",
+          },
+          user.id
+        );
+        aiLogger.info("ChatAPI", "Created assistant placeholder message in DB", {
+          messageId: finalMessageId,
+        });
+      } catch (placeholderErr) {
+        aiLogger.error("ChatAPI", "Failed to create assistant placeholder in DB", {
+          error: placeholderErr instanceof Error ? placeholderErr.message : String(placeholderErr),
+        });
+      }
+    }
+
+    const apiStartTime = Date.now();
+
     // Standard chat responses stream in real-time with fallback protection
     try {
       const stream = await generateAIResponseStream({
         contents,
         systemPrompt: finalSystemPrompt,
         generationConfig,
-        signal: req.signal,
+        signal: serverAbortController.signal,
       });
 
-      return new Response(stream, {
+      // Intercept the stream to capture response text and save to the database in finally block
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+      let fullResponseText = "";
+
+      let lastSaveTime = Date.now();
+      let lastSavedText = "";
+
+      const transformStream = new ReadableStream({
+        async start(controller) {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              try {
+                controller.enqueue(value);
+              } catch {
+                // Client connection closed, ignore and keep reading standard stream
+              }
+
+              const chunk = decoder.decode(value, { stream: true });
+              const lines = chunk.split("\n");
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed.startsWith("data: ")) {
+                  const dataStr = trimmed.substring(6);
+                  if (dataStr === "[DONE]") continue;
+                  try {
+                    const parsed = JSON.parse(dataStr);
+                    if (parsed.text) {
+                      fullResponseText += parsed.text;
+                    }
+                  } catch {
+                    fullResponseText += dataStr;
+                  }
+                }
+              }
+
+              // Progressive Database Save (at most once every 2 seconds)
+              const now = Date.now();
+              if (
+                now - lastSaveTime > 2000 &&
+                fullResponseText !== lastSavedText &&
+                sessionId &&
+                user
+              ) {
+                lastSaveTime = now;
+                lastSavedText = fullResponseText;
+                (async () => {
+                  try {
+                    const { updateChatMessage } =
+                      await import("@/lib/services/shared/chat.actions.server");
+                    await updateChatMessage(finalMessageId, {
+                      content: fullResponseText,
+                      status: "streaming",
+                    });
+                  } catch (progressErr) {
+                    console.error("Progressive save failed:", progressErr);
+                  }
+                })();
+              }
+            }
+          } catch (err) {
+            aiLogger.error("ChatAPI", "Error reading stream in customStream", {
+              error: err instanceof Error ? err.message : String(err),
+            });
+            // Mark message as failed in the DB
+            if (sessionId && user) {
+              try {
+                const { updateChatMessage } =
+                  await import("@/lib/services/shared/chat.actions.server");
+                await updateChatMessage(finalMessageId, {
+                  status: "failed",
+                });
+              } catch (failErr) {
+                console.error("Failed to mark message as failed in DB:", failErr);
+              }
+            }
+          } finally {
+            try {
+              controller.close();
+            } catch {
+              // Ignore if already closed
+            }
+            reader.releaseLock();
+
+            // Remove from active generations map
+            activeGenerations.delete(finalMessageId);
+
+            // Save final completed standard response to database
+            if (sessionId && user) {
+              try {
+                const { data: latestMsg } = await supabase
+                  .from("chat_messages")
+                  .select("status, content")
+                  .eq("id", finalMessageId)
+                  .maybeSingle();
+
+                const isAborted = serverAbortController.signal.aborted;
+
+                if (isAborted) {
+                  if (latestMsg?.status !== "failed") {
+                    const { updateChatMessage } =
+                      await import("@/lib/services/shared/chat.actions.server");
+                    const currentContent = latestMsg?.content || fullResponseText || "";
+                    const hasTermination =
+                      currentContent.includes("Session has been terminated") ||
+                      currentContent.includes("terminated");
+                    const stopContent = hasTermination
+                      ? currentContent
+                      : currentContent.trim()
+                        ? `${currentContent}\n\n*(Session has been terminated.)*`
+                        : "Session has been terminated.";
+
+                    await updateChatMessage(finalMessageId, {
+                      content: stopContent,
+                      status: "failed",
+                    });
+                    aiLogger.info(
+                      "ChatAPI",
+                      "Marked aborted stream message as failed in finally block",
+                      {
+                        messageId: finalMessageId,
+                      }
+                    );
+                  }
+                } else if (latestMsg?.status !== "completed" && latestMsg?.status !== "failed") {
+                  const { updateChatMessage, trackDailyUsage } =
+                    await import("@/lib/services/shared/chat.actions.server");
+                  const tokens = Math.round(fullResponseText.length / 4);
+                  const responseTime = Date.now() - apiStartTime;
+
+                  await updateChatMessage(finalMessageId, {
+                    content: fullResponseText.trim() || "No response generated",
+                    status: "completed",
+                    token_used: tokens,
+                    response_time_ms: responseTime,
+                    generated_by_model: "gemini-2.5-flash",
+                  });
+
+                  await trackDailyUsage(tokens, { durationMs: responseTime }, user.id);
+                  aiLogger.info(
+                    "ChatAPI",
+                    "Streamed response saved to DB successfully as completed",
+                    {
+                      messageId: finalMessageId,
+                      textLength: fullResponseText.length,
+                    }
+                  );
+                }
+              } catch (dbErr) {
+                aiLogger.error("ChatAPI", "Failed to save final response to DB in finally", {
+                  error: dbErr instanceof Error ? dbErr.message : String(dbErr),
+                });
+              }
+            }
+          }
+        },
+        cancel(reason) {
+          reader.cancel(reason);
+          activeGenerations.delete(finalMessageId);
+        },
+      });
+
+      return new Response(transformStream, {
         headers: {
           "Content-Type": "text/event-stream; charset=utf-8",
           "Cache-Control": "no-cache",
@@ -614,8 +811,29 @@ export async function POST(req: NextRequest) {
         },
       });
     } catch (streamError) {
-      if (req.signal?.aborted) {
-        throw streamError;
+      activeGenerations.delete(finalMessageId);
+
+      const isAborted =
+        serverAbortController.signal.aborted ||
+        (streamError instanceof Error &&
+          (streamError.name === "AbortError" ||
+            streamError.message.toLowerCase().includes("abort")));
+
+      if (isAborted) {
+        aiLogger.info("ChatAPI", "Streaming aborted by user, skipping fallback response", {
+          messageId: finalMessageId,
+        });
+        if (sessionId && user) {
+          try {
+            const { updateChatMessage } = await import("@/lib/services/shared/chat.actions.server");
+            await updateChatMessage(finalMessageId, {
+              status: "failed",
+            });
+          } catch (failErr) {
+            console.error("Failed to mark message as failed in DB:", failErr);
+          }
+        }
+        return NextResponse.json({ error: "Generation aborted by user" }, { status: 499 });
       }
 
       aiLogger.warn("ChatAPI", "Streaming failed, falling back to non-streamed response", {
@@ -626,14 +844,51 @@ export async function POST(req: NextRequest) {
         contents,
         systemPrompt: finalSystemPrompt,
         generationConfig,
-        signal: req.signal,
       });
 
       if (!response.success) {
+        // Mark message as failed in the DB
+        if (sessionId && user) {
+          try {
+            const { updateChatMessage } = await import("@/lib/services/shared/chat.actions.server");
+            await updateChatMessage(finalMessageId, {
+              status: "failed",
+            });
+          } catch (failErr) {
+            console.error("Failed to mark message as failed in DB:", failErr);
+          }
+        }
         return NextResponse.json(
           { error: response.error || "Failed to generate AI response" },
           { status: 500 }
         );
+      }
+
+      // Save fallback non-streamed response to database
+      if (sessionId && user && response.content.trim()) {
+        try {
+          const { updateChatMessage, trackDailyUsage } =
+            await import("@/lib/services/shared/chat.actions.server");
+          const tokens =
+            response.usage?.completionTokens || Math.round(response.content.length / 4);
+          const responseTime = Date.now() - apiStartTime;
+
+          await updateChatMessage(finalMessageId, {
+            content: response.content,
+            status: "completed",
+            token_used: tokens,
+            response_time_ms: responseTime,
+            generated_by_model: response.model || "gemini-2.5-flash",
+          });
+          await trackDailyUsage(tokens, { durationMs: responseTime }, user.id);
+          aiLogger.info("ChatAPI", "Fallback non-streamed response saved to DB successfully", {
+            messageId: finalMessageId,
+          });
+        } catch (dbErr) {
+          aiLogger.error("ChatAPI", "Failed to save fallback response to DB", {
+            error: dbErr instanceof Error ? dbErr.message : String(dbErr),
+          });
+        }
       }
 
       // Convert full non-streamed content to a compatible SSE event stream

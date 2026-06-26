@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import {
   getDailyScreenTime,
-  logScreenTimeSession,
   notifyParentLimitReached,
 } from "@/lib/services/shared/screentime.actions";
 import { Clock, Sun, Sparkles, Moon, EyeOff } from "lucide-react";
@@ -121,12 +120,23 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
             `[ScreenTimeTracker] Dev Monitor - Attempting sync: ${seconds}s (total with unsynced: ${totalToSync}s)`
           );
         }
-        const result = await logScreenTimeSession(childId, totalToSync, tz);
+        const response = await fetch("/api/screentime", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            childId,
+            activeSeconds: totalToSync,
+            timezone: tz,
+          }),
+        });
+        const result = await response.json();
         if (result.success) {
           // Success -> Clear unsynced queue
           localStorage.removeItem("screen_time_unsynced");
           if (process.env.NODE_ENV !== "production") {
-            console.log(`[ScreenTimeTracker] Dev Monitor - Sync successful. Unsynced queue cleared.`);
+            console.log(
+              `[ScreenTimeTracker] Dev Monitor - Sync successful. Unsynced queue cleared.`
+            );
           }
         } else {
           // Failure -> Queue it locally
@@ -177,9 +187,11 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
 
     const supabase = createClient();
     const channelName = `screentime-limit-sync-${childId}`;
-    
+
     if (process.env.NODE_ENV !== "production") {
-      console.log(`[ScreenTimeTracker] Dev Monitor - Subscribing to real-time parent_child_link for child: ${childId}`);
+      console.log(
+        `[ScreenTimeTracker] Dev Monitor - Subscribing to real-time parent_child_link for child: ${childId}`
+      );
     }
 
     const channel = supabase
@@ -195,7 +207,10 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (payload: any) => {
           if (process.env.NODE_ENV !== "production") {
-            console.log("[ScreenTimeTracker] Dev Monitor - Real-time link update payload:", payload);
+            console.log(
+              "[ScreenTimeTracker] Dev Monitor - Real-time link update payload:",
+              payload
+            );
           }
           const record = payload.new as {
             daily_limit_minutes?: number;
@@ -421,7 +436,8 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
           if (!stateRefs.current.isLimitEnabled) {
             targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.SAFE;
           } else {
-            const totalElapsedSecs = stateRefs.current.dbScreenTimeSeconds + elapsedAccumulatedRef.current;
+            const totalElapsedSecs =
+              stateRefs.current.dbScreenTimeSeconds + elapsedAccumulatedRef.current;
             const limitSecs = stateRefs.current.dailyLimitMinutes * 60;
             const remainingSecs = Math.max(0, limitSecs - totalElapsedSecs);
             const remainingMins = remainingSecs / 60;
@@ -431,9 +447,9 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
             } else if (remainingMins <= SCREENTIME_THRESHOLDS.MEDIUM_MINUTES) {
               targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.WARNING; // 5-10 mins -> 30s
             } else if (remainingMins <= SCREENTIME_THRESHOLDS.SAFE_MINUTES) {
-              targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.MEDIUM;  // 10-20 mins -> 45s
+              targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.MEDIUM; // 10-20 mins -> 45s
             } else {
-              targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.SAFE;    // > 20 mins -> 90s
+              targetInterval = SCREENTIME_HEARTBEAT_INTERVALS.SAFE; // > 20 mins -> 90s
             }
           }
         }

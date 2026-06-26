@@ -18,11 +18,14 @@ import {
   saveGeneratedMaterial,
   updateChatMessageAttachment,
 } from "@/lib/services/shared/chat.actions";
-import { Message, UserRole } from "@/types/common";
+import { Message, UserRole, ChatSessionRow } from "@/types/common";
 import { generatePdfBlob } from "@/hooks/shared/pdf-helper";
 import { generateDocxBlob } from "@/hooks/shared/docx-helper";
 import { getSessionManager } from "@/lib/ai/session-manager";
 import { getUniqueStoragePath } from "./chat-utils";
+import { createClient } from "@/lib/supabase/client";
+import { uploadChatAttachment } from "@/lib/storage/attachments";
+import { useChatStore } from "./chatStore";
 
 interface UseChatSenderArgs {
   messages: Message[];
@@ -47,8 +50,14 @@ export function useChatSender({
   const router = useRouter();
   const userProfile = useAppSelector((state) => state.auth.userProfile);
   const [isLoading, setIsLoading] = useState(false);
-  const requestType: "pdf" | "docx" | "image" | "regular" = "regular";
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [requestType] = useState<"pdf" | "docx" | "image" | "regular">("regular");
   const [loadingText, setLoadingText] = useState("Thinking...");
+
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -61,29 +70,20 @@ export function useChatSender({
         "Gathering the best learning info...",
         "Organizing PDF page layouts...",
         "Creating beautiful PDF sections...",
-        "Your PDF has been generated!",
       ],
       docx: [
         "Analyzing your document request...",
         "Researching educational details...",
         "Organizing headings & content structure...",
         "Writing the Word Document content...",
-        "Your Word Document has been generated!",
       ],
       image: [
         "Reading your creative request...",
         "Setting up the drawing canvas...",
         "Drawing the outlines & shapes...",
         "Adding colorful details & textures...",
-        "Your Image has been generated!",
       ],
-      regular: [
-        "Thinking...",
-        "Searching for answers...",
-        "Writing down the thoughts...",
-        "Almost ready...",
-        "Your Response is ready!",
-      ],
+      regular: ["Thinking...", "Almost ready..."],
     }[requestType];
 
     let index = 0;
@@ -109,13 +109,18 @@ export function useChatSender({
   const pendingImageRef = useRef<string | null>(null);
   const pendingFileContentRef = useRef<string | null>(null);
   const pendingFileNameRef = useRef<string | null>(null);
+  const pendingVoiceInputRef = useRef<boolean | undefined>(false);
+  const pendingRawFileRef = useRef<File | null>(null);
 
   const sendMessage = useCallback(
     async (
       currentInput: string,
       currentImage: string | null,
       currentFileContent: string | null,
-      currentFileName: string | null
+      currentFileName: string | null,
+      isVoiceInput?: boolean,
+      attachedFile?: File | null,
+      isResume?: boolean
     ) => {
       if (isLoading) return;
       if (isLoadingAuth) {
@@ -124,14 +129,28 @@ export function useChatSender({
         pendingImageRef.current = currentImage;
         pendingFileContentRef.current = currentFileContent;
         pendingFileNameRef.current = currentFileName;
+        pendingVoiceInputRef.current = isVoiceInput;
+        pendingRawFileRef.current = attachedFile || null;
         return;
       }
 
       let sessionId = currentSessionId;
       const canPersist = !!user?.id;
+      let lastUserMsg: Message | undefined = undefined;
 
-      if (!currentInput.trim() && !currentImage && !currentFileContent && !currentFileName) {
-        return;
+      if (isResume) {
+        if (messages.length === 0) return;
+        lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+        if (!lastUserMsg) return;
+
+        currentInput = lastUserMsg.content;
+        currentImage = lastUserMsg.uploadedImage || null;
+        currentFileContent = null;
+        currentFileName = lastUserMsg.fileName || null;
+      } else {
+        if (!currentInput.trim() && !currentImage && !currentFileContent && !currentFileName) {
+          return;
+        }
       }
 
       // Combine input with file content if present
@@ -144,45 +163,104 @@ export function useChatSender({
         : currentInput;
 
       setIsLoading(true);
+      setIsGenerating(true);
 
-      let userAttachmentUrl: string | undefined = undefined;
-
-      // 1. Upload user attachment if exists (Images or PDFs)
-      if (canPersist && (currentImage || currentFileContent)) {
-        try {
-          if (currentImage) {
-            const res = await fetch(currentImage);
-            const blob = await res.blob();
-            if (!user?.id) throw new Error("Missing user id for image upload");
-            const path = getUniqueStoragePath(user.id, sessionId || "new", "jpg", "image");
-            userAttachmentUrl = await uploadFileToStorage(blob, path, user.id);
-          } else if (currentFileContent) {
-            // Upload PDF or Text file
-            const blob = new Blob([currentFileContent], { type: "text/plain" });
-            if (!user?.id) throw new Error("Missing user id for document upload");
-            const path = getUniqueStoragePath(user.id, sessionId || "new", "txt", "doc");
-            userAttachmentUrl = await uploadFileToStorage(blob, path, user.id);
-          }
-        } catch (e) {
-          console.error("User upload failed:", e);
-        }
-      }
+      const userMessageId = isResume && lastUserMsg ? lastUserMsg.id : crypto.randomUUID();
 
       const userMessage: Message = {
-        id: crypto.randomUUID(),
+        id: userMessageId,
         userId: user?.id || undefined,
         senderProfile: userProfile || undefined,
         role: "user",
         content: currentInput,
         uploadedImage: currentImage || undefined,
-        attachmentUrl: userAttachmentUrl,
+        attachmentUrl: undefined,
         fileName: currentFileName || undefined,
+        isVoiceInput: isResume && lastUserMsg ? lastUserMsg.isVoiceInput : isVoiceInput,
+        // Task 5.2: Set initial status to "pending" for user message
+        status: "pending",
       };
 
-      dispatch(addMessage(userMessage));
+      if (!isResume) {
+        dispatch(addMessage(userMessage));
+
+        // Task 5.2: Mark user message as "completed" immediately after adding
+        // (since user messages don't stream, they're complete as soon as they're added)
+        dispatch(
+          updateMessage({
+            id: userMessageId,
+            status: "completed",
+          })
+        );
+      }
+
+      let userAttachmentUrl: string | undefined = undefined;
+
+      // 1. Upload user attachment if exists (Images, PDFs, or Text files)
+      if (!isResume && canPersist && (currentImage || attachedFile || currentFileContent)) {
+        try {
+          const supabaseClient = createClient();
+          if (currentImage) {
+            const res = await fetch(currentImage);
+            const blob = await res.blob();
+            if (!user?.id) throw new Error("Missing user id for image upload");
+            const path = getUniqueStoragePath(user.id, sessionId || "new", "jpg", "image");
+            const uploadResult = await uploadChatAttachment(supabaseClient, user.id, blob, path);
+            if (!uploadResult.success || !uploadResult.publicUrl) {
+              throw new Error(uploadResult.error || "Failed to upload image.");
+            }
+            userAttachmentUrl = uploadResult.publicUrl;
+          } else if (attachedFile) {
+            if (!user?.id) throw new Error("Missing user id for document upload");
+            const fileExtension = attachedFile.name.split(".").pop() || "bin";
+            const typePrefix = attachedFile.type.includes("pdf") ? "pdf" : "doc";
+            const path = getUniqueStoragePath(
+              user.id,
+              sessionId || "new",
+              fileExtension,
+              typePrefix
+            );
+            const uploadResult = await uploadChatAttachment(
+              supabaseClient,
+              user.id,
+              attachedFile,
+              path
+            );
+            if (!uploadResult.success || !uploadResult.publicUrl) {
+              throw new Error(uploadResult.error || "Failed to upload document.");
+            }
+            userAttachmentUrl = uploadResult.publicUrl;
+          } else if (currentFileContent) {
+            // Fallback for when raw attachedFile is not available but parsed text content is
+            const blob = new Blob([currentFileContent], { type: "text/plain" });
+            if (!user?.id) throw new Error("Missing user id for document upload");
+            const path = getUniqueStoragePath(user.id, sessionId || "new", "txt", "doc");
+            const uploadResult = await uploadChatAttachment(supabaseClient, user.id, blob, path);
+            if (!uploadResult.success || !uploadResult.publicUrl) {
+              throw new Error(uploadResult.error || "Failed to upload document.");
+            }
+            userAttachmentUrl = uploadResult.publicUrl;
+          }
+
+          if (userAttachmentUrl) {
+            dispatch(
+              updateMessage({
+                id: userMessageId,
+                attachmentUrl: userAttachmentUrl,
+              })
+            );
+          }
+        } catch (e) {
+          console.error("User upload failed:", e);
+        }
+      } else if (isResume && lastUserMsg) {
+        userAttachmentUrl = lastUserMsg.attachmentUrl || undefined;
+      }
 
       // Prepare history for API including image context persistence
-      const chatHistory = messages.slice(-20).map((m) => ({
+      // If we are resuming, slice out the last message (which is the current user prompt)
+      const historySource = isResume ? messages.slice(0, -1) : messages;
+      const chatHistory = historySource.slice(-20).map((m) => ({
         role: m.role === "user" ? "user" : "model",
         content: m.content,
         image: m.role === "user" ? m.uploadedImage : undefined,
@@ -191,39 +269,64 @@ export function useChatSender({
       }));
 
       // 2. Create session and save user message if it doesn't exist
-      if (!sessionId && canPersist) {
+      if (!isResume && !sessionId && canPersist) {
         try {
-          const newSession = await createChatSession(currentInput.slice(0, 30) + "...", user?.id);
-          sessionId = newSession.id;
+          const tempSessionId = crypto.randomUUID();
+          sessionId = tempSessionId;
 
-          const userTokens = Math.round(currentInput.length / 4);
-          await saveChatMessage(
-            sessionId,
-            "user",
-            savedContent,
-            {
-              tokens: userTokens,
-              attachmentUrl: userAttachmentUrl,
-            },
-            user?.id
-          );
-          await trackDailyUsage(userTokens, {}, user?.id);
+          const sessionTitle = currentInput;
+
+          const newSession: ChatSessionRow = {
+            id: tempSessionId,
+            user_id: user?.id || "",
+            title: sessionTitle,
+            session_type: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            is_active: true,
+            deleted_at: null,
+          };
 
           justCreatedSessionRef.current = true;
           dispatch(addSession(newSession));
           dispatch(setCurrentSessionId(sessionId));
+
           const targetUrl =
             typeof window !== "undefined" && window.location.pathname.startsWith("/chat/")
               ? `${window.location.pathname}?id=${sessionId}`
               : `/?id=${sessionId}`;
           router.replace(targetUrl);
+
+          // Perform DB writes in the background to avoid blocking AI generation
+          const userTokens = Math.round(currentInput.length / 4);
+          (async () => {
+            try {
+              await createChatSession(sessionTitle, user?.id, tempSessionId);
+              await Promise.all([
+                saveChatMessage(
+                  tempSessionId,
+                  "user",
+                  savedContent,
+                  {
+                    tokens: userTokens,
+                    attachmentUrl: userAttachmentUrl,
+                  },
+                  user?.id
+                ),
+                trackDailyUsage(userTokens, {}, user?.id),
+              ]);
+            } catch (dbErr) {
+              console.error("Failed to save new session/message to database in background:", dbErr);
+            }
+          })();
         } catch (error) {
-          console.error("Failed to create session/save message:", error);
+          console.error("Failed to initialize session/message:", error);
         }
-      } else if (sessionId && canPersist) {
+      } else if (!isResume && sessionId && canPersist) {
         const userTokens = Math.round(currentInput.length / 4);
-        try {
-          await saveChatMessage(
+        // Save user message and track usage in the background to avoid blocking generation
+        Promise.all([
+          saveChatMessage(
             sessionId,
             "user",
             savedContent,
@@ -232,14 +335,26 @@ export function useChatSender({
               attachmentUrl: userAttachmentUrl,
             },
             user?.id
-          );
-          await trackDailyUsage(userTokens, {}, user?.id);
-        } catch (dbErr) {
-          console.error("Failed to save user message to database:", dbErr);
-        }
+          ),
+          trackDailyUsage(userTokens, {}, user?.id),
+        ]).catch((dbErr) => {
+          console.error("Failed to save user message or track usage in background:", dbErr);
+        });
       }
 
       setIsLoading(true);
+      setIsGenerating(true);
+
+      // Reuse the existing model message ID if resuming or retrying, otherwise generate a new one
+      let aiMessageId = crypto.randomUUID();
+      if (isResume && messages.length > 0) {
+        const lastMsg = messages[messages.length - 1];
+        if (lastMsg && lastMsg.role === "model") {
+          aiMessageId = lastMsg.id;
+        }
+      }
+
+      useChatStore.getState().setActiveMessageId(aiMessageId);
 
       const sessionManager = getSessionManager();
       const requestId = crypto.randomUUID();
@@ -253,6 +368,7 @@ export function useChatSender({
           role: userRole || "kid",
           age: age,
           sessionId: sessionId || undefined,
+          aiMessageId: aiMessageId,
         };
 
         const apiStartTime = Date.now();
@@ -266,14 +382,13 @@ export function useChatSender({
         const isStream = res.headers.get("content-type")?.includes("text/event-stream");
 
         if (isStream && res.body) {
-          // 1. Generate unique message ID
-          const aiMessageId = crypto.randomUUID();
-
           // 2. Dispatch initial empty message to UI immediately!
+          // Task 5.2: Bot message starts with "pending" status
           const initialAiMessage: Message = {
             id: aiMessageId,
             role: "model",
             content: "",
+            status: "pending",
           };
           dispatch(addMessage(initialAiMessage));
           setIsLoading(false);
@@ -375,12 +490,17 @@ export function useChatSender({
             console.error("[ChatInterface] Stream reading error:", streamErr);
           } finally {
             clearInterval(flushInterval);
-            flushStreamUpdate(); // Final flush to guarantee latest text state is synced to Redux
+            if (!signal.aborted) {
+              flushStreamUpdate(); // Final flush to guarantee latest text state is synced to Redux
+            }
             reader.releaseLock();
           }
 
+          if (signal.aborted) {
+            return;
+          }
+
           const responseTime = Date.now() - apiStartTime;
-          const tokens = Math.round(aiResponseContent.length / 4);
 
           // 3. Process database persistence and daily tracking in the background
           if (sessionId && canPersist) {
@@ -458,22 +578,6 @@ export function useChatSender({
                   } catch (imgUploadErr) {
                     console.error("[ChatInterface] Background image upload failed:", imgUploadErr);
                   }
-                } else if (aiResponseContent.trim()) {
-                  // Only save non-empty text responses
-                  await saveChatMessage(
-                    sessionId,
-                    "model",
-                    aiResponseContent,
-                    {
-                      id: aiMessageId,
-                      tokens,
-                      model: "gemini-2.5-flash",
-                      responseTime: responseTime,
-                    },
-                    user?.id
-                  );
-
-                  await trackDailyUsage(tokens, { durationMs: responseTime }, user?.id);
                 }
               } catch (backgroundErr) {
                 console.error(
@@ -798,6 +902,8 @@ export function useChatSender({
       } finally {
         sessionManager.completeRequest(requestId);
         setIsLoading(false);
+        setIsGenerating(false);
+        useChatStore.getState().setActiveMessageId(null);
       }
     },
     [
@@ -825,13 +931,17 @@ export function useChatSender({
         pendingInputRef.current,
         pendingImageRef.current,
         pendingFileContentRef.current,
-        pendingFileNameRef.current
+        pendingFileNameRef.current,
+        pendingVoiceInputRef.current,
+        pendingRawFileRef.current || undefined
       );
       // Clear values after trigger
       pendingInputRef.current = "";
       pendingImageRef.current = null;
       pendingFileContentRef.current = null;
       pendingFileNameRef.current = null;
+      pendingVoiceInputRef.current = false;
+      pendingRawFileRef.current = null;
     }, 0);
     return () => clearTimeout(timer);
   }, [isLoadingAuth, sendMessage]);
@@ -839,8 +949,61 @@ export function useChatSender({
   const stopGenerating = useCallback(() => {
     const sessionManager = getSessionManager();
     sessionManager.abortActiveRequest();
-    setIsLoading(false);
-  }, []);
 
-  return { isLoading, loadingText, sendMessage, stopGenerating };
+    let activeMsgId = useChatStore.getState().activeMessageId;
+    if (!activeMsgId) {
+      const lastMsg = messagesRef.current[messagesRef.current.length - 1];
+      if (
+        lastMsg &&
+        lastMsg.role === "model" &&
+        (lastMsg.status === "streaming" || !lastMsg.status)
+      ) {
+        activeMsgId = lastMsg.id;
+      }
+    }
+
+    if (activeMsgId) {
+      void fetch("/api/chat/stop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId: activeMsgId, sessionId: currentSessionId }),
+      }).catch((e) => console.error("Failed to stop server-side generation:", e));
+
+      // Retrieve the current message content for the active AI message and append termination note
+      const currentMsg = messagesRef.current.find((m) => m.id === activeMsgId);
+      const text = currentMsg?.content || "";
+      const hasTerminationMsg =
+        text.includes("Session has been terminated") || text.includes("terminated");
+
+      const stopText = hasTerminationMsg
+        ? text
+        : text.trim()
+          ? `${text}\n\n*(Session has been terminated.)*`
+          : "Session has been terminated.";
+
+      if (currentMsg) {
+        dispatch(
+          updateMessage({
+            id: activeMsgId,
+            content: stopText,
+            status: "failed",
+          })
+        );
+      } else {
+        dispatch(
+          addMessage({
+            id: activeMsgId,
+            role: "model",
+            content: stopText,
+            status: "failed",
+          })
+        );
+      }
+    }
+
+    setIsLoading(false);
+    setIsGenerating(false);
+  }, [dispatch, currentSessionId]);
+
+  return { isLoading, isGenerating, loadingText, sendMessage, stopGenerating };
 }

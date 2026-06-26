@@ -427,6 +427,13 @@ export default function TeacherClassroomWorkspaceClient({
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
+                  onClick={(e) => {
+                    e.currentTarget.scrollIntoView({
+                      behavior: "smooth",
+                      block: "nearest",
+                      inline: "center",
+                    });
+                  }}
                   className="flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2 sm:py-3 data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:bg-input/50 whitespace-nowrap shrink-0 border-none bg-transparent text-muted-foreground hover:text-foreground transition-all shadow-none data-[state=active]:shadow-sm"
                 >
                   <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />

@@ -12,24 +12,14 @@ const Navbar = () => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMounted(true);
-    }, 0);
-    return () => clearTimeout(timer);
+    Promise.resolve().then(() => setMounted(true));
   }, []);
 
-  if (!mounted) {
-    return (
-      <div className="flex items-center gap-2">
-        <Skeleton className="h-9 w-20 rounded-lg" />
-        <Skeleton className="h-9 w-24 rounded-xl" />
-      </div>
-    );
-  }
+  const showSkeleton = !mounted || isInitializing;
 
   return (
     <div className="flex items-center gap-2">
-      {isInitializing ? (
+      {showSkeleton ? (
         <>
           <Skeleton className="h-9 w-20 rounded-lg" />
           <Skeleton className="h-9 w-24 rounded-xl" />

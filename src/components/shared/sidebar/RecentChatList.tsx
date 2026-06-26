@@ -2,6 +2,7 @@
 
 import React, { useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ChatSessionRow } from "@/types/common";
 import RecentChatItem from "./RecentChatItem";
 
@@ -22,6 +23,7 @@ interface RecentChatListProps {
   onLoadMoreSessions: () => void;
   hasMoreSessions: boolean;
   isLoadingMoreSessions: boolean;
+  isInitialLoading?: boolean;
 }
 
 export default function RecentChatList({
@@ -41,6 +43,7 @@ export default function RecentChatList({
   onLoadMoreSessions,
   hasMoreSessions,
   isLoadingMoreSessions,
+  isInitialLoading,
 }: RecentChatListProps) {
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
@@ -61,7 +64,16 @@ export default function RecentChatList({
       </h3>
       <ScrollArea onScroll={handleScroll} className="w-full flex-1 min-h-0">
         <div className="w-full pl-1 pr-3 space-y-1">
-          {sessions.length > 0 ? (
+          {isInitialLoading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="w-full flex items-center justify-between rounded-xl pl-1 py-1.5"
+              >
+                <Skeleton className="h-4 w-4/5 rounded-md" />
+              </div>
+            ))
+          ) : sessions.length > 0 ? (
             sessions.map((session) => (
               <RecentChatItem
                 key={session.id}

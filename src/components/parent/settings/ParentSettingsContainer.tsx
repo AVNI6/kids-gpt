@@ -90,7 +90,7 @@ export default function ParentSettingsContainer({ profile }: ParentSettingsConta
     <div className="flex flex-col gap-8">
       {/* Settings Header */}
       <div>
-        <h1 className="text-4xl font-black tracking-tight text-foreground">Settings</h1>
+        <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">Settings</h1>
         <p className="text-sm sm:text-base text-muted-foreground font-medium mt-2">
           Manage your guardian profile and account security settings.
         </p>
