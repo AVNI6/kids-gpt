@@ -94,7 +94,7 @@ export default function SidebarNavigation({
         const isActivities = item.label === "Activities";
 
         const buttonClass = cn(
-          "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group/nav cursor-pointer",
+          "w-full flex items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group/nav cursor-pointer",
           showActiveStyle ? "bg-sidebar-accent text-sky-500 font-bold" : "text-sidebar-foreground"
         );
 
@@ -212,7 +212,7 @@ export default function SidebarNavigation({
               const isClassrooms = item.label === "Classrooms";
 
               const buttonClass = cn(
-                "w-full flex items-center justify-between rounded-xl px-3 py-2.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group/nav cursor-pointer",
+                "w-full flex items-center justify-between rounded-xl px-2 py-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left font-semibold transition-colors group/nav cursor-pointer",
                 isActive ? "bg-sidebar-accent text-sky-500 font-bold" : "text-sidebar-foreground"
               );
 

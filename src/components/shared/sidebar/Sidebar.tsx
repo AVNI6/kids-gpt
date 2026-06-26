@@ -274,7 +274,7 @@ export default function Sidebar() {
                   toggleSidebar();
                 }
               }}
-              className="group/btn h-7 w-7 rounded-2xl bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95 cursor-pointer"
+              className="group/btn h-8 w-8 rounded-md bg-sky-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform active:scale-95 cursor-pointer"
             >
               {isOpen ? (
                 <Sparkles className="w-4 h-4" />
