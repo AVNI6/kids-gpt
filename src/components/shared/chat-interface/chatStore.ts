@@ -73,7 +73,7 @@ export interface ChatState {
   clearChat: () => void;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>()((set) => ({
   messages: [],
   sessions: [],
   currentSessionId: null,

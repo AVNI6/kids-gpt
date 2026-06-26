@@ -5,8 +5,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const createClient = (request: NextRequest) => {
-  let response = NextResponse.next({
+export const updateSession = async (request: NextRequest) => {
+  let supabaseResponse = NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -18,9 +18,7 @@ export const createClient = (request: NextRequest) => {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
 
         // Sync the raw Cookie header string explicitly to the request headers
         // so downstream Server Components / Route Handlers read the new session cookies.
@@ -31,29 +29,19 @@ export const createClient = (request: NextRequest) => {
           .join("; ");
         requestHeaders.set("Cookie", cookieString);
 
-        response = NextResponse.next({
+        supabaseResponse = NextResponse.next({
           request: {
             headers: requestHeaders,
           },
         });
-
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        );
       },
     },
   });
 
-  return {
-    supabase,
-    get response() {
-      return response;
-    },
-  };
-};
+  await supabase.auth.getUser();
 
-export const updateSession = async (request: NextRequest) => {
-  const client = createClient(request);
-  await client.supabase.auth.getUser();
-  return client.response;
+  return supabaseResponse;
 };
