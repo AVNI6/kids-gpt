@@ -1,4 +1,4 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -97,7 +97,6 @@ export type Database = {
           response_time_ms: number | null;
           sender_role: Database["public"]["Enums"]["sender_role"] | null;
           session_id: string | null;
-          status: string | null;
           token_used: number | null;
           updated_at: string | null;
           user_id: string | null;
@@ -113,7 +112,6 @@ export type Database = {
           response_time_ms?: number | null;
           sender_role?: Database["public"]["Enums"]["sender_role"] | null;
           session_id?: string | null;
-          status?: string | null;
           token_used?: number | null;
           updated_at?: string | null;
           user_id?: string | null;
@@ -129,7 +127,6 @@ export type Database = {
           response_time_ms?: number | null;
           sender_role?: Database["public"]["Enums"]["sender_role"] | null;
           session_id?: string | null;
-          status?: string | null;
           token_used?: number | null;
           updated_at?: string | null;
           user_id?: string | null;

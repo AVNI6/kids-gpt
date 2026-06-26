@@ -43,9 +43,6 @@ export interface Message {
   token_used?: number;
   attachmentUrl?: string | null;
   fileName?: string | null;
-  isVoiceInput?: boolean;
-  status?: "pending" | "streaming" | "completed" | "failed" | "stopped";
-  stopReason?: "user_aborted" | "error";
   created_at?: string;
 }
 
@@ -87,7 +84,6 @@ export interface ChatMessageRow {
   generated_by_model: string | null;
   is_flagged: boolean | null;
   attachment_url: string | null;
-  status: "pending" | "streaming" | "completed" | "failed" | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

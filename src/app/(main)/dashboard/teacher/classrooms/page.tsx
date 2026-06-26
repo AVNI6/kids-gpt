@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Suspense } from "react";
 import { checkDashboardAccess } from "@/lib/dashboard-auth";
 import { getCurrentDashboardProfile } from "@/lib/services/kid/dashboard.actions";
 import { getTeacherDashboardData } from "@/lib/services/kid/classroom.actions";
@@ -6,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import TeacherClassrooms from "@/components/teacher/classrooms/TeacherClassrooms";
 import NeedsAttention from "@/components/teacher/home/NeedsAttention";
 import TeacherActivityFeed from "@/components/teacher/home/TeacherActivityFeed";
+import { ClassroomsListSkeleton } from "@/components/shared/skeletonLoading";
 
 async function ClassroomsPageContent({ createOpen }: { createOpen: boolean }) {
   const profile = await getCurrentDashboardProfile();
@@ -138,5 +140,9 @@ export default async function TeacherClassroomsPage({
   const { create } = await searchParams;
   const shouldOpenCreate = create === "true";
 
-  return <ClassroomsPageContent createOpen={shouldOpenCreate} />;
+  return (
+    <Suspense fallback={<ClassroomsListSkeleton />}>
+      <ClassroomsPageContent createOpen={shouldOpenCreate} />
+    </Suspense>
+  );
 }
