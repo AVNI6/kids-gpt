@@ -56,17 +56,7 @@ export function useChatPdf({
         setPdfStates((prev) => ({ ...prev, [messageId]: "downloading" }));
         const toastId = toast.loading("Downloading PDF...");
         try {
-          let targetUrl = message.attachmentUrl;
-          if (targetUrl.includes("/object/public/materials/")) {
-            const relativePath = targetUrl.split("/object/public/materials/")[1];
-            const { getSignedResourceUrl } = await import("@/lib/services/shared/storage.actions");
-            const result = await getSignedResourceUrl(relativePath);
-            if (result.success && result.url) {
-              targetUrl = result.url;
-            } else {
-              throw new Error(result.error || "Failed to generate signed URL");
-            }
-          }
+          const targetUrl = message.attachmentUrl;
           await downloadPdfFromUrl(targetUrl, downloadFileName);
           setPdfStates((prev) => ({ ...prev, [messageId]: "success" }));
           toast.success("PDF downloaded successfully! 🚀", { id: toastId });
@@ -75,20 +65,7 @@ export function useChatPdf({
           }, 3000);
         } catch (err) {
           console.error("Direct download failed, opening in new tab:", err);
-          let targetUrl = message.attachmentUrl;
-          if (targetUrl.includes("/object/public/materials/")) {
-            try {
-              const relativePath = targetUrl.split("/object/public/materials/")[1];
-              const { getSignedResourceUrl } =
-                await import("@/lib/services/shared/storage.actions");
-              const result = await getSignedResourceUrl(relativePath);
-              if (result.success && result.url) {
-                targetUrl = result.url;
-              }
-            } catch {
-              // fallback to original if signed request fails
-            }
-          }
+          const targetUrl = message.attachmentUrl;
           window.open(targetUrl, "_blank");
           setPdfStates((prev) => ({ ...prev, [messageId]: "success" }));
           toast.success("Opening PDF in a new tab...", { id: toastId });

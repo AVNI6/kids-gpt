@@ -9,7 +9,7 @@ import { useSessionStorageState } from "@/hooks/shared/useSessionStorageState";
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, ActivityCard, ActivityCardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import VictoryModal from "@/components/shared/VictoryModal";
@@ -211,21 +211,22 @@ export default function QuizzesPage({
   }
 
   return (
-    <div className="h-full bg-background flex flex-col relative min-h-screen overflow-y-auto md:overflow-hidden">
+    <div className="bg-background flex flex-col relative h-full max-h-full overflow-hidden">
       <div className="absolute top-20 left-10 h-32 w-32 rounded-full bg-green-500/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-20 right-10 h-48 w-48 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
 
-      <main className="relative z-10 flex-1 px-4 py-4 md:px-8 md:py-5 flex flex-col min-h-0 overflow-y-auto md:overflow-hidden">
-        <div className="mx-auto max-w-4xl w-full h-full flex flex-col justify-between gap-3 min-h-0">
+      <main className="relative z-10 flex-1 px-4 py-4 md:px-6 flex flex-col min-h-0 overflow-hidden">
+        <div className="mx-auto max-w-4xl w-full flex-1 flex flex-col justify-start gap-4 sm:gap-5 min-h-0 overflow-hidden">
           <div className="flex items-center justify-between shrink-0">
             <Link
               href={APP_ROUTES.Activities}
-              className="inline-flex items-center gap-2 text-green-600 font-bold hover:text-green-800 hover:-translate-x-1 transition-transform bg-card px-4 py-1.5 rounded-full shadow-sm border border-border w-fit text-sm"
+              className="inline-flex items-center gap-1.5 text-green-600 font-bold hover:text-green-800 hover:-translate-x-1 transition-transform bg-card px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full shadow-sm border border-border w-fit text-xs sm:text-sm"
             >
-              <ArrowLeft className="h-4 w-4" /> Back to Activities
+              <ArrowLeft className="h-3.5 w-3.5" /> Back{" "}
+              <span className="hidden sm:inline">to Activities</span>
             </Link>
 
-            <div className="rounded-full bg-card px-4 py-1 shadow-sm border border-border text-xs">
+            <div className="rounded-full bg-card px-2.5 py-1 sm:px-4 sm:py-1 shadow-sm border border-border text-[10px] sm:text-xs">
               <span className="font-bold text-green-600">
                 {quizCompleted
                   ? "Finished!"
@@ -234,36 +235,38 @@ export default function QuizzesPage({
             </div>
           </div>
 
-          <div className="space-y-1.5 shrink-0">
+          <div className="space-y-1 shrink-0">
             <div className="flex justify-between items-end">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground hidden sm:block">
                   Your Mission Progress
                 </p>
-                <h2 className="text-xl md:text-2xl font-black text-foreground">{quizTitle}</h2>
+                <h2 className="text-sm sm:text-lg md:text-2xl font-black text-foreground">
+                  {quizTitle}
+                </h2>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-0.5 text-xs font-bold text-muted-foreground">
-                <Timer className="h-3.5 w-3.5 text-orange-500" /> {formatTime(timeLeft)}
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-[10px] sm:text-xs font-bold text-muted-foreground">
+                <Timer className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-orange-500" />{" "}
+                {formatTime(timeLeft)}
               </span>
             </div>
             <Progress
               value={progress}
-              className="h-2 rounded-full [&>div]:bg-green-500 bg-green-500/10"
+              className="h-1.5 rounded-full [&>div]:bg-green-500 bg-green-500/10"
             />
           </div>
 
-          <Card className="border-4 border-green-500/20 shadow-md bg-card flex-1 flex flex-col min-h-[160px] md:min-h-[220px] justify-center my-4 rounded-2xl">
-            <CardContent className="p-6 flex flex-col justify-center min-h-0 overflow-y-auto text-center space-y-4">
-              <div className="h-14 w-14 rounded-2xl bg-green-500/10 text-green-600 flex items-center justify-center mx-auto shrink-0">
-                <Star className="h-7 w-7" />
+          <ActivityCard className="border-4 border-green-500/20 my-2">
+            <ActivityCardContent>
+              <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center text-center gap-4 my-auto">
+                <h2 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-black text-foreground leading-tight">
+                  {quiz.question}
+                </h2>
               </div>
-              <h2 className="text-2xl md:text-3xl font-black text-foreground leading-tight max-w-xl mx-auto">
-                {quiz.question}
-              </h2>
-            </CardContent>
-          </Card>
+            </ActivityCardContent>
+          </ActivityCard>
 
-          <div className="grid gap-3 md:grid-cols-2 shrink-0">
+          <div className="grid grid-cols-2 gap-2 shrink-0">
             {quiz.options.map((option) => {
               const isSelected = selected === option.id;
               const isCorrect = option.correct;
@@ -275,7 +278,7 @@ export default function QuizzesPage({
                   type="button"
                   disabled={isAnswered}
                   onClick={() => handleSelect(option.id)}
-                  className={`flex items-center justify-between rounded-[18px] border-4 px-6 py-4 text-left font-black text-base transition duration-200 ${
+                  className={`flex items-center justify-between rounded-xl border-2 px-3 py-1.5 sm:px-5 sm:py-2.5 text-left font-black text-xs sm:text-base transition duration-200 ${
                     isSelected
                       ? isCorrect
                         ? "border-green-500 bg-green-500/10 text-green-600 scale-[1.01]"
@@ -285,9 +288,9 @@ export default function QuizzesPage({
                         : "border-green-500/10 bg-card text-muted-foreground hover:border-green-500/40 hover:bg-green-500/5"
                   } ${isAnswered ? "cursor-default" : "cursor-pointer"}`}
                 >
-                  <span className="flex items-center gap-3">
+                  <span className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1">
                     <span
-                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+                      className={`flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-full text-[10px] sm:text-xs font-bold shrink-0 ${
                         isSelected
                           ? isCorrect
                             ? "bg-green-600 text-white"
@@ -299,49 +302,49 @@ export default function QuizzesPage({
                     >
                       {option.id}
                     </span>
-                    {option.label}
+                    <span className="truncate text-xs sm:text-sm md:text-base">{option.label}</span>
                   </span>
                   {isSelected &&
                     (isCorrect ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600 animate-in zoom-in" />
+                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 animate-in zoom-in shrink-0" />
                     ) : null)}
                 </button>
               );
             })}
           </div>
 
-          <div className="h-32 flex items-center justify-center shrink-0 mt-4">
+          <div className="min-h-0 flex items-center justify-center shrink-0 mt-2">
             {selected !== null && (
               <div className="w-full animate-in slide-in-from-bottom-2 duration-300">
                 <Card
-                  className={`border-4 rounded-[20px] ${
+                  className={`border-2 rounded-2xl ${
                     quiz.options.find((o) => o.id === selected)?.correct
                       ? "border-green-500/30 bg-green-500/5"
                       : "border-red-500/30 bg-red-500/5"
                   }`}
                 >
-                  <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between p-4">
+                  <CardContent className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-2.5 sm:p-3">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`h-10 w-10 rounded-full flex items-center justify-center text-white shrink-0 ${
+                        className={`h-7 w-7 sm:h-9 sm:w-9 rounded-full flex items-center justify-center text-white shrink-0 ${
                           quiz.options.find((o) => o.id === selected)?.correct
                             ? "bg-green-600"
                             : "bg-red-600 animate-shake"
                         }`}
                       >
                         {quiz.options.find((o) => o.id === selected)?.correct ? (
-                          <Star className="h-5 w-5" />
+                          <Star className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
                         ) : (
-                          <span className="font-bold text-lg">!</span>
+                          <span className="font-bold text-sm sm:text-base">!</span>
                         )}
                       </div>
                       <div>
-                        <h3 className="font-bold text-foreground text-sm">
+                        <h3 className="font-bold text-foreground text-xs">
                           {quiz.options.find((o) => o.id === selected)?.correct
                             ? "Awesome job, Explorer! 🚀"
                             : "Nice try, Space Ranger! 👍"}
                         </h3>
-                        <p className="text-xs text-muted-foreground leading-tight">
+                        <p className="text-[10px] sm:text-[11px] text-muted-foreground leading-tight">
                           {quiz.feedback}
                         </p>
                       </div>
@@ -349,7 +352,7 @@ export default function QuizzesPage({
                     <div className="shrink-0">
                       <Button
                         onClick={handleNext}
-                        className="h-11 px-6 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold"
+                        className="h-8 px-3 sm:h-9 sm:px-4 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[10px] sm:text-xs font-bold"
                       >
                         {isLastQuestion ? "Finish Quiz" : "Next Question"}
                       </Button>

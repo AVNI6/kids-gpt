@@ -9,7 +9,6 @@ export interface AuthState {
   userRole: UserRole | null;
   isLoading: boolean;
   isInitializing: boolean;
-  isUserLoggedIn: boolean;
 }
 
 const initialState: AuthState = {
@@ -18,7 +17,6 @@ const initialState: AuthState = {
   userRole: null,
   isLoading: true,
   isInitializing: true,
-  isUserLoggedIn: false,
 };
 
 /**
@@ -54,7 +52,6 @@ const authSlice = createSlice({
     setSessionUser: (state, action: PayloadAction<User | null>) => {
       const user = action.payload;
       state.user = user;
-      state.isUserLoggedIn = !!user;
       if (!user) {
         state.userProfile = null;
         state.userRole = null;
@@ -77,7 +74,6 @@ const authSlice = createSlice({
       state.user = null;
       state.userProfile = null;
       state.userRole = null;
-      state.isUserLoggedIn = false;
       state.isLoading = false;
       state.isInitializing = false;
     },

@@ -48,7 +48,7 @@ export default function MatchFollowingPage({
   }, [game.showScorecard]);
 
   return (
-    <div className="h-full bg-background overflow-hidden flex flex-col relative min-h-screen">
+    <div className="bg-background overflow-y-auto flex flex-col relative min-h-full">
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
@@ -66,8 +66,8 @@ export default function MatchFollowingPage({
       <div className="absolute top-20 left-10 h-32 w-32 rounded-full bg-orange-500/5 blur-3xl pointer-events-none" />
       <div className="absolute bottom-20 right-10 h-48 w-48 rounded-full bg-yellow-500/5 blur-3xl pointer-events-none" />
 
-      <main className="relative z-10 flex-1 px-4 py-4 md:px-8 md:py-5 overflow-hidden flex flex-col min-h-0">
-        <div className="mx-auto max-w-3xl w-full h-full flex flex-col justify-between gap-3 min-h-0">
+      <main className="relative z-10 flex-1 px-4 py-4 md:px-8 md:py-5 flex flex-col min-h-0">
+        <div className="mx-auto max-w-3xl w-full flex-1 flex flex-col justify-between gap-3 min-h-0">
           {/* Header */}
           <div className="flex items-center justify-between shrink-0">
             <Link

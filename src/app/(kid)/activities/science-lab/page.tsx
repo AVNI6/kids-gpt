@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Beaker, CheckCircle2, FlaskConical, ArrowLeft } from "lucide-react";
+import { CheckCircle2, FlaskConical, ArrowLeft } from "lucide-react";
 import { getActivityXp } from "@/lib/services/kid/activities/activity.actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
+import { ActivityCard, ActivityCardContent } from "@/components/ui/card";
 import { APP_ROUTES } from "@/lib/constants/app_routes";
 import { type ScienceLabItem } from "@/types/activities.type";
 import VictoryModal from "@/components/shared/VictoryModal";
@@ -110,50 +110,47 @@ export default function ScienceLabPage({
   // Render normal game view; VictoryModal handles completion celebrate state
 
   return (
-    <div className="h-full bg-background flex flex-col relative min-h-screen overflow-y-auto md:overflow-hidden">
-      <main className="flex-1 px-4 py-4 md:px-8 md:py-5 flex flex-col min-h-0 overflow-y-auto md:overflow-hidden">
-        <div className="mx-auto max-w-4xl w-full h-full flex flex-col justify-between gap-3 min-h-0">
+    <div className="bg-background flex flex-col relative h-full max-h-full overflow-hidden">
+      <main className="flex-1 px-4 py-4 md:px-6 flex flex-col min-h-0 overflow-hidden">
+        <div className="mx-auto max-w-4xl w-full flex-1 flex flex-col justify-start gap-4 sm:gap-5 min-h-0 overflow-hidden">
           <Link
             href={APP_ROUTES.Activities}
-            className="inline-flex items-center gap-2 text-emerald-600 font-bold hover:text-emerald-800 hover:-translate-x-1 transition-transform bg-card px-4 py-1.5 rounded-full shadow-sm border border-border w-fit text-sm shrink-0"
+            className="inline-flex items-center gap-1.5 text-emerald-600 font-bold hover:text-emerald-800 hover:-translate-x-1 transition-transform bg-card px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full shadow-sm border border-border w-fit text-xs sm:text-sm shrink-0"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Activities
+            <ArrowLeft className="h-3.5 w-3.5" /> Back{" "}
+            <span className="hidden sm:inline">to Activities</span>
           </Link>
 
-          <div className="space-y-1.5 shrink-0">
+          <div className="space-y-1 shrink-0">
             <div className="flex items-center justify-between text-xs text-emerald-600 font-bold">
-              <span>{labTitle} 🧪</span>
-              <span className="flex items-center gap-1.5 rounded-full bg-card px-2.5 py-0.5 shadow-sm border border-border">
-                <FlaskConical className="h-3.5 w-3.5 text-emerald-500" /> Experiment{" "}
+              <span className="truncate max-w-[120px] sm:max-w-none text-[11px] sm:text-xs">
+                {labTitle} 🧪
+              </span>
+              <span className="flex items-center gap-1 rounded-full bg-card px-2 py-0.5 shadow-sm border border-border text-[10px] sm:text-xs">
+                <FlaskConical className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" /> Experiment{" "}
                 {currentExp + 1} of {safeExperiments.length}
               </span>
             </div>
             <Progress
               value={progress}
-              className="h-2 rounded-full bg-emerald-500/10 [&>div]:bg-emerald-500"
+              className="h-1.5 rounded-full bg-emerald-500/10 [&>div]:bg-emerald-500"
             />
           </div>
 
-          <Card className="border-4 border-emerald-500/20 shadow-md rounded-[1.5rem] overflow-hidden bg-card flex-1 flex flex-col min-h-[160px] md:min-h-[220px]">
-            <div className="bg-emerald-500 p-2.5 flex justify-center shrink-0">
-              <div className="bg-white p-2 rounded-full shadow-inner animate-pulse">
-                <Beaker
-                  className="h-8 w-8 text-emerald-600 animate-bounce"
-                  style={{ animationDuration: "3s" }}
-                />
+          <ActivityCard className="border-4 border-emerald-500/20 my-2">
+            <ActivityCardContent>
+              <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center text-center gap-4 my-auto">
+                <h2 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-black text-foreground shrink-0 animate-in fade-in">
+                  {exp.title}
+                </h2>
+                <p className="text-xs sm:text-base md:text-lg text-muted-foreground font-medium bg-emerald-500/5 p-3 sm:p-4 rounded-xl border-2 border-emerald-500/10 animate-in zoom-in-95 w-full">
+                  {exp.setup}
+                </p>
               </div>
-            </div>
-            <CardContent className="p-4 md:p-6 text-center flex-1 flex flex-col justify-center gap-3 min-h-0 overflow-y-auto">
-              <h2 className="text-xl md:text-2xl font-black text-foreground shrink-0 animate-in fade-in">
-                {exp.title}
-              </h2>
-              <p className="text-base md:text-lg text-muted-foreground font-medium bg-emerald-500/5 p-4 rounded-xl border-2 border-emerald-500/10 animate-in zoom-in-95">
-                {exp.setup}
-              </p>
-            </CardContent>
-          </Card>
+            </ActivityCardContent>
+          </ActivityCard>
 
-          <div className="grid grid-cols-2 gap-3 shrink-0">
+          <div className="grid grid-cols-2 gap-2.5 shrink-0">
             {exp.options.map((opt) => {
               const isSelected = selected === opt.id;
               const isCorrect = opt.correct;
@@ -163,50 +160,51 @@ export default function ScienceLabPage({
               return (
                 <button
                   key={opt.id}
+                  type="button"
                   onClick={() => {
-                    if (!selected) {
+                    if (selected === null) {
                       setSelected(opt.id);
-                      const isOptCorrect = opt.correct;
-                      if (isOptCorrect) {
+                      if (opt.correct) {
                         setCorrectCount((prev) => prev + 1);
                       }
-                      // Capture this experiment's result for the review snapshot
                       resultsRef.current.push({
-                        title: rawExp.title,
-                        setup: rawExp.setup,
+                        title: exp.title,
+                        setup: exp.setup,
                         kid_answer: opt.label,
-                        correct_answer: rawExp.options.find((o) => o.correct)?.label ?? "",
-                        is_correct: isOptCorrect,
-                        explanation: rawExp.explanation,
+                        correct_answer: exp.options.find((o) => o.correct)?.label ?? "",
+                        is_correct: opt.correct,
+                        explanation: exp.explanation,
                       });
                     }
                   }}
                   disabled={selected !== null}
-                  className={`p-4 md:p-6 rounded-2xl border-4 text-lg md:text-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 ${
+                  className={`p-2.5 sm:p-3 md:p-4 rounded-2xl border-2 text-xs sm:text-base md:text-lg font-bold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 ${
                     showSuccess
                       ? "border-green-500 bg-green-500/10 text-green-600 scale-[1.01]"
                       : showError
                         ? "border-red-500 bg-red-500/10 text-red-600 opacity-50"
-                        : "border-emerald-500/20 bg-card text-emerald-600 hover:bg-emerald-500/5 hover:-translate-y-1 hover:shadow-md active:translate-y-0.5 active:shadow-none"
+                        : "border-emerald-500/20 bg-card text-emerald-600 hover:bg-emerald-500/5 hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0.5 active:shadow-none"
                   }`}
                 >
                   <span>{opt.label}</span>
-                  {showSuccess && <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />}
+                  {showSuccess && (
+                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 shrink-0" />
+                  )}
                 </button>
               );
             })}
           </div>
 
-          <div className="h-20 shrink-0 flex items-center justify-center">
+          <div className="min-h-0 mt-2 shrink-0 flex items-center justify-center">
             {selected !== null && (
-              <div className="w-full flex items-center gap-3 bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 animate-in fade-in slide-in-from-bottom-2">
-                <div className="flex-1 text-emerald-600 font-bold text-sm md:text-base flex items-start gap-2 min-w-0">
-                  <span className="text-2xl shrink-0">🔬</span>
-                  <p className="truncate md:whitespace-normal md:line-clamp-2">{exp.explanation}</p>
+              <div className="w-full flex items-center gap-2.5 bg-emerald-500/10 p-2.5 rounded-2xl border border-emerald-500/20 animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex-1 text-emerald-600 font-bold text-[10px] sm:text-xs md:text-sm flex items-start gap-1.5 min-w-0">
+                  <span className="text-lg shrink-0">🔬</span>
+                  <p className="line-clamp-2 md:line-clamp-none">{exp.explanation}</p>
                 </div>
                 <Button
                   onClick={handleNext}
-                  className="h-10 px-6 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-[0_4px_0px_0px_#047857] active:translate-y-1 active:shadow-none transition-all shrink-0"
+                  className="h-8 px-3 sm:h-9 sm:px-4 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] sm:text-xs font-bold shadow-[0_3px_0px_0px_#047857] active:translate-y-0.5 active:shadow-none transition-all shrink-0"
                 >
                   {currentExp === safeExperiments.length - 1 ? "Finish Lab 🔬" : "Next Experiment"}
                 </Button>

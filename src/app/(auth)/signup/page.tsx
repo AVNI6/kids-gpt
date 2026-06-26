@@ -40,15 +40,7 @@ function SignupForm() {
   useEffect(() => {
     if (isUserLoggedIn && userProfile) {
       if (userProfile.is_onboarded) {
-        const role = userProfile.role;
-        if (role) {
-          const roleRedirectMap: Record<string, string> = {
-            kid: "/dashboard/kid",
-            parent: "/dashboard/parent",
-            teacher: "/dashboard/teacher",
-          };
-          router.replace(roleRedirectMap[role] || "/");
-        }
+        router.replace("/");
       } else {
         if (user?.user_metadata?.invite_token) {
           router.replace("/onboarding/kid");
@@ -174,9 +166,9 @@ function SignupForm() {
           description: "Please check your email to confirm your account.",
         });
 
-        // Email confirmation disabled (dev mode) — session returned immediately
+        // Email confirmation disabled (dev mode) — session returned immediately.
+        // We let the page-level useEffect handle the onboarding redirect.
         if (data.session || isUserLoggedIn) {
-          router.push(inviteToken ? `/onboarding/kid` : `/onboarding`);
           return;
         }
 

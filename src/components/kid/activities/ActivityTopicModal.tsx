@@ -247,33 +247,22 @@ export default function ActivityTopicModal({
         <div className="fixed inset-0 bg-background/90 backdrop-blur-lg flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
           <div className="text-center max-w-md flex flex-col items-center">
             <div className="relative mb-6 h-40 w-40 motion-reduce:animate-none">
-              <div className="absolute inset-0 rounded-full border border-sky-500/15 border-dashed" />
+              {/* Dashed Orbit Track */}
+              <div className="absolute inset-0 rounded-full border border-sky-500/30 border-dashed" />
 
-              <div className="absolute inset-8 overflow-hidden rounded-full bg-[#39beff] shadow-[0_0_40px_rgba(57,190,255,0.28)]">
-                <div className="absolute left-0 top-0 h-full w-1/2 bg-[#2f9fe0]/35" />
-                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_34%_28%,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.16)_12%,rgba(255,255,255,0)_30%)]" />
-
-                <div className="absolute left-[28%] top-[24%] h-3.5 w-3.5 rounded-full bg-[#2a8ec8]/55" />
-                <div className="absolute left-[54%] top-[22%] h-2.5 w-2.5 rounded-full bg-[#2a8ec8]/55" />
-                <div className="absolute left-[18%] top-[44%] h-2.5 w-2.5 rounded-full bg-[#2a8ec8]/55" />
-                <div className="absolute left-[43%] top-[53%] h-3 w-3 rounded-full bg-[#2a8ec8]/55" />
-                <div className="absolute left-[61%] top-[48%] h-4 w-4 rounded-full bg-[#2a8ec8]/55" />
-
-                <div className="absolute left-[38%] top-[46%] h-10.5 w-10.5 rounded-full border-b-8 border-[#1f6f9d]/55 opacity-35" />
-                <div className="absolute left-[33%] top-[40%] h-5 w-5 rounded-full bg-[#17658d]/45" />
-                <div className="absolute left-[58%] top-[40%] h-5 w-5 rounded-full bg-[#17658d]/45" />
-                <div className="absolute left-[42%] top-[58%] h-3.5 w-7 rounded-b-full border-b-4 border-[#17658d]/45 opacity-45" />
-                <div className="absolute left-[28%] top-[63%] h-4 w-8 rounded-full bg-[#ff9db3]/45 blur-[1px]" />
-                <div className="absolute right-[28%] top-[63%] h-4 w-8 rounded-full bg-[#ff9db3]/45 blur-[1px]" />
+              {/* Central Earth */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                {/* Optional soft glow behind earth */}
+                <div className="absolute h-16 w-16 rounded-full bg-sky-500/20 shadow-[0_0_40px_rgba(14,165,233,0.3)]" />
+                <div className="text-[5rem] drop-shadow-xl z-10 select-none">🌍</div>
               </div>
 
-              <div className="absolute inset-0 animate-[spin_5.8s_linear_infinite] motion-reduce:animate-none">
+              {/* Rotating Moon */}
+              <div className="absolute inset-0 animate-[spin_4s_linear_infinite] motion-reduce:animate-none z-20">
                 <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">
-                  <div className="text-4xl drop-shadow-sm">🌏</div>
+                  <div className="text-3xl drop-shadow-md select-none">🌕</div>
                 </div>
               </div>
-
-              <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-500/80 shadow-[0_0_0_10px_rgba(14,165,233,0.12)]" />
             </div>
 
             <h3 className="text-3xl font-black text-foreground">

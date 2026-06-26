@@ -249,7 +249,7 @@ export default function VictoryModal({
               </motion.div>
 
               {/* Title & Description */}
-              <h2 className="text-3xl font-black text-slate-900 dark:text-slate-50 tracking-tight mb-2 animate-pulse shrink-0">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-50 tracking-tight mb-2 animate-pulse shrink-0">
                 You Did It! 🎉
               </h2>
               <p className="text-slate-500 dark:text-slate-400 font-semibold mb-6 max-w-xs shrink-0 text-sm">

@@ -1,5 +1,5 @@
 import { APP_ROUTES } from "@/lib/constants/app_routes";
-import { Users, BarChart3, ClipboardList, Home, Settings } from "lucide-react";
+import { Users, BarChart3, ClipboardList, Home } from "lucide-react";
 import type { NavItemConfig } from "./kid-nav";
 
 export const parentNavItems: NavItemConfig[] = [
@@ -17,5 +17,4 @@ export const parentNavItems: NavItemConfig[] = [
     isParameterized: true,
     icon: ClipboardList,
   },
-  { label: "Settings", href: "/dashboard/parent/settings", exact: false, icon: Settings },
 ];
