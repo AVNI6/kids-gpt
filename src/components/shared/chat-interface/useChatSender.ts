@@ -9,6 +9,7 @@ import {
   addSession,
   setCurrentSessionId,
   updateMessage,
+  touchSession,
 } from "@/store/slices/chatSlice";
 import {
   createChatSession,
@@ -323,6 +324,7 @@ export function useChatSender({
           console.error("Failed to initialize session/message:", error);
         }
       } else if (!isResume && sessionId && canPersist) {
+        dispatch(touchSession(sessionId));
         const userTokens = Math.round(currentInput.length / 4);
         // Save user message and track usage in the background to avoid blocking generation
         Promise.all([

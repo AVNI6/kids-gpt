@@ -26,10 +26,6 @@ export default async function Home({ searchParams }: PageProps) {
     if (profile) {
       if (!profile.is_onboarded) {
         redirect("/onboarding");
-      } else if (profile.role === "parent") {
-        redirect("/dashboard/parent");
-      } else if (profile.role === "teacher") {
-        redirect("/dashboard/teacher");
       }
     }
   }

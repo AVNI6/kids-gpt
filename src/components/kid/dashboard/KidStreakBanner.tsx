@@ -40,11 +40,16 @@ export default async function KidStreakBanner() {
           <StreakDisplay streak={stats.current_streak} variant="kid-card" />
 
           <div className="rounded-[28px] border border-slate-200/60 bg-white/90 p-4 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/40">
-            <div className="text-xs font-bold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-400">
+            <div className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.12em] sm:tracking-[0.16em] text-sky-700 dark:text-sky-400">
               Experience points
             </div>
-            <div className="mt-3 text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
-              {getSafeXP(stats.total_experience_points)}
+            <div className="mt-2.5 flex flex-col">
+              <span className="text-3xl sm:text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
+                {getSafeXP(stats.total_experience_points)}
+              </span>
+              <span className="mt-1 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
+                total xp
+              </span>
             </div>
           </div>
         </div>

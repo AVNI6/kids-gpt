@@ -51,6 +51,7 @@ export default function Sidebar() {
   const pathname = usePathname() || "";
   const sessions = useAppSelector((state) => state.chat.sessions);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
+  const hasMoreSessions = useAppSelector((state) => state.chat.hasMoreSessions);
   const { user, userProfile, isUserLoggedIn, isLoading: isLoadingAuth } = useAuth();
   const userId = user?.id;
   const userRole = userProfile?.role ?? "kid";
@@ -70,9 +71,8 @@ export default function Sidebar() {
   const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
   const isOpen = state === "expanded" || isMobile;
 
-  const [hasMoreSessions, setHasMoreSessions] = useState(true);
   const [isLoadingMoreSessions, setIsLoadingMoreSessions] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const isInitialLoading = useAppSelector((state) => state.chat.isLoadingSessions);
 
   // Automatically close the mobile sidebar drawer on navigation or chat session switch
   useEffect(() => {
@@ -81,61 +81,12 @@ export default function Sidebar() {
     }
   }, [pathname, currentSessionId, isMobile, setOpenMobile]);
 
-  useEffect(() => {
-    let active = true;
-    let controller = new AbortController();
-
-    const loadSessions = async () => {
-      if (isLoadingAuth) {
-        return;
-      }
-      try {
-        if (userId) {
-          controller.abort();
-          controller = new AbortController();
-
-          setHasMoreSessions(true);
-          setIsLoadingMoreSessions(false);
-          setIsInitialLoading(true);
-
-          const userSessions = await fetchUserSessions(userId, undefined, undefined, 20);
-          if (active) {
-            dispatch(setSessions(userSessions));
-            if (userSessions.length < 20) {
-              setHasMoreSessions(false);
-            }
-          }
-        } else {
-          if (active) {
-            dispatch(setSessions([]));
-            setHasMoreSessions(false);
-          }
-        }
-      } catch (err) {
-        if (active) {
-          console.error("Failed to load sessions:", err);
-        }
-      } finally {
-        if (active) {
-          setIsInitialLoading(false);
-        }
-      }
-    };
-    loadSessions();
-
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [userId, isLoadingAuth, dispatch]);
-
   const handleLoadMoreSessions = useCallback(async () => {
     if (isLoadingMoreSessions || !hasMoreSessions || !userId) return;
     setIsLoadingMoreSessions(true);
 
     const oldestSession = sessions[sessions.length - 1];
     if (!oldestSession) {
-      setHasMoreSessions(false);
       setIsLoadingMoreSessions(false);
       return;
     }
@@ -148,13 +99,7 @@ export default function Sidebar() {
         20
       );
 
-      if (nextSessions.length < 20) {
-        setHasMoreSessions(false);
-      }
-
-      if (nextSessions.length > 0) {
-        dispatch(appendSessions(nextSessions));
-      }
+      dispatch(appendSessions(nextSessions));
     } catch (err) {
       console.error("Failed to load more sessions:", err);
     } finally {
@@ -192,7 +137,7 @@ export default function Sidebar() {
     async (sessionId: string) => {
       const originalSessions = [...sessions];
       const updatedSessions = sessions.filter((s: ChatSessionRow) => s.id !== sessionId);
-      dispatch(setSessions(updatedSessions));
+      dispatch(setSessions({ sessions: updatedSessions }));
 
       const wasCurrentSession = currentSessionId === sessionId;
       if (wasCurrentSession) {
@@ -204,7 +149,7 @@ export default function Sidebar() {
       try {
         await deleteChatSession(sessionId);
       } catch {
-        dispatch(setSessions(originalSessions));
+        dispatch(setSessions({ sessions: originalSessions }));
         if (wasCurrentSession) {
           dispatch(setCurrentSessionId(sessionId));
         }

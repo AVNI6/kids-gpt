@@ -17,9 +17,10 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
-      // Router replaces URL, clearing Redux state is handled automatically by onAuthStateChange
       router.replace("/");
+      // Allow router to start transitioning before session cookies are cleared
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await supabase.auth.signOut();
     } catch (error) {
       console.error("useAuth: Error logging out:", error);
     }

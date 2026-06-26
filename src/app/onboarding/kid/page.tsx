@@ -123,6 +123,17 @@ export default function KidOnboardingPage() {
     );
   }
 
+  if (userProfile?.is_onboarded) {
+    if (kidState.success) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
+        </div>
+      );
+    }
+    return <AlreadyOnboardedView />;
+  }
+
   if (inviteError) {
     return (
       <OnboardingLayout
@@ -155,17 +166,6 @@ export default function KidOnboardingPage() {
         </div>
       </OnboardingLayout>
     );
-  }
-
-  if (userProfile?.is_onboarded) {
-    if (kidState.success) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
-        </div>
-      );
-    }
-    return <AlreadyOnboardedView />;
   }
 
   const fullName = user?.user_metadata?.fullname || user?.user_metadata?.full_name || "";

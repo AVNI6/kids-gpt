@@ -50,15 +50,15 @@ export default function StreakDisplay({ streak, variant, className = "" }: Strea
         <div
           className={`rounded-[28px] border border-slate-200/60 bg-white/90 p-4 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/40 dark:shadow-none ${className}`}
         >
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-400">
-            <Flame className="h-4 w-4 sm:h-8 sm:w-8 text-sky-700 shrink-0 dark:text-sky-400 animate-pulse" />
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-[0.12em] sm:tracking-[0.16em] text-sky-700 dark:text-sky-400">
+            <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-sky-700 shrink-0 dark:text-sky-400 animate-pulse" />
             Learning streak
           </div>
-          <div className="mt-3 flex items-end gap-2">
-            <span className="text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
+          <div className="mt-2.5 flex flex-col">
+            <span className="text-3xl sm:text-4xl font-black leading-none text-slate-950 dark:text-slate-50">
               {activeStreak}
             </span>
-            <span className="pb-1 text-sm font-semibold text-slate-500 dark:text-slate-400">
+            <span className="mt-1 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
               days straight!
             </span>
           </div>

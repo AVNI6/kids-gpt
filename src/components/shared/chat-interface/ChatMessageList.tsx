@@ -63,7 +63,7 @@ const ChatMessageList = memo(function ChatMessageList({
   return (
     <div className="flex-1 min-h-0 overflow-hidden relative">
       <ScrollArea viewportRef={viewportRef} onScroll={handleScroll} className="h-full w-full">
-        <div className="w-full max-w-3xl mx-auto pb-6 px-2 py-4 sm:p-0 sm:py-6">
+        <div className="w-full max-w-3xl mx-auto pb-6 px-2 py-4 sm:p-0 sm:py-6 space-y-3">
           {isLoadingMore && (
             <div className="flex justify-center py-2 text-xs font-semibold text-muted-foreground gap-2 items-center">
               <Spinner className="w-4 h-4 animate-spin text-sky-500" />
