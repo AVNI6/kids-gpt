@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
     email: string;
   };
 
-  const { register, handleSubmit } = useForm<FormValue>();
+  const { register, handleSubmit, reset } = useForm<FormValue>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
@@ -50,6 +50,7 @@ export default function ForgotPasswordPage() {
         toast.success("Reset link sent!", {
           description: "Please check your email for instructions.",
         });
+        reset();
       }
     } catch (err) {
       toast.error("An error occurred", {

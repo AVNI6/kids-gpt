@@ -108,6 +108,19 @@ export async function updateChatMessage(
   }
 ) {
   const supabase = await createClient();
+
+  // Retrieve existing message status to prevent race conditions from overwriting a stopped/failed state
+  const { data: existingMsg } = await supabase
+    .from("chat_messages")
+    .select("status")
+    .eq("id", messageId)
+    .maybeSingle();
+
+  if (existingMsg?.status === "failed") {
+    // If user terminated/paused the chat session, ignore any further stream updates
+    return;
+  }
+
   const { error } = await supabase.from("chat_messages").update(updates).eq("id", messageId);
 
   if (error) {

@@ -301,9 +301,9 @@ function SignupForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
                   >
-                    {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+                    {showPassword ? <IoEyeOffOutline size={20} /> : <IoEyeOutline size={20} />}
                   </button>
                 </div>
                 {errors.password && (

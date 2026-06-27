@@ -183,7 +183,17 @@ export async function createChildInvitation(
   const inviteLink = `${baseUrl}/signup?invite_token=${token}`;
 
   // Send mock email
-  await sendInvitationEmail(targetEmail, parentName, inviteLink);
+  try {
+    await sendInvitationEmail(targetEmail, parentName, inviteLink);
+  } catch (emailErr) {
+    console.error("Failed to send invitation email:", emailErr);
+    // Rollback: delete the inserted invitation row from the database so it's not locked as "pending"
+    await supabase.from("child_invitations").delete().eq("token", token);
+    return {
+      success: false,
+      error: "Failed to send invitation email. Please check your SMTP configuration and try again.",
+    };
+  }
 
   return {
     success: true,
@@ -285,7 +295,9 @@ export type PendingInvitation = {
  */
 export async function getPendingInvitations(): Promise<PendingInvitation[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user || !user.email) return [];
 
   const { data: invites, error } = await supabase
@@ -322,7 +334,9 @@ export async function getPendingInvitations(): Promise<PendingInvitation[]> {
       expires_at: invite.expires_at,
       created_at: invite.created_at,
       parent_name: profile
-        ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || profile.username || "Parent"
+        ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
+          profile.username ||
+          "Parent"
         : "Parent",
       parent_email: profile?.email || "",
       parent_avatar: profile?.avatar_url || null,
@@ -343,7 +357,9 @@ export type SentInvitation = {
  */
 export async function getSentPendingInvitations(): Promise<SentInvitation[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   const { data, error } = await supabase
@@ -372,7 +388,9 @@ export async function acceptChildInvitation(
   if (!inviteId) return { success: false, error: "Invitation ID is required." };
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Not authenticated." };
 
   // Call the transactional accept_child_invitation RPC
@@ -415,7 +433,9 @@ export async function declineChildInvitation(
   if (!inviteId) return { success: false, error: "Invitation ID is required." };
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Not authenticated." };
 
   const { error } = await supabase
@@ -444,7 +464,9 @@ export async function cancelChildInvitation(
   if (!inviteId) return { success: false, error: "Invitation ID is required." };
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Not authenticated." };
 
   const { error } = await supabase

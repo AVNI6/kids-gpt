@@ -297,28 +297,26 @@ export function useChatSender({
               : `/?id=${sessionId}`;
           router.replace(targetUrl);
 
-          // Perform DB writes in the background to avoid blocking AI generation
+          // Perform DB writes before AI generation to prevent race conditions on session creation
           const userTokens = Math.round(currentInput.length / 4);
-          (async () => {
-            try {
-              await createChatSession(sessionTitle, user?.id, tempSessionId);
-              await Promise.all([
-                saveChatMessage(
-                  tempSessionId,
-                  "user",
-                  savedContent,
-                  {
-                    tokens: userTokens,
-                    attachmentUrl: userAttachmentUrl,
-                  },
-                  user?.id
-                ),
-                trackDailyUsage(userTokens, {}, user?.id),
-              ]);
-            } catch (dbErr) {
-              console.error("Failed to save new session/message to database in background:", dbErr);
-            }
-          })();
+          try {
+            await createChatSession(sessionTitle, user?.id, tempSessionId);
+            await Promise.all([
+              saveChatMessage(
+                tempSessionId,
+                "user",
+                savedContent,
+                {
+                  tokens: userTokens,
+                  attachmentUrl: userAttachmentUrl,
+                },
+                user?.id
+              ),
+              trackDailyUsage(userTokens, {}, user?.id),
+            ]);
+          } catch (dbErr) {
+            console.error("Failed to save new session/message to database:", dbErr);
+          }
         } catch (error) {
           console.error("Failed to initialize session/message:", error);
         }

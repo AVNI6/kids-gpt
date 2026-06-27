@@ -31,21 +31,15 @@ function LoginPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { isUserLoggedIn, userProfile, user, isInitializing } = useAuth();
+  const { isUserLoggedIn, userProfile, user } = useAuth();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isUserLoggedIn && userProfile) {
+      // Show welcome toast on destination page
+      sessionStorage.setItem("showWelcomeToast", "true");
+
       if (userProfile.is_onboarded) {
-        const role = userProfile.role;
-        if (role) {
-          const roleRedirectMap: Record<string, string> = {
-            kid: "/dashboard/kid",
-            parent: "/dashboard/parent",
-            teacher: "/dashboard/teacher",
-          };
-          router.replace(roleRedirectMap[role] || "/");
-        }
+        router.replace("/");
       } else {
         if (user?.user_metadata?.invite_token) {
           router.replace("/onboarding/kid");
@@ -89,23 +83,20 @@ function LoginPageContent() {
     initRemembered();
   }, [setValue]);
 
-  if (isInitializing || (isUserLoggedIn && !userProfile)) {
-    return <AuthSkeleton />;
-  }
-
   const onSubmit: SubmitHandler<FormValue> = async (e) => {
     setIsSubmitting(true);
     const { data, error } = await supabase.auth.signInWithPassword({
       email: e.email,
       password: e.password,
     });
+
     if (error) {
       toast.error("Sign in failed", { description: error.message });
       setIsSubmitting(false);
       return;
     }
+
     if (data) {
-      // Save credentials if Remember Me is checked. Otherwise clear them.
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");
         localStorage.setItem("rememberedEmail", e.email);
@@ -124,36 +115,8 @@ function LoginPageContent() {
         localStorage.removeItem("rememberedEmail");
         localStorage.removeItem("rememberedPassword");
       }
-
-      // Attempt to read profile and route first-time users to onboarding.
-      try {
-        const userId = data.user?.id;
-        if (userId) {
-          const { data: profileData } = await supabase
-            .from("profile")
-            .select("is_onboarded")
-            .eq("user_id", userId)
-            .maybeSingle();
-
-          const isOnboarded = Boolean(profileData?.is_onboarded);
-
-          if (!isOnboarded) {
-            // Always redirect to the root onboarding role selection page if not onboarded yet
-            window.location.assign("/onboarding");
-            return;
-          }
-        }
-      } catch (err) {
-        console.error("Error checking profile after sign-in:", err);
-      }
-
-      window.location.assign("/");
-      toast.success("Welcome!", {
-        description: "Login successful!",
-      });
+      sessionStorage.setItem("showWelcomeToast", "true");
     }
-
-    setIsSubmitting(false);
   };
 
   return (
@@ -256,9 +219,9 @@ function LoginPageContent() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors z-20"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
                 >
-                  {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+                  {showPassword ? <IoEyeOffOutline size={20} /> : <IoEyeOutline size={20} />}
                 </button>
               </div>
               <div className="flex justify-between mt-1">
@@ -321,7 +284,7 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<AuthSkeleton />}>
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
       <LoginPageContent />
     </Suspense>
   );
