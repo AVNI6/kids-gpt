@@ -260,7 +260,7 @@ export function useChatSender({
           ),
           trackDailyUsage(userTokens, {}, user?.id),
         ]).catch((dbErr) => {
-          console.error("Failed to save user message or track usage in background:", dbErr);
+          console.error("Failed to save user message to database:", dbErr);
         });
       }
 

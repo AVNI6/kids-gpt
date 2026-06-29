@@ -119,6 +119,7 @@ function cleanTerminationContent(content: string): string {
     .replace(/Session has been terminated\./g, "")
     .trim();
 }
+
 const ChatMessageItem = React.memo(
   function ChatMessageItem({
     message,
@@ -245,12 +246,10 @@ const ChatMessageItem = React.memo(
       !message.isDocRequest &&
       message.status !== "failed";
 
-    // Task 3.2: Update termination detection logic
     const isStoppedByUser =
       !!message.content &&
       (message.content.includes("stopped by user") || message.content.includes("terminated"));
 
-    // Task 3.3: Apply content cleaning
     const cleanContent = isStoppedByUser
       ? cleanTerminationContent(message.content)
       : message.content;
@@ -268,6 +267,7 @@ const ChatMessageItem = React.memo(
     if (hasNoDisplayContent) {
       return null;
     }
+
     return (
       <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
         <div

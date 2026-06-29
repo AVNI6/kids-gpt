@@ -79,6 +79,7 @@ export default function Sidebar() {
       setOpenMobile(false);
     }
   }, [pathname, currentSessionId, isMobile, setOpenMobile]);
+
   const handleLoadMoreSessions = useCallback(async () => {
     if (isLoadingMoreSessions || !hasMoreSessions || !userId) return;
     setIsLoadingMoreSessions(true);
