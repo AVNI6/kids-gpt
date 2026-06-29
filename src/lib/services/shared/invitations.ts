@@ -221,7 +221,17 @@ export async function createChildInvitation(
   console.log(
     `[createChildInvitation] New user path — SENDING invitation email to ${targetEmail}.`
   );
-  await sendInvitationEmail(targetEmail, parentName, inviteLink);
+  try {
+    await sendInvitationEmail(targetEmail, parentName, inviteLink);
+  } catch (emailErr) {
+    console.error("Failed to send invitation email:", emailErr);
+    // Rollback: delete the inserted invitation row from the database so it's not locked as "pending"
+    await supabase.from("child_invitations").delete().eq("token", token);
+    return {
+      success: false,
+      error: "Failed to send invitation email. Please check your SMTP configuration and try again.",
+    };
+  }
 
   return {
     success: true,

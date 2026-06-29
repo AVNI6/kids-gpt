@@ -106,7 +106,8 @@ export default function LoginPageContent() {
         const isOnboarded = Boolean(profileData?.is_onboarded);
 
         if (!isOnboarded) {
-          window.location.assign("/onboarding");
+          const inviteToken = data.user.user_metadata?.invite_token;
+          window.location.assign(inviteToken ? "/onboarding/kid" : "/onboarding");
           return;
         }
       } catch (err) {
