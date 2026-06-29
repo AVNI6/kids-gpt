@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -45,6 +45,21 @@ export default function ChangePasswordModal({
   const [confirmTouched, setConfirmTouched] = useState(false);
 
   const [isPending, startTransition] = useTransition();
+  const [isOAuthUser, setIsOAuthUser] = useState(false);
+
+  useEffect(() => {
+    const checkUserProvider = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const hasEmailIdentity = user.identities?.some((id) => id.provider === "email") ?? false;
+        setIsOAuthUser(!hasEmailIdentity);
+      }
+    };
+    checkUserProvider();
+  }, []);
 
   // Reset all states
   const handleReset = () => {
@@ -67,7 +82,7 @@ export default function ChangePasswordModal({
   };
 
   // Validation
-  const currentError = currentPassword ? "" : "Current password is required.";
+  const currentError = isOAuthUser ? "" : currentPassword ? "" : "Current password is required.";
 
   const validationResult = validatePassword(newPassword);
   const newError = validationResult === true ? "" : validationResult;
@@ -79,7 +94,7 @@ export default function ChangePasswordModal({
       : "";
 
   const isFormValid =
-    currentPassword.length > 0 &&
+    (isOAuthUser || currentPassword.length > 0) &&
     newPassword.length > 0 &&
     validationResult === true &&
     confirmPassword === newPassword;
@@ -92,15 +107,17 @@ export default function ChangePasswordModal({
       try {
         const supabase = createClient();
 
-        // 1. Verify current password
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password: currentPassword,
-        });
+        // 1. Verify current password (if not OAuth user)
+        if (!isOAuthUser) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password: currentPassword,
+          });
 
-        if (signInError) {
-          toast.error("Incorrect current password.");
-          return;
+          if (signInError) {
+            toast.error("Incorrect current password.");
+            return;
+          }
         }
 
         // 2. Call the role-specific update action
@@ -147,39 +164,49 @@ export default function ChangePasswordModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 pt-4">
-          {/* Current Password */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="currentPassword" className="text-sm font-bold text-foreground ml-1">
-              Current Password
-            </Label>
-            <div className="relative">
-              <Input
-                id="currentPassword"
-                type={showCurrent ? "text" : "password"}
-                placeholder="••••••••"
-                value={currentPassword}
-                onChange={(e) => {
-                  setCurrentPassword(e.target.value);
-                  setCurrentTouched(true);
-                }}
-                onBlur={() => setCurrentTouched(true)}
-                className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium pl-11 pr-11"
-              />
-              <Lock className="absolute left-4 top-4 h-5 w-5 text-muted-foreground shrink-0" />
-              <button
-                type="button"
-                onClick={() => setShowCurrent(!showCurrent)}
-                className="absolute right-4 top-4 h-5 w-5 text-muted-foreground hover:text-foreground shrink-0 cursor-pointer flex items-center justify-center"
-              >
-                {showCurrent ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
+          {isOAuthUser ? (
+            <div className="mb-2 p-4 bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 text-xs font-bold rounded-2xl flex flex-col gap-1">
+              <span className="text-sm">🔑 Social Account Linked</span>
+              <span>
+                You are signed in using Google OAuth. Setting a password will allow you to sign in
+                with your email address directly in the future.
+              </span>
             </div>
-            {currentTouched && currentError && (
-              <p className="text-xs font-semibold text-rose-500 mt-1 ml-1 animate-in fade-in duration-200">
-                {currentError}
-              </p>
-            )}
-          </div>
+          ) : (
+            /* Current Password */
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="currentPassword" className="text-sm font-bold text-foreground ml-1">
+                Current Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="currentPassword"
+                  type={showCurrent ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={currentPassword}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    setCurrentTouched(true);
+                  }}
+                  onBlur={() => setCurrentTouched(true)}
+                  className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium pl-11 pr-11"
+                />
+                <Lock className="absolute left-4 top-4 h-5 w-5 text-muted-foreground shrink-0" />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrent(!showCurrent)}
+                  className="absolute right-4 top-4 h-5 w-5 text-muted-foreground hover:text-foreground shrink-0 cursor-pointer flex items-center justify-center"
+                >
+                  {showCurrent ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+              {currentTouched && currentError && (
+                <p className="text-xs font-semibold text-rose-500 mt-1 ml-1 animate-in fade-in duration-200">
+                  {currentError}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* New Password */}
           <div className="flex flex-col gap-2">
