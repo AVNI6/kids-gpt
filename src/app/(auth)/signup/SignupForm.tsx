@@ -365,7 +365,7 @@ export default function SignupForm() {
                 <li className="flex items-start gap-2.5 p-3 rounded-2xl bg-sky-50/50 dark:bg-sky-950/20 border border-sky-100/30">
                   <span className="text-xl">🤝</span>
                   <div>
-                    <h4 className="font-bold text-slate-850 dark:text-slate-200">
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200">
                       Be Kind & Respectful
                     </h4>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
@@ -377,7 +377,7 @@ export default function SignupForm() {
                 <li className="flex items-start gap-2.5 p-3 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100/30">
                   <span className="text-xl">🤫</span>
                   <div>
-                    <h4 className="font-bold text-slate-850 dark:text-slate-200">
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200">
                       Keep Secrets Secret
                     </h4>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
@@ -389,7 +389,7 @@ export default function SignupForm() {
                 <li className="flex items-start gap-2.5 p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/30">
                   <span className="text-xl">🙋‍♂️</span>
                   <div>
-                    <h4 className="font-bold text-slate-850 dark:text-slate-200">Ask a Grown-up</h4>
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200">Ask a Grown-up</h4>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                       If the AI ever says anything that makes you feel weird or uncomfortable, tell
                       your parent or teacher right away.
@@ -399,7 +399,7 @@ export default function SignupForm() {
                 <li className="flex items-start gap-2.5 p-3 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100/30">
                   <span className="text-xl">🚀</span>
                   <div>
-                    <h4 className="font-bold text-slate-850 dark:text-slate-200">
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200">
                       Learn & Explore
                     </h4>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
@@ -414,7 +414,7 @@ export default function SignupForm() {
                 <li className="flex items-start gap-2.5 p-3 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100/30">
                   <span className="text-xl">🛡️</span>
                   <div>
-                    <h4 className="font-bold text-slate-850 dark:text-slate-200">We Protect You</h4>
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200">We Protect You</h4>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                       We do not sell your personal details, and we do not advertise inside the
                       application.
@@ -424,7 +424,7 @@ export default function SignupForm() {
                 <li className="flex items-start gap-2.5 p-3 rounded-2xl bg-sky-50/50 dark:bg-sky-950/20 border border-sky-100/30">
                   <span className="text-xl">👨‍👩‍👧</span>
                   <div>
-                    <h4 className="font-bold text-slate-850 dark:text-slate-200">
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200">
                       Parent & Teacher Oversight
                     </h4>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
@@ -436,7 +436,7 @@ export default function SignupForm() {
                 <li className="flex items-start gap-2.5 p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/30">
                   <span className="text-xl">🔒</span>
                   <div>
-                    <h4 className="font-bold text-slate-850 dark:text-slate-200">Secure Storage</h4>
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200">Secure Storage</h4>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                       All details and chat sessions are stored behind secure databases with limited
                       access.

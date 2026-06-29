@@ -123,7 +123,7 @@ export default function LearningProgress() {
               <div key={subject.name} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-slate-700 dark:text-slate-350">
+                    <span className="font-bold text-sm text-slate-700 dark:text-slate-300">
                       {subject.name}
                     </span>
                   </div>
@@ -163,7 +163,7 @@ export default function LearningProgress() {
               </div>
             ) : aiInsights ? (
               <div className="space-y-4">
-                <p className="text-xs font-semibold text-slate-650 dark:text-slate-300 bg-sky-50/50 dark:bg-black/20 p-4 rounded-2xl border border-sky-100/60 dark:border-sky-900/20 leading-relaxed">
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-sky-50/50 dark:bg-black/20 p-4 rounded-2xl border border-sky-100/60 dark:border-sky-900/20 leading-relaxed">
                   {aiInsights.summary}
                 </p>
 

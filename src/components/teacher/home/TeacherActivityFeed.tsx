@@ -202,7 +202,7 @@ export default function TeacherActivityFeed({ activityEvents }: Props) {
 
                 return (
                   <div key={event.id || idx} className="flex gap-4 items-start py-5 px-3">
-                    <Avatar className="w-9 h-9 border border-white dark:border-slate-850 rounded-full shrink-0 shadow-sm ring-1 ring-slate-100 dark:ring-slate-800">
+                    <Avatar className="w-9 h-9 border border-white dark:border-slate-800 rounded-full shrink-0 shadow-sm ring-1 ring-slate-100 dark:ring-slate-800">
                       <AvatarImage src={avatarUrl ?? undefined} className="object-cover" />
                       <AvatarFallback className="text-xs font-black bg-indigo-500 text-white">
                         {initials}

@@ -90,7 +90,7 @@ export default function AchievementsRewards({ xp }: { xp: number }) {
               return (
                 <div
                   key={i}
-                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border ${badge.unlocked ? "bg-white border-amber-100 shadow-sm dark:bg-slate-800 dark:border-slate-700" : "bg-slate-50 border-slate-100 opacity-70 dark:bg-slate-900 dark:border-slate-850"} text-center group`}
+                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border ${badge.unlocked ? "bg-white border-amber-100 shadow-sm dark:bg-slate-800 dark:border-slate-700" : "bg-slate-50 border-slate-100 opacity-70 dark:bg-slate-900 dark:border-slate-800"} text-center group`}
                 >
                   <div
                     className={`p-3 rounded-full ${badge.bg} ${badge.color} mb-2 group-hover:scale-110 transition-transform`}

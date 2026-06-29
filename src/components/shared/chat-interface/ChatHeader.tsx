@@ -47,7 +47,7 @@ export default function ChatHeader({ toggleSidebar, sessionOwnerProfile }: ChatH
       {/* Right side controls & info */}
       <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         {sessionOwnerProfile && sessionOwnerProfile.role === "kid" && (
-          <div className="flex items-center gap-1.5 sm:gap-2.5 bg-slate-50 dark:bg-black/20 border border-slate-150/60 dark:border-slate-800/60 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-sm max-w-[110px] xs:max-w-[155px] sm:max-w-xs md:max-w-md min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-slate-800/60 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-sm max-w-[110px] xs:max-w-[155px] sm:max-w-xs md:max-w-md min-w-0">
             <Avatar
               size="sm"
               className="border border-sky-500/20 shadow-sm shrink-0 w-6 h-6 sm:w-8 sm:h-8"

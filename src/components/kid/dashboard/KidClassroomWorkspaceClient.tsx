@@ -377,7 +377,7 @@ export default function KidClassroomWorkspaceClient({
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
               <CardContent className="p-6 md:p-8 space-y-6">
                 <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16 border-2 border-indigo-100 shadow-sm shrink-0 dark:border-slate-850">
+                  <Avatar className="h-16 w-16 border-2 border-indigo-100 shadow-sm shrink-0 dark:border-slate-800">
                     <AvatarImage src={classroom.teacher?.avatar_url ?? undefined} />
                     <AvatarFallback className="bg-linear-to-br from-indigo-400 to-indigo-650 text-white font-extrabold text-lg">
                       {getInitials(classroom.teacher?.first_name, classroom.teacher?.last_name)}
@@ -463,7 +463,7 @@ export default function KidClassroomWorkspaceClient({
                     <Skeleton className="h-4 w-full rounded-full" />
                     <Skeleton className="h-3 w-full rounded-full" />
                   </div>
-                  <div className="pt-4 border-t border-slate-150 dark:border-slate-800 flex items-center justify-between">
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                     <div className="space-y-1">
                       <Skeleton className="h-3 w-20 rounded-full" />
                       <Skeleton className="h-6 w-16 rounded-full" />
@@ -503,7 +503,7 @@ export default function KidClassroomWorkspaceClient({
                     </div>
 
                     {/* XP Earned */}
-                    <div className="pt-4 border-t border-slate-150 dark:border-slate-800 flex items-center justify-between">
+                    <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                       <div>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
                           XP Earned Here
@@ -553,7 +553,7 @@ export default function KidClassroomWorkspaceClient({
             </div>
 
             {assignments.length === 0 ? (
-              <Card className="rounded-[32px] border-2 border-indigo-150 bg-indigo-50/5 p-12 text-center">
+              <Card className="rounded-[32px] border-2 border-indigo-200 bg-indigo-50/5 p-12 text-center">
                 <CardContent className="space-y-4 p-0 max-w-sm mx-auto flex flex-col items-center">
                   <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500">
                     <BookOpen className="h-6 w-6" />
@@ -760,11 +760,11 @@ export default function KidClassroomWorkspaceClient({
                                     </DialogHeader>
 
                                     <form onSubmit={handleSubmit} className="space-y-4 py-6 px-6">
-                                      <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50 space-y-1 dark:bg-slate-950">
+                                      <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200 space-y-1 dark:bg-slate-950">
                                         <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block">
                                           Instructions
                                         </span>
-                                        <h5 className="text-xs font-black text-slate-950 dark:text-slate-150">
+                                        <h5 className="text-xs font-black text-slate-950 dark:text-slate-200">
                                           {assign.title}
                                         </h5>
                                         {assign.description && (

@@ -184,7 +184,7 @@ export default function MyChildrenManagement({
                           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-extrabold uppercase tracking-wider mb-0.5">
                             Classroom
                           </p>
-                          <p className="text-sm font-bold text-slate-800 dark:text-slate-250 truncate">
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
                             {gradeStr}
                           </p>
                         </div>
@@ -199,7 +199,7 @@ export default function MyChildrenManagement({
                           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-extrabold uppercase tracking-wider mb-0.5">
                             Learning Level
                           </p>
-                          <p className="text-sm font-bold text-slate-800 dark:text-slate-250 truncate">
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
                             {getLevelTitle(child.total_experience_points)}
                           </p>
                         </div>

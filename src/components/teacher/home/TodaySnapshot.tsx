@@ -49,7 +49,7 @@ export default function TodaySnapshot({ snapshot }: Props) {
 
   return (
     <div className="h-full flex flex-col">
-      <Card className="rounded-[32px] border-slate-250/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm relative overflow-hidden flex-1 flex flex-col">
+      <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm relative overflow-hidden flex-1 flex flex-col">
         <CardContent className="p-5 md:p-6 flex flex-col gap-4 flex-1 justify-between">
           <div className="border-b border-slate-100 dark:border-slate-800 pb-3.5">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">

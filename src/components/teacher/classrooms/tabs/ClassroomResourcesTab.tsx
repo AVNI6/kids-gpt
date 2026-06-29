@@ -278,7 +278,7 @@ export default function ClassroomResourcesTab({
                         "flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-black rounded-xl cursor-pointer transition-all",
                         uploadMethod === "FILE"
                           ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-350"
+                          : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                       )}
                     >
                       <Upload className="h-3.5 w-3.5" />
@@ -295,7 +295,7 @@ export default function ClassroomResourcesTab({
                         "flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-black rounded-xl cursor-pointer transition-all",
                         uploadMethod === "LINK"
                           ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-350"
+                          : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                       )}
                     >
                       <LinkSymbol className="h-3.5 w-3.5" />
@@ -307,7 +307,7 @@ export default function ClassroomResourcesTab({
                   <div className="space-y-1.5">
                     <Label
                       htmlFor="resTitle"
-                      className="text-xs font-bold text-slate-700 dark:text-slate-350 ml-1"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1"
                     >
                       Resource Title*
                     </Label>
@@ -353,7 +353,7 @@ export default function ClassroomResourcesTab({
                           <div className="h-10 w-10 bg-indigo-50 dark:bg-slate-800 text-indigo-555 dark:text-indigo-400 rounded-full flex items-center justify-center mb-2">
                             <Upload className="h-5 w-5" />
                           </div>
-                          <div className="text-xs text-slate-650 dark:text-slate-350">
+                          <div className="text-xs text-slate-600 dark:text-slate-300">
                             <span className="font-black text-indigo-600 dark:text-indigo-400">
                               Click to upload
                             </span>{" "}
@@ -396,7 +396,7 @@ export default function ClassroomResourcesTab({
                             Resource Type
                           </Label>
                           <Select value={resType} onValueChange={(val) => setResType(val || "")}>
-                            <SelectTrigger className="w-full rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-850 px-3.5 h-11 bg-background text-sm font-semibold focus:border-indigo-500 focus:ring-0">
+                            <SelectTrigger className="w-full rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 px-3.5 h-11 bg-background text-sm font-semibold focus:border-indigo-500 focus:ring-0">
                               <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent>

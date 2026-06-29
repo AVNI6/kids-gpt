@@ -81,7 +81,7 @@ export default function GameHistory({ timeline }: { timeline: GameHistoryItem[] 
                       )}
                     </div>
                     {/* Content */}
-                    <div className="flex-1 bg-slate-50 card-padding rounded-2xl border border-slate-100 shadow-sm transition-colors group-hover:bg-slate-100/50 dark:bg-slate-950 dark:border-slate-800/80 dark:group-hover:bg-slate-850/40">
+                    <div className="flex-1 bg-slate-50 card-padding rounded-2xl border border-slate-100 shadow-sm transition-colors group-hover:bg-slate-100/50 dark:bg-slate-950 dark:border-slate-800/80 dark:group-hover:bg-slate-800/40">
                       <div className="flex items-center justify-between mb-1">
                         <div className="font-bold text-sky-600 text-body-sm dark:text-sky-400">
                           +{item.rewards_amount} XP

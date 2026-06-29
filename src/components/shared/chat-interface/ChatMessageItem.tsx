@@ -67,7 +67,7 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components
     </h3>
   ),
   p: ({ children }) => (
-    <p className="mb-3 last:mb-0 leading-relaxed text-body-md text-slate-700 dark:text-slate-350 font-medium">
+    <p className="mb-3 last:mb-0 leading-relaxed text-body-md text-slate-700 dark:text-slate-300 font-medium">
       {children}
     </p>
   ),

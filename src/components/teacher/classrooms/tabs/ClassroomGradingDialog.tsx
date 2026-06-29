@@ -102,7 +102,7 @@ export default function ClassroomGradingDialog({
             </span>
 
             {!assignmentOverview || assignmentOverview.submissions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-8 text-center rounded-2xl border-2 border-slate-100 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-950/20">
+              <div className="flex flex-col items-center justify-center p-8 text-center rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
                 <AlertCircle className="w-8 h-8 text-slate-400 mb-2" />
                 <p className="text-xs text-slate-950 dark:text-white font-bold">
                   No submissions collected yet
@@ -179,7 +179,7 @@ export default function ClassroomGradingDialog({
           </div>
 
           {/* Right Side: Grading Action Panel */}
-          <div className="w-full md:w-[320px] shrink-0 border-t md:border-t-0 md:border-l border-slate-150/80 dark:border-slate-800 pt-6 md:pt-0 md:pl-6 flex flex-col justify-between">
+          <div className="w-full md:w-[320px] shrink-0 border-t md:border-t-0 md:border-l border-slate-200/80 dark:border-slate-800 pt-6 md:pt-0 md:pl-6 flex flex-col justify-between">
             {activeSubmission ? (
               selectedAssignment?.activity_type ? (
                 // Auto-graded assignment: show read-only summary, no manual grading

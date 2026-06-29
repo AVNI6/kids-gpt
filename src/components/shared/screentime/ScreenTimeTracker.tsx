@@ -616,7 +616,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
 
               <div className="h-0.5 w-16 bg-slate-100 dark:bg-slate-800 rounded-full" />
 
-              <p className="text-base sm:text-lg font-bold text-slate-650 dark:text-slate-300 leading-relaxed max-w-md">
+              <p className="text-base sm:text-lg font-bold text-slate-600 dark:text-slate-300 leading-relaxed max-w-md">
                 Your screen time is up for today. It&apos;s time to rest your eyes, step away from
                 the screen, and play outside! 🤸‍♂️🌱
               </p>

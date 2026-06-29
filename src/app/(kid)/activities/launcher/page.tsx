@@ -39,11 +39,13 @@ function mapWordScrambleDifficulty(difficultyStr: string): "easy" | "medium" | "
 // ─── Shared Layout Shell ─────────────────────────────────────────────────────
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="
+    <div
+      className="
       min-h-screen relative flex flex-col items-center justify-center p-6 overflow-hidden
       bg-gradient-to-br from-slate-50 via-indigo-50/60 to-emerald-50/40
       dark:from-indigo-950 dark:via-slate-900 dark:to-emerald-950
-    ">
+    "
+    >
       {/* Ambient blobs — light mode: soft pastels / dark mode: glowing halos */}
       <div
         className="absolute top-[-80px] left-[-80px] w-[420px] h-[420px] rounded-full blur-3xl pointer-events-none
@@ -65,8 +67,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.025] dark:opacity-[0.04]"
         style={{
-          backgroundImage:
-            "radial-gradient(circle, #6366f1 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, #6366f1 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }}
       />
@@ -83,9 +84,10 @@ function GlassCard({ children, error = false }: { children: React.ReactNode; err
       className={`
         rounded-3xl p-8 text-center shadow-2xl backdrop-blur-xl border
         bg-white/70 dark:bg-slate-900/60
-        ${error
-          ? "border-rose-300/60 dark:border-rose-500/20"
-          : "border-white/80 dark:border-white/10"
+        ${
+          error
+            ? "border-rose-300/60 dark:border-rose-500/20"
+            : "border-white/80 dark:border-white/10"
         }
         shadow-indigo-100/50 dark:shadow-black/40
       `}
@@ -107,10 +109,12 @@ function BrainSpinner() {
         style={{ animationDuration: "1.2s" }}
       />
       {/* Inner circle */}
-      <div className="absolute inset-4 rounded-full flex items-center justify-center
+      <div
+        className="absolute inset-4 rounded-full flex items-center justify-center
         bg-white/80 dark:bg-slate-900
         border border-indigo-100/60 dark:border-white/5
-        shadow-inner shadow-indigo-100 dark:shadow-black/40">
+        shadow-inner shadow-indigo-100 dark:shadow-black/40"
+      >
         <Brain className="h-10 w-10 text-indigo-500 dark:text-indigo-400 animate-pulse" />
       </div>
       {/* Sparkle badge */}
@@ -132,10 +136,12 @@ const STEPS = [
 
 function StatusPill({ status }: { status: string }) {
   return (
-    <div className="flex items-center justify-center gap-2 w-fit mx-auto
+    <div
+      className="flex items-center justify-center gap-2 w-fit mx-auto
       px-4 py-1.5 rounded-full text-sm font-bold animate-pulse
       bg-indigo-100 text-indigo-700 border border-indigo-200
-      dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/20">
+      dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/20"
+    >
       <span>{status}</span>
     </div>
   );
@@ -154,8 +160,8 @@ function ProgressSteps({ currentStatus }: { currentStatus: string }) {
               isDone
                 ? "bg-emerald-400 dark:bg-emerald-400 w-6"
                 : isActive
-                ? "bg-indigo-500 dark:bg-indigo-400 w-8"
-                : "bg-slate-200 dark:bg-slate-700/60 w-4"
+                  ? "bg-indigo-500 dark:bg-indigo-400 w-8"
+                  : "bg-slate-200 dark:bg-slate-700/60 w-4"
             }`}
           />
         );
@@ -306,15 +312,15 @@ function LauncherContent() {
       <PageShell>
         <GlassCard error>
           {/* Error icon */}
-          <div className="h-20 w-20 rounded-2xl mx-auto flex items-center justify-center border
-            bg-rose-50 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/20">
+          <div
+            className="h-20 w-20 rounded-2xl mx-auto flex items-center justify-center border
+            bg-rose-50 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/20"
+          >
             <AlertCircle className="h-10 w-10 text-rose-500 dark:text-rose-400 animate-bounce" />
           </div>
 
           <div className="mt-6 space-y-2">
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white">
-              Launch Failed
-            </h1>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white">Launch Failed</h1>
             <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
               {error}
             </p>
@@ -325,7 +331,7 @@ function LauncherContent() {
             className="mt-6 w-full rounded-2xl inline-flex items-center justify-center gap-2
               py-3.5 px-5 font-bold text-sm transition-all active:scale-[0.98]
               bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200
-              dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-white dark:border-slate-700/50"
+              dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white dark:border-slate-700/50"
           >
             <ArrowLeft className="h-4 w-4" /> Go Back to Dashboard
           </Link>
@@ -349,8 +355,10 @@ function LauncherContent() {
           <ProgressSteps currentStatus={status} />
         </div>
 
-        <p className="mt-6 text-xs leading-relaxed max-w-[240px] mx-auto
-          text-slate-400 dark:text-slate-500">
+        <p
+          className="mt-6 text-xs leading-relaxed max-w-[240px] mx-auto
+          text-slate-400 dark:text-slate-500"
+        >
           Gemini is customising this learning activity. This might take a few moments.
         </p>
 
@@ -361,21 +369,26 @@ function LauncherContent() {
             const done = currentIndex > i;
             const active = currentIndex === i;
             return (
-              <div key={i} className={`flex items-center gap-2 text-xs font-medium transition-all duration-300 ${
-                done
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : active
-                  ? "text-indigo-600 dark:text-indigo-300"
-                  : "text-slate-300 dark:text-slate-600"
-              }`}>
+              <div
+                key={i}
+                className={`flex items-center gap-2 text-xs font-medium transition-all duration-300 ${
+                  done
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : active
+                      ? "text-indigo-600 dark:text-indigo-300"
+                      : "text-slate-300 dark:text-slate-600"
+                }`}
+              >
                 {done ? (
                   <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                 ) : (
-                  <div className={`h-3.5 w-3.5 rounded-full border-2 shrink-0 ${
-                    active
-                      ? "border-indigo-500 dark:border-indigo-400 animate-pulse"
-                      : "border-slate-200 dark:border-slate-700"
-                  }`} />
+                  <div
+                    className={`h-3.5 w-3.5 rounded-full border-2 shrink-0 ${
+                      active
+                        ? "border-indigo-500 dark:border-indigo-400 animate-pulse"
+                        : "border-slate-200 dark:border-slate-700"
+                    }`}
+                  />
                 )}
                 <span className={active ? "" : done ? "line-through opacity-60" : "opacity-40"}>
                   {step}

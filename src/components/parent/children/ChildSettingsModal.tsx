@@ -93,7 +93,7 @@ export default function ChildSettingsModal({
                 <ShieldAlert className="icon-xs text-sky-500" />
               </div>
               <div className="min-w-0 leading-none">
-                <span className="text-body-xs font-black text-slate-700 dark:text-slate-350 block">
+                <span className="text-body-xs font-black text-slate-700 dark:text-slate-300 block">
                   Parent Mode
                 </span>
                 <span className="text-body-xs font-semibold text-slate-400 uppercase tracking-wide">

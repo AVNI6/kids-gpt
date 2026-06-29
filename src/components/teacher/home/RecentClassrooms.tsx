@@ -95,7 +95,7 @@ export default function RecentClassrooms({ classrooms }: Props) {
                   }
                 }}
                 title={`Open ${cls.name}`}
-                className="group flex items-center gap-2.5 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 p-1.5 pr-3.5 rounded-full border border-slate-150/60 dark:border-slate-800 shadow-sm hover:scale-105 hover:border-indigo-200 dark:hover:border-slate-700 transition-all cursor-pointer"
+                className="group flex items-center gap-2.5 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 p-1.5 pr-3.5 rounded-full border border-slate-200/60 dark:border-slate-800 shadow-sm hover:scale-105 hover:border-indigo-200 dark:hover:border-slate-700 transition-all cursor-pointer"
               >
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-gradient-to-br ${getGradientClass(idx)} shadow-sm shrink-0`}

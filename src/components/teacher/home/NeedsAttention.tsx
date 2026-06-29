@@ -84,7 +84,7 @@ export default function NeedsAttention({
             <div className="p-5 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/20 shrink-0">
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                <h4 className="text-xs font-black uppercase tracking-wide text-slate-850 dark:text-slate-200">
+                <h4 className="text-xs font-black uppercase tracking-wide text-slate-800 dark:text-slate-200">
                   Student Enrollment Request Queue
                 </h4>
               </div>

@@ -51,7 +51,7 @@ export default function MatchFollowingReviewDetails({ data }: MatchFollowingRevi
             </div>
 
             <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 pt-2 text-[10px] font-bold">
-              <span className="text-slate-550">Kid Connection:</span>
+              <span className="text-slate-500">Kid Connection:</span>
               {item.is_correct ? (
                 <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-black">
                   ✓ Correct Match

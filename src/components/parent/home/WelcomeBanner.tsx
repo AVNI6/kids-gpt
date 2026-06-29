@@ -120,7 +120,7 @@ export default function WelcomeBanner({
                 </Avatar>
               ))}
               {linkedChildren.length > 4 && (
-                <div className="flex items-center justify-center w-14 h-14 rounded-full border-4 border-white dark:border-black bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-350 text-sm font-black ring-2 ring-slate-100 dark:ring-slate-800">
+                <div className="flex items-center justify-center w-14 h-14 rounded-full border-4 border-white dark:border-black bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-black ring-2 ring-slate-100 dark:ring-slate-800">
                   +{linkedChildren.length - 4}
                 </div>
               )}

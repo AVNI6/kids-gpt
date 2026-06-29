@@ -55,7 +55,7 @@ export default function TeacherHeroBanner({
             <p className="text-slate-500 dark:text-slate-400 font-semibold text-sm md:text-base">
               {school}
             </p>
-            <p className="text-slate-650 dark:text-slate-300 text-xs md:text-sm font-semibold max-w-2xl leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-300 text-xs md:text-sm font-semibold max-w-2xl leading-relaxed">
               {summaryMessage}
             </p>
           </div>
@@ -81,7 +81,7 @@ export default function TeacherHeroBanner({
         </div>
 
         {/* Classroom Summary Card right */}
-        <div className="shrink-0 flex flex-col items-stretch gap-4 bg-slate-50/50 dark:bg-black/30 border border-slate-100 dark:border-slate-850 p-6 rounded-[28px] shadow-sm backdrop-blur-md min-w-[280px]">
+        <div className="shrink-0 flex flex-col items-stretch gap-4 bg-slate-50/50 dark:bg-black/30 border border-slate-100 dark:border-slate-800 p-6 rounded-[28px] shadow-sm backdrop-blur-md min-w-[280px]">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30 self-start">
             <Award className="w-3.5 h-3.5" /> Classroom Summary
           </span>

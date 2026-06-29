@@ -101,7 +101,7 @@ export default function DifficultyControls({
                 className={`rounded-2xl font-extrabold transition-all duration-350 py-3.5 px-1 text-[11px] sm:text-xs cursor-pointer w-full ${
                   isActive
                     ? "bg-sky-500 hover:bg-sky-600 text-white border-sky-500 shadow-md scale-105"
-                    : `border-border dark:border-slate-850 text-foreground dark:text-slate-300 ${opt.colorClass}`
+                    : `border-border dark:border-slate-800 text-foreground dark:text-slate-300 ${opt.colorClass}`
                 }`}
               >
                 {opt.label}

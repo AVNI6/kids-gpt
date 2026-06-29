@@ -356,7 +356,7 @@ export default function ClassroomOverview({ memberships }: Props) {
                           <Icon className="h-5 w-5" />
                         </div>
                         <div className="space-y-1">
-                          <p className="text-xs font-black text-slate-800 dark:text-slate-350">
+                          <p className="text-xs font-black text-slate-800 dark:text-slate-300">
                             {mod.name}
                           </p>
                           <Badge className="bg-slate-200 dark:bg-slate-850 text-[8px] text-slate-500 dark:text-slate-400 border-none font-extrabold uppercase scale-90 px-1.5 py-0">

@@ -37,13 +37,8 @@ export default function ChildDetailPanel({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const {
-    isLoadingChildData,
-    activeChildCachedData,
-    details,
-    safety,
-    screenTime,
-  } = useParentDashboard();
+  const { isLoadingChildData, activeChildCachedData, details, safety, screenTime } =
+    useParentDashboard();
 
   // Retrieve standardized subject analytics using parent analytics hook
   useParentAnalytics(details?.timeline ?? []);
@@ -97,7 +92,8 @@ export default function ChildDetailPanel({
 
   const { data: searchHistoryData, isLoading: isLoadingSearchHistory } = useQuery({
     queryKey: ["child-search-history", selectedChild.user_id, searchHistoryPage, pageSize],
-    queryFn: () => getParentSearchHistoryPaginated(selectedChild.user_id, searchHistoryPage, pageSize),
+    queryFn: () =>
+      getParentSearchHistoryPaginated(selectedChild.user_id, searchHistoryPage, pageSize),
     enabled: !!selectedChild.user_id,
   });
 
@@ -319,7 +315,7 @@ export default function ChildDetailPanel({
         <TabsList className="flex !h-auto p-1 bg-slate-100 dark:bg-black/40 rounded-full w-full border border-slate-200/30 dark:border-slate-800/60">
           <TabsTrigger
             value="history"
-            className="flex-1 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-6 cursor-pointer py-2.5 sm:py-3 data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap shrink-0"
+            className="flex-1 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-6 cursor-pointer py-2.5 sm:py-3 data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 whitespace-nowrap shrink-0"
           >
             <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span className="hidden sm:inline">AI Search History</span>
@@ -327,7 +323,7 @@ export default function ChildDetailPanel({
           </TabsTrigger>
           <TabsTrigger
             value="activities"
-            className="flex-1 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-6 cursor-pointer py-2.5 sm:py-3 data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap shrink-0"
+            className="flex-1 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-6 cursor-pointer py-2.5 sm:py-3 data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 whitespace-nowrap shrink-0"
           >
             <BookOpen className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span className="hidden sm:inline">Completed Activities & Rewards</span>
@@ -335,7 +331,7 @@ export default function ChildDetailPanel({
           </TabsTrigger>
           <TabsTrigger
             value="progress"
-            className="flex-1 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-6 cursor-pointer py-2.5 sm:py-3 data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 whitespace-nowrap shrink-0"
+            className="flex-1 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-6 cursor-pointer py-2.5 sm:py-3 data-active:bg-sky-600 data-active:text-white sm:data-active:bg-white sm:data-active:dark:bg-slate-900 sm:data-active:text-sky-600 sm:data-active:dark:text-white sm:data-active:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 whitespace-nowrap shrink-0"
           >
             <School className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span className="hidden sm:inline">Classroom & Progress</span>
@@ -440,7 +436,7 @@ export default function ChildDetailPanel({
                     </div>
                   ) : searchHistoryCount === 0 ? (
                     <div className="text-center py-16 bg-slate-50/50 dark:bg-black/20 rounded-[24px] border border-slate-100 dark:border-slate-900 border-dashed">
-                      <Search className="w-10 h-10 text-slate-350 dark:text-slate-700 mx-auto mb-3" />
+                      <Search className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
                       <p className="text-sm font-bold text-slate-400">
                         No AI search topics tracked yet
                       </p>
@@ -461,7 +457,7 @@ export default function ChildDetailPanel({
                               <Search className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm sm:text-base font-bold text-slate-850 dark:text-slate-200 truncate leading-snug">
+                              <p className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 truncate leading-snug">
                                 {session.title || "Curiosity Search Session"}
                               </p>
                               <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5 mt-1.5">
@@ -542,7 +538,7 @@ export default function ChildDetailPanel({
                     </div>
                   ) : activitiesCount === 0 ? (
                     <div className="text-center py-16 bg-slate-50/50 dark:bg-black/20 rounded-[24px] border border-slate-100 dark:border-slate-900 border-dashed">
-                      <Award className="w-10 h-10 text-slate-350 dark:text-slate-700 mx-auto mb-3" />
+                      <Award className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
                       <p className="text-sm font-bold text-slate-400">
                         No completed activities yet
                       </p>
@@ -603,7 +599,7 @@ export default function ChildDetailPanel({
                                 </div>
 
                                 <div className="space-y-1 mb-3">
-                                  <h4 className="text-sm font-extrabold text-slate-850 dark:text-slate-200 line-clamp-1 leading-snug">
+                                  <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 line-clamp-1 leading-snug">
                                     {activityTitle}
                                   </h4>
                                   {act.description &&
@@ -757,7 +753,7 @@ export default function ChildDetailPanel({
                               </h5>
                               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
                                 Teacher:{" "}
-                                <span className="text-slate-800 dark:text-slate-350 font-bold">
+                                <span className="text-slate-800 dark:text-slate-300 font-bold">
                                   {teacherName}
                                 </span>
                               </p>

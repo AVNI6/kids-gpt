@@ -317,7 +317,7 @@ export default function ScreenTimeTab({ child }: { child: LinkedChildProfile }) 
                 <div className="space-y-0.5 text-left">
                   <Label
                     htmlFor="limit-toggle"
-                    className="font-bold text-xs uppercase tracking-wider text-slate-650 dark:text-slate-350"
+                    className="font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300"
                   >
                     Enable Daily Screen Time Limit
                   </Label>

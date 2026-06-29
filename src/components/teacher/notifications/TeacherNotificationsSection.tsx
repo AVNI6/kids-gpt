@@ -121,7 +121,7 @@ export default function TeacherNotificationsSection() {
                   variant="outline"
                   disabled={!hasPrevPage}
                   onClick={prevPage}
-                  className="rounded-xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 font-bold h-9 px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-850"
+                  className="rounded-xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 font-bold h-9 px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   Previous
                 </Button>
@@ -130,7 +130,7 @@ export default function TeacherNotificationsSection() {
                   variant="outline"
                   disabled={!hasNextPage}
                   onClick={nextPage}
-                  className="rounded-xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 font-bold h-9 px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-850"
+                  className="rounded-xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 font-bold h-9 px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   Next
                 </Button>

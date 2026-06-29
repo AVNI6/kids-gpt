@@ -290,7 +290,7 @@ export default function VictoryModal({
                 <Button
                   onClick={onReplay}
                   variant="outline"
-                  className="w-full py-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-200 font-bold transition-all duration-300 cursor-pointer"
+                  className="w-full py-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold transition-all duration-300 cursor-pointer"
                 >
                   <RefreshCw className="mr-2 size-5" />
                   Play Again

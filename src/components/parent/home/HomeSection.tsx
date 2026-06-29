@@ -240,7 +240,7 @@ export default function HomeSection() {
                               : "Recently"}
                           </span>
                         </div>
-                        <p className="text-body-sm font-semibold text-slate-700 dark:text-slate-350">
+                        <p className="text-body-sm font-semibold text-slate-700 dark:text-slate-300">
                           {item.title}
                         </p>
                         {item.description && item.description !== item.title && (
@@ -328,7 +328,7 @@ export default function HomeSection() {
             </div>
 
             {linkedChildren.length > 0 && (
-              <p className="text-body-xs font-semibold text-slate-600 dark:text-slate-350 bg-sky-50/50 dark:bg-sky-950/20 p-4 rounded-2xl border border-sky-100/60 dark:border-sky-900/20 leading-relaxed shrink-0">
+              <p className="text-body-xs font-semibold text-slate-600 dark:text-slate-300 bg-sky-50/50 dark:bg-sky-950/20 p-4 rounded-2xl border border-sky-100/60 dark:border-sky-900/20 leading-relaxed shrink-0">
                 Your family dashboard aggregates learning habits across all linked children. Use the
                 &quot;My Children&quot; tab to monitor specific histories, or head to &quot;Learning
                 Progress&quot; for subject mastery details.

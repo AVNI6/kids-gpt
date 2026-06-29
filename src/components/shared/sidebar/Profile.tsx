@@ -118,7 +118,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
               href={`/dashboard/${dashboardRole}`}
               onClick={handleLinkClick}
               prefetch={false}
-              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-body-sm font-semibold"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-body-sm font-semibold"
             >
               <UserRound className="icon-sm" />
               <span>View Profile</span>
@@ -128,7 +128,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
               href={`/dashboard/${dashboardRole}/settings`}
               onClick={handleLinkClick}
               prefetch={false}
-              className="w-full flex items-center gap-3 p-2 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-body-sm font-semibold"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-body-sm font-semibold"
             >
               <Settings className="icon-sm" />
               <span>Settings</span>
@@ -138,7 +138,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
               href={APP_ROUTES.Help}
               onClick={handleLinkClick}
               prefetch={false}
-              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-body-sm font-semibold"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 rounded-xl text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground transition-colors text-body-sm font-semibold"
             >
               <HelpCircle className="icon-sm" />
               <span>Help</span>
@@ -190,7 +190,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                 setOpenPath(null);
                 setShowLogoutConfirm(true);
               }}
-              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-body-sm font-semibold cursor-pointer"
+              className="w-full flex items-center gap-3 px-2 py-2 sm:px-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-body-sm font-semibold cursor-pointer"
             >
               <LogOut className="icon-sm" />
               <span>Log Out</span>

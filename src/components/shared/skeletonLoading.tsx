@@ -229,7 +229,7 @@ export function ClassroomsListSkeleton() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="flex items-center gap-4 py-2 border-b last:border-0 border-slate-50 dark:border-slate-850"
+                className="flex items-center gap-4 py-2 border-b last:border-0 border-slate-50 dark:border-slate-800"
               >
                 <Skeleton className="h-10 w-10 rounded-full shrink-0" />
                 <div className="flex-1 space-y-2">
@@ -264,7 +264,7 @@ export function TeacherDashboardSkeleton() {
               <Skeleton className="h-4 w-56 max-w-lg rounded" />
             </div>
           </div>
-          <div className="shrink-0 flex flex-col items-stretch gap-4 bg-slate-50/50 dark:bg-black/30 border border-slate-100 dark:border-slate-850 p-4 sm:p-6 rounded-[28px] shadow-sm min-w-[240px] sm:min-w-[280px] w-full lg:w-auto">
+          <div className="shrink-0 flex flex-col items-stretch gap-4 bg-slate-50/50 dark:bg-black/30 border border-slate-100 dark:border-slate-800 p-4 sm:p-6 rounded-[28px] shadow-sm min-w-[240px] sm:min-w-[280px] w-full lg:w-auto">
             <Skeleton className="h-5 w-36 rounded-full" />
             <div className="grid grid-cols-2 gap-4 pt-2">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -320,7 +320,7 @@ export function TeacherDashboardSkeleton() {
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-900/60 p-1.5 pr-3.5 rounded-full border border-slate-150/60 dark:border-slate-800 shadow-sm w-36 shrink-0"
+                  className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-900/60 p-1.5 pr-3.5 rounded-full border border-slate-200/60 dark:border-slate-800 shadow-sm w-36 shrink-0"
                 >
                   <Skeleton className="w-9 h-9 rounded-full shrink-0" />
                   <div className="space-y-1.5 flex-1 min-w-0">
@@ -333,7 +333,7 @@ export function TeacherDashboardSkeleton() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[32px] border-slate-250/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm">
+        <Card className="rounded-[32px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-black/30 shadow-sm">
           <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col gap-4">
             <div className="border-b border-slate-100 dark:border-slate-800 pb-3.5 space-y-1.5">
               <Skeleton className="h-4 w-full max-w-[112px] rounded" />

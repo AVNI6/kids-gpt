@@ -165,7 +165,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Science Explorers"
                       required
-                      className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
+                      className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
                     />
                   </div>
 
@@ -181,7 +181,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="e.g. Hands-on physics & chemistry activities"
-                      className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
+                      className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
                     />
                   </div>
 
@@ -198,7 +198,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
                         placeholder="e.g. Science"
-                        className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
+                        className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
                       />
                     </div>
 
@@ -214,7 +214,7 @@ export default function TeacherClassrooms({ classrooms, createOpen, setCreateOpe
                         value={grade}
                         onChange={(e) => setGrade(e.target.value)}
                         placeholder="e.g. Grade 5"
-                        className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-850 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
+                        className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white h-11 focus:border-indigo-500 focus:ring-0 text-sm font-medium"
                       />
                     </div>
                   </div>
