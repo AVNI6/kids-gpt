@@ -1,32 +1,53 @@
 "use client";
 
-import React, { useEffect, useLayoutEffect, useRef, useCallback, memo } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState, useCallback, memo } from "react";
 import { Bot } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Spinner } from "@/components/ui/spinner";
 import { Message } from "@/types/common";
+import { useAuth } from "@/hooks/useAuth";
 import ChatMessageItem from "./ChatMessageItem";
+import { UserProfile } from "@/types/user";
 
 interface ChatMessageListProps {
   messages: Message[];
   isLoading: boolean;
+  pdfStates: Record<
+    string,
+    "idle" | "generating" | "uploading" | "downloading" | "success" | "error"
+  >;
+  handleDownloadPDF: (messageId: string) => Promise<void>;
+  docxStates: Record<
+    string,
+    "idle" | "generating" | "uploading" | "downloading" | "success" | "error"
+  >;
+  handleDownloadDocx: (messageId: string) => Promise<void>;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   hasMore: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => Promise<void>;
+  sessionOwnerProfile?: UserProfile | null;
   loadingText?: string;
 }
 
 const ChatMessageList = memo(function ChatMessageList({
   messages,
   isLoading,
+  pdfStates,
+  handleDownloadPDF,
+  docxStates,
+  handleDownloadDocx,
   messagesEndRef,
   hasMore,
   isLoadingMore,
   onLoadMore,
+  sessionOwnerProfile,
   loadingText,
 }: ChatMessageListProps) {
+  const { userProfile, isUserLoggedIn } = useAuth();
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const scrollHeightRef = useRef<number>(0);
   const scrollTopRef = useRef<number>(0);
@@ -51,6 +72,7 @@ const ChatMessageList = memo(function ChatMessageList({
   const handleScroll = useCallback(
     async (e: React.UIEvent<HTMLDivElement>) => {
       const target = e.currentTarget;
+      // Check target.scrollTop <= 5 instead of exactly 0 to support high-DPI display zoom/rounding issues
       if (target.scrollTop <= 5 && hasMore && !isLoadingMoreRef.current) {
         scrollHeightRef.current = target.scrollHeight;
         scrollTopRef.current = target.scrollTop;
@@ -59,6 +81,17 @@ const ChatMessageList = memo(function ChatMessageList({
     },
     [hasMore, onLoadMore]
   );
+
+  const handleCopy = useCallback(async (messageId: string, content: string) => {
+    if (!content) return;
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedMessageId(messageId);
+      setTimeout(() => setCopiedMessageId(null), 1200);
+    } catch (error) {
+      console.error("Failed to copy message:", error);
+    }
+  }, []);
 
   return (
     <div className="flex-1 min-h-0 overflow-hidden relative">
@@ -72,9 +105,7 @@ const ChatMessageList = memo(function ChatMessageList({
           )}
           {messages.map((message) => {
             const isUser = message.role === "user";
-            // FIX: Only show "AI Buddy" header when there's actual content AND it's not failed/terminated
-            const showModelHeader =
-              message.role === "model" && !!message.content && message.status !== "failed";
+            const showModelHeader = message.role === "model";
 
             return (
               <ChatMessageItem
@@ -82,6 +113,15 @@ const ChatMessageList = memo(function ChatMessageList({
                 message={message}
                 isUser={isUser}
                 showModelHeader={showModelHeader}
+                pdfState={pdfStates[message.id] || "idle"}
+                handleDownloadPDF={handleDownloadPDF}
+                docxState={docxStates[message.id] || "idle"}
+                handleDownloadDocx={handleDownloadDocx}
+                isCopied={copiedMessageId === message.id}
+                handleCopy={handleCopy}
+                isUserLoggedIn={isUserLoggedIn}
+                userProfile={userProfile}
+                sessionOwnerProfile={sessionOwnerProfile}
               />
             );
           })}
@@ -89,13 +129,13 @@ const ChatMessageList = memo(function ChatMessageList({
           {isLoading && (
             <div className="flex justify-start">
               <div className="flex items-end gap-3">
-                <Avatar size={"sm"} className="hidden sm:flex shrink-0 mb-1">
+                <Avatar size={"sm"} className="shrink-0 mb-1">
                   <AvatarFallback className="bg-sky-500 text-white">
                     <Bot className="w-4 h-4" />
                   </AvatarFallback>
                 </Avatar>
 
-                <div className="rounded-2xl sm:rounded-3xl rounded-bl-sm px-3 sm:px-5 py-2.5 sm:py-3.5 bg-card border border-border flex items-center gap-2.5 sm:gap-3 shadow-sm">
+                <div className="rounded-3xl rounded-bl-sm px-5 py-3.5 bg-card border border-border flex items-center gap-3 shadow-sm">
                   <Spinner />
                   <span className="text-muted-foreground text-sm font-medium">
                     {loadingText || "Thinking..."}

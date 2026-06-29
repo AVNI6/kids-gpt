@@ -336,16 +336,11 @@ export default function KidClassroomWorkspaceClient({
               return (
                 <button
                   key={tab.id}
-                  onClick={(e) => {
-                    e.currentTarget.scrollIntoView({
-                      behavior: "smooth",
-                      block: "nearest",
-                      inline: "center",
-                    });
+                  onClick={() =>
                     handleTabChange(
                       tab.id as "overview" | "assignments" | "resources" | "announcements"
-                    );
-                  }}
+                    )
+                  }
                   className={`flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 transition-all select-none whitespace-nowrap shrink-0 border-none bg-transparent ${
                     active
                       ? "bg-background text-foreground dark:bg-input/50 shadow-sm"

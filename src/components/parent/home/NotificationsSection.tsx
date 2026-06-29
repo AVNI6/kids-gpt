@@ -5,7 +5,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import NotificationCard from "@/components/shared/notifications/NotificationCard";
 import { Bell, Check, Trash2 } from "lucide-react";
 import { useNotifications } from "@/hooks/parent/useNotifications";
@@ -153,7 +152,7 @@ export default function NotificationsSection() {
     <div className="space-y-8 animate-in fade-in duration-300">
       <div className="flex justify-between items-end flex-wrap gap-4">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <Bell className="w-8 h-8 text-purple-500" /> Notifications
           </h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">
@@ -184,21 +183,12 @@ export default function NotificationsSection() {
 
       {isLoading ? (
         <div className="space-y-4 w-full">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {[1, 2, 3].map((n) => (
             <Card
-              key={i}
+              key={n}
               className="rounded-[24px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900/40 animate-pulse"
             >
-              <CardContent className="p-6 flex items-center gap-4">
-                <Skeleton className="w-10 h-10 rounded-full shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Skeleton className="h-4 w-32 rounded-md" />
-                    <Skeleton className="h-3 w-16 rounded" />
-                  </div>
-                  <Skeleton className="h-3.5 w-3/4 rounded" />
-                </div>
-              </CardContent>
+              <CardContent className="p-6 h-24 flex items-center justify-between" />
             </Card>
           ))}
         </div>

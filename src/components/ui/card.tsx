@@ -89,40 +89,4 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function ActivityCard({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="activity-card"
-      className={cn(
-        "flex flex-col overflow-hidden rounded-[24px] bg-card text-card-foreground shadow-md flex-1 min-h-0 max-h-[400px] md:max-h-[450px] relative",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-function ActivityCardContent({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="activity-card-content"
-      className={cn(
-        "flex flex-col p-4 sm:p-6 md:p-8 flex-1 min-h-0 overflow-y-auto w-full scrollbar-thin",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardAction,
-  CardDescription,
-  CardContent,
-  ActivityCard,
-  ActivityCardContent,
-};
+export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };

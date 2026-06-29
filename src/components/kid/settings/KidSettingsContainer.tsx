@@ -106,11 +106,11 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
   };
 
   return (
-    <div className="flex flex-col section-gap">
+    <div className="flex flex-col gap-8 px-4 sm:px-6 lg:px-8 py-6">
       {/* Settings Header */}
       <div>
-        <h1 className="text-page-title text-foreground">Settings</h1>
-        <p className="text-body-md text-muted-foreground font-medium mt-2">
+        <h1 className="text-4xl font-black tracking-tight text-foreground">Settings</h1>
+        <p className="text-sm sm:text-base text-muted-foreground font-medium mt-2">
           Manage your student profile and learning account security.
         </p>
       </div>
@@ -120,18 +120,18 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
           <TabsList className="flex h-auto! p-1 bg-muted dark:bg-slate-900 rounded-full w-full">
             <TabsTrigger
               value="profile"
-              className="flex-1 rounded-full font-bold text-body-sm sm:text-body-md flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0"
+              className="flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0"
             >
-              <UserRound className="icon-sm shrink-0" />
+              <UserRound className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
               <span>
                 Profile<span className="hidden sm:inline"> Details</span>
               </span>
             </TabsTrigger>
             <TabsTrigger
               value="security"
-              className="flex-1 rounded-full font-bold text-body-sm sm:text-body-md flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0"
+              className="flex-1 rounded-full font-bold text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 cursor-pointer py-2.5 sm:py-3.5 data-active:bg-background data-active:text-foreground dark:data-active:bg-input/50 whitespace-nowrap shrink-0"
             >
-              <KeyRound className="icon-sm shrink-0" />
+              <KeyRound className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
               <span>
                 <span className="hidden sm:inline">Account & </span>Security
               </span>
@@ -142,19 +142,19 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
         {/* Tab 1: Profile Details */}
         <TabsContent value="profile" className="mt-8">
           <Card className="rounded-[32px] border border-border bg-card shadow-sm overflow-hidden">
-            <CardHeader className="card-padding py-5 sm:py-6 border-b border-border">
-              <CardTitle className="text-section-title text-card-foreground">
+            <CardHeader className="p-5 sm:p-8 lg:p-10 border-b border-border">
+              <CardTitle className="text-2xl font-black text-card-foreground">
                 Profile Details
               </CardTitle>
-              <CardDescription className="text-body-sm text-muted-foreground font-medium">
+              <CardDescription className="text-sm text-muted-foreground font-medium">
                 Customize your display profile and settings.
               </CardDescription>
             </CardHeader>
-            <CardContent className="card-padding flex flex-col gap-8">
+            <CardContent className="p-5 sm:p-8 lg:p-10 flex flex-col gap-8">
               <form onSubmit={handleProfileSubmit} className="flex flex-col gap-8">
                 {/* Profile Picture Upload Container */}
                 <div className="flex flex-col gap-4">
-                  <Label className="text-body-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                  <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
                     Profile Photo
                   </Label>
                   <div className="flex flex-col sm:flex-row items-center gap-6 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
@@ -169,12 +169,9 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
                 </div>
 
                 {/* Profile Grid Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 card-gap">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-2">
-                    <Label
-                      htmlFor="firstName"
-                      className="text-body-sm font-bold text-foreground ml-1"
-                    >
+                    <Label htmlFor="firstName" className="text-sm font-bold text-foreground ml-1">
                       First Name *
                     </Label>
                     <Input
@@ -182,15 +179,12 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
                       placeholder="First Name"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-body-md font-medium px-4"
+                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
                     />
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <Label
-                      htmlFor="lastName"
-                      className="text-body-sm font-bold text-foreground ml-1"
-                    >
+                    <Label htmlFor="lastName" className="text-sm font-bold text-foreground ml-1">
                       Last Name
                     </Label>
                     <Input
@@ -198,15 +192,12 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
                       placeholder="Last Name"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-body-md font-medium px-4"
+                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
                     />
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <Label
-                      htmlFor="username"
-                      className="text-body-sm font-bold text-foreground ml-1"
-                    >
+                    <Label htmlFor="username" className="text-sm font-bold text-foreground ml-1">
                       Username
                     </Label>
                     <Input
@@ -214,7 +205,7 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
                       placeholder="e.g. kid_adventurer"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-body-md font-medium px-4"
+                      className="rounded-2xl border-input bg-background focus:bg-card h-13 text-base font-medium px-4"
                     />
                   </div>
 
@@ -235,7 +226,7 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
                     loading={isSavingProfile}
                     loadingText="Saving..."
                     disabled={!date || !!localAgeError || !hasChanges}
-                    className="rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-13 px-8 text-body-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-sky-500 dark:hover:bg-sky-600 transition-all w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-13 px-8 text-sm cursor-pointer shadow-md hover:shadow-lg dark:bg-sky-500 dark:hover:bg-sky-600 transition-all w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Save Changes
                   </Button>
@@ -247,44 +238,44 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
 
         {/* Tab 2: Account & Security */}
         <TabsContent value="security" className="mt-8">
-          <div className="flex flex-col section-gap">
+          <div className="flex flex-col gap-8">
             {/* Account Info details */}
             <Card className="rounded-[32px] border border-border bg-card shadow-sm overflow-hidden">
-              <CardHeader className="card-padding py-5 sm:py-6 border-b border-border">
-                <CardTitle className="text-section-title text-card-foreground">
+              <CardHeader className="p-5 sm:p-8 lg:p-10 border-b border-border">
+                <CardTitle className="text-2xl font-black text-card-foreground">
                   Account Information
                 </CardTitle>
-                <CardDescription className="text-body-sm text-muted-foreground font-medium">
+                <CardDescription className="text-sm text-muted-foreground font-medium">
                   General details tied to your account authentication credentials.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="card-padding flex flex-col gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 card-gap">
+              <CardContent className="p-5 sm:p-8 lg:p-10 flex flex-col gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="flex items-start gap-4 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
-                    <Mail className="icon-md text-sky-600 dark:text-sky-400 mt-1 shrink-0" />
+                    <Mail className="w-6 h-6 text-sky-600 dark:text-sky-400 mt-1 shrink-0" />
                     <div>
-                      <h4 className="text-body-xs font-bold text-muted-foreground uppercase tracking-wider">
+                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                         Email Address
                       </h4>
-                      <p className="text-body-md font-extrabold text-foreground mt-1.5 break-all">
+                      <p className="text-base font-extrabold text-foreground mt-1.5 break-all">
                         {profile.email}
                       </p>
-                      <Badge className="bg-muted text-muted-foreground border border-border font-bold text-body-xs uppercase px-2 py-1 rounded-md mt-3">
+                      <Badge className="bg-muted text-muted-foreground border border-border font-bold text-[10px] uppercase px-2 py-1 rounded-md mt-3">
                         Primary Auth
                       </Badge>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4 bg-muted/30 p-4 sm:p-6 rounded-3xl border border-border">
-                    <Shield className="icon-md text-sky-600 dark:text-sky-400 mt-1 shrink-0" />
+                    <Shield className="w-6 h-6 text-sky-600 dark:text-sky-400 mt-1 shrink-0" />
                     <div>
-                      <h4 className="text-body-xs font-bold text-muted-foreground uppercase tracking-wider">
+                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                         Role & Credentials
                       </h4>
-                      <p className="text-body-md font-extrabold text-foreground mt-1.5 capitalize">
+                      <p className="text-base font-extrabold text-foreground mt-1.5 capitalize">
                         {profile.role}
                       </p>
-                      <Badge className="bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400 border-none font-bold text-body-xs uppercase px-2 py-1 rounded-md mt-3">
+                      <Badge className="bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400 border-none font-bold text-[10px] uppercase px-2 py-1 rounded-md mt-3">
                         Learning Account
                       </Badge>
                     </div>
@@ -295,14 +286,14 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
 
             {/* Change Password Form */}
             <Card className="rounded-[32px] border border-border bg-card shadow-sm overflow-hidden">
-              <CardHeader className="card-padding py-5 sm:py-6 border-b border-border">
+              <CardHeader className="p-5 border-b border-border">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                   <div>
-                    <CardTitle className="text-section-title text-card-foreground">
+                    <CardTitle className="text-2xl font-black text-card-foreground">
                       Update Password
                     </CardTitle>
 
-                    <p className="text-body-sm text-muted-foreground font-medium mt-2">
+                    <p className="text-sm text-muted-foreground font-medium mt-2">
                       Ensure your account is secure by using a strong password.
                     </p>
                   </div>

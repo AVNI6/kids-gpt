@@ -41,7 +41,7 @@ interface DashboardContextType {
   deleteAllNotifications: () => Promise<void>;
 }
 
-export const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
+const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
 const fetchNotifications = async (parentUserId: string, limit?: number) => {
   if (!parentUserId) return { items: [], unreadCount: 0 };

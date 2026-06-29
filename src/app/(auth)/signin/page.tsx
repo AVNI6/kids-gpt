@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AuthSkeleton } from "@/components/shared/skeletonLoading";
 import LoginPageContent from "./LoginPageContent";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <Suspense>
+    <Suspense fallback={<AuthSkeleton />}>
       <LoginPageContent />
     </Suspense>
   );

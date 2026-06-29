@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import {
   getDailyScreenTime,
+  logScreenTimeSession,
   notifyParentLimitReached,
 } from "@/lib/services/shared/screentime.actions";
 import { Clock, Sun, Sparkles, Moon, EyeOff } from "lucide-react";
@@ -120,16 +121,7 @@ export default function ScreenTimeTracker({ children }: { children: React.ReactN
             `[ScreenTimeTracker] Dev Monitor - Attempting sync: ${seconds}s (total with unsynced: ${totalToSync}s)`
           );
         }
-        const response = await fetch("/api/screentime", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            childId,
-            activeSeconds: totalToSync,
-            timezone: tz,
-          }),
-        });
-        const result = await response.json();
+        const result = await logScreenTimeSession(childId, totalToSync, tz);
         if (result.success) {
           // Success -> Clear unsynced queue
           localStorage.removeItem("screen_time_unsynced");

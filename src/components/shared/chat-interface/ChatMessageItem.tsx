@@ -1,38 +1,17 @@
 "use client";
 
 import React from "react";
-import {
-  Bot,
-  Check,
-  Copy,
-  Download,
-  FileText,
-  Volume2,
-  Square,
-  Pause,
-  Loader2,
-} from "lucide-react";
+import { Bot, Check, Copy, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
 import { Message } from "@/types/common";
+import type { UserProfile } from "@/types/user";
+import { getSignedResourceUrl } from "@/lib/services/shared/storage.actions";
 import { IoPersonCircleOutline } from "react-icons/io5";
 import { DownloadCard } from "./DownloadCard";
-import { useUser, useSpeech, useDownloads, useChatSession } from "./chatStore";
-
-// Task 3.1: Create cleanTerminationContent utility function
-function cleanTerminationContent(content: string): string {
-  if (!content) return "";
-
-  return content
-    .replace(/\n\n\*\(Generation stopped by user\.\)\*/g, "")
-    .replace(/Generation stopped by user\./g, "")
-    .replace(/\n\n\*\(Session has been terminated\.\)\*/g, "")
-    .replace(/Session has been terminated\./g, "")
-    .trim();
-}
 
 function useTextClamp(text: string, limit: number = 2500) {
   const [isExpanded, setIsExpanded] = React.useState(false);
@@ -48,6 +27,15 @@ interface ChatMessageItemProps {
   message: Message;
   isUser: boolean;
   showModelHeader: boolean;
+  pdfState: "idle" | "generating" | "uploading" | "downloading" | "success" | "error";
+  handleDownloadPDF: (messageId: string) => Promise<void>;
+  docxState: "idle" | "generating" | "uploading" | "downloading" | "success" | "error";
+  handleDownloadDocx: (messageId: string) => Promise<void>;
+  isCopied: boolean;
+  handleCopy: (messageId: string, content: string) => void;
+  isUserLoggedIn: boolean;
+  userProfile: UserProfile | null;
+  sessionOwnerProfile?: UserProfile | null;
 }
 
 const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
@@ -121,49 +109,109 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components
   ),
 };
 
+function cleanTerminationContent(content: string): string {
+  if (!content) return "";
+
+  return content
+    .replace(/\n\n\*\(Generation stopped by user\.\)\*/g, "")
+    .replace(/Generation stopped by user\./g, "")
+    .replace(/\n\n\*\(Session has been terminated\.\)\*/g, "")
+    .replace(/Session has been terminated\./g, "")
+    .trim();
+}
 const ChatMessageItem = React.memo(
-  function ChatMessageItem({ message, isUser, showModelHeader }: ChatMessageItemProps) {
-    // If it's a model message with no content and not failed/image/document, don't render it
-    const hasNoDisplayContent =
-      !isUser &&
-      !message.content?.trim() &&
-      !message.isImage &&
-      !message.isPdfRequest &&
-      !message.isDocRequest &&
-      message.status !== "failed";
-
-    const { userProfile } = useUser();
-    const { sessionOwnerProfile, onRetry } = useChatSession();
-    const { pdfStates, docxStates, handleDownloadPDF, handleDownloadDocx } = useDownloads();
-    const {
-      activeSpeakingId,
-      isPlaying,
-      isSpeechLoading,
-      isSpeechPaused,
-      speak: onSpeak,
-      stop: onStop,
-      pause: onPause,
-      resume: onResume,
-    } = useSpeech();
-
-    const [isCopied, setIsCopied] = React.useState(false);
-    const handleCopy = React.useCallback(async (messageId: string, content: string) => {
-      if (!content) return;
-      try {
-        await navigator.clipboard.writeText(content);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 1200);
-      } catch (error) {
-        console.error("Failed to copy message:", error);
-      }
-    }, []);
-
-    const pdfState = pdfStates[message.id] || "idle";
-    const docxState = docxStates[message.id] || "idle";
+  function ChatMessageItem({
+    message,
+    isUser,
+    showModelHeader,
+    pdfState,
+    handleDownloadPDF,
+    docxState,
+    handleDownloadDocx,
+    isCopied,
+    handleCopy,
+    isUserLoggedIn,
+    userProfile,
+    sessionOwnerProfile,
+  }: ChatMessageItemProps) {
     const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
     const [previewImageUrl, setPreviewImageUrl] = React.useState("");
-    const resolvedImageUrl = message.uploadedImage || null;
-    const resolvedGeneratedImageUrl = message.isImage && message.content ? message.content : null;
+    const [resolvedImageUrl, setResolvedImageUrl] = React.useState<string | null>(null);
+    const [resolvedGeneratedImageUrl, setResolvedGeneratedImageUrl] = React.useState<string | null>(
+      null
+    );
+
+    React.useEffect(() => {
+      let active = true;
+      if (message.uploadedImage) {
+        if (message.uploadedImage.startsWith("http") && message.uploadedImage.includes("token=")) {
+          Promise.resolve().then(() => {
+            if (active) setResolvedImageUrl(message.uploadedImage!);
+          });
+        } else if (message.uploadedImage.includes("/object/public/materials/")) {
+          const relativePath = message.uploadedImage.split("/object/public/materials/")[1];
+          getSignedResourceUrl(relativePath)
+            .then((res) => {
+              if (active && res.success && res.url) {
+                setResolvedImageUrl(res.url);
+              } else if (active) {
+                setResolvedImageUrl(message.uploadedImage!);
+              }
+            })
+            .catch((err) => {
+              console.error("Failed to sign user image:", err);
+              if (active) setResolvedImageUrl(message.uploadedImage!);
+            });
+        } else {
+          Promise.resolve().then(() => {
+            if (active) setResolvedImageUrl(message.uploadedImage!);
+          });
+        }
+      } else {
+        Promise.resolve().then(() => {
+          if (active) setResolvedImageUrl(null);
+        });
+      }
+      return () => {
+        active = false;
+      };
+    }, [message.uploadedImage]);
+
+    React.useEffect(() => {
+      let active = true;
+      if (message.isImage && message.content) {
+        if (message.content.startsWith("http") && message.content.includes("token=")) {
+          Promise.resolve().then(() => {
+            if (active) setResolvedGeneratedImageUrl(message.content);
+          });
+        } else if (message.content.includes("/object/public/materials/")) {
+          const relativePath = message.content.split("/object/public/materials/")[1];
+          getSignedResourceUrl(relativePath)
+            .then((res) => {
+              if (active && res.success && res.url) {
+                setResolvedGeneratedImageUrl(res.url);
+              } else if (active) {
+                setResolvedGeneratedImageUrl(message.content);
+              }
+            })
+            .catch((err) => {
+              console.error("Failed to sign generated image:", err);
+              if (active) setResolvedGeneratedImageUrl(message.content);
+            });
+        } else {
+          Promise.resolve().then(() => {
+            if (active) setResolvedGeneratedImageUrl(message.content);
+          });
+        }
+      } else {
+        Promise.resolve().then(() => {
+          if (active) setResolvedGeneratedImageUrl(null);
+        });
+      }
+      return () => {
+        active = false;
+      };
+    }, [message.isImage, message.content]);
 
     const handleDownloadImage = React.useCallback(async (url: string) => {
       try {
@@ -188,6 +236,15 @@ const ChatMessageItem = React.memo(
         ? sessionOwnerProfile
         : userProfile;
 
+    // If it's a model message with no content and not failed/image/document, don't render it
+    const hasNoDisplayContent =
+      !isUser &&
+      !message.content?.trim() &&
+      !message.isImage &&
+      !message.isPdfRequest &&
+      !message.isDocRequest &&
+      message.status !== "failed";
+
     // Task 3.2: Update termination detection logic
     const isStoppedByUser =
       !!message.content &&
@@ -197,14 +254,6 @@ const ChatMessageItem = React.memo(
     const cleanContent = isStoppedByUser
       ? cleanTerminationContent(message.content)
       : message.content;
-
-    const speakText = isStoppedByUser
-      ? cleanContent
-        ? `${cleanContent}. Session has been terminated.`
-        : "Session has been terminated."
-      : message.status === "failed"
-        ? "Sorry, something went wrong and I couldn't finish generating that response. Please try again."
-        : message.content || "";
 
     const activeText = isUser
       ? message.content || ""
@@ -219,7 +268,6 @@ const ChatMessageItem = React.memo(
     if (hasNoDisplayContent) {
       return null;
     }
-
     return (
       <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
         <div
@@ -228,7 +276,7 @@ const ChatMessageItem = React.memo(
           <Avatar size={"sm"} className="hidden sm:flex shrink-0 mb-1">
             {isUser ? (
               <>
-                {resolvedProfile?.avatar_url ? (
+                {isUserLoggedIn && resolvedProfile?.avatar_url ? (
                   <AvatarImage
                     src={resolvedProfile.avatar_url}
                     alt={resolvedProfile.first_name || "User"}
@@ -236,7 +284,7 @@ const ChatMessageItem = React.memo(
                   />
                 ) : null}
                 <AvatarFallback className="bg-sky-500/10 text-sky-600 font-bold uppercase">
-                  {resolvedProfile?.first_name ? (
+                  {isUserLoggedIn && resolvedProfile?.first_name ? (
                     resolvedProfile.first_name.charAt(0)
                   ) : (
                     <IoPersonCircleOutline size={20} />
@@ -245,7 +293,7 @@ const ChatMessageItem = React.memo(
               </>
             ) : (
               <AvatarFallback className="bg-sky-500 text-white">
-                <Bot className="icon-sm" />
+                <Bot className="w-4 h-4" />
               </AvatarFallback>
             )}
           </Avatar>
@@ -279,8 +327,8 @@ const ChatMessageItem = React.memo(
                 }`}
               >
                 {showModelHeader && (
-                  <div className="flex items-center gap-1.5 text-sky-600 font-bold text-body-sm mb-2">
-                    <Bot className="icon-sm" /> AI Buddy
+                  <div className="flex items-center gap-1.5 text-sky-600 font-bold text-sm mb-2">
+                    <Bot className="w-4 h-4" /> AI Buddy
                   </div>
                 )}
 
@@ -314,16 +362,6 @@ const ChatMessageItem = React.memo(
                             Sorry, something went wrong and I couldn&apos;t finish generating that
                             response. Please try again.
                           </p>
-                          {onRetry && (
-                            <Button
-                              onClick={onRetry}
-                              variant="outline"
-                              size="sm"
-                              className="w-fit border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl font-semibold cursor-pointer"
-                            >
-                              Retry
-                            </Button>
-                          )}
                         </div>
                       ) : message.isImage && resolvedGeneratedImageUrl ? (
                         <div className="flex flex-col gap-2">
@@ -439,55 +477,6 @@ const ChatMessageItem = React.memo(
                   isUser ? "justify-end" : "justify-start"
                 }`}
               >
-                {!isUser && (
-                  <div className="flex items-center gap-1">
-                    {activeSpeakingId === message.id ? (
-                      <>
-                        {isSpeechLoading ? (
-                          <div className="flex items-center justify-center p-1 rounded-lg text-sky-500">
-                            <Loader2 className="icon-xs animate-spin" />
-                          </div>
-                        ) : isPlaying ? (
-                          <button
-                            type="button"
-                            onClick={() => onPause && onPause()}
-                            className="flex items-center justify-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-150"
-                            title="Pause"
-                          >
-                            <Pause className="icon-xs" />
-                          </button>
-                        ) : isSpeechPaused ? (
-                          <button
-                            type="button"
-                            onClick={() => onResume && onResume()}
-                            className="flex items-center justify-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-150 text-sky-500"
-                            title="Resume"
-                          >
-                            <Volume2 className="icon-xs" />
-                          </button>
-                        ) : null}
-
-                        <button
-                          type="button"
-                          onClick={() => onStop && onStop()}
-                          className="flex items-center justify-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-red-500 hover:text-red-600 transition-colors duration-150"
-                          title="Stop"
-                        >
-                          <Square className="icon-xs fill-current" />
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => onSpeak && onSpeak(message.id, speakText)}
-                        className="flex items-center justify-center p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-150"
-                        title="Read aloud"
-                      >
-                        <Volume2 className="icon-xs" />
-                      </button>
-                    )}
-                  </div>
-                )}
                 <button
                   type="button"
                   onClick={() => handleCopy(message.id, message.content)}
@@ -495,9 +484,9 @@ const ChatMessageItem = React.memo(
                   title={isCopied ? "Copied!" : "Copy message"}
                 >
                   {isCopied ? (
-                    <Check className="icon-xs text-emerald-500" />
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
                   ) : (
-                    <Copy className="icon-xs" />
+                    <Copy className="w-3.5 h-3.5" />
                   )}
                 </button>
               </div>
@@ -533,6 +522,7 @@ const ChatMessageItem = React.memo(
                 </svg>
               </button>
 
+              {/* Preview image */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewImageUrl}
@@ -564,8 +554,6 @@ const ChatMessageItem = React.memo(
   },
   (prevProps, nextProps) => {
     return (
-      prevProps.isUser === nextProps.isUser &&
-      prevProps.showModelHeader === nextProps.showModelHeader &&
       prevProps.message.id === nextProps.message.id &&
       prevProps.message.userId === nextProps.message.userId &&
       prevProps.message.senderProfile?.avatar_url === nextProps.message.senderProfile?.avatar_url &&
@@ -578,7 +566,13 @@ const ChatMessageItem = React.memo(
       prevProps.message.isPdfRequest === nextProps.message.isPdfRequest &&
       prevProps.message.pdfContent === nextProps.message.pdfContent &&
       prevProps.message.pdfTheme === nextProps.message.pdfTheme &&
-      prevProps.message.status === nextProps.message.status
+      prevProps.pdfState === nextProps.pdfState &&
+      prevProps.isCopied === nextProps.isCopied &&
+      prevProps.isUserLoggedIn === nextProps.isUserLoggedIn &&
+      prevProps.userProfile?.avatar_url === nextProps.userProfile?.avatar_url &&
+      prevProps.userProfile?.first_name === nextProps.userProfile?.first_name &&
+      prevProps.sessionOwnerProfile?.avatar_url === nextProps.sessionOwnerProfile?.avatar_url &&
+      prevProps.sessionOwnerProfile?.first_name === nextProps.sessionOwnerProfile?.first_name
     );
   }
 );

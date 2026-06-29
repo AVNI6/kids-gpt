@@ -1,4 +1,4 @@
-import { Home, School } from "lucide-react";
+import { Home, School, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavItemConfig {
@@ -23,5 +23,11 @@ export const kidNavItems: NavItemConfig[] = [
     exact: false,
     hasBadge: true,
     icon: School,
+  },
+  {
+    label: "Settings",
+    href: "/dashboard/kid/settings",
+    exact: false,
+    icon: Settings,
   },
 ];

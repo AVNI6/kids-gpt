@@ -36,7 +36,7 @@ export default function TeacherNotificationsSection() {
     <div className="space-y-8 animate-in fade-in duration-300">
       <div className="flex justify-between items-end flex-wrap gap-4">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <Bell className="w-8 h-8 text-indigo-500" /> Notifications
           </h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">

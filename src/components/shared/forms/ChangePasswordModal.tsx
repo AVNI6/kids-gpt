@@ -54,7 +54,8 @@ export default function ChangePasswordModal({
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
-        const hasEmailIdentity = user.identities?.some((id) => id.provider === "email") ?? false;
+        const hasEmailIdentity =
+          user.identities?.some((id: { provider: string }) => id.provider === "email") ?? false;
         setIsOAuthUser(!hasEmailIdentity);
       }
     };
