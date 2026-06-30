@@ -59,7 +59,7 @@ export default function DashboardNavbarBase({
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-md">
       <div className="px-4 md:px-6 lg:px-8 w-full">
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-15 items-center justify-between gap-4">
           {/* Left Section: Mobile Sidebar Hamburger & Brand */}
           <div className="flex items-center shrink-0 gap-3">
             {showSidebarToggle && (
@@ -84,7 +84,7 @@ export default function DashboardNavbarBase({
           </div>
 
           {/* Right Section holding Desktop Links & Notification/Menu Utilities */}
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex text-sm items-center gap-4 sm:gap-6">
             {/* Desktop Navigation Links */}
             <div className="hidden lg:flex items-center gap-1">
               {navItems.map((item) => {

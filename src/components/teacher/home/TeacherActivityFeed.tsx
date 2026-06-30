@@ -180,7 +180,7 @@ export default function TeacherActivityFeed({ activityEvents }: Props) {
         </h3>
       </div>
 
-      <CardContent className="p-6 pt-0">
+      <CardContent>
         <ScrollArea className="max-h-[360px] pr-4 -mr-4">
           <div className="divide-y divide-slate-100 dark:divide-slate-800/40 pr-2">
             {activityEvents.length === 0 ? (
@@ -201,7 +201,7 @@ export default function TeacherActivityFeed({ activityEvents }: Props) {
                 const initials = event.actor_first_name?.[0] || "?";
 
                 return (
-                  <div key={event.id || idx} className="flex gap-4 items-start py-5 px-3">
+                  <div key={event.id || idx} className="flex gap-4 items-start py-5 px-0 md:px-3">
                     <Avatar className="w-9 h-9 border border-white dark:border-slate-800 rounded-full shrink-0 shadow-sm ring-1 ring-slate-100 dark:ring-slate-800">
                       <AvatarImage src={avatarUrl ?? undefined} className="object-cover" />
                       <AvatarFallback className="text-xs font-black bg-indigo-500 text-white">
@@ -225,7 +225,7 @@ export default function TeacherActivityFeed({ activityEvents }: Props) {
                     </div>
 
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${config.bgColor} ${config.border}`}
+                      className={`hidden sm:flex w-8 h-8 rounded-full items-center justify-center shrink-0 border ${config.bgColor} ${config.border}`}
                     >
                       <Icon className={`w-4 h-4 ${config.color}`} />
                     </div>
