@@ -15,7 +15,7 @@ export default function ThemeSelector({
   isLoading,
 }: ThemeSelectorProps) {
   return (
-    <div className="w-full bg-card/75 dark:bg-slate-900/60 border border-border/80 dark:border-slate-800/80 backdrop-blur-md p-6 rounded-3xl shadow-xl select-none flex flex-col gap-3">
+    <div className="w-full bg-card/75 dark:bg-slate-900/60 border border-border/80 dark:border-slate-800/80 backdrop-blur-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-xl select-none flex flex-col gap-3">
       <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-2">
         <ImageIcon className="size-4 text-sky-500" />
         Choose Adventure Theme

@@ -119,7 +119,7 @@ export default function LoginPageContent() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col p-3 sm:p-6 font-sans bg-background relative overflow-hidden">
+    <main className="min-h-screen flex flex-col p-2 xs:p-3 sm:p-6 font-sans bg-background relative overflow-hidden">
       {/* Dynamic Background Accents */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-50 dark:opacity-20">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-sky-400/20 blur-[120px]" />
@@ -173,58 +173,62 @@ export default function LoginPageContent() {
           </div>
         </div>
 
-        <div className="rounded-[32px] border-2 border-border/50 bg-card p-8 shadow-xl md:p-10">
+        <div className="rounded-[20px] sm:rounded-[32px] border-2 border-border/50 bg-card p-4 xs:p-5 sm:p-8 shadow-xl md:p-10">
           {from === "signup" && (
             <div className="mb-4 rounded-lg border border-sky-500/20 bg-sky-500/10 px-4 py-3 text-sm text-foreground">
               Account created! Please check your email to verify your account before signing in.
             </div>
           )}
           <div className="mb-4 sm:mb-8">
-            <h2 className="mb-2 text-4xl font-bold text-foreground">Sign In</h2>
-            <p className="text-muted-foreground">Access your learning dashboard</p>
+            <h2 className="mb-1 sm:mb-2 text-2xl sm:text-4xl font-bold text-foreground">Sign In</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Access your learning dashboard
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
             <div className="sm:space-y-2">
-              <Label className="block mb-2 text-sm font-semibold text-foreground">Email</Label>
+              <Label className="block mb-1 sm:mb-2 text-xs sm:text-sm font-semibold text-foreground">
+                Email
+              </Label>
               <div className="relative">
-                <Mail
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 z-10"
-                  size={20}
-                />
+                <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 z-10 w-4 h-4 sm:w-5 sm:h-5" />
                 <Input
                   {...register("email", { required: true })}
                   type="email"
                   placeholder="you@example.com"
-                  className="w-full rounded-full border-2 border-border bg-muted/50 h-14 pl-12 pr-4 focus-visible:border-sky-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                  className="w-full rounded-full border-2 border-border bg-muted/50 h-11 sm:h-14 pl-9 sm:pl-12 pr-3 sm:pr-4 text-sm sm:text-base focus-visible:border-sky-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="block mb-2 text-sm font-semibold text-foreground">Password</Label>
+              <Label className="block mb-1 sm:mb-2 text-xs sm:text-sm font-semibold text-foreground">
+                Password
+              </Label>
               <div className="relative">
-                <Lock
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 z-10"
-                  size={20}
-                />
+                <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 z-10 w-4 h-4 sm:w-5 sm:h-5" />
                 <Input
                   {...register("password", { required: true })}
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full rounded-full border-2 border-border bg-muted/50 h-14 pl-12 pr-12 focus-visible:border-sky-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                  className="w-full rounded-full border-2 border-border bg-muted/50 h-11 sm:h-14 pl-9 sm:pl-12 pr-10 sm:pr-12 text-sm sm:text-base focus-visible:border-sky-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors z-20"
+                  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors z-20"
                 >
-                  {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+                  {showPassword ? (
+                    <IoEyeOutline className="w-4 h-4 sm:w-5 sm:h-5" />
+                  ) : (
+                    <IoEyeOffOutline className="w-4 h-4 sm:w-5 sm:h-5" />
+                  )}
                 </button>
               </div>
               <div className="flex justify-between mt-1">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <Checkbox
                     id="remember-me"
                     checked={rememberMe}
@@ -232,14 +236,14 @@ export default function LoginPageContent() {
                   />
                   <label
                     htmlFor="remember-me"
-                    className="text-sm text-muted-foreground cursor-pointer select-none"
+                    className="text-xs sm:text-sm text-muted-foreground cursor-pointer select-none"
                   >
                     Remember Me
                   </label>
                 </div>
                 <Link
                   href={APP_ROUTES.ForgotPassword}
-                  className="text-sm font-semibold text-sky-500 hover:underline"
+                  className="text-xs sm:text-sm font-semibold text-sky-500 hover:underline"
                 >
                   Forgot Password?
                 </Link>
@@ -250,7 +254,7 @@ export default function LoginPageContent() {
               type="submit"
               loading={isSubmitting}
               loadingText="Signing in..."
-              className="w-full rounded-full py-4 font-bold text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5 h-14"
+              className="w-full rounded-full py-3 sm:py-4 font-bold text-sm sm:text-base text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_6px_0_rgb(0_77_109)] sm:shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_6px_0_rgba(14,165,233,0.4)] sm:dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5 h-11 sm:h-14"
             >
               Sign In
             </Button>
@@ -269,7 +273,7 @@ export default function LoginPageContent() {
             <GoogleSignInButton next="/onboarding" />
           </div>
 
-          <p className="mt-8 text-center text-muted-foreground">
+          <p className="mt-4 sm:mt-8 text-center text-sm sm:text-base text-muted-foreground">
             New explorer?{" "}
             <Link href={APP_ROUTES.Signup} className="font-semibold text-sky-500 hover:underline">
               Create account

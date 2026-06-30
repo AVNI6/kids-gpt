@@ -224,33 +224,30 @@ export default function JigsawPuzzlePage() {
   }
 
   return (
-    <main
-      className="min-h-screen w-full bg-linear-to-b from-sky-50/50 via-background to-sky-100/30 dark:from-[#0B0F19] dark:via-[#0E1528] dark:to-[#0A0D17] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 text-foreground flex flex-col gap-6 items-center justify-start overflow-visible transition-colors duration-300"
-      style={{ overflow: "visible" }}
-    >
+    <main className="w-full h-full bg-linear-to-b from-sky-50/50 via-background to-sky-100/30 dark:from-[#0B0F19] dark:via-[#0E1528] dark:to-[#0A0D17] px-4 pt-6 pb-24 sm:pb-8 sm:px-6 sm:py-8 lg:px-8 text-foreground flex flex-col gap-6 items-center justify-start overflow-y-auto overflow-x-hidden transition-colors duration-300">
       {/* ─── SCREEN 1: Setup Workspace ─────────────────────────────────────── */}
       {gameState === "setup" && (
         <div className="w-full max-w-7xl flex flex-col gap-6 items-center">
           {/* Header Card */}
-          <div className="w-full bg-card/75 dark:bg-slate-900/60 border border-border/80 dark:border-slate-800/80 backdrop-blur-md p-6 rounded-[28px] shadow-2xl flex flex-col items-center gap-3 select-none relative overflow-hidden">
+          <div className="w-full bg-card/75 dark:bg-slate-900/60 border border-border/80 dark:border-slate-800/80 backdrop-blur-md p-4 sm:p-6 rounded-2xl sm:rounded-[28px] shadow-2xl flex flex-col items-center gap-3 select-none relative overflow-hidden">
             <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-12 -right-12 w-32 h-32 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
             <div className="flex items-center justify-between w-full relative z-10">
               <Link
                 href={APP_ROUTES.Activities}
-                className="inline-flex items-center justify-center p-2.5 rounded-2xl bg-muted/80 hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition-all"
+                className="inline-flex items-center justify-center p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-muted/80 hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition-all"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
-              <span className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 text-xs font-black uppercase tracking-wider px-3.5 py-1.5 rounded-2xl flex items-center gap-1.5 shadow-md">
-                <Gamepad2 className="size-4 animate-pulse" />
+              <span className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 text-[10px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-2xl flex items-center gap-1 sm:gap-1.5 shadow-md">
+                <Gamepad2 className="size-3.5 sm:size-4 animate-pulse" />
                 Drag & Drop Jigsaw
               </span>
-              <div className="w-10 h-10" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mt-2 text-center drop-shadow-md">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mt-2 text-center drop-shadow-md">
               Jigsaw Puzzle Engine 🧩
             </h1>
             <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 max-w-xl text-center">
@@ -283,13 +280,13 @@ export default function JigsawPuzzlePage() {
               <button
                 onClick={handleStartPuzzle}
                 disabled={isLoading}
-                className="w-full py-4.5 rounded-[22px] bg-linear-to-r from-sky-500 via-indigo-500 to-emerald-500 hover:brightness-110 active:scale-[0.98] text-white font-black text-lg tracking-wide shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full py-3.5 sm:py-4.5 rounded-2xl sm:rounded-[22px] bg-linear-to-r from-sky-500 via-indigo-500 to-emerald-500 hover:brightness-110 active:scale-[0.98] text-white font-black text-base sm:text-lg tracking-wide shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {isLoading ? (
-                  <Loader2 className="size-6 animate-spin" />
+                  <Loader2 className="size-5 sm:size-6 animate-spin" />
                 ) : (
                   <>
-                    <Play className="size-6 fill-white" />
+                    <Play className="size-5 sm:size-6 fill-white" />
                     Start Puzzle
                   </>
                 )}

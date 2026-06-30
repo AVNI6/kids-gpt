@@ -23,10 +23,10 @@ import { useChatStore } from "./chatStore";
 
 const suggestions = ["Help with Math", "Tell a Space Story", "Practice Spanish"];
 
-export default function ChatInterface() {
+export default function ChatInterface({ initialSessionId }: { initialSessionId?: string }) {
   const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
-  const urlSessionId = searchParams ? searchParams.get("id") : null;
+  const urlSessionId = initialSessionId || (searchParams ? searchParams.get("id") : null);
   const messages = useAppSelector((state) => state.chat.messages);
   const currentSessionId = useAppSelector((state) => state.chat.currentSessionId);
   const sessions = useAppSelector((state) => state.chat.sessions);
@@ -320,7 +320,9 @@ export default function ChatInterface() {
       )}
 
       <main className="flex-1 flex flex-col overflow-hidden min-h-0 bg-background">
-        {isSessionLoading && messages.length === 0 && currentSessionId ? (
+        {(isSessionLoading || isLoadingAuth || !currentSessionId) &&
+        messages.length === 0 &&
+        (urlSessionId || currentSessionId) ? (
           <ChatSkeleton />
         ) : messages.length === 0 ? (
           <ChatSuggestions suggestions={suggestions} onSelectSuggestion={handleSelectSuggestion} />
@@ -342,7 +344,7 @@ export default function ChatInterface() {
           onStop={handleStop}
           isLoading={effectiveIsGenerating}
           isAuthLoading={isLoadingAuth}
-          currentSessionId={currentSessionId}
+          currentSessionId={currentSessionId || urlSessionId}
         />
       </main>
     </div>

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { UserRound, KeyRound, Mail, Shield } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ interface KidSettingsContainerProps {
 
 export default function KidSettingsContainer({ profile }: KidSettingsContainerProps) {
   const { refreshProfile } = useAuth();
+  const router = useRouter();
   // Tabs state
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -42,6 +44,16 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  /* eslint-disable react-hooks/set-state-in-effect */
+  React.useEffect(() => {
+    setFirstName(profile.first_name || "");
+    setLastName(profile.last_name || "");
+    setUsername(profile.username || "");
+    const updatedDate = profile.date_of_birth ? parseLocalDate(profile.date_of_birth) : undefined;
+    setDate(updatedDate);
+    setAvatarUrl(profile.avatar_url || "");
+  }, [profile]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const hasChanges =
     firstName !== (profile.first_name || "") ||
@@ -95,6 +107,7 @@ export default function KidSettingsContainer({ profile }: KidSettingsContainerPr
         toast.success(res.message || "Profile settings saved!");
         setSelectedFile(null);
         await refreshProfile();
+        router.refresh();
       } else {
         toast.error(res.error || "Failed to update settings.");
       }

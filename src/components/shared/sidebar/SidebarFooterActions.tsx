@@ -55,13 +55,13 @@ export default function SidebarFooterActions({
               {isOpen && "Settings"}
             </PopoverTrigger>
             <PopoverContent
-              className="w-56 p-2 rounded-2xl shadow-xl border-sidebar-border bg-popover"
+              className="w-56 sm:w-64 p-1 sm:p-2 rounded-2xl shadow-xl border-sidebar-border bg-popover"
               side={isOpen ? "top" : "right"}
               align="center"
               sideOffset={10}
             >
               <div className="space-y-1">
-                <h4 className="font-bold text-popover-foreground px-2 py-1.5 text-sm uppercase tracking-wider opacity-50">
+                <h4 className="font-bold text-popover-foreground px-2 py-1.5 text-body-xs uppercase tracking-wider opacity-50">
                   Theme
                 </h4>
                 {[
@@ -73,13 +73,13 @@ export default function SidebarFooterActions({
                     key={name}
                     onClick={() => setTheme(name)}
                     suppressHydrationWarning={true}
-                    className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors cursor-pointer ${
+                    className={`w-full flex items-center gap-3 px-2 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-body-sm font-semibold ${
                       theme === name
                         ? "bg-sky-500/10 text-sky-500 font-bold"
                         : "text-popover-foreground/70 hover:bg-accent hover:text-accent-foreground"
                     }`}
                   >
-                    <Icon className="h-6 w-6" />
+                    <Icon className="icon-sm shrink-0" />
                     <span>{label}</span>
                   </button>
                 ))}

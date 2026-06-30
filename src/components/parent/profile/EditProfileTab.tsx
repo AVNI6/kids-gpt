@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useTransition, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { updateChildProfile, uploadChildAvatar } from "@/lib/services/parent/parent.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ interface EditProfileTabProps {
 }
 
 export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps) {
+  const router = useRouter();
   const [firstName, setFirstName] = useState(child.first_name || "");
   const [lastName, setLastName] = useState(child.last_name || "");
   const [standard, setStandard] = useState(child.standard || "");
@@ -23,7 +25,7 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
   const [isPending, setIsPending] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, startTransition] = useTransition();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
   }, [localPreviewUrl]);
 
   const displayUrl = useMemo(
-    () => avatarUrl || localPreviewUrl || "",
+    () => localPreviewUrl || avatarUrl || "",
     [avatarUrl, localPreviewUrl]
   );
 
@@ -49,27 +51,7 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
 
     const preview = URL.createObjectURL(file);
     setLocalPreviewUrl(preview);
-
-    const formData = new FormData();
-    formData.append("avatar", file);
-
-    startTransition(async () => {
-      try {
-        const result = await uploadChildAvatar(child.user_id, formData);
-        if (result.success && result.avatarUrl) {
-          setAvatarUrl(result.avatarUrl);
-          toast.success("Profile picture updated successfully!");
-        } else {
-          toast.error("Upload failed", {
-            description: result.error || "Could not upload profile picture.",
-          });
-        }
-      } catch (err) {
-        toast.error("Upload error", {
-          description: err instanceof Error ? err.message : "Failed to upload avatar.",
-        });
-      }
-    });
+    setSelectedFile(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,17 +64,38 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
 
     setIsPending(true);
     try {
+      let finalAvatarUrl = avatarUrl;
+
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("avatar", selectedFile);
+
+        const uploadResult = await uploadChildAvatar(child.user_id, formData);
+        if (uploadResult.success && uploadResult.avatarUrl) {
+          finalAvatarUrl = uploadResult.avatarUrl;
+          setAvatarUrl(uploadResult.avatarUrl);
+          setSelectedFile(null);
+        } else {
+          toast.error("Upload failed", {
+            description: uploadResult.error || "Could not upload profile picture.",
+          });
+          setIsPending(false);
+          return;
+        }
+      }
+
       const response = await updateChildProfile(child.user_id, {
         firstName,
         lastName,
         standard,
-        avatarUrl,
+        avatarUrl: finalAvatarUrl,
       });
 
       if (response.success) {
         toast.success("Profile updated", {
           description: response.message || "Child details updated successfully.",
         });
+        router.refresh();
         onSuccess();
       } else {
         toast.error("Update failed", {
@@ -107,6 +110,12 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
       setIsPending(false);
     }
   };
+
+  const hasChanges =
+    firstName.trim() !== (child.first_name || "") ||
+    lastName.trim() !== (child.last_name || "") ||
+    standard.trim() !== (child.standard || "") ||
+    selectedFile !== null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -130,9 +139,9 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
+                disabled={isPending}
                 className={`relative group rounded-full p-1 border-2 border-slate-200 dark:border-slate-800 transition-all shrink-0 ${
-                  isUploading
+                  isPending
                     ? "cursor-not-allowed opacity-80"
                     : "cursor-pointer hover:scale-105 hover:border-sky-500 active:scale-95"
                 }`}
@@ -153,7 +162,7 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
                 </div>
 
                 {/* Glassmorphic Loading Overlay */}
-                {isUploading && (
+                {isPending && (
                   <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center rounded-full animate-in fade-in duration-200">
                     <Loader2 className="w-6 h-6 text-white animate-spin" />
                   </div>
@@ -166,7 +175,7 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
                 type="file"
                 accept="image/*"
                 onChange={handleAvatarChange}
-                disabled={isUploading}
+                disabled={isPending}
                 className="hidden"
               />
             </div>
@@ -239,8 +248,8 @@ export default function EditProfileTab({ child, onSuccess }: EditProfileTabProps
           type="submit"
           loading={isPending}
           loadingText="Saving..."
-          disabled={isUploading}
-          className="rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-11 px-6 text-xs cursor-pointer shadow-md hover:shadow-lg dark:bg-sky-500 dark:hover:bg-sky-600"
+          disabled={isPending || !hasChanges}
+          className="rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold h-11 px-6 text-xs cursor-pointer shadow-md hover:shadow-lg dark:bg-sky-500 dark:hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Save Profile
         </Button>

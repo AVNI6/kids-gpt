@@ -206,19 +206,21 @@ export default function NotificationsSection() {
         <>
           <div className="space-y-4 w-full">
             {paginatedNotifications.length === 0 ? (
-              <Card className="rounded-[28px] border-2 border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/10 p-12 text-center">
-                <CardContent className="p-0 flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-4">
-                    <Bell className="w-8 h-8 text-purple-500" />
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">
-                    All caught up!
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                    No new learning or safety notifications at the moment.
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="flex items-center justify-center min-h-[50vh] w-full">
+                <Card className="rounded-[28px] border-slate-200 dark:border-slate-800 bg-white dark:bg-black/30 p-12 text-center max-w-2xl w-full">
+                  <CardContent className="p-0 flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-4">
+                      <Bell className="w-8 h-8 text-purple-500" />
+                    </div>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">
+                      All caught up!
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                      No new learning or safety notifications at the moment.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             ) : (
               currentItems.map((notif: NotificationItem) => (
                 <NotificationCard

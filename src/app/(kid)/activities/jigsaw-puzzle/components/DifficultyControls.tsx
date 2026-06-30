@@ -83,13 +83,13 @@ export default function DifficultyControls({
   ];
 
   return (
-    <div className="flex flex-col gap-6 w-full bg-card/75 dark:bg-slate-900/60 p-6 rounded-3xl border border-border/80 dark:border-slate-800/80 shadow-xl backdrop-blur-md transition-all duration-300">
+    <div className="flex flex-col gap-6 w-full bg-card/75 dark:bg-slate-900/60 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-border/80 dark:border-slate-800/80 shadow-xl backdrop-blur-md transition-all duration-300">
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-black uppercase tracking-wider text-muted-foreground flex items-center gap-2">
           <LayoutGrid className="size-4 text-sky-500" />
           Choose Difficulty
         </h3>
-        <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
           {options.map((opt) => {
             const isActive = difficulty === opt.value;
             return (
@@ -98,7 +98,7 @@ export default function DifficultyControls({
                 onClick={() => onDifficultyChange(opt.value)}
                 disabled={isLoading}
                 variant="outline"
-                className={`rounded-2xl font-extrabold transition-all duration-350 py-3.5 px-1 text-[11px] sm:text-xs cursor-pointer w-full ${
+                className={`rounded-xl sm:rounded-2xl font-extrabold transition-all duration-350 py-2.5 sm:py-3.5 px-1 text-[10px] sm:text-xs cursor-pointer w-full ${
                   isActive
                     ? "bg-sky-500 hover:bg-sky-600 text-white border-sky-500 shadow-md scale-105"
                     : `border-border dark:border-slate-800 text-foreground dark:text-slate-300 ${opt.colorClass}`

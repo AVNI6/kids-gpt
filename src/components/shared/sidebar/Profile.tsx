@@ -146,7 +146,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
 
             <div className="py-2 sm:py-4 px-2 sm:px-3">
               <div className="flex items-center gap-2 mb-2">
-                <Settings className="icon-sm opacity-50" />
+                <Settings className="icon-sm md:w-4 md:h-4 opacity-50" />
                 <span className="text-body-xs font-bold uppercase tracking-wider opacity-50">
                   Theme
                 </span>
@@ -159,7 +159,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                   }}
                   className={`flex-1 flex justify-center py-1 sm:py-1.5 rounded-md transition-all ${mounted && theme === "light" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Sun className="icon-sm" />
+                  <Sun className="icon-sm md:w-4 md:h-4" />
                 </button>
                 <button
                   onClick={() => {
@@ -168,7 +168,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                   }}
                   className={`flex-1 flex justify-center py-1 sm:py-1.5 rounded-md transition-all ${mounted && theme === "dark" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Moon className="icon-sm" />
+                  <Moon className="icon-sm md:w-4 md:h-4" />
                 </button>
                 <button
                   onClick={() => {
@@ -177,7 +177,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
                   }}
                   className={`flex-1 flex justify-center py-1 sm:py-1.5 rounded-md transition-all ${mounted && theme === "system" ? "bg-background shadow-sm text-sky-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Monitor className="icon-sm" />
+                  <Monitor className="icon-sm md:w-4 md:h-4" />
                 </button>
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function Profile({ isCollapsed }: ProfileProps) {
               access your learning adventure.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
+          <AlertDialogFooter className="grid grid-cols-2 gap-2">
             <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
             <Button
               variant="destructive"

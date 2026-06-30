@@ -25,7 +25,7 @@ export default async function ChatRoute({ params, searchParams }: PageProps) {
   return (
     <MainLayout>
       <Suspense fallback={resolvedSearchParams.id ? <ChatSkeleton /> : null}>
-        <ChatInterface />
+        <ChatInterface initialSessionId={resolvedSearchParams.id} />
       </Suspense>
     </MainLayout>
   );

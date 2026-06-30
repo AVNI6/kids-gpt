@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { cookies, headers } from "next/headers";
 
 type UserRole = "kid" | "parent" | "teacher";
 
@@ -13,6 +14,28 @@ export async function checkDashboardAccess(requiredRoles: UserRole[]) {
 
   // Not authenticated
   if (authError || !user) {
+    // Detect if this is a prefetch request
+    let isPrefetch = false;
+    try {
+      const headerStore = await headers();
+      isPrefetch =
+        headerStore.get("purpose") === "prefetch" ||
+        headerStore.get("next-router-prefetch") === "1" ||
+        headerStore.get("sec-purpose") === "prefetch";
+    } catch {
+      // Ignore errors outside of request context
+    }
+
+    if (isPrefetch) {
+      const cookieStore = await cookies();
+      const hasAuthCookie = cookieStore.getAll().some((c) => c.name.startsWith("sb-"));
+      // If we have an auth cookie, it's likely just expired and needs refresh on the actual request.
+      // Do not redirect prefetch requests to prevent caching redirect to /signin.
+      if (hasAuthCookie) {
+        return;
+      }
+    }
+
     redirect("/signin");
   }
 

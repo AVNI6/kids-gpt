@@ -4,10 +4,9 @@ import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
-import { Loader2, Sparkles, UserRound, Users, ShieldCheck, CheckCircle2, Mail } from "lucide-react";
+import { Loader2, Sparkles, UserRound, Users, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
-
 import {
   submitParentOnboarding,
   type ParentOnboardingState,
@@ -146,7 +145,7 @@ export default function ParentOnboardingPage() {
           </div>
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="childEmail" className="text-sm font-bold text-foreground ml-1">
             Child&apos;s Email <span className="text-muted-foreground">(Optional)</span>
           </Label>
@@ -160,13 +159,13 @@ export default function ParentOnboardingPage() {
               className="h-12 rounded-2xl border-2 border-border pl-11 focus:border-sky-500 focus:ring-0 text-base font-medium bg-background text-foreground"
             />
           </div>
-        </div>
-
+        </div> */}
+        {/* 
         {parentState.error && (
           <div className="animate-in fade-in slide-in-from-top-2 rounded-2xl border-2 border-rose-500/20 bg-rose-500/10 p-3 text-sm font-bold text-rose-500 text-center">
             {parentState.error}
           </div>
-        )}
+        )} */}
 
         <ParentSubmitButton />
       </form>

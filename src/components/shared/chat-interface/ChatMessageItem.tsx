@@ -67,17 +67,17 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components
     </h3>
   ),
   p: ({ children }) => (
-    <p className="mb-3 last:mb-0 leading-relaxed text-body-md text-slate-700 dark:text-slate-300 font-medium">
+    <p className="mb-3 last:mb-0 leading-relaxed text-[14px] sm:text-[15px] text-slate-700 dark:text-slate-300 font-medium">
       {children}
     </p>
   ),
   ul: ({ children }) => (
-    <ul className="list-disc pl-6 my-3 space-y-2 text-body-md text-slate-700 dark:text-slate-300 font-medium">
+    <ul className="list-disc pl-6 my-3 space-y-2 text-[14px] sm:text-[15px] text-slate-700 dark:text-slate-300 font-medium">
       {children}
     </ul>
   ),
   ol: ({ children }) => (
-    <ol className="list-decimal pl-6 my-3 space-y-2 text-body-md text-slate-700 dark:text-slate-300 font-medium">
+    <ol className="list-decimal pl-6 my-3 space-y-2 text-[14px] sm:text-[15px] text-slate-700 dark:text-slate-300 font-medium">
       {children}
     </ol>
   ),
@@ -123,6 +123,13 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components
 
 const ChatMessageItem = React.memo(
   function ChatMessageItem({ message, isUser, showModelHeader }: ChatMessageItemProps) {
+    const messageRef = React.useRef<HTMLDivElement | null>(null);
+    const scrollStateRef = React.useRef<{
+      scrollTop: number;
+      messageOffsetTop: number;
+      isExpanding: boolean;
+    } | null>(null);
+
     // If it's a model message with no content and not failed/image/document, don't render it
     const hasNoDisplayContent =
       !isUser &&
@@ -216,12 +223,63 @@ const ChatMessageItem = React.memo(
       2500
     );
 
+    const handleToggleClamp = React.useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.currentTarget.blur();
+        const messageEl = messageRef.current;
+        if (messageEl) {
+          const viewport = messageEl.closest('[data-slot="scroll-area-viewport"]');
+          if (viewport) {
+            const messageRect = messageEl.getBoundingClientRect();
+            const viewportRect = viewport.getBoundingClientRect();
+            scrollStateRef.current = {
+              scrollTop: viewport.scrollTop,
+              messageOffsetTop: messageRect.top - viewportRect.top,
+              isExpanding: !isExpanded,
+            };
+          }
+        }
+        toggleClamp();
+      },
+      [isExpanded, toggleClamp]
+    );
+
+    React.useLayoutEffect(() => {
+      if (scrollStateRef.current && messageRef.current) {
+        const messageEl = messageRef.current;
+        const viewport = messageEl.closest(
+          '[data-slot="scroll-area-viewport"]'
+        ) as HTMLDivElement | null;
+        if (viewport) {
+          const { scrollTop, messageOffsetTop, isExpanding } = scrollStateRef.current;
+
+          if (isExpanding) {
+            // Restore scroll position exactly to prevent browser auto-scroll anchoring
+            viewport.scrollTop = scrollTop;
+          } else {
+            // If the top of the message was scrolled above the viewport fold (offset < 16px)
+            const padding = 16;
+            if (messageOffsetTop < padding) {
+              const currentRect = messageEl.getBoundingClientRect();
+              const viewportRect = viewport.getBoundingClientRect();
+              const currentOffset = currentRect.top - viewportRect.top;
+              const diff = currentOffset - padding;
+              viewport.scrollTop = viewport.scrollTop + diff;
+            } else {
+              viewport.scrollTop = scrollTop;
+            }
+          }
+        }
+        scrollStateRef.current = null;
+      }
+    }, [isExpanded]);
+
     if (hasNoDisplayContent) {
       return null;
     }
 
     return (
-      <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+      <div ref={messageRef} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
         <div
           className={`flex items-end gap-2 sm:gap-3 max-w-[95%] sm:max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}
         >
@@ -381,7 +439,7 @@ const ChatMessageItem = React.memo(
                     {isLongMessage && (
                       <button
                         type="button"
-                        onClick={toggleClamp}
+                        onClick={handleToggleClamp}
                         className="mt-2 text-xs font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors focus:outline-none cursor-pointer"
                       >
                         {isExpanded ? "Show Less" : "Read More"}
@@ -421,7 +479,7 @@ const ChatMessageItem = React.memo(
                     {isLongMessage && (
                       <button
                         type="button"
-                        onClick={toggleClamp}
+                        onClick={handleToggleClamp}
                         className="mt-2 text-xs font-bold text-white hover:text-white/80 transition-colors focus:outline-none cursor-pointer"
                       >
                         {isExpanded ? "Show Less" : "Read More"}

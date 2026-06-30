@@ -160,7 +160,7 @@ export default function SignupForm() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col px-6 font-sans bg-background relative overflow-hidden">
+    <main className="min-h-screen flex flex-col p-2 xs:p-3 sm:p-6 font-sans bg-background relative overflow-hidden">
       {/* Dynamic Background Accents */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-50 dark:opacity-20">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-sky-400/20 blur-[120px]" />
@@ -200,10 +200,12 @@ export default function SignupForm() {
           </Card>
         </div>
 
-        <Card className="rounded-[32px] border-2 border-border/50 bg-card shadow-xl overflow-hidden">
-          <CardContent className="p-8 md:p-10">
+        <Card className="rounded-[20px] sm:rounded-[32px] border-2 border-border/50 bg-card shadow-xl overflow-hidden">
+          <CardContent className="p-4 xs:p-5 sm:p-8 md:p-10">
             <div className="mb-8">
-              <h2 className="text-4xl font-bold mb-2 text-foreground">Create Account</h2>
+              <h2 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 text-foreground">
+                Create Account
+              </h2>
               {inviteStatus === "valid" ? (
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs font-bold border border-sky-500/20 mt-1">
                   <span className="relative flex h-2 w-2">
@@ -217,34 +219,38 @@ export default function SignupForm() {
                   ⚠️ Invitation Invalid: {inviteError}
                 </div>
               ) : (
-                <p className="text-muted-foreground">
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Fill in the bubbles to start your learning journey 🚀
                 </p>
               )}
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
               <div className="space-y-2">
-                <label className="block mb-2 font-semibold text-foreground">Full Name</label>
+                <label className="block mb-1 sm:mb-2 text-xs sm:text-sm font-semibold text-foreground">
+                  Full Name
+                </label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
+                  <User className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/50" />
                   <Input
                     {...register("name", { required: true })}
-                    className="pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
+                    className="pl-9 sm:pl-12 h-11 sm:h-14 rounded-full border-border bg-muted/50 focus-visible:ring-sky-500 text-sm sm:text-base text-foreground"
                     placeholder="Alex Explorer"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="block mb-2 font-semibold text-foreground">Email</label>
+                <label className="block mb-1 sm:mb-2 text-xs sm:text-sm font-semibold text-foreground">
+                  Email
+                </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
+                  <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/50" />
                   <Input
                     {...register("email", { required: true })}
                     type="email"
                     readOnly={isEmailLocked}
-                    className={`pl-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground ${
+                    className={`pl-9 sm:pl-12 h-11 sm:h-14 rounded-full border-border bg-muted/50 focus-visible:ring-sky-500 text-sm sm:text-base text-foreground ${
                       isEmailLocked
                         ? "opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-900"
                         : ""
@@ -255,24 +261,30 @@ export default function SignupForm() {
               </div>
 
               <div className="space-y-2">
-                <label className="block mb-2 font-semibold text-foreground">Password</label>
+                <label className="block mb-1 sm:mb-2 text-xs sm:text-sm font-semibold text-foreground">
+                  Password
+                </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
+                  <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/50" />
                   <Input
                     {...register("password", {
                       required: "Password is required",
                       validate: validatePassword,
                     })}
                     type={showPassword ? "text" : "password"}
-                    className="pl-12 pr-12 h-14 rounded-4xl border-border bg-muted/50 focus-visible:ring-sky-500 text-foreground"
+                    className="pl-9 sm:pl-12 pr-10 sm:pr-12 h-11 sm:h-14 rounded-full border-border bg-muted/50 focus-visible:ring-sky-500 text-sm sm:text-base text-foreground"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-black transition-colors"
+                    className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
                   >
-                    {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+                    {showPassword ? (
+                      <IoEyeOffOutline className="w-4 h-4 sm:w-5 sm:h-5" />
+                    ) : (
+                      <IoEyeOutline className="w-4 h-4 sm:w-5 sm:h-5" />
+                    )}
                   </button>
                 </div>
                 {errors.password && (
@@ -282,7 +294,7 @@ export default function SignupForm() {
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <Checkbox
                   id="agree-terms"
                   checked={agreed}
@@ -290,7 +302,7 @@ export default function SignupForm() {
                 />
                 <label
                   htmlFor="agree-terms"
-                  className="text-sm text-muted-foreground leading-relaxed cursor-pointer select-none"
+                  className="text-xs sm:text-sm text-muted-foreground leading-relaxed cursor-pointer select-none"
                 >
                   I agree to the{" "}
                   <button
@@ -316,10 +328,10 @@ export default function SignupForm() {
                 loading={signupState === "loading"}
                 loadingText="Creating account..."
                 disabled={inviteToken ? inviteStatus !== "valid" : false}
-                className="w-full h-14 rounded-2xl text-lg font-bold flex items-center gap-2 text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
+                className="w-full h-11 sm:h-14 rounded-full text-sm sm:text-lg font-bold flex items-center justify-center gap-2 text-black bg-theme-brand dark:text-white dark:bg-sky-500 shadow-[0_6px_0_rgb(0_77_109)] sm:shadow-[0_8px_0_rgb(0_77_109)] dark:shadow-[0_6px_0_rgba(14,165,233,0.4)] sm:dark:shadow-[0_8px_0_rgba(14,165,233,0.4)] transition hover:-translate-y-0.5"
               >
                 Create Account
-                <Rocket className="w-5 h-5" />
+                <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
 
               {signupState === "check-email" && (
@@ -329,7 +341,7 @@ export default function SignupForm() {
                 </div>
               )}
 
-              <p className="text-center text-muted-foreground">
+              <p className="text-center text-sm sm:text-base text-muted-foreground">
                 Already an explorer?{" "}
                 <Link
                   href={APP_ROUTES.Signin}

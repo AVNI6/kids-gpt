@@ -32,7 +32,7 @@ export default async function Home({ searchParams }: PageProps) {
 
   return (
     <Suspense fallback={resolvedSearchParams.id ? <ChatSkeleton /> : null}>
-      <ChatInterface />
+      <ChatInterface initialSessionId={resolvedSearchParams.id} />
     </Suspense>
   );
 }
